@@ -1,0 +1,20 @@
+{
+  "name": "nexopos-cl-monorepo",
+  "version": "1.0.0",
+  "description": "Monorepo for NexoPos CL",
+  "private": true,
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "main": "index.js",
+  "type": "commonjs",
+  "devDependencies": {
+    "@nestjs/cli": "^11.0.16"
+  }
+}
