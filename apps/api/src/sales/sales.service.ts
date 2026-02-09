@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException, InternalServerErrorException } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateSaleDto } from './dto/create-sale.dto';
 
@@ -7,15 +7,41 @@ export class SalesService {
     constructor(private prisma: PrismaService) { }
 
     async createSale(createSaleDto: CreateSaleDto) {
-        const { tenantId, branchId, userId, items } = createSaleDto;
+        const { tenantId, branchId, userId, items, paymentMethod } = createSaleDto;
 
+        // Validate items array is not empty
+        if (!items || items.length === 0) {
+            throw new BadRequestException('Sale must contain at least one item');
+        }
+
+        // ============================================
+        // ACID TRANSACTION - All or Nothing
+        // ============================================
         return this.prisma.$transaction(async (prisma) => {
-            // 1. Calculate total
-            const total = items.reduce((acc, item) => acc + item.price * item.quantity, 0);
+            // 1. Validate all products exist and fetch their prices from DB
+            const productIds = items.map(item => item.productId);
+            const products = await prisma.product.findMany({
+                where: {
+                    id: { in: productIds },
+                    tenantId, // Ensure products belong to the tenant (security)
+                },
+            });
 
-            // 2. Iterate items to check stock and decrement
+            if (products.length !== productIds.length) {
+                const foundIds = products.map(p => p.id);
+                const missingIds = productIds.filter(id => !foundIds.includes(id));
+                throw new BadRequestException(
+                    `Products not found or don't belong to tenant: ${missingIds.join(', ')}`
+                );
+            }
+
+            // Create a map for quick price lookup
+            const productPriceMap = new Map(
+                products.map(p => [p.id, p.price])
+            );
+
+            // 2. Validate stock availability for ALL items BEFORE processing
             for (const item of items) {
-                // Find current inventory
                 const inventory = await prisma.inventoryLevel.findUnique({
                     where: {
                         productId_branchId: {
@@ -26,14 +52,21 @@ export class SalesService {
                 });
 
                 if (!inventory) {
-                    throw new BadRequestException(`Product ${item.productId} not found in branch inventory`);
+                    throw new BadRequestException(
+                        `Product ${item.productId} not found in branch inventory`
+                    );
                 }
 
                 if (inventory.quantity < item.quantity) {
-                    throw new BadRequestException(`Insufficient stock for product ${item.productId}. Available: ${inventory.quantity}, Requested: ${item.quantity}`);
+                    throw new BadRequestException(
+                        `Insufficient stock for product ${item.productId}. Available: ${inventory.quantity}, Requested: ${item.quantity}`
+                    );
                 }
+            }
 
-                // 3. Decrement stock
+            // 3. All validations passed - now execute the sale
+            // Decrement stock for all items
+            for (const item of items) {
                 await prisma.inventoryLevel.update({
                     where: {
                         productId_branchId: {
@@ -47,23 +80,39 @@ export class SalesService {
                 });
             }
 
-            // 4. Create Sale and SaleItems
+            // 4. Calculate total using DB prices (SECURITY: Never trust client prices)
+            const total = items.reduce((acc, item) => {
+                const priceFromDB = Number(productPriceMap.get(item.productId) || 0);
+                return acc + (priceFromDB * item.quantity);
+            }, 0);
+
+            // 5. Create Sale and SaleItems
             const sale = await prisma.sale.create({
                 data: {
                     tenantId,
                     branchId,
                     userId,
                     total,
+                    paymentMethod,
                     items: {
-                        create: items.map((item) => ({
-                            productId: item.productId,
-                            quantity: item.quantity,
-                            price: item.price,
-                        })),
+                        create: items.map((item) => {
+                            const priceFromDB = Number(productPriceMap.get(item.productId) || 0);
+                            return {
+                                productId: item.productId,
+                                quantity: item.quantity,
+                                price: priceFromDB, // Use DB price, not client price
+                            };
+                        }),
                     },
                 },
                 include: {
-                    items: true,
+                    items: {
+                        include: {
+                            product: true, // Include product details in response
+                        },
+                    },
+                    branch: true,
+                    user: true,
                 },
             });
 

@@ -18,9 +18,24 @@ let SalesService = class SalesService {
         this.prisma = prisma;
     }
     async createSale(createSaleDto) {
-        const { tenantId, branchId, userId, items } = createSaleDto;
+        const { tenantId, branchId, userId, items, paymentMethod } = createSaleDto;
+        if (!items || items.length === 0) {
+            throw new common_1.BadRequestException('Sale must contain at least one item');
+        }
         return this.prisma.$transaction(async (prisma) => {
-            const total = items.reduce((acc, item) => acc + item.price * item.quantity, 0);
+            const productIds = items.map(item => item.productId);
+            const products = await prisma.product.findMany({
+                where: {
+                    id: { in: productIds },
+                    tenantId,
+                },
+            });
+            if (products.length !== productIds.length) {
+                const foundIds = products.map(p => p.id);
+                const missingIds = productIds.filter(id => !foundIds.includes(id));
+                throw new common_1.BadRequestException(`Products not found or don't belong to tenant: ${missingIds.join(', ')}`);
+            }
+            const productPriceMap = new Map(products.map(p => [p.id, p.price]));
             for (const item of items) {
                 const inventory = await prisma.inventoryLevel.findUnique({
                     where: {
@@ -36,6 +51,8 @@ let SalesService = class SalesService {
                 if (inventory.quantity < item.quantity) {
                     throw new common_1.BadRequestException(`Insufficient stock for product ${item.productId}. Available: ${inventory.quantity}, Requested: ${item.quantity}`);
                 }
+            }
+            for (const item of items) {
                 await prisma.inventoryLevel.update({
                     where: {
                         productId_branchId: {
@@ -48,22 +65,36 @@ let SalesService = class SalesService {
                     },
                 });
             }
+            const total = items.reduce((acc, item) => {
+                const priceFromDB = Number(productPriceMap.get(item.productId) || 0);
+                return acc + (priceFromDB * item.quantity);
+            }, 0);
             const sale = await prisma.sale.create({
                 data: {
                     tenantId,
                     branchId,
                     userId,
                     total,
+                    paymentMethod,
                     items: {
-                        create: items.map((item) => ({
-                            productId: item.productId,
-                            quantity: item.quantity,
-                            price: item.price,
-                        })),
+                        create: items.map((item) => {
+                            const priceFromDB = Number(productPriceMap.get(item.productId) || 0);
+                            return {
+                                productId: item.productId,
+                                quantity: item.quantity,
+                                price: priceFromDB,
+                            };
+                        }),
                     },
                 },
                 include: {
-                    items: true,
+                    items: {
+                        include: {
+                            product: true,
+                        },
+                    },
+                    branch: true,
+                    user: true,
                 },
             });
             return sale;

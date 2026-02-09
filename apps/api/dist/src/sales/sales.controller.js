@@ -21,7 +21,7 @@ let SalesController = class SalesController {
     constructor(salesService) {
         this.salesService = salesService;
     }
-    create(createSaleDto) {
+    async create(createSaleDto) {
         return this.salesService.createSale(createSaleDto);
     }
 };
@@ -32,7 +32,7 @@ __decorate([
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [create_sale_dto_1.CreateSaleDto]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:returntype", Promise)
 ], SalesController.prototype, "create", null);
 exports.SalesController = SalesController = __decorate([
     (0, common_1.Controller)('sales'),

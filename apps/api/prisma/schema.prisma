@@ -51,6 +51,7 @@ model Product {
   id        String   @id @default(uuid())
   name      String
   sku       String?
+  price     Int      @default(0) // Price in Chilean Pesos (CLP)
   tenantId  String
   tenant    Tenant   @relation(fields: [tenantId], references: [id])
   
@@ -75,8 +76,9 @@ model InventoryLevel {
 }
 
 model Sale {
-  id        String   @id @default(uuid())
-  total     Float
+  id            String   @id @default(uuid())
+  total         Float
+  paymentMethod String   // "CASH", "CARD", "TRANSFER", "DEBIT"
   
   tenantId  String
   tenant    Tenant   @relation(fields: [tenantId], references: [id])
