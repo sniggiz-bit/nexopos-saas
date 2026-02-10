@@ -1,37 +1,42 @@
 import { apiClient } from './client';
 
+export const PaymentMethod = {
+    CASH: 'CASH',
+    CARD: 'CARD',
+    TRANSFER: 'TRANSFER',
+    DEBIT: 'DEBIT',
+} as const;
+
+export type PaymentMethod = typeof PaymentMethod[keyof typeof PaymentMethod];
+
+
 export interface SaleItem {
     productId: string;
     quantity: number;
-    unitPrice: number;
-    subtotal: number;
 }
 
 export interface CreateSaleRequest {
+    tenantId: string;
+    branchId: string;
+    userId?: string;
     items: SaleItem[];
-    subtotal: number;
-    tax: number;
-    total: number;
-    paymentMethod?: string;
-    customerName?: string;
-    customerRut?: string;
+    paymentMethod: PaymentMethod;
 }
+
 
 export interface Sale {
     id: string;
     tenantId: string;
-    userId: string;
-    subtotal: number;
-    tax: number;
+    branchId: string;
+    userId?: string;
     total: number;
-    status: string;
-    paymentMethod?: string;
-    customerName?: string;
-    customerRut?: string;
+    paymentMethod: PaymentMethod;
+    dteFolio?: number;
+    dteStatus?: string;
     createdAt: string;
     updatedAt: string;
-    items: SaleItem[];
 }
+
 
 /**
  * Create a new sale

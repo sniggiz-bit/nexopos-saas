@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { Product } from '@/api/products';
 import { useProducts } from '@/hooks/useProducts';
 import { useSale } from '@/hooks/useSale';
@@ -6,24 +7,47 @@ import { ProductGrid } from '@/components/pos/ProductGrid';
 import { Cart } from '@/components/pos/Cart';
 import { PaymentModal } from '@/components/pos/PaymentModal';
 import { type CartItemData } from '@/components/pos/CartItem';
-import { CreateSaleRequest } from '@/api/sales';
+import { CreateSaleRequest, PaymentMethod } from '@/api/sales';
+import { useToast } from '@/hooks/use-toast';
 
 const TAX_RATE = 0.19; // 19% IVA in Chile
 
 export function PosPage() {
     const [cartItems, setCartItems] = useState<CartItemData[]>([]);
     const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+    const { toast } = useToast();
+    const queryClient = useQueryClient();
 
     const { data: products = [], isLoading } = useProducts();
 
     const { mutate: createSale, isPending, isSuccess, isError, reset } = useSale({
-        onSuccess: () => {
-            // Clear cart after successful sale
+        onSuccess: (data) => {
+            // Show success toast with DTE folio if available
+            toast({
+                variant: 'success',
+                title: '¡Venta Exitosa!',
+                description: data.dteFolio
+                    ? `Folio: #${data.dteFolio}`
+                    : `Venta ID: ${data.id}`,
+            });
+
+            // Clear cart and invalidate products query to update stock
+            setCartItems([]);
+            queryClient.invalidateQueries({ queryKey: ['products'] });
+
+            // Close modal after delay
             setTimeout(() => {
-                setCartItems([]);
                 setIsPaymentModalOpen(false);
                 reset();
             }, 2000);
+        },
+        onError: (error) => {
+            // Show error toast
+            toast({
+                variant: 'destructive',
+                title: 'Error en la Venta',
+                description: error.message || 'Ocurrió un error al procesar la venta',
+            });
         },
     });
 
@@ -72,23 +96,15 @@ export function PosPage() {
     };
 
     const handleConfirmPayment = () => {
-        const subtotal = cartItems.reduce(
-            (sum, item) => sum + item.price * item.quantity,
-            0
-        );
-        const tax = subtotal * TAX_RATE;
-        const total = subtotal + tax;
-
+        // Construct payload matching backend requirements
         const saleData: CreateSaleRequest = {
+            tenantId: 'tenant-1', // TODO: Get from auth context
+            branchId: 'branch-1', // Hardcoded for now as per instructions
             items: cartItems.map((item) => ({
                 productId: item.productId,
                 quantity: item.quantity,
-                unitPrice: item.price,
-                subtotal: item.price * item.quantity,
             })),
-            subtotal,
-            tax,
-            total,
+            paymentMethod: PaymentMethod.CASH,
         };
 
         createSale(saleData);
@@ -145,3 +161,4 @@ export function PosPage() {
         </div>
     );
 }
+
