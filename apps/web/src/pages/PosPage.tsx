@@ -36,12 +36,13 @@ export function PosPage() {
             setCartItems([]);
             queryClient.invalidateQueries({ queryKey: ['products'] });
 
-            // Close modal after delay - increased to 5s if there is a ticket
+            // Close modal after delay - increased to 10s if there is any document (DTE or Internal)
+            const hasDocument = data.dtePdfUrl || data.internalReceiptUrl;
             setTimeout(() => {
                 setIsPaymentModalOpen(false);
                 reset();
                 setSaleResult(null);
-            }, data.dteFolio ? 5000 : 2000);
+            }, hasDocument ? 10000 : 2000);
         },
         onError: (error) => {
             // Show error toast

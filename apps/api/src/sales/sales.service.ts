@@ -1,16 +1,82 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { DteService } from '../dte/dte.service';
+import { InternalReceiptService } from '../dte/internal-receipt.service';
 import { CreateSaleDto } from './dto/create-sale.dto';
+import * as path from 'path';
+
+interface GetSalesFilters {
+    startDate?: string;
+    endDate?: string;
+    branchId?: string;
+}
 
 @Injectable()
 export class SalesService {
+    private readonly logger = new Logger(SalesService.name);
+
     constructor(
         private prisma: PrismaService,
         private dteService: DteService,
+        private internalReceiptService: InternalReceiptService,
     ) { }
 
+    /**
+     * Get all sales with optional filters
+     * 
+     * @param filters - Optional filters for date range and branch
+     * @returns Array of sales with items, products, branch, and user data
+     */
+    async getSales(filters: GetSalesFilters = {}) {
+        const { startDate, endDate, branchId } = filters;
+
+        // Build the where clause dynamically based on provided filters
+        const where: any = {};
+
+        if (startDate || endDate) {
+            where.createdAt = {};
+            if (startDate) {
+                where.createdAt.gte = new Date(startDate);
+            }
+            if (endDate) {
+                where.createdAt.lte = new Date(endDate);
+            }
+        }
+
+        if (branchId) {
+            where.branchId = branchId;
+        }
+
+        return this.prisma.sale.findMany({
+            where,
+            orderBy: {
+                createdAt: 'desc', // Most recent first
+            },
+            include: {
+                items: {
+                    include: {
+                        product: true, // Include product details for each item
+                    },
+                },
+                branch: true,
+                user: true,
+            },
+        });
+    }
+
     async createSale(createSaleDto: CreateSaleDto) {
+        const logFile = 'C:\\Users\\user\\sales-debug.log';
+        const log = (msg: string) => {
+            const time = new Date().toISOString();
+            const fs = require('fs');
+            fs.appendFileSync(logFile, `[${time}] ${msg}\n`);
+            this.logger.log(msg);
+        };
+
+        log(`[Sales Service] Starting creation of sale for tenant ${createSaleDto.tenantId}`);
+        // Log the DTO for detail
+        log(`- Items count: ${createSaleDto.items.length}`);
+        log(`- Payment method: ${createSaleDto.paymentMethod}`);
         const { tenantId, branchId, userId, items, paymentMethod } = createSaleDto;
 
         // Validate items array is not empty
@@ -127,15 +193,32 @@ export class SalesService {
         // ============================================
         // DTE EMISSION - SYNC FOR FRONTEND FEEDBACK
         // ============================================
+        log(`[Sales Service] Emitting DTE for sale ${sale.id}...`);
         try {
             await this.dteService.emitirDte(sale.id);
+            log(`- DTE emitted successfully`);
         } catch (error) {
-            console.error(`[Sales Service] Error emitiendo DTE para venta ${sale.id}:`, error);
+            log(`- DTE emission FAILED: ${error.message}`);
+            this.logger.error(`[Sales Service] Error emitiendo DTE para venta ${sale.id}:`, error.message);
             // We don't throw here because the sale is already valid and stored
         }
 
-        // Fetch the updated sale with DTE data
-        return this.prisma.sale.findUnique({
+        // ============================================
+        // INTERNAL RECEIPT GENERATION
+        // ============================================
+        log(`[Sales Service] Requesting internal receipt for sale ${sale.id}...`);
+        try {
+            await this.internalReceiptService.generateReceipt(sale.id);
+            log(`- Internal receipt generated successfully`);
+        } catch (error) {
+            log(`- Internal receipt generation FAILED: ${error.message}`);
+            this.logger.error(`[Sales Service] Error generando ticket interno para venta ${sale.id}:`, error.message);
+            // We don't throw here because the sale is already valid and stored
+        }
+
+        // Fetch the updated sale with DTE data and receipt URL
+        log(`[Sales Service] Fetching final sale object...`);
+        const finalSale = await this.prisma.sale.findUnique({
             where: { id: sale.id },
             include: {
                 items: { include: { product: true } },
@@ -143,5 +226,12 @@ export class SalesService {
                 user: true,
             },
         });
+
+        this.logger.log(`[Sales Service] Final sale object for response (ID: ${sale.id}):`);
+        this.logger.log(`- dteFolio: ${finalSale?.dteFolio}`);
+        this.logger.log(`- dtePdfUrl: ${finalSale?.dtePdfUrl}`);
+        this.logger.log(`- internalReceiptUrl: ${(finalSale as any)?.internalReceiptUrl}`);
+
+        return finalSale;
     }
 }

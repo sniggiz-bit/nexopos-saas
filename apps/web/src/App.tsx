@@ -9,6 +9,7 @@ import { InventoryPage } from './pages/dashboard/InventoryPage';
 import { CategoriesPage } from './pages/dashboard/CategoriesPage';
 import { BrandsPage } from './pages/dashboard/BrandsPage';
 import { SettingsPage } from './pages/dashboard/SettingsPage';
+import { SalesHistoryPage } from './pages/dashboard/SalesHistoryPage';
 
 // Create a client for TanStack Query
 const queryClient = new QueryClient({
@@ -48,6 +49,7 @@ function App() {
             <Route path="/dashboard/categories" element={<CategoriesPage />} />
             <Route path="/dashboard/brands" element={<BrandsPage />} />
             <Route path="/dashboard/settings" element={<SettingsPage />} />
+            <Route path="/dashboard/sales" element={<SalesHistoryPage />} />
             <Route path="/" element={<Navigate to="/pos" replace />} />
           </Routes>
         </Suspense>

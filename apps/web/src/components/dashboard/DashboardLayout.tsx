@@ -6,7 +6,8 @@ import {
     Warehouse,
     FolderTree,
     Tag,
-    Settings
+    Settings,
+    Receipt
 } from 'lucide-react';
 
 interface DashboardLayoutProps {
@@ -19,6 +20,7 @@ const navigation = [
     { name: 'Inventario', href: '/dashboard/inventory', icon: Warehouse },
     { name: 'Categorías', href: '/dashboard/categories', icon: FolderTree },
     { name: 'Marcas', href: '/dashboard/brands', icon: Tag },
+    { name: 'Historial de Ventas', href: '/dashboard/sales', icon: Receipt },
     { name: 'Configuración', href: '/dashboard/settings', icon: Settings },
 ];
 

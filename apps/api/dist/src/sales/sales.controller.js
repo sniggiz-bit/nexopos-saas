@@ -21,11 +21,23 @@ let SalesController = class SalesController {
     constructor(salesService) {
         this.salesService = salesService;
     }
+    async findAll(startDate, endDate, branchId) {
+        return this.salesService.getSales({ startDate, endDate, branchId });
+    }
     async create(createSaleDto) {
         return this.salesService.createSale(createSaleDto);
     }
 };
 exports.SalesController = SalesController;
+__decorate([
+    (0, common_1.Get)(),
+    __param(0, (0, common_1.Query)('startDate')),
+    __param(1, (0, common_1.Query)('endDate')),
+    __param(2, (0, common_1.Query)('branchId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String, String]),
+    __metadata("design:returntype", Promise)
+], SalesController.prototype, "findAll", null);
 __decorate([
     (0, common_1.Post)(),
     (0, common_1.HttpCode)(common_1.HttpStatus.CREATED),

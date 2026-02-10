@@ -8,19 +8,65 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var SalesService_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.SalesService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma/prisma.service");
 const dte_service_1 = require("../dte/dte.service");
-let SalesService = class SalesService {
+const internal_receipt_service_1 = require("../dte/internal-receipt.service");
+let SalesService = SalesService_1 = class SalesService {
     prisma;
     dteService;
-    constructor(prisma, dteService) {
+    internalReceiptService;
+    logger = new common_1.Logger(SalesService_1.name);
+    constructor(prisma, dteService, internalReceiptService) {
         this.prisma = prisma;
         this.dteService = dteService;
+        this.internalReceiptService = internalReceiptService;
+    }
+    async getSales(filters = {}) {
+        const { startDate, endDate, branchId } = filters;
+        const where = {};
+        if (startDate || endDate) {
+            where.createdAt = {};
+            if (startDate) {
+                where.createdAt.gte = new Date(startDate);
+            }
+            if (endDate) {
+                where.createdAt.lte = new Date(endDate);
+            }
+        }
+        if (branchId) {
+            where.branchId = branchId;
+        }
+        return this.prisma.sale.findMany({
+            where,
+            orderBy: {
+                createdAt: 'desc',
+            },
+            include: {
+                items: {
+                    include: {
+                        product: true,
+                    },
+                },
+                branch: true,
+                user: true,
+            },
+        });
     }
     async createSale(createSaleDto) {
+        const logFile = 'C:\\Users\\user\\sales-debug.log';
+        const log = (msg) => {
+            const time = new Date().toISOString();
+            const fs = require('fs');
+            fs.appendFileSync(logFile, `[${time}] ${msg}\n`);
+            this.logger.log(msg);
+        };
+        log(`[Sales Service] Starting creation of sale for tenant ${createSaleDto.tenantId}`);
+        log(`- Items count: ${createSaleDto.items.length}`);
+        log(`- Payment method: ${createSaleDto.paymentMethod}`);
         const { tenantId, branchId, userId, items, paymentMethod } = createSaleDto;
         if (!items || items.length === 0) {
             throw new common_1.BadRequestException('Sale must contain at least one item');
@@ -102,13 +148,26 @@ let SalesService = class SalesService {
             });
             return sale;
         });
+        log(`[Sales Service] Emitting DTE for sale ${sale.id}...`);
         try {
             await this.dteService.emitirDte(sale.id);
+            log(`- DTE emitted successfully`);
         }
         catch (error) {
-            console.error(`[Sales Service] Error emitiendo DTE para venta ${sale.id}:`, error);
+            log(`- DTE emission FAILED: ${error.message}`);
+            this.logger.error(`[Sales Service] Error emitiendo DTE para venta ${sale.id}:`, error.message);
         }
-        return this.prisma.sale.findUnique({
+        log(`[Sales Service] Requesting internal receipt for sale ${sale.id}...`);
+        try {
+            await this.internalReceiptService.generateReceipt(sale.id);
+            log(`- Internal receipt generated successfully`);
+        }
+        catch (error) {
+            log(`- Internal receipt generation FAILED: ${error.message}`);
+            this.logger.error(`[Sales Service] Error generando ticket interno para venta ${sale.id}:`, error.message);
+        }
+        log(`[Sales Service] Fetching final sale object...`);
+        const finalSale = await this.prisma.sale.findUnique({
             where: { id: sale.id },
             include: {
                 items: { include: { product: true } },
@@ -116,12 +175,18 @@ let SalesService = class SalesService {
                 user: true,
             },
         });
+        this.logger.log(`[Sales Service] Final sale object for response (ID: ${sale.id}):`);
+        this.logger.log(`- dteFolio: ${finalSale?.dteFolio}`);
+        this.logger.log(`- dtePdfUrl: ${finalSale?.dtePdfUrl}`);
+        this.logger.log(`- internalReceiptUrl: ${finalSale?.internalReceiptUrl}`);
+        return finalSale;
     }
 };
 exports.SalesService = SalesService;
-exports.SalesService = SalesService = __decorate([
+exports.SalesService = SalesService = SalesService_1 = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [prisma_service_1.PrismaService,
-        dte_service_1.DteService])
+        dte_service_1.DteService,
+        internal_receipt_service_1.InternalReceiptService])
 ], SalesService);
 //# sourceMappingURL=sales.service.js.map

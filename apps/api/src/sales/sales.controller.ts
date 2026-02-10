@@ -1,10 +1,32 @@
-import { Controller, Post, Body, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Post, Body, HttpCode, HttpStatus, Get, Query } from '@nestjs/common';
 import { SalesService } from './sales.service';
 import { CreateSaleDto } from './dto/create-sale.dto';
 
 @Controller('sales')
 export class SalesController {
     constructor(private readonly salesService: SalesService) { }
+
+    /**
+     * Get all sales with optional filters
+     * 
+     * @param startDate - Optional start date filter (ISO string)
+     * @param endDate - Optional end date filter (ISO string)
+     * @param branchId - Optional branch ID filter
+     * @returns Array of sales ordered by createdAt desc (most recent first)
+     * 
+     * @example
+     * GET /sales
+     * GET /sales?startDate=2026-02-01&endDate=2026-02-28
+     * GET /sales?branchId=uuid-here
+     */
+    @Get()
+    async findAll(
+        @Query('startDate') startDate?: string,
+        @Query('endDate') endDate?: string,
+        @Query('branchId') branchId?: string,
+    ) {
+        return this.salesService.getSales({ startDate, endDate, branchId });
+    }
 
     /**
      * Create a new sale with ACID transaction guarantees

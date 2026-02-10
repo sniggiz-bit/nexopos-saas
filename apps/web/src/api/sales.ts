@@ -33,8 +33,35 @@ export interface Sale {
     paymentMethod: PaymentMethod;
     dteFolio?: number;
     dteStatus?: string;
+    dtePdfUrl?: string;
+    internalReceiptUrl?: string;
     createdAt: string;
     updatedAt: string;
+    items?: {
+        id: string;
+        quantity: number;
+        price: number;
+        product: {
+            id: string;
+            name: string;
+            sku?: string;
+        };
+    }[];
+    branch?: {
+        id: string;
+        name: string;
+    };
+    user?: {
+        id: string;
+        name?: string;
+        email: string;
+    };
+}
+
+export interface GetSalesParams {
+    startDate?: string;
+    endDate?: string;
+    branchId?: string;
 }
 
 
@@ -47,10 +74,10 @@ export async function createSale(saleData: CreateSaleRequest): Promise<Sale> {
 }
 
 /**
- * Get all sales
+ * Get all sales with optional filters
  */
-export async function getSales(): Promise<Sale[]> {
-    const response = await apiClient.get<Sale[]>('/sales');
+export async function getSales(params?: GetSalesParams): Promise<Sale[]> {
+    const response = await apiClient.get<Sale[]>('/sales', { params });
     return response.data;
 }
 
@@ -61,3 +88,4 @@ export async function getSale(id: string): Promise<Sale> {
     const response = await apiClient.get<Sale>(`/sales/${id}`);
     return response.data;
 }
+

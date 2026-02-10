@@ -105,22 +105,23 @@ model InventoryLevel {
 }
 
 model Sale {
-  id            String     @id @default(uuid())
-  total         Float
-  paymentMethod String
-  tenantId      String
-  branchId      String
-  userId        String?
-  createdAt     DateTime   @default(now())
-  updatedAt     DateTime   @updatedAt
-  dteFolio      Int?
-  dteStatus     String     @default("PENDING")
-  dteType       Int        @default(39)
-  dtePdfUrl     String?
-  branch        Branch     @relation(fields: [branchId], references: [id])
-  tenant        Tenant     @relation(fields: [tenantId], references: [id])
-  user          User?      @relation(fields: [userId], references: [id])
-  items         SaleItem[]
+  id                 String     @id @default(uuid())
+  total              Float
+  paymentMethod      String
+  tenantId           String
+  branchId           String
+  userId             String?
+  createdAt          DateTime   @default(now())
+  updatedAt          DateTime   @updatedAt
+  dteFolio           Int?
+  dteStatus          String     @default("PENDING")
+  dteType            Int        @default(39)
+  dtePdfUrl          String?
+  internalReceiptUrl String?
+  branch             Branch     @relation(fields: [branchId], references: [id])
+  tenant             Tenant     @relation(fields: [tenantId], references: [id])
+  user               User?      @relation(fields: [userId], references: [id])
+  items              SaleItem[]
 }
 
 model SaleItem {

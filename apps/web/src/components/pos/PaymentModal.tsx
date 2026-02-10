@@ -53,23 +53,37 @@ export function PaymentModal({
                         </DialogDescription>
                     </DialogHeader>
 
-                    {saleResult?.dteFolio && (
-                        <div className="bg-muted p-4 rounded-lg space-y-3 mb-4">
+                    <div className="bg-muted p-4 rounded-lg space-y-3 mb-4">
+                        {saleResult?.dteFolio && (
                             <div className="flex justify-between items-center text-sm">
                                 <span className="font-medium">Folio DTE:</span>
                                 <span className="font-bold text-lg">#{saleResult.dteFolio}</span>
                             </div>
-                            {saleResult.dtePdfUrl && (
-                                <Button
-                                    className="w-full"
-                                    variant="outline"
-                                    onClick={() => window.open(saleResult.dtePdfUrl, '_blank')}
-                                >
-                                    Ver Ticket (PDF)
-                                </Button>
-                            )}
-                        </div>
-                    )}
+                        )}
+
+                        {saleResult?.dtePdfUrl && !saleResult.dtePdfUrl.includes('ejemplo-mock') && (
+                            <Button
+                                className="w-full"
+                                variant="outline"
+                                onClick={() => window.open(saleResult.dtePdfUrl, '_blank')}
+                            >
+                                Ver Boleta (PDF)
+                            </Button>
+                        )}
+
+                        {saleResult?.internalReceiptUrl && (
+                            <Button
+                                className="w-full"
+                                variant="outline"
+                                onClick={() => {
+                                    const fullUrl = `http://localhost:3000${saleResult.internalReceiptUrl}`;
+                                    window.open(fullUrl, '_blank');
+                                }}
+                            >
+                                Ver Ticket Interno (PDF)
+                            </Button>
+                        )}
+                    </div>
 
                     <DialogFooter>
                         <Button onClick={onClose} className="w-full">Cerrar</Button>
