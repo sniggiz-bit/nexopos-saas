@@ -9,14 +9,15 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.DteModule = void 0;
 const common_1 = require("@nestjs/common");
 const dte_service_1 = require("./dte.service");
+const lioren_service_1 = require("./lioren.service");
 let DteModule = class DteModule {
 };
 exports.DteModule = DteModule;
 exports.DteModule = DteModule = __decorate([
     (0, common_1.Global)(),
     (0, common_1.Module)({
-        providers: [dte_service_1.DteService],
-        exports: [dte_service_1.DteService],
+        providers: [dte_service_1.DteService, lioren_service_1.LiorenService],
+        exports: [dte_service_1.DteService, lioren_service_1.LiorenService],
     })
 ], DteModule);
 //# sourceMappingURL=dte.module.js.map

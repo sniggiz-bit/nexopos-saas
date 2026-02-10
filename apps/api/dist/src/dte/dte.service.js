@@ -11,42 +11,19 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.DteService = void 0;
 const common_1 = require("@nestjs/common");
-const prisma_service_1 = require("../prisma/prisma.service");
+const lioren_service_1 = require("./lioren.service");
 let DteService = class DteService {
-    prisma;
-    constructor(prisma) {
-        this.prisma = prisma;
+    liorenService;
+    constructor(liorenService) {
+        this.liorenService = liorenService;
     }
     async emitirDte(saleId) {
-        console.log(`[DTE Service] Iniciando emisión de DTE para venta ${saleId}...`);
-        await this.delay(1000);
-        const folio = this.generateRandomFolio();
-        const updatedSale = await this.prisma.sale.update({
-            where: { id: saleId },
-            data: {
-                dteFolio: folio,
-                dteStatus: 'ACEPTADO',
-            },
-        });
-        console.log(`[DTE Service] ✅ DTE emitido exitosamente. Folio: ${folio}, Status: ACEPTADO`);
-        return {
-            success: true,
-            folio,
-            status: 'ACEPTADO',
-            saleId,
-            message: 'DTE emitido correctamente (MOCK)',
-        };
-    }
-    generateRandomFolio() {
-        return Math.floor(Math.random() * (9999 - 5001 + 1)) + 5001;
-    }
-    delay(ms) {
-        return new Promise(resolve => setTimeout(resolve, ms));
+        return this.liorenService.emitirBoleta(saleId);
     }
 };
 exports.DteService = DteService;
 exports.DteService = DteService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService])
+    __metadata("design:paramtypes", [lioren_service_1.LiorenService])
 ], DteService);
 //# sourceMappingURL=dte.service.js.map

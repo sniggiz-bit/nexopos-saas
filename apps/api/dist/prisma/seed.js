@@ -62,6 +62,17 @@ async function main() {
         },
     });
     console.log('✅ Inventario creado:', inventory.quantity, 'unidades');
+    const dteConfig = await prisma.dteConfig.upsert({
+        where: { tenantId: tenant.id },
+        update: {},
+        create: {
+            tenantId: tenant.id,
+            liorenToken: 'TEST_TOKEN_LIOREN_2026',
+            dteResolution: '123456',
+            resolutionDate: new Date(),
+        },
+    });
+    console.log('✅ Configuración DTE creada para el tenant');
     console.log('\n🎉 Seed completado exitosamente!');
 }
 main()

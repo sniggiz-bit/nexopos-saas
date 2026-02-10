@@ -139,6 +139,7 @@ model Sale {
   dteType   Int     @default(39) // 39 = Boleta Electrónica
   dteFolio  Int?    // Assigned by SII when DTE is emitted
   dteStatus String  @default("PENDING") // PENDING, ACEPTADO, RECHAZADO
+  dtePdfUrl String? // URL to the PDF version of the DTE from Lioren
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

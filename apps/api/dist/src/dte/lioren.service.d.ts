@@ -1,8 +1,10 @@
-import { LiorenService } from './lioren.service';
-export declare class DteService {
-    private liorenService;
-    constructor(liorenService: LiorenService);
-    emitirDte(saleId: string): Promise<{
+import { PrismaService } from '../prisma/prisma.service';
+export declare class LiorenService {
+    private prisma;
+    private readonly logger;
+    private readonly apiUrl;
+    constructor(prisma: PrismaService);
+    emitirBoleta(saleId: string): Promise<{
         success: boolean;
         message: string;
         folio?: undefined;
