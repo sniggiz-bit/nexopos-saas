@@ -1,28 +1,15 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { PosPage } from './pages/PosPage';
-
-
-// Create a client
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      refetchOnWindowFocus: false,
-      retry: 1,
-    },
-  },
-});
-
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Navigate to="/pos" replace />} />
-          <Route path="/pos" element={<PosPage />} />
-        </Routes>
-      </BrowserRouter>
-    </QueryClientProvider>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
+      <div className="text-center">
+        <h1 className="text-4xl font-bold text-gray-800 mb-2">
+          NexoPOS
+        </h1>
+        <p className="text-xl text-gray-600">
+          Iniciando Sistema...
+        </p>
+      </div>
+    </div>
   );
 }
 
