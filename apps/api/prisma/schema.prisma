@@ -9,16 +9,25 @@ datasource db {
   provider = "postgresql"
 }
 
+// Enum for product unit types (unit-based or weight-based sales)
+enum UnitType {
+  UNIT    // Sold by unit (e.g., bottles, boxes)
+  WEIGHT  // Sold by weight (e.g., kg, grams) - allows decimal quantities
+}
+
 model Tenant {
   id        String   @id @default(uuid())
   name      String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  users     User[]
-  branches  Branch[]
-  products  Product[]
-  sales     Sale[]
+  users      User[]
+  branches   Branch[]
+  products   Product[]
+  sales      Sale[]
+  categories Category[]
+  brands     Brand[]
+  dteConfig  DteConfig?
 }
 
 model Branch {
@@ -47,19 +56,56 @@ model User {
   updatedAt DateTime @updatedAt
 }
 
-model Product {
-  id        String   @id @default(uuid())
+model Category {
+  id        String    @id @default(uuid())
   name      String
-  sku       String?
-  price     Int      @default(0) // Price in Chilean Pesos (CLP)
   tenantId  String
-  tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  tenant    Tenant    @relation(fields: [tenantId], references: [id])
+  products  Product[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
   
-  inventory InventoryLevel[]
-  saleItems SaleItem[]
+  @@unique([name, tenantId])
+}
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+model Brand {
+  id        String    @id @default(uuid())
+  name      String
+  tenantId  String
+  tenant    Tenant    @relation(fields: [tenantId], references: [id])
+  products  Product[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  
+  @@unique([name, tenantId])
+}
+
+model Product {
+  id         String    @id @default(uuid())
+  name       String
+  sku        String?
+  barcode    String?   // Product barcode (unique per tenant)
+  price      Int       @default(0) // Selling price in Chilean Pesos (CLP)
+  costPrice  Int       @default(0) // Cost price for margin calculations
+  minStock   Int       @default(0) // Minimum stock level for alerts
+  unitType   UnitType  @default(UNIT) // UNIT or WEIGHT
+  image      String?   // URL to product image
+  isActive   Boolean   @default(true) // Soft delete support
+  
+  tenantId   String
+  tenant     Tenant    @relation(fields: [tenantId], references: [id])
+  categoryId String?
+  category   Category? @relation(fields: [categoryId], references: [id])
+  brandId    String?
+  brand      Brand?    @relation(fields: [brandId], references: [id])
+  
+  inventory  InventoryLevel[]
+  saleItems  SaleItem[]
+
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  
+  @@unique([barcode, tenantId])
 }
 
 model InventoryLevel {
@@ -68,7 +114,7 @@ model InventoryLevel {
   product   Product  @relation(fields: [productId], references: [id])
   branchId  String
   branch    Branch   @relation(fields: [branchId], references: [id])
-  quantity  Int      @default(0)
+  quantity  Decimal  @default(0) @db.Decimal(10, 3) // Supports decimal quantities (e.g., 0.5 kg)
 
   updatedAt DateTime @updatedAt
 
@@ -105,6 +151,18 @@ model SaleItem {
   productId String
   product   Product  @relation(fields: [productId], references: [id])
   
-  quantity  Int
+  quantity  Decimal  @db.Decimal(10, 3) // Supports decimal quantities for bulk sales
   price     Float
+}
+
+model DteConfig {
+  id             String    @id @default(uuid())
+  tenantId       String    @unique
+  tenant         Tenant    @relation(fields: [tenantId], references: [id])
+  liorenToken    String?   // API token for Lioren DTE service
+  liorenLogo     String?   // URL to company logo for DTE
+  dteResolution  String?   // SII resolution number
+  resolutionDate DateTime? // Date of SII resolution
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 }

@@ -4,9 +4,17 @@ exports.ProductResponseDto = void 0;
 class ProductResponseDto {
     id;
     name;
-    price;
-    stock;
     sku;
+    barcode;
+    price;
+    costPrice;
+    minStock;
+    unitType;
+    image;
+    isActive;
+    stock;
+    category;
+    brand;
 }
 exports.ProductResponseDto = ProductResponseDto;
 //# sourceMappingURL=product-response.dto.js.map

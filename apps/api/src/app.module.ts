@@ -6,6 +6,9 @@ import { SalesModule } from './sales/sales.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { DteModule } from './dte/dte.module';
 import { ProductsModule } from './products/products.module';
+import { CategoriesModule } from './categories/categories.module';
+import { BrandsModule } from './brands/brands.module';
+import { DteConfigModule } from './dte-config/dte-config.module';
 
 @Module({
   imports: [
@@ -17,6 +20,9 @@ import { ProductsModule } from './products/products.module';
     PrismaModule,
     DteModule,
     ProductsModule,
+    CategoriesModule,
+    BrandsModule,
+    DteConfigModule,
   ],
   controllers: [AppController],
   providers: [AppService],

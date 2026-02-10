@@ -1,8 +1,14 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { PosPage } from './pages/PosPage';
-import { Toaster } from '@/components/ui/toaster';
+import { Toaster } from 'react-hot-toast';
 import { Suspense } from 'react';
+import { DashboardOverviewPage } from './pages/dashboard/DashboardOverviewPage';
+import { ProductsPage } from './pages/dashboard/ProductsPage';
+import { InventoryPage } from './pages/dashboard/InventoryPage';
+import { CategoriesPage } from './pages/dashboard/CategoriesPage';
+import { BrandsPage } from './pages/dashboard/BrandsPage';
+import { SettingsPage } from './pages/dashboard/SettingsPage';
 
 // Create a client for TanStack Query
 const queryClient = new QueryClient({
@@ -36,6 +42,12 @@ function App() {
         <Suspense fallback={<LoadingScreen />}>
           <Routes>
             <Route path="/pos" element={<PosPage />} />
+            <Route path="/dashboard" element={<DashboardOverviewPage />} />
+            <Route path="/dashboard/products" element={<ProductsPage />} />
+            <Route path="/dashboard/inventory" element={<InventoryPage />} />
+            <Route path="/dashboard/categories" element={<CategoriesPage />} />
+            <Route path="/dashboard/brands" element={<BrandsPage />} />
+            <Route path="/dashboard/settings" element={<SettingsPage />} />
             <Route path="/" element={<Navigate to="/pos" replace />} />
           </Routes>
         </Suspense>
@@ -47,3 +59,4 @@ function App() {
 
 
 export default App;
+

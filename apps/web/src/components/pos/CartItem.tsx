@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { formatPrice } from '@/utils/formatters';
 import { Minus, Plus, Trash2 } from 'lucide-react';
@@ -7,6 +8,7 @@ export interface CartItemData {
     name: string;
     price: number;
     quantity: number;
+    unitType: 'UNIT' | 'WEIGHT';
 }
 
 interface CartItemProps {
@@ -16,7 +18,21 @@ interface CartItemProps {
 }
 
 export function CartItem({ item, onUpdateQuantity, onRemove }: CartItemProps) {
+    const [localQuantity, setLocalQuantity] = useState(item.quantity.toString());
     const subtotal = item.price * item.quantity;
+
+    // Sync local state if quantity changes from outside (e.g. Plus/Minus or Re-add)
+    useEffect(() => {
+        setLocalQuantity(item.quantity.toString());
+    }, [item.quantity]);
+
+    const handleLocalChange = (val: string) => {
+        setLocalQuantity(val);
+        const numericVal = parseFloat(val);
+        if (!isNaN(numericVal) && numericVal > 0) {
+            onUpdateQuantity(item.productId, numericVal);
+        }
+    };
 
     return (
         <div className="flex items-center gap-3 py-3 border-b last:border-b-0">
@@ -28,28 +44,51 @@ export function CartItem({ item, onUpdateQuantity, onRemove }: CartItemProps) {
             </div>
 
             <div className="flex items-center gap-2">
-                <Button
-                    variant="outline"
-                    size="icon"
-                    className="h-7 w-7"
-                    onClick={() => onUpdateQuantity(item.productId, item.quantity - 1)}
-                    disabled={item.quantity <= 1}
-                >
-                    <Minus className="h-3 w-3" />
-                </Button>
+                {item.unitType === 'UNIT' ? (
+                    <>
+                        <Button
+                            variant="outline"
+                            size="icon"
+                            className="h-7 w-7"
+                            onClick={() => onUpdateQuantity(item.productId, item.quantity - 1)}
+                            disabled={item.quantity <= 1}
+                        >
+                            <Minus className="h-3 w-3" />
+                        </Button>
 
-                <span className="w-8 text-center text-sm font-medium">
-                    {item.quantity}
-                </span>
+                        <span className="w-8 text-center text-sm font-medium">
+                            {item.quantity}
+                        </span>
 
-                <Button
-                    variant="outline"
-                    size="icon"
-                    className="h-7 w-7"
-                    onClick={() => onUpdateQuantity(item.productId, item.quantity + 1)}
-                >
-                    <Plus className="h-3 w-3" />
-                </Button>
+                        <Button
+                            variant="outline"
+                            size="icon"
+                            className="h-7 w-7"
+                            onClick={() => onUpdateQuantity(item.productId, item.quantity + 1)}
+                        >
+                            <Plus className="h-3 w-3" />
+                        </Button>
+                    </>
+                ) : (
+                    <div className="flex items-center gap-1">
+                        <input
+                            type="number"
+                            className="w-20 h-7 text-center text-sm border rounded focus:ring-1 focus:ring-primary outline-none"
+                            value={localQuantity}
+                            step="0.001"
+                            onChange={(e) => handleLocalChange(e.target.value)}
+                            onBlur={() => {
+                                // Reset to actual quantity if left empty or invalid
+                                if (localQuantity === '' || isNaN(parseFloat(localQuantity))) {
+                                    setLocalQuantity(item.quantity.toString());
+                                }
+                            }}
+                        />
+                        <span className="text-[10px] text-muted-foreground font-medium uppercase">
+                            kg
+                        </span>
+                    </div>
+                )}
             </div>
 
             <div className="flex items-center gap-2">

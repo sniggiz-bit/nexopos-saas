@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.ProductsService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma/prisma.service");
+const client_1 = require("@prisma/client");
 let ProductsService = class ProductsService {
     prisma;
     constructor(prisma) {
@@ -21,6 +22,7 @@ let ProductsService = class ProductsService {
         const products = await this.prisma.product.findMany({
             where: {
                 tenantId,
+                isActive: true,
             },
             include: {
                 inventory: {
@@ -28,15 +30,215 @@ let ProductsService = class ProductsService {
                         branchId,
                     },
                 },
+                category: true,
+                brand: true,
             },
         });
         return products.map((product) => ({
             id: product.id,
             name: product.name,
-            price: product.price,
-            stock: product.inventory.reduce((total, inv) => total + inv.quantity, 0),
             sku: product.sku || undefined,
+            barcode: product.barcode || undefined,
+            price: product.price,
+            costPrice: product.costPrice,
+            minStock: product.minStock,
+            unitType: product.unitType,
+            image: product.image || undefined,
+            isActive: product.isActive,
+            stock: product.inventory.reduce((total, inv) => total + Number(inv.quantity), 0),
+            category: product.category ? {
+                id: product.category.id,
+                name: product.category.name,
+            } : undefined,
+            brand: product.brand ? {
+                id: product.brand.id,
+                name: product.brand.name,
+            } : undefined,
         }));
+    }
+    async findOne(id, tenantId, branchId = 'branch-1') {
+        const product = await this.prisma.product.findFirst({
+            where: {
+                id,
+                tenantId,
+            },
+            include: {
+                inventory: {
+                    where: {
+                        branchId,
+                    },
+                },
+                category: true,
+                brand: true,
+            },
+        });
+        if (!product) {
+            throw new common_1.NotFoundException(`Product with ID ${id} not found`);
+        }
+        return {
+            id: product.id,
+            name: product.name,
+            sku: product.sku || undefined,
+            barcode: product.barcode || undefined,
+            price: product.price,
+            costPrice: product.costPrice,
+            minStock: product.minStock,
+            unitType: product.unitType,
+            image: product.image || undefined,
+            isActive: product.isActive,
+            stock: product.inventory.reduce((total, inv) => total + Number(inv.quantity), 0),
+            category: product.category ? {
+                id: product.category.id,
+                name: product.category.name,
+            } : undefined,
+            brand: product.brand ? {
+                id: product.brand.id,
+                name: product.brand.name,
+            } : undefined,
+        };
+    }
+    async create(createProductDto) {
+        const { tenantId, barcode, ...productData } = createProductDto;
+        if (barcode) {
+            const existingProduct = await this.prisma.product.findFirst({
+                where: {
+                    barcode,
+                    tenantId,
+                },
+            });
+            if (existingProduct) {
+                throw new common_1.ConflictException(`El código de barras ${barcode} ya existe para este tenant`);
+            }
+        }
+        const product = await this.prisma.product.create({
+            data: {
+                ...productData,
+                barcode,
+                tenantId,
+                costPrice: productData.costPrice ?? 0,
+                minStock: productData.minStock ?? 0,
+                unitType: productData.unitType ?? 'UNIT',
+                isActive: productData.isActive ?? true,
+                inventory: {
+                    create: createProductDto.initialStock ? [
+                        {
+                            branchId: 'branch-1',
+                            quantity: new client_1.Prisma.Decimal(createProductDto.initialStock),
+                        }
+                    ] : [],
+                },
+            },
+            include: {
+                category: true,
+                brand: true,
+                inventory: true,
+            },
+        });
+        const stock = product.inventory.reduce((total, inv) => total + inv.quantity.toNumber(), 0);
+        return {
+            id: product.id,
+            name: product.name,
+            sku: product.sku || undefined,
+            barcode: product.barcode || undefined,
+            price: product.price,
+            costPrice: product.costPrice,
+            minStock: product.minStock,
+            unitType: product.unitType,
+            image: product.image || undefined,
+            isActive: product.isActive,
+            stock,
+            category: product.category ? {
+                id: product.category.id,
+                name: product.category.name,
+            } : undefined,
+            brand: product.brand ? {
+                id: product.brand.id,
+                name: product.brand.name,
+            } : undefined,
+        };
+    }
+    async update(id, updateProductDto) {
+        if (updateProductDto.barcode && updateProductDto.tenantId) {
+            const existingProduct = await this.prisma.product.findFirst({
+                where: {
+                    barcode: updateProductDto.barcode,
+                    tenantId: updateProductDto.tenantId,
+                    NOT: {
+                        id,
+                    },
+                },
+            });
+            if (existingProduct) {
+                throw new common_1.ConflictException(`Product with barcode ${updateProductDto.barcode} already exists for this tenant`);
+            }
+        }
+        const product = await this.prisma.product.update({
+            where: { id },
+            data: {
+                name: updateProductDto.name,
+                sku: updateProductDto.sku,
+                barcode: updateProductDto.barcode,
+                price: updateProductDto.price,
+                costPrice: updateProductDto.costPrice,
+                minStock: updateProductDto.minStock,
+                unitType: updateProductDto.unitType,
+                image: updateProductDto.image,
+                isActive: updateProductDto.isActive,
+                categoryId: updateProductDto.categoryId,
+                brandId: updateProductDto.brandId,
+                inventory: updateProductDto.stock !== undefined ? {
+                    upsert: {
+                        where: {
+                            productId_branchId: {
+                                productId: id,
+                                branchId: 'branch-1',
+                            }
+                        },
+                        create: {
+                            branchId: 'branch-1',
+                            quantity: new client_1.Prisma.Decimal(updateProductDto.stock),
+                        },
+                        update: {
+                            quantity: new client_1.Prisma.Decimal(updateProductDto.stock),
+                        }
+                    }
+                } : undefined,
+            },
+            include: {
+                category: true,
+                brand: true,
+                inventory: true,
+            },
+        });
+        return {
+            id: product.id,
+            name: product.name,
+            sku: product.sku || undefined,
+            barcode: product.barcode || undefined,
+            price: product.price,
+            costPrice: product.costPrice,
+            minStock: product.minStock,
+            unitType: product.unitType,
+            image: product.image || undefined,
+            isActive: product.isActive,
+            stock: product.inventory.reduce((total, inv) => total + Number(inv.quantity), 0),
+            category: product.category ? {
+                id: product.category.id,
+                name: product.category.name,
+            } : undefined,
+            brand: product.brand ? {
+                id: product.brand.id,
+                name: product.brand.name,
+            } : undefined,
+        };
+    }
+    async remove(id) {
+        await this.prisma.product.update({
+            where: { id },
+            data: {
+                isActive: false,
+            },
+        });
     }
 };
 exports.ProductsService = ProductsService;

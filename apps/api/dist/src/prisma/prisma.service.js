@@ -55,6 +55,15 @@ let PrismaService = class PrismaService {
     get user() {
         return this.prisma.user;
     }
+    get category() {
+        return this.prisma.category;
+    }
+    get brand() {
+        return this.prisma.brand;
+    }
+    get dteConfig() {
+        return this.prisma.dteConfig;
+    }
 };
 exports.PrismaService = PrismaService;
 exports.PrismaService = PrismaService = __decorate([

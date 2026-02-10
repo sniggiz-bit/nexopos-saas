@@ -71,6 +71,7 @@ export function PosPage() {
                         name: product.name,
                         price: product.price,
                         quantity: 1,
+                        unitType: product.unitType,
                     },
                 ];
             }
@@ -78,7 +79,7 @@ export function PosPage() {
     };
 
     const handleUpdateQuantity = (productId: string, quantity: number) => {
-        if (quantity < 1) return;
+        if (quantity <= 0) return;
 
         setCartItems((prev) =>
             prev.map((item) =>
