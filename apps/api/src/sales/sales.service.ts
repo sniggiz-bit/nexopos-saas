@@ -1,10 +1,14 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { DteService } from '../dte/dte.service';
 import { CreateSaleDto } from './dto/create-sale.dto';
 
 @Injectable()
 export class SalesService {
-    constructor(private prisma: PrismaService) { }
+    constructor(
+        private prisma: PrismaService,
+        private dteService: DteService,
+    ) { }
 
     async createSale(createSaleDto: CreateSaleDto) {
         const { tenantId, branchId, userId, items, paymentMethod } = createSaleDto;
@@ -17,7 +21,7 @@ export class SalesService {
         // ============================================
         // ACID TRANSACTION - All or Nothing
         // ============================================
-        return this.prisma.$transaction(async (prisma) => {
+        const sale = await this.prisma.$transaction(async (prisma) => {
             // 1. Validate all products exist and fetch their prices from DB
             const productIds = items.map(item => item.productId);
             const products = await prisma.product.findMany({
@@ -118,5 +122,17 @@ export class SalesService {
 
             return sale;
         });
+
+        // ============================================
+        // DTE EMISSION - OUTSIDE TRANSACTION
+        // ============================================
+        // Emit DTE after successful sale (non-blocking, independent of sale transaction)
+        // If DTE fails, the sale is still valid - DTE can be retried later
+        this.dteService.emitirDte(sale.id).catch((error) => {
+            console.error(`[Sales Service] Error emitiendo DTE para venta ${sale.id}:`, error);
+            // In production, you might want to queue this for retry
+        });
+
+        return sale;
     }
 }

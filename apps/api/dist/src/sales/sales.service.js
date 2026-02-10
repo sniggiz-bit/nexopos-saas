@@ -12,17 +12,20 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.SalesService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma/prisma.service");
+const dte_service_1 = require("../dte/dte.service");
 let SalesService = class SalesService {
     prisma;
-    constructor(prisma) {
+    dteService;
+    constructor(prisma, dteService) {
         this.prisma = prisma;
+        this.dteService = dteService;
     }
     async createSale(createSaleDto) {
         const { tenantId, branchId, userId, items, paymentMethod } = createSaleDto;
         if (!items || items.length === 0) {
             throw new common_1.BadRequestException('Sale must contain at least one item');
         }
-        return this.prisma.$transaction(async (prisma) => {
+        const sale = await this.prisma.$transaction(async (prisma) => {
             const productIds = items.map(item => item.productId);
             const products = await prisma.product.findMany({
                 where: {
@@ -99,11 +102,16 @@ let SalesService = class SalesService {
             });
             return sale;
         });
+        this.dteService.emitirDte(sale.id).catch((error) => {
+            console.error(`[Sales Service] Error emitiendo DTE para venta ${sale.id}:`, error);
+        });
+        return sale;
     }
 };
 exports.SalesService = SalesService;
 exports.SalesService = SalesService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService])
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService,
+        dte_service_1.DteService])
 ], SalesService);
 //# sourceMappingURL=sales.service.js.map

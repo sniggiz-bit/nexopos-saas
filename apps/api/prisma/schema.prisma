@@ -89,9 +89,10 @@ model Sale {
 
   items     SaleItem[]
 
-  dte_folio  Int?
-  dte_type   Int?
-  dte_status String?
+  // DTE (Documento Tributario Electrónico) fields for Chilean tax compliance
+  dteType   Int     @default(39) // 39 = Boleta Electrónica
+  dteFolio  Int?    // Assigned by SII when DTE is emitted
+  dteStatus String  @default("PENDING") // PENDING, ACEPTADO, RECHAZADO
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
