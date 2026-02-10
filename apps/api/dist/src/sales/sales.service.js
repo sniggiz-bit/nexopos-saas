@@ -70,7 +70,7 @@ let SalesService = class SalesService {
             }
             const total = items.reduce((acc, item) => {
                 const priceFromDB = Number(productPriceMap.get(item.productId) || 0);
-                return acc + (priceFromDB * item.quantity);
+                return acc + (priceFromDB * Number(item.quantity));
             }, 0);
             const sale = await prisma.sale.create({
                 data: {
@@ -102,10 +102,20 @@ let SalesService = class SalesService {
             });
             return sale;
         });
-        this.dteService.emitirDte(sale.id).catch((error) => {
+        try {
+            await this.dteService.emitirDte(sale.id);
+        }
+        catch (error) {
             console.error(`[Sales Service] Error emitiendo DTE para venta ${sale.id}:`, error);
+        }
+        return this.prisma.sale.findUnique({
+            where: { id: sale.id },
+            include: {
+                items: { include: { product: true } },
+                branch: true,
+                user: true,
+            },
         });
-        return sale;
     }
 };
 exports.SalesService = SalesService;

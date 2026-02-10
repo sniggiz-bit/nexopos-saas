@@ -70,9 +70,20 @@ let LiorenService = LiorenService_1 = class LiorenService {
                 },
             };
             this.logger.log(`[Lioren] Enviando solicitud POST a ${this.apiUrl}`);
-            const response = await axios_1.default.post(this.apiUrl, payload);
-            if (response.data && response.data.folio && response.data.url_pdf) {
-                const { folio, url_pdf } = response.data;
+            let responseData;
+            if (token.startsWith('TEST_TOKEN')) {
+                this.logger.log(`[Lioren] MOCK MODE: Simulando emisión exitosa para token de prueba.`);
+                responseData = {
+                    folio: Math.floor(Math.random() * 10000) + 1,
+                    url_pdf: 'https://lioren.cl/ver/boleta/ejemplo-mock',
+                };
+            }
+            else {
+                const response = await axios_1.default.post(this.apiUrl, payload);
+                responseData = response.data;
+            }
+            if (responseData && responseData.folio && responseData.url_pdf) {
+                const { folio, url_pdf } = responseData;
                 this.logger.log(`[Lioren] ✅ DTE emitido: Folio ${folio}`);
                 await this.prisma.sale.update({
                     where: { id: saleId },
@@ -85,7 +96,7 @@ let LiorenService = LiorenService_1 = class LiorenService {
                 return { success: true, folio, url_pdf };
             }
             else {
-                const errorMsg = response.data?.message || 'Respuesta inválida de Lioren';
+                const errorMsg = responseData?.message || 'Respuesta inválida de Lioren';
                 throw new Error(errorMsg);
             }
         }

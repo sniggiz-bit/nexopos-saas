@@ -9,24 +9,24 @@ export enum PaymentMethod {
 }
 
 export class CreateSaleItemDto {
-    @IsUUID()
+    @IsString()
     productId: string;
 
     @IsNumber()
-    @Min(1)
+    @Min(0.001)
     quantity: number;
 
     // Price is NO LONGER sent by client - fetched from DB for security
 }
 
 export class CreateSaleDto {
-    @IsUUID()
+    @IsString()
     tenantId: string;
 
-    @IsUUID()
+    @IsString()
     branchId: string;
 
-    @IsUUID()
+    @IsString()
     @IsOptional()
     userId?: string;
 

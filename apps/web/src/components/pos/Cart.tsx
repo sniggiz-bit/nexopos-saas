@@ -14,12 +14,11 @@ interface CartProps {
     isProcessing?: boolean;
 }
 
-const TAX_RATE = 0.19; // 19% IVA in Chile
 
 export function Cart({ items, onUpdateQuantity, onRemove, onCheckout, isProcessing }: CartProps) {
-    const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-    const tax = subtotal * TAX_RATE;
-    const total = subtotal + tax;
+    const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+    const netAmount = total / 1.19;
+    const taxValue = total - netAmount;
 
     const isEmpty = items.length === 0;
 
@@ -54,18 +53,21 @@ export function Cart({ items, onUpdateQuantity, onRemove, onCheckout, isProcessi
 
             <CardFooter className="flex-col gap-4 pt-4">
                 <div className="w-full space-y-2">
-                    <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Subtotal</span>
-                        <span>{formatPrice(subtotal)}</span>
+                    <div className="flex justify-between text-sm text-muted-foreground italic">
+                        <span>Neto aprox.</span>
+                        <span>{formatPrice(netAmount)}</span>
                     </div>
-                    <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">IVA (19%)</span>
-                        <span>{formatPrice(tax)}</span>
+                    <div className="flex justify-between text-sm text-muted-foreground italic">
+                        <span>IVA (19%)</span>
+                        <span>{formatPrice(taxValue)}</span>
                     </div>
                     <Separator />
                     <div className="flex justify-between text-lg font-bold">
-                        <span>Total</span>
-                        <span className="text-primary">{formatPrice(total)}</span>
+                        <div className="flex flex-col">
+                            <span>Total</span>
+                            <span className="text-[10px] font-normal text-muted-foreground uppercase">IVA Incluido</span>
+                        </div>
+                        <span className="text-primary text-2xl">{formatPrice(total)}</span>
                     </div>
                 </div>
 

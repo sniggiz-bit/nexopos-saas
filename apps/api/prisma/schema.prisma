@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -9,36 +6,28 @@ datasource db {
   provider = "postgresql"
 }
 
-// Enum for product unit types (unit-based or weight-based sales)
-enum UnitType {
-  UNIT    // Sold by unit (e.g., bottles, boxes)
-  WEIGHT  // Sold by weight (e.g., kg, grams) - allows decimal quantities
-}
-
 model Tenant {
-  id        String   @id @default(uuid())
-  name      String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  users      User[]
+  id         String     @id @default(uuid())
+  name       String
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
   branches   Branch[]
+  brands     Brand[]
+  categories Category[]
+  dteConfig  DteConfig?
   products   Product[]
   sales      Sale[]
-  categories Category[]
-  brands     Brand[]
-  dteConfig  DteConfig?
+  users      User[]
 }
 
 model Branch {
-  id        String   @id @default(uuid())
+  id        String           @id @default(uuid())
   name      String
   tenantId  String
-  tenant    Tenant   @relation(fields: [tenantId], references: [id])
-  
-  users     User[]
+  tenant    Tenant           @relation(fields: [tenantId], references: [id])
   inventory InventoryLevel[]
   sales     Sale[]
+  users     User[]
 }
 
 model User {
@@ -46,25 +35,23 @@ model User {
   email     String   @unique
   name      String?
   tenantId  String
-  tenant    Tenant   @relation(fields: [tenantId], references: [id])
   branchId  String?
-  branch    Branch?  @relation(fields: [branchId], references: [id])
-
-  sales     Sale[]
-
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  sales     Sale[]
+  branch    Branch?  @relation(fields: [branchId], references: [id])
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
 }
 
 model Category {
   id        String    @id @default(uuid())
   name      String
   tenantId  String
-  tenant    Tenant    @relation(fields: [tenantId], references: [id])
-  products  Product[]
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
-  
+  tenant    Tenant    @relation(fields: [tenantId], references: [id])
+  products  Product[]
+
   @@unique([name, tenantId])
 }
 
@@ -72,98 +59,93 @@ model Brand {
   id        String    @id @default(uuid())
   name      String
   tenantId  String
-  tenant    Tenant    @relation(fields: [tenantId], references: [id])
-  products  Product[]
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
-  
+  tenant    Tenant    @relation(fields: [tenantId], references: [id])
+  products  Product[]
+
   @@unique([name, tenantId])
 }
 
 model Product {
-  id         String    @id @default(uuid())
+  id         String           @id @default(uuid())
   name       String
   sku        String?
-  barcode    String?   // Product barcode (unique per tenant)
-  price      Int       @default(0) // Selling price in Chilean Pesos (CLP)
-  costPrice  Int       @default(0) // Cost price for margin calculations
-  minStock   Int       @default(0) // Minimum stock level for alerts
-  unitType   UnitType  @default(UNIT) // UNIT or WEIGHT
-  image      String?   // URL to product image
-  isActive   Boolean   @default(true) // Soft delete support
-  
+  price      Int              @default(0)
   tenantId   String
-  tenant     Tenant    @relation(fields: [tenantId], references: [id])
-  categoryId String?
-  category   Category? @relation(fields: [categoryId], references: [id])
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+  barcode    String?
   brandId    String?
-  brand      Brand?    @relation(fields: [brandId], references: [id])
-  
+  categoryId String?
+  costPrice  Int              @default(0)
+  image      String?
+  isActive   Boolean          @default(true)
+  minStock   Int              @default(0)
+  unitType   UnitType         @default(UNIT)
   inventory  InventoryLevel[]
+  brand      Brand?           @relation(fields: [brandId], references: [id])
+  category   Category?        @relation(fields: [categoryId], references: [id])
+  tenant     Tenant           @relation(fields: [tenantId], references: [id])
   saleItems  SaleItem[]
 
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
-  
   @@unique([barcode, tenantId])
 }
 
 model InventoryLevel {
   id        String   @id @default(uuid())
   productId String
-  product   Product  @relation(fields: [productId], references: [id])
   branchId  String
-  branch    Branch   @relation(fields: [branchId], references: [id])
-  quantity  Decimal  @default(0) @db.Decimal(10, 3) // Supports decimal quantities (e.g., 0.5 kg)
-
+  quantity  Decimal  @default(0) @db.Decimal(10, 3)
   updatedAt DateTime @updatedAt
+  branch    Branch   @relation(fields: [branchId], references: [id])
+  product   Product  @relation(fields: [productId], references: [id])
 
   @@unique([productId, branchId])
 }
 
 model Sale {
-  id            String   @id @default(uuid())
+  id            String     @id @default(uuid())
   total         Float
-  paymentMethod String   // "CASH", "CARD", "TRANSFER", "DEBIT"
-  
-  tenantId  String
-  tenant    Tenant   @relation(fields: [tenantId], references: [id])
-  branchId  String
-  branch    Branch   @relation(fields: [branchId], references: [id])
-  userId    String?
-  user      User?    @relation(fields: [userId], references: [id])
-
-  items     SaleItem[]
-
-  // DTE (Documento Tributario Electrónico) fields for Chilean tax compliance
-  dteType   Int     @default(39) // 39 = Boleta Electrónica
-  dteFolio  Int?    // Assigned by SII when DTE is emitted
-  dteStatus String  @default("PENDING") // PENDING, ACEPTADO, RECHAZADO
-  dtePdfUrl String? // URL to the PDF version of the DTE from Lioren
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  paymentMethod String
+  tenantId      String
+  branchId      String
+  userId        String?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  dteFolio      Int?
+  dteStatus     String     @default("PENDING")
+  dteType       Int        @default(39)
+  dtePdfUrl     String?
+  branch        Branch     @relation(fields: [branchId], references: [id])
+  tenant        Tenant     @relation(fields: [tenantId], references: [id])
+  user          User?      @relation(fields: [userId], references: [id])
+  items         SaleItem[]
 }
 
 model SaleItem {
-  id        String   @id @default(uuid())
+  id        String  @id @default(uuid())
   saleId    String
-  sale      Sale     @relation(fields: [saleId], references: [id])
   productId String
-  product   Product  @relation(fields: [productId], references: [id])
-  
-  quantity  Decimal  @db.Decimal(10, 3) // Supports decimal quantities for bulk sales
+  quantity  Decimal @db.Decimal(10, 3)
   price     Float
+  product   Product @relation(fields: [productId], references: [id])
+  sale      Sale    @relation(fields: [saleId], references: [id])
 }
 
 model DteConfig {
   id             String    @id @default(uuid())
   tenantId       String    @unique
-  tenant         Tenant    @relation(fields: [tenantId], references: [id])
-  liorenToken    String?   // API token for Lioren DTE service
-  liorenLogo     String?   // URL to company logo for DTE
-  dteResolution  String?   // SII resolution number
-  resolutionDate DateTime? // Date of SII resolution
+  liorenToken    String?
+  liorenLogo     String?
+  dteResolution  String?
+  resolutionDate DateTime?
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
+  tenant         Tenant    @relation(fields: [tenantId], references: [id])
+}
+
+enum UnitType {
+  UNIT
+  WEIGHT
 }

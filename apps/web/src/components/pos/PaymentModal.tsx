@@ -23,6 +23,7 @@ interface PaymentModalProps {
     isProcessing: boolean;
     isSuccess: boolean;
     isError: boolean;
+    saleResult?: any;
 }
 
 export function PaymentModal({
@@ -36,6 +37,7 @@ export function PaymentModal({
     isProcessing,
     isSuccess,
     isError,
+    saleResult,
 }: PaymentModalProps) {
     if (isSuccess) {
         return (
@@ -50,8 +52,27 @@ export function PaymentModal({
                             La venta se ha procesado correctamente.
                         </DialogDescription>
                     </DialogHeader>
+
+                    {saleResult?.dteFolio && (
+                        <div className="bg-muted p-4 rounded-lg space-y-3 mb-4">
+                            <div className="flex justify-between items-center text-sm">
+                                <span className="font-medium">Folio DTE:</span>
+                                <span className="font-bold text-lg">#{saleResult.dteFolio}</span>
+                            </div>
+                            {saleResult.dtePdfUrl && (
+                                <Button
+                                    className="w-full"
+                                    variant="outline"
+                                    onClick={() => window.open(saleResult.dtePdfUrl, '_blank')}
+                                >
+                                    Ver Ticket (PDF)
+                                </Button>
+                            )}
+                        </div>
+                    )}
+
                     <DialogFooter>
-                        <Button onClick={onClose}>Cerrar</Button>
+                        <Button onClick={onClose} className="w-full">Cerrar</Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
@@ -113,18 +134,21 @@ export function PaymentModal({
                     <Separator />
 
                     <div className="space-y-2">
-                        <div className="flex justify-between text-sm">
-                            <span className="text-muted-foreground">Subtotal</span>
+                        <div className="flex justify-between text-sm text-muted-foreground italic">
+                            <span>Neto aprox.</span>
                             <span>{formatPrice(subtotal)}</span>
                         </div>
-                        <div className="flex justify-between text-sm">
-                            <span className="text-muted-foreground">IVA (19%)</span>
+                        <div className="flex justify-between text-sm text-muted-foreground italic">
+                            <span>IVA (19%)</span>
                             <span>{formatPrice(tax)}</span>
                         </div>
                         <Separator />
                         <div className="flex justify-between text-lg font-bold">
-                            <span>Total</span>
-                            <span className="text-primary">{formatPrice(total)}</span>
+                            <div className="flex flex-col">
+                                <span>Total</span>
+                                <span className="text-[10px] font-normal text-muted-foreground uppercase">IVA Incluido</span>
+                            </div>
+                            <span className="text-primary text-2xl">{formatPrice(total)}</span>
                         </div>
                     </div>
                 </div>

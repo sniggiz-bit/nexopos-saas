@@ -61,6 +61,7 @@ export class LiorenService {
             });
 
             // 3. Preparar el Payload para Lioren
+            // Lioren (tipodoc 39 - Boleta) asume que el 'precio' es BRUTO (IVA incluido)
             const payload = {
                 token,
                 dte: {
@@ -71,14 +72,21 @@ export class LiorenService {
 
             this.logger.log(`[Lioren] Enviando solicitud POST a ${this.apiUrl}`);
 
-            // En caso de que Lioren requiera el token en el Header:
-            // const response = await axios.post(this.apiUrl, payload.dte, { headers: { Authorization: `Bearer ${token}` } });
+            // MOCK MODE: If token is a test token, skip real API call and simulate success
+            let responseData;
+            if (token.startsWith('TEST_TOKEN')) {
+                this.logger.log(`[Lioren] MOCK MODE: Simulando emisión exitosa para token de prueba.`);
+                responseData = {
+                    folio: Math.floor(Math.random() * 10000) + 1,
+                    url_pdf: 'https://lioren.cl/ver/boleta/ejemplo-mock',
+                };
+            } else {
+                const response = await axios.post(this.apiUrl, payload);
+                responseData = response.data;
+            }
 
-            // Según la instrucción, enviamos el payload completo
-            const response = await axios.post(this.apiUrl, payload);
-
-            if (response.data && response.data.folio && response.data.url_pdf) {
-                const { folio, url_pdf } = response.data;
+            if (responseData && responseData.folio && responseData.url_pdf) {
+                const { folio, url_pdf } = responseData;
 
                 this.logger.log(`[Lioren] ✅ DTE emitido: Folio ${folio}`);
 
@@ -95,7 +103,7 @@ export class LiorenService {
                 return { success: true, folio, url_pdf };
             } else {
                 // Si la respuesta no contiene lo esperado, lanzamos error
-                const errorMsg = response.data?.message || 'Respuesta inválida de Lioren';
+                const errorMsg = responseData?.message || 'Respuesta inválida de Lioren';
                 throw new Error(errorMsg);
             }
 

@@ -85,9 +85,10 @@ export class SalesService {
             }
 
             // 4. Calculate total using DB prices (SECURITY: Never trust client prices)
+            // Note: prices are GROSS (IVA included). Total is simple sum.
             const total = items.reduce((acc, item) => {
                 const priceFromDB = Number(productPriceMap.get(item.productId) || 0);
-                return acc + (priceFromDB * item.quantity);
+                return acc + (priceFromDB * Number(item.quantity));
             }, 0);
 
             // 5. Create Sale and SaleItems
@@ -124,15 +125,23 @@ export class SalesService {
         });
 
         // ============================================
-        // DTE EMISSION - OUTSIDE TRANSACTION
+        // DTE EMISSION - SYNC FOR FRONTEND FEEDBACK
         // ============================================
-        // Emit DTE after successful sale (non-blocking, independent of sale transaction)
-        // If DTE fails, the sale is still valid - DTE can be retried later
-        this.dteService.emitirDte(sale.id).catch((error) => {
+        try {
+            await this.dteService.emitirDte(sale.id);
+        } catch (error) {
             console.error(`[Sales Service] Error emitiendo DTE para venta ${sale.id}:`, error);
-            // In production, you might want to queue this for retry
-        });
+            // We don't throw here because the sale is already valid and stored
+        }
 
-        return sale;
+        // Fetch the updated sale with DTE data
+        return this.prisma.sale.findUnique({
+            where: { id: sale.id },
+            include: {
+                items: { include: { product: true } },
+                branch: true,
+                user: true,
+            },
+        });
     }
 }

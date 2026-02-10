@@ -10,11 +10,11 @@ import { type CartItemData } from '@/components/pos/CartItem';
 import { CreateSaleRequest, PaymentMethod } from '@/api/sales';
 import { useToast } from '@/hooks/use-toast';
 
-const TAX_RATE = 0.19; // 19% IVA in Chile
 
 export function PosPage() {
     const [cartItems, setCartItems] = useState<CartItemData[]>([]);
     const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+    const [saleResult, setSaleResult] = useState<any>(null);
     const { toast } = useToast();
     const queryClient = useQueryClient();
 
@@ -22,6 +22,7 @@ export function PosPage() {
 
     const { mutate: createSale, isPending, isSuccess, isError, reset } = useSale({
         onSuccess: (data) => {
+            setSaleResult(data);
             // Show success toast with DTE folio if available
             toast({
                 variant: 'success',
@@ -35,11 +36,12 @@ export function PosPage() {
             setCartItems([]);
             queryClient.invalidateQueries({ queryKey: ['products'] });
 
-            // Close modal after delay
+            // Close modal after delay - increased to 5s if there is a ticket
             setTimeout(() => {
                 setIsPaymentModalOpen(false);
                 reset();
-            }, 2000);
+                setSaleResult(null);
+            }, data.dteFolio ? 5000 : 2000);
         },
         onError: (error) => {
             // Show error toast
@@ -111,12 +113,12 @@ export function PosPage() {
         createSale(saleData);
     };
 
-    const subtotal = cartItems.reduce(
+    const total = cartItems.reduce(
         (sum, item) => sum + item.price * item.quantity,
         0
     );
-    const tax = subtotal * TAX_RATE;
-    const total = subtotal + tax;
+    const tax = total - (total / 1.19);
+    const subtotal = total - tax;
 
     return (
         <div className="h-screen flex">
@@ -158,6 +160,7 @@ export function PosPage() {
                 isProcessing={isPending}
                 isSuccess={isSuccess}
                 isError={isError}
+                saleResult={saleResult}
             />
         </div>
     );
