@@ -71,4 +71,8 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
   get dteConfig() {
     return this.prisma.dteConfig;
   }
+
+  get cashShift() {
+    return this.prisma.cashShift;
+  }
 }

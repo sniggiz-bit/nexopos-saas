@@ -74,6 +74,7 @@ let InternalReceiptService = InternalReceiptService_1 = class InternalReceiptSer
                             product: true,
                         },
                     },
+                    payments: true,
                     branch: true,
                     tenant: true,
                     user: true,
@@ -94,61 +95,77 @@ let InternalReceiptService = InternalReceiptService_1 = class InternalReceiptSer
             const doc = new PDFDocument({ size: 'A4', margin: 50 });
             const stream = fs.createWriteStream(filepath);
             doc.pipe(stream);
-            doc.fontSize(20)
+            doc.fontSize(18)
+                .font('Helvetica-Bold')
                 .text(sale.tenant.name, { align: 'center' })
+                .moveDown(0.2);
+            doc.fontSize(10)
+                .font('Helvetica')
+                .text(`RUT: ${sale.tenant.rut || 'N/A'}`, { align: 'center' })
+                .text(`Giro: ${sale.tenant.giro || 'N/A'}`, { align: 'center' })
+                .text(`Dirección: ${sale.tenant.address || 'N/A'}`, { align: 'center' })
                 .moveDown(0.5);
             doc.fontSize(10)
-                .text('TICKET INTERNO - NO VÁLIDO COMO FACTURA', { align: 'center' })
+                .font('Helvetica-Bold')
+                .text('TICKET INTERNO - CONTROL DE VENTA', { align: 'center' })
                 .moveDown(1);
-            doc.fontSize(12)
-                .text(`Ticket N°: ${sale.id.substring(0, 8).toUpperCase()}`, { align: 'left' })
+            doc.fontSize(10)
+                .font('Helvetica')
+                .text(`Ticket ID: ${sale.id.substring(0, 8).toUpperCase()}`, { align: 'left' })
                 .text(`Fecha: ${this.formatDate(sale.createdAt)}`, { align: 'left' })
-                .text(`Sucursal: ${sale.branch.name}`, { align: 'left' });
+                .text(`Sucursal: ${sale.branch.name}`, { align: 'left' })
+                .text(`Turno Caja: ${sale.cashShiftId ? sale.cashShiftId.substring(0, 8).toUpperCase() : 'N/A'}`, { align: 'left' });
             if (sale.user) {
                 doc.text(`Vendedor: ${sale.user.name || sale.user.email}`, { align: 'left' });
             }
-            doc.moveDown(1);
-            doc.moveTo(50, doc.y)
-                .lineTo(550, doc.y)
-                .stroke()
-                .moveDown(0.5);
+            doc.moveDown(0.5);
             doc.fontSize(10)
+                .font('Helvetica-Bold')
                 .text('Cant.', 50, doc.y, { width: 50, continued: true })
                 .text('Producto', 100, doc.y, { width: 250, continued: true })
                 .text('P. Unit.', 350, doc.y, { width: 80, align: 'right', continued: true })
                 .text('Subtotal', 430, doc.y, { width: 120, align: 'right' });
+            doc.moveTo(50, doc.y + 2).lineTo(550, doc.y + 2).stroke();
             doc.moveDown(0.5);
+            doc.font('Helvetica').fontSize(9);
             for (const item of sale.items) {
                 const quantity = Number(item.quantity);
                 const price = item.price;
                 const subtotal = quantity * price;
-                doc.fontSize(9)
-                    .text(quantity.toString(), 50, doc.y, { width: 50, continued: true })
+                doc.text(quantity.toString(), 50, doc.y, { width: 50, continued: true })
                     .text(item.product.name, 100, doc.y, { width: 250, continued: true })
                     .text(this.formatCurrency(price), 350, doc.y, { width: 80, align: 'right', continued: true })
                     .text(this.formatCurrency(subtotal), 430, doc.y, { width: 120, align: 'right' });
                 doc.moveDown(0.3);
             }
             doc.moveDown(0.5);
-            doc.moveTo(50, doc.y)
-                .lineTo(550, doc.y)
-                .stroke()
+            doc.moveTo(350, doc.y).lineTo(550, doc.y).stroke().moveDown(0.5);
+            const total = sale.total;
+            const factorIVA = 1.19;
+            const neto = Math.round(total / factorIVA);
+            const iva = total - neto;
+            doc.fontSize(10)
+                .text('Neto:', 350, doc.y, { width: 80, align: 'right', continued: true })
+                .text(this.formatCurrency(neto), 430, doc.y, { width: 120, align: 'right' })
+                .moveDown(0.2);
+            doc.text('IVA (19%):', 350, doc.y, { width: 80, align: 'right', continued: true })
+                .text(this.formatCurrency(iva), 430, doc.y, { width: 120, align: 'right' })
                 .moveDown(0.5);
             doc.fontSize(12)
                 .font('Helvetica-Bold')
                 .text('TOTAL:', 350, doc.y, { width: 80, align: 'right', continued: true })
-                .text(this.formatCurrency(sale.total), 430, doc.y, { width: 120, align: 'right' });
-            doc.font('Helvetica');
-            doc.moveDown(1);
-            doc.fontSize(10)
-                .text(`Método de Pago: ${this.getPaymentMethodLabel(sale.paymentMethod)}`, { align: 'left' });
+                .text(this.formatCurrency(total), 430, doc.y, { width: 120, align: 'right' });
+            doc.font('Helvetica').moveDown(1);
+            doc.fontSize(10).font('Helvetica-Bold').text('Pagos:', { align: 'left' }).font('Helvetica');
+            for (const payment of sale.payments) {
+                doc.text(`- ${this.getPaymentMethodLabel(payment.paymentMethod)}: ${this.formatCurrency(payment.amount)}`, { align: 'left' });
+            }
             doc.moveDown(2);
             doc.fontSize(9)
                 .text('¡Gracias por su compra!', { align: 'center' })
                 .moveDown(0.5)
                 .fontSize(8)
-                .text('Este documento es solo para control interno', { align: 'center' })
-                .text('No válido como comprobante tributario', { align: 'center' });
+                .text('Vendido con NexoPOS - Trazabilidad Turno: ' + (sale.cashShiftId || 'N/A'), { align: 'center' });
             doc.end();
             await new Promise((resolve, reject) => {
                 stream.on('finish', () => resolve());
@@ -205,10 +222,10 @@ let InternalReceiptService = InternalReceiptService_1 = class InternalReceiptSer
     }
     getPaymentMethodLabel(method) {
         const labels = {
-            CASH: 'Efectivo',
-            CARD: 'Tarjeta',
-            TRANSFER: 'Transferencia',
-            DEBIT: 'Débito',
+            EFECTIVO: 'Efectivo',
+            DEBITO: 'Débito',
+            CREDITO: 'Crédito',
+            TRANSFERENCIA: 'Transferencia',
         };
         return labels[method] || method;
     }

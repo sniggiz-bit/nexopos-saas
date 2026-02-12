@@ -16,27 +16,27 @@ export declare class SalesService {
     getSales(filters?: GetSalesFilters): Promise<({
         branch: {
             id: string;
-            tenantId: string;
             name: string;
+            tenantId: string;
         };
         user: {
             id: string;
+            name: string | null;
             tenantId: string;
-            branchId: string | null;
             createdAt: Date;
             updatedAt: Date;
-            name: string | null;
+            branchId: string | null;
             email: string;
         } | null;
         items: ({
             product: {
                 id: string;
+                name: string;
+                sku: string | null;
+                price: number;
                 tenantId: string;
                 createdAt: Date;
                 updatedAt: Date;
-                name: string;
-                price: number;
-                sku: string | null;
                 barcode: string | null;
                 brandId: string | null;
                 categoryId: string | null;
@@ -44,54 +44,54 @@ export declare class SalesService {
                 image: string | null;
                 isActive: boolean;
                 minStock: number;
-                unitType: import("@prisma/client").$Enums.UnitType;
+                unitType: import("@prisma/client/client").$Enums.UnitType;
             };
         } & {
             id: string;
-            saleId: string;
+            price: number;
             productId: string;
             quantity: import("@prisma/client-runtime-utils").Decimal;
-            price: number;
+            saleId: string;
         })[];
     } & {
         id: string;
-        total: number;
-        paymentMethod: string;
         tenantId: string;
-        branchId: string;
-        userId: string | null;
         createdAt: Date;
         updatedAt: Date;
+        branchId: string;
+        total: number;
         dteFolio: number | null;
         dteStatus: string;
         dteType: number;
         dtePdfUrl: string | null;
         internalReceiptUrl: string | null;
+        userId: string | null;
+        cashShiftId: string | null;
     })[]>;
     createSale(createSaleDto: CreateSaleDto): Promise<({
         branch: {
             id: string;
-            tenantId: string;
             name: string;
+            tenantId: string;
         };
         user: {
             id: string;
+            name: string | null;
             tenantId: string;
-            branchId: string | null;
             createdAt: Date;
             updatedAt: Date;
-            name: string | null;
+            branchId: string | null;
             email: string;
         } | null;
         items: ({
             product: {
                 id: string;
+                name: string;
+                sku: string | null;
+                price: number;
                 tenantId: string;
                 createdAt: Date;
                 updatedAt: Date;
-                name: string;
-                price: number;
-                sku: string | null;
                 barcode: string | null;
                 brandId: string | null;
                 categoryId: string | null;
@@ -99,29 +99,36 @@ export declare class SalesService {
                 image: string | null;
                 isActive: boolean;
                 minStock: number;
-                unitType: import("@prisma/client").$Enums.UnitType;
+                unitType: import("@prisma/client/client").$Enums.UnitType;
             };
         } & {
             id: string;
-            saleId: string;
+            price: number;
             productId: string;
             quantity: import("@prisma/client-runtime-utils").Decimal;
-            price: number;
+            saleId: string;
         })[];
+        payments: {
+            id: string;
+            createdAt: Date;
+            amount: number;
+            paymentMethod: import("@prisma/client/client").$Enums.PaymentMethod;
+            saleId: string;
+        }[];
     } & {
         id: string;
-        total: number;
-        paymentMethod: string;
         tenantId: string;
-        branchId: string;
-        userId: string | null;
         createdAt: Date;
         updatedAt: Date;
+        branchId: string;
+        total: number;
         dteFolio: number | null;
         dteStatus: string;
         dteType: number;
         dtePdfUrl: string | null;
         internalReceiptUrl: string | null;
+        userId: string | null;
+        cashShiftId: string | null;
     }) | null>;
 }
 export {};

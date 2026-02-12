@@ -39,6 +39,7 @@ export class InternalReceiptService {
                             product: true,
                         },
                     },
+                    payments: true, // Included payments
                     branch: true,
                     tenant: true,
                     user: true,
@@ -49,7 +50,7 @@ export class InternalReceiptService {
                 throw new Error(`Sale ${saleId} not found`);
             }
 
-            // 2. Create directory structure: uploads/receipts/{tenantId}/{year}/{month}/
+            // 2. Create directory structure
             const date = new Date(sale.createdAt);
             const year = date.getFullYear();
             const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -68,50 +69,57 @@ export class InternalReceiptService {
             const stream = fs.createWriteStream(filepath);
             doc.pipe(stream);
 
-            // Header
-            doc.fontSize(20)
+            // Header - Tenant Info
+            doc.fontSize(18)
+                .font('Helvetica-Bold')
                 .text(sale.tenant.name, { align: 'center' })
+                .moveDown(0.2);
+
+            doc.fontSize(10)
+                .font('Helvetica')
+                .text(`RUT: ${sale.tenant.rut || 'N/A'}`, { align: 'center' })
+                .text(`Giro: ${sale.tenant.giro || 'N/A'}`, { align: 'center' })
+                .text(`Dirección: ${sale.tenant.address || 'N/A'}`, { align: 'center' })
                 .moveDown(0.5);
 
             doc.fontSize(10)
-                .text('TICKET INTERNO - NO VÁLIDO COMO FACTURA', { align: 'center' })
+                .font('Helvetica-Bold')
+                .text('TICKET INTERNO - CONTROL DE VENTA', { align: 'center' })
                 .moveDown(1);
 
-            // Sale info
-            doc.fontSize(12)
-                .text(`Ticket N°: ${sale.id.substring(0, 8).toUpperCase()}`, { align: 'left' })
+            // Sale and Shift info
+            doc.fontSize(10)
+                .font('Helvetica')
+                .text(`Ticket ID: ${sale.id.substring(0, 8).toUpperCase()}`, { align: 'left' })
                 .text(`Fecha: ${this.formatDate(sale.createdAt)}`, { align: 'left' })
-                .text(`Sucursal: ${sale.branch.name}`, { align: 'left' });
+                .text(`Sucursal: ${sale.branch.name}`, { align: 'left' })
+                .text(`Turno Caja: ${sale.cashShiftId ? sale.cashShiftId.substring(0, 8).toUpperCase() : 'N/A'}`, { align: 'left' });
 
             if (sale.user) {
                 doc.text(`Vendedor: ${sale.user.name || sale.user.email}`, { align: 'left' });
             }
 
-            doc.moveDown(1);
-
-            // Line separator
-            doc.moveTo(50, doc.y)
-                .lineTo(550, doc.y)
-                .stroke()
-                .moveDown(0.5);
+            doc.moveDown(0.5);
 
             // Table header
             doc.fontSize(10)
+                .font('Helvetica-Bold')
                 .text('Cant.', 50, doc.y, { width: 50, continued: true })
                 .text('Producto', 100, doc.y, { width: 250, continued: true })
                 .text('P. Unit.', 350, doc.y, { width: 80, align: 'right', continued: true })
                 .text('Subtotal', 430, doc.y, { width: 120, align: 'right' });
 
+            doc.moveTo(50, doc.y + 2).lineTo(550, doc.y + 2).stroke();
             doc.moveDown(0.5);
 
             // Items
+            doc.font('Helvetica').fontSize(9);
             for (const item of sale.items) {
                 const quantity = Number(item.quantity);
                 const price = item.price;
                 const subtotal = quantity * price;
 
-                doc.fontSize(9)
-                    .text(quantity.toString(), 50, doc.y, { width: 50, continued: true })
+                doc.text(quantity.toString(), 50, doc.y, { width: 50, continued: true })
                     .text(item.product.name, 100, doc.y, { width: 250, continued: true })
                     .text(this.formatCurrency(price), 350, doc.y, { width: 80, align: 'right', continued: true })
                     .text(this.formatCurrency(subtotal), 430, doc.y, { width: 120, align: 'right' });
@@ -120,25 +128,35 @@ export class InternalReceiptService {
             }
 
             doc.moveDown(0.5);
+            doc.moveTo(350, doc.y).lineTo(550, doc.y).stroke().moveDown(0.5);
 
-            // Line separator
-            doc.moveTo(50, doc.y)
-                .lineTo(550, doc.y)
-                .stroke()
+            // Breakdown (Neto, IVA, Total)
+            const total = sale.total;
+            const factorIVA = 1.19;
+            const neto = Math.round(total / factorIVA);
+            const iva = total - neto;
+
+            doc.fontSize(10)
+                .text('Neto:', 350, doc.y, { width: 80, align: 'right', continued: true })
+                .text(this.formatCurrency(neto), 430, doc.y, { width: 120, align: 'right' })
+                .moveDown(0.2);
+
+            doc.text('IVA (19%):', 350, doc.y, { width: 80, align: 'right', continued: true })
+                .text(this.formatCurrency(iva), 430, doc.y, { width: 120, align: 'right' })
                 .moveDown(0.5);
 
-            // Total
             doc.fontSize(12)
                 .font('Helvetica-Bold')
                 .text('TOTAL:', 350, doc.y, { width: 80, align: 'right', continued: true })
-                .text(this.formatCurrency(sale.total), 430, doc.y, { width: 120, align: 'right' });
+                .text(this.formatCurrency(total), 430, doc.y, { width: 120, align: 'right' });
 
-            doc.font('Helvetica');
-            doc.moveDown(1);
+            doc.font('Helvetica').moveDown(1);
 
-            // Payment method
-            doc.fontSize(10)
-                .text(`Método de Pago: ${this.getPaymentMethodLabel(sale.paymentMethod)}`, { align: 'left' });
+            // Payment Methods summary
+            doc.fontSize(10).font('Helvetica-Bold').text('Pagos:', { align: 'left' }).font('Helvetica');
+            for (const payment of sale.payments) {
+                doc.text(`- ${this.getPaymentMethodLabel(payment.paymentMethod)}: ${this.formatCurrency(payment.amount)}`, { align: 'left' });
+            }
 
             doc.moveDown(2);
 
@@ -147,8 +165,7 @@ export class InternalReceiptService {
                 .text('¡Gracias por su compra!', { align: 'center' })
                 .moveDown(0.5)
                 .fontSize(8)
-                .text('Este documento es solo para control interno', { align: 'center' })
-                .text('No válido como comprobante tributario', { align: 'center' });
+                .text('Vendido con NexoPOS - Trazabilidad Turno: ' + (sale.cashShiftId || 'N/A'), { align: 'center' });
 
             // Finalize PDF
             doc.end();
@@ -162,9 +179,9 @@ export class InternalReceiptService {
             // 4. Generate URL
             const receiptUrl = `/api/receipts/${saleId}`;
 
-            // 5. Update sale with receipt URL
+            // 5. Update sale
             log(`[Internal Receipt] Updating sale ${saleId} with internalReceiptUrl: ${receiptUrl}`);
-            await (this.prisma.sale as any).update({
+            await this.prisma.sale.update({
                 where: { id: saleId },
                 data: { internalReceiptUrl: receiptUrl },
             });
@@ -182,15 +199,11 @@ export class InternalReceiptService {
      * Get the file path for a receipt
      */
     getReceiptPath(saleId: string): string | null {
-        // Find the receipt file by searching in the uploads directory
         const findReceipt = (dir: string): string | null => {
             if (!fs.existsSync(dir)) return null;
-
             const files = fs.readdirSync(dir, { withFileTypes: true });
-
             for (const file of files) {
                 const fullPath = path.join(dir, file.name);
-
                 if (file.isDirectory()) {
                     const found = findReceipt(fullPath);
                     if (found) return found;
@@ -198,10 +211,8 @@ export class InternalReceiptService {
                     return fullPath;
                 }
             }
-
             return null;
         };
-
         return findReceipt(this.uploadsDir);
     }
 
@@ -233,10 +244,10 @@ export class InternalReceiptService {
      */
     private getPaymentMethodLabel(method: string): string {
         const labels: Record<string, string> = {
-            CASH: 'Efectivo',
-            CARD: 'Tarjeta',
-            TRANSFER: 'Transferencia',
-            DEBIT: 'Débito',
+            EFECTIVO: 'Efectivo',
+            DEBITO: 'Débito',
+            CREDITO: 'Crédito',
+            TRANSFERENCIA: 'Transferencia',
         };
         return labels[method] || method;
     }

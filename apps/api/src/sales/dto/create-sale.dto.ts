@@ -2,10 +2,19 @@ import { IsString, IsUUID, IsArray, ValidateNested, IsNumber, Min, IsOptional, I
 import { Type } from 'class-transformer';
 
 export enum PaymentMethod {
-    CASH = 'CASH',
-    CARD = 'CARD',
-    TRANSFER = 'TRANSFER',
-    DEBIT = 'DEBIT',
+    EFECTIVO = 'EFECTIVO',
+    DEBITO = 'DEBITO',
+    CREDITO = 'CREDITO',
+    TRANSFERENCIA = 'TRANSFERENCIA',
+}
+
+export class CreatePaymentDto {
+    @IsEnum(PaymentMethod)
+    paymentMethod: PaymentMethod;
+
+    @IsNumber()
+    @Min(0)
+    amount: number;
 }
 
 export class CreateSaleItemDto {
@@ -30,8 +39,10 @@ export class CreateSaleDto {
     @IsOptional()
     userId?: string;
 
-    @IsEnum(PaymentMethod)
-    paymentMethod: PaymentMethod;
+    @IsArray()
+    @ValidateNested({ each: true })
+    @Type(() => CreatePaymentDto)
+    payments: CreatePaymentDto[];
 
     @IsArray()
     @ValidateNested({ each: true })

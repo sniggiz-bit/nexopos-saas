@@ -64,6 +64,9 @@ let PrismaService = class PrismaService {
     get dteConfig() {
         return this.prisma.dteConfig;
     }
+    get cashShift() {
+        return this.prisma.cashShift;
+    }
 };
 exports.PrismaService = PrismaService;
 exports.PrismaService = PrismaService = __decorate([

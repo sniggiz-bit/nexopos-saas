@@ -17,10 +17,13 @@ exports.LiorenService = void 0;
 const common_1 = require("@nestjs/common");
 const axios_1 = __importDefault(require("axios"));
 const prisma_service_1 = require("../prisma/prisma.service");
+const lioren_helper_1 = require("./lioren.helper");
 let LiorenService = LiorenService_1 = class LiorenService {
     prisma;
     logger = new common_1.Logger(LiorenService_1.name);
     apiUrl = 'https://lioren.cl/api/dte';
+    apiKey = process.env.LIOREN_API_KEY;
+    defaultToken = process.env.LIOREN_TOKEN;
     constructor(prisma) {
         this.prisma = prisma;
     }
@@ -35,6 +38,7 @@ let LiorenService = LiorenService_1 = class LiorenService {
                             product: true,
                         },
                     },
+                    payments: true,
                     tenant: {
                         include: {
                             dteConfig: true,
@@ -45,9 +49,9 @@ let LiorenService = LiorenService_1 = class LiorenService {
             if (!sale) {
                 throw new Error(`Venta ${saleId} no encontrada`);
             }
-            const token = sale.tenant?.dteConfig?.liorenToken;
+            const token = sale.tenant?.dteConfig?.liorenToken || this.defaultToken;
             if (!token) {
-                this.logger.warn(`[Lioren] Tenant ${sale.tenantId} no tiene token configurado.`);
+                this.logger.warn(`[Lioren] Tenant ${sale.tenantId} no tiene token configurado y no hay token por defecto.`);
                 await this.prisma.sale.update({
                     where: { id: saleId },
                     data: { dteStatus: 'ERROR' },
@@ -62,17 +66,25 @@ let LiorenService = LiorenService_1 = class LiorenService {
                     precio: Math.round(item.price),
                 };
             });
+            const mainPayment = sale.payments[0];
+            const liorenPayment = lioren_helper_1.LiorenHelper.mapPaymentMethod(mainPayment?.paymentMethod);
             const payload = {
                 token,
+                apikey: this.apiKey,
                 dte: {
                     tipodoc: 39,
                     detalles,
+                    pago: {
+                        formapago: liorenPayment.formapago,
+                        mediopago: liorenPayment.mediopago,
+                        montopago: Math.round(sale.total)
+                    }
                 },
             };
-            this.logger.log(`[Lioren] Enviando solicitud POST a ${this.apiUrl}`);
+            this.logger.log(`[Lioren] Payload: ${JSON.stringify(payload)}`);
             let responseData;
-            if (token.startsWith('TEST_TOKEN')) {
-                this.logger.log(`[Lioren] MOCK MODE: Simulando emisión exitosa para token de prueba.`);
+            if (token.startsWith('TEST_TOKEN') || token.includes('YOUR_TOKEN')) {
+                this.logger.log(`[Lioren] MOCK MODE: Simulando emisión exitosa.`);
                 responseData = {
                     folio: Math.floor(Math.random() * 10000) + 1,
                     url_pdf: 'https://lioren.cl/ver/boleta/ejemplo-mock',

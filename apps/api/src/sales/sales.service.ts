@@ -76,12 +76,17 @@ export class SalesService {
         log(`[Sales Service] Starting creation of sale for tenant ${createSaleDto.tenantId}`);
         // Log the DTO for detail
         log(`- Items count: ${createSaleDto.items.length}`);
-        log(`- Payment method: ${createSaleDto.paymentMethod}`);
-        const { tenantId, branchId, userId, items, paymentMethod } = createSaleDto;
+        log(`- Payments count: ${createSaleDto.payments.length}`);
+        const { tenantId, branchId, userId, items, payments } = createSaleDto;
 
         // Validate items array is not empty
         if (!items || items.length === 0) {
             throw new BadRequestException('Sale must contain at least one item');
+        }
+
+        // Validate payments array is not empty
+        if (!payments || payments.length === 0) {
+            throw new BadRequestException('Sale must contain at least one payment method');
         }
 
         // ============================================
@@ -103,6 +108,18 @@ export class SalesService {
                 throw new BadRequestException(
                     `Products not found or don't belong to tenant: ${missingIds.join(', ')}`
                 );
+            }
+
+            // 1.5. Validate Open Shift
+            let currentShift = await prisma.cashShift.findFirst({
+                where: {
+                    branchId,
+                    status: 'OPEN',
+                },
+            });
+
+            if (!currentShift) {
+                throw new BadRequestException('No hay turno de caja abierto. Debe abrir caja para realizar ventas.');
             }
 
             // Create a map for quick price lookup
@@ -151,37 +168,49 @@ export class SalesService {
             }
 
             // 4. Calculate total using DB prices (SECURITY: Never trust client prices)
-            // Note: prices are GROSS (IVA included). Total is simple sum.
             const total = items.reduce((acc, item) => {
                 const priceFromDB = Number(productPriceMap.get(item.productId) || 0);
                 return acc + (priceFromDB * Number(item.quantity));
             }, 0);
 
-            // 5. Create Sale and SaleItems
+            // 5. Validate total payments match sale total
+            const totalPaid = payments.reduce((acc, p) => acc + p.amount, 0);
+            if (Math.abs(totalPaid - total) > 0.01) {
+                throw new BadRequestException(`El total pagado ($${totalPaid}) no coincide con el total de la venta ($${total}).`);
+            }
+
+            // 6. Create Sale, SaleItems, and Payments
             const sale = await prisma.sale.create({
                 data: {
                     tenantId,
                     branchId,
                     userId,
+                    cashShiftId: currentShift.id,
                     total,
-                    paymentMethod,
                     items: {
                         create: items.map((item) => {
                             const priceFromDB = Number(productPriceMap.get(item.productId) || 0);
                             return {
                                 productId: item.productId,
                                 quantity: item.quantity,
-                                price: priceFromDB, // Use DB price, not client price
+                                price: priceFromDB,
                             };
                         }),
+                    },
+                    payments: {
+                        create: payments.map((p) => ({
+                            paymentMethod: p.paymentMethod,
+                            amount: p.amount,
+                        })),
                     },
                 },
                 include: {
                     items: {
                         include: {
-                            product: true, // Include product details in response
+                            product: true,
                         },
                     },
+                    payments: true,
                     branch: true,
                     user: true,
                 },
@@ -200,7 +229,6 @@ export class SalesService {
         } catch (error) {
             log(`- DTE emission FAILED: ${error.message}`);
             this.logger.error(`[Sales Service] Error emitiendo DTE para venta ${sale.id}:`, error.message);
-            // We don't throw here because the sale is already valid and stored
         }
 
         // ============================================
@@ -213,7 +241,6 @@ export class SalesService {
         } catch (error) {
             log(`- Internal receipt generation FAILED: ${error.message}`);
             this.logger.error(`[Sales Service] Error generando ticket interno para venta ${sale.id}:`, error.message);
-            // We don't throw here because the sale is already valid and stored
         }
 
         // Fetch the updated sale with DTE data and receipt URL
@@ -222,15 +249,11 @@ export class SalesService {
             where: { id: sale.id },
             include: {
                 items: { include: { product: true } },
+                payments: true,
                 branch: true,
                 user: true,
             },
         });
-
-        this.logger.log(`[Sales Service] Final sale object for response (ID: ${sale.id}):`);
-        this.logger.log(`- dteFolio: ${finalSale?.dteFolio}`);
-        this.logger.log(`- dtePdfUrl: ${finalSale?.dtePdfUrl}`);
-        this.logger.log(`- internalReceiptUrl: ${(finalSale as any)?.internalReceiptUrl}`);
 
         return finalSale;
     }

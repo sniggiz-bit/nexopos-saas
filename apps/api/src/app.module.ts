@@ -10,6 +10,7 @@ import { CategoriesModule } from './categories/categories.module';
 import { BrandsModule } from './brands/brands.module';
 import { DteConfigModule } from './dte-config/dte-config.module';
 import { ReceiptsModule } from './receipts/receipts.module';
+import { ShiftsModule } from './shifts/shifts.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { ReceiptsModule } from './receipts/receipts.module';
     BrandsModule,
     DteConfigModule,
     ReceiptsModule,
+    ShiftsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

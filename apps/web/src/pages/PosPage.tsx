@@ -9,14 +9,23 @@ import { PaymentModal } from '@/components/pos/PaymentModal';
 import { type CartItemData } from '@/components/pos/CartItem';
 import { CreateSaleRequest, PaymentMethod } from '@/api/sales';
 import { useToast } from '@/hooks/use-toast';
+import { useCurrentShift } from '@/hooks/useShifts';
+import { OpenShiftModal } from '@/components/pos/OpenShiftModal';
+import { CloseShiftModal } from '@/components/pos/CloseShiftModal';
+import { Button } from '@/components/ui/button';
 
 
 export function PosPage() {
     const [cartItems, setCartItems] = useState<CartItemData[]>([]);
     const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
     const [saleResult, setSaleResult] = useState<any>(null);
+    const [isCloseShiftModalOpen, setIsCloseShiftModalOpen] = useState(false);
     const { toast } = useToast();
     const queryClient = useQueryClient();
+
+    // TODO: Get branchId from context/auth
+    const branchId = 'branch-1';
+    const { data: currentShift, isLoading: isLoadingShift } = useCurrentShift(branchId);
 
     const { data: products = [], isLoading } = useProducts();
 
@@ -126,7 +135,15 @@ export function PosPage() {
             {/* Left side - Product Grid */}
             <div className="flex-1 overflow-y-auto bg-background">
                 <div className="p-6">
-                    <h1 className="text-3xl font-bold mb-6">Punto de Venta</h1>
+                    <div className="flex justify-between items-center mb-6">
+                        <h1 className="text-3xl font-bold">Punto de Venta</h1>
+                        {currentShift && (
+                            <Button variant="outline" onClick={() => setIsCloseShiftModalOpen(true)}>
+                                Cerrar Caja
+                            </Button>
+                        )}
+                    </div>
+
                     <ProductGrid
                         products={products}
                         isLoading={isLoading}
@@ -134,6 +151,16 @@ export function PosPage() {
                     />
                 </div>
             </div>
+
+            <OpenShiftModal isOpen={!isLoadingShift && !currentShift} />
+
+            {currentShift && (
+                <CloseShiftModal
+                    isOpen={isCloseShiftModalOpen}
+                    onClose={() => setIsCloseShiftModalOpen(false)}
+                    shiftId={currentShift.id}
+                />
+            )}
 
             {/* Right side - Cart */}
             <div className="w-96 border-l bg-muted/30 p-4">

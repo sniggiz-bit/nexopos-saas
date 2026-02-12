@@ -3,6 +3,8 @@ export declare class LiorenService {
     private prisma;
     private readonly logger;
     private readonly apiUrl;
+    private readonly apiKey;
+    private readonly defaultToken;
     constructor(prisma: PrismaService);
     emitirBoleta(saleId: string): Promise<{
         success: boolean;

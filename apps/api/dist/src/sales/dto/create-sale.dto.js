@@ -9,16 +9,30 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.CreateSaleDto = exports.CreateSaleItemDto = exports.PaymentMethod = void 0;
+exports.CreateSaleDto = exports.CreateSaleItemDto = exports.CreatePaymentDto = exports.PaymentMethod = void 0;
 const class_validator_1 = require("class-validator");
 const class_transformer_1 = require("class-transformer");
 var PaymentMethod;
 (function (PaymentMethod) {
-    PaymentMethod["CASH"] = "CASH";
-    PaymentMethod["CARD"] = "CARD";
-    PaymentMethod["TRANSFER"] = "TRANSFER";
-    PaymentMethod["DEBIT"] = "DEBIT";
+    PaymentMethod["EFECTIVO"] = "EFECTIVO";
+    PaymentMethod["DEBITO"] = "DEBITO";
+    PaymentMethod["CREDITO"] = "CREDITO";
+    PaymentMethod["TRANSFERENCIA"] = "TRANSFERENCIA";
 })(PaymentMethod || (exports.PaymentMethod = PaymentMethod = {}));
+class CreatePaymentDto {
+    paymentMethod;
+    amount;
+}
+exports.CreatePaymentDto = CreatePaymentDto;
+__decorate([
+    (0, class_validator_1.IsEnum)(PaymentMethod),
+    __metadata("design:type", String)
+], CreatePaymentDto.prototype, "paymentMethod", void 0);
+__decorate([
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.Min)(0),
+    __metadata("design:type", Number)
+], CreatePaymentDto.prototype, "amount", void 0);
 class CreateSaleItemDto {
     productId;
     quantity;
@@ -37,7 +51,7 @@ class CreateSaleDto {
     tenantId;
     branchId;
     userId;
-    paymentMethod;
+    payments;
     items;
 }
 exports.CreateSaleDto = CreateSaleDto;
@@ -55,9 +69,11 @@ __decorate([
     __metadata("design:type", String)
 ], CreateSaleDto.prototype, "userId", void 0);
 __decorate([
-    (0, class_validator_1.IsEnum)(PaymentMethod),
-    __metadata("design:type", String)
-], CreateSaleDto.prototype, "paymentMethod", void 0);
+    (0, class_validator_1.IsArray)(),
+    (0, class_validator_1.ValidateNested)({ each: true }),
+    (0, class_transformer_1.Type)(() => CreatePaymentDto),
+    __metadata("design:type", Array)
+], CreateSaleDto.prototype, "payments", void 0);
 __decorate([
     (0, class_validator_1.IsArray)(),
     (0, class_validator_1.ValidateNested)({ each: true }),

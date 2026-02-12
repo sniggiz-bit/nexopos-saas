@@ -1,6 +1,8 @@
 generator client {
-  provider = "prisma-client-js"
+provider = "prisma-client-js"
+output = "./../node_modules/@prisma/client"
 }
+
 
 datasource db {
   provider = "postgresql"
@@ -9,6 +11,9 @@ datasource db {
 model Tenant {
   id         String     @id @default(uuid())
   name       String
+  rut        String?
+  giro       String?
+  address    String?
   createdAt  DateTime   @default(now())
   updatedAt  DateTime   @updatedAt
   branches   Branch[]
@@ -28,6 +33,7 @@ model Branch {
   inventory InventoryLevel[]
   sales     Sale[]
   users     User[]
+  cashShifts CashShift[]
 }
 
 model User {
@@ -107,10 +113,10 @@ model InventoryLevel {
 model Sale {
   id                 String     @id @default(uuid())
   total              Float
-  paymentMethod      String
   tenantId           String
   branchId           String
   userId             String?
+  cashShiftId        String?
   createdAt          DateTime   @default(now())
   updatedAt          DateTime   @updatedAt
   dteFolio           Int?
@@ -121,7 +127,9 @@ model Sale {
   branch             Branch     @relation(fields: [branchId], references: [id])
   tenant             Tenant     @relation(fields: [tenantId], references: [id])
   user               User?      @relation(fields: [userId], references: [id])
+  cashShift          CashShift? @relation(fields: [cashShiftId], references: [id])
   items              SaleItem[]
+  payments           Payment[]
 }
 
 model SaleItem {
@@ -132,6 +140,22 @@ model SaleItem {
   price     Float
   product   Product @relation(fields: [productId], references: [id])
   sale      Sale    @relation(fields: [saleId], references: [id])
+}
+
+model Payment {
+  id            String        @id @default(uuid())
+  saleId        String
+  amount        Float
+  paymentMethod PaymentMethod
+  createdAt     DateTime      @default(now())
+  sale          Sale          @relation(fields: [saleId], references: [id])
+}
+
+enum PaymentMethod {
+  EFECTIVO
+  DEBITO
+  CREDITO
+  TRANSFERENCIA
 }
 
 model DteConfig {
@@ -149,4 +173,22 @@ model DteConfig {
 enum UnitType {
   UNIT
   WEIGHT
+}
+
+model CashShift {
+  id            String    @id @default(uuid())
+  branchId      String
+  branch        Branch    @relation(fields: [branchId], references: [id])
+  openedBy      String
+  closedBy      String?
+  startTime     DateTime  @default(now())
+  endTime       DateTime?
+  initialAmount Decimal   @db.Decimal(10, 2)
+  finalAmount   Decimal?  @db.Decimal(10, 2)
+  expectedAmount Decimal? @db.Decimal(10, 2)
+  difference    Decimal?  @db.Decimal(10, 2)
+  status        String    @default("OPEN")
+  sales         Sale[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 }

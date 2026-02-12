@@ -66,10 +66,13 @@ let SalesService = SalesService_1 = class SalesService {
         };
         log(`[Sales Service] Starting creation of sale for tenant ${createSaleDto.tenantId}`);
         log(`- Items count: ${createSaleDto.items.length}`);
-        log(`- Payment method: ${createSaleDto.paymentMethod}`);
-        const { tenantId, branchId, userId, items, paymentMethod } = createSaleDto;
+        log(`- Payments count: ${createSaleDto.payments.length}`);
+        const { tenantId, branchId, userId, items, payments } = createSaleDto;
         if (!items || items.length === 0) {
             throw new common_1.BadRequestException('Sale must contain at least one item');
+        }
+        if (!payments || payments.length === 0) {
+            throw new common_1.BadRequestException('Sale must contain at least one payment method');
         }
         const sale = await this.prisma.$transaction(async (prisma) => {
             const productIds = items.map(item => item.productId);
@@ -83,6 +86,15 @@ let SalesService = SalesService_1 = class SalesService {
                 const foundIds = products.map(p => p.id);
                 const missingIds = productIds.filter(id => !foundIds.includes(id));
                 throw new common_1.BadRequestException(`Products not found or don't belong to tenant: ${missingIds.join(', ')}`);
+            }
+            let currentShift = await prisma.cashShift.findFirst({
+                where: {
+                    branchId,
+                    status: 'OPEN',
+                },
+            });
+            if (!currentShift) {
+                throw new common_1.BadRequestException('No hay turno de caja abierto. Debe abrir caja para realizar ventas.');
             }
             const productPriceMap = new Map(products.map(p => [p.id, p.price]));
             for (const item of items) {
@@ -118,13 +130,17 @@ let SalesService = SalesService_1 = class SalesService {
                 const priceFromDB = Number(productPriceMap.get(item.productId) || 0);
                 return acc + (priceFromDB * Number(item.quantity));
             }, 0);
+            const totalPaid = payments.reduce((acc, p) => acc + p.amount, 0);
+            if (Math.abs(totalPaid - total) > 0.01) {
+                throw new common_1.BadRequestException(`El total pagado ($${totalPaid}) no coincide con el total de la venta ($${total}).`);
+            }
             const sale = await prisma.sale.create({
                 data: {
                     tenantId,
                     branchId,
                     userId,
+                    cashShiftId: currentShift.id,
                     total,
-                    paymentMethod,
                     items: {
                         create: items.map((item) => {
                             const priceFromDB = Number(productPriceMap.get(item.productId) || 0);
@@ -135,6 +151,12 @@ let SalesService = SalesService_1 = class SalesService {
                             };
                         }),
                     },
+                    payments: {
+                        create: payments.map((p) => ({
+                            paymentMethod: p.paymentMethod,
+                            amount: p.amount,
+                        })),
+                    },
                 },
                 include: {
                     items: {
@@ -142,6 +164,7 @@ let SalesService = SalesService_1 = class SalesService {
                             product: true,
                         },
                     },
+                    payments: true,
                     branch: true,
                     user: true,
                 },
@@ -171,14 +194,11 @@ let SalesService = SalesService_1 = class SalesService {
             where: { id: sale.id },
             include: {
                 items: { include: { product: true } },
+                payments: true,
                 branch: true,
                 user: true,
             },
         });
-        this.logger.log(`[Sales Service] Final sale object for response (ID: ${sale.id}):`);
-        this.logger.log(`- dteFolio: ${finalSale?.dteFolio}`);
-        this.logger.log(`- dtePdfUrl: ${finalSale?.dtePdfUrl}`);
-        this.logger.log(`- internalReceiptUrl: ${finalSale?.internalReceiptUrl}`);
         return finalSale;
     }
 };

@@ -19,6 +19,7 @@ const categories_module_1 = require("./categories/categories.module");
 const brands_module_1 = require("./brands/brands.module");
 const dte_config_module_1 = require("./dte-config/dte-config.module");
 const receipts_module_1 = require("./receipts/receipts.module");
+const shifts_module_1 = require("./shifts/shifts.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -37,6 +38,7 @@ exports.AppModule = AppModule = __decorate([
             brands_module_1.BrandsModule,
             dte_config_module_1.DteConfigModule,
             receipts_module_1.ReceiptsModule,
+            shifts_module_1.ShiftsModule,
         ],
         controllers: [app_controller_1.AppController],
         providers: [app_service_1.AppService],

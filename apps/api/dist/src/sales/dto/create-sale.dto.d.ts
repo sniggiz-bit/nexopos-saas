@@ -1,8 +1,12 @@
 export declare enum PaymentMethod {
-    CASH = "CASH",
-    CARD = "CARD",
-    TRANSFER = "TRANSFER",
-    DEBIT = "DEBIT"
+    EFECTIVO = "EFECTIVO",
+    DEBITO = "DEBITO",
+    CREDITO = "CREDITO",
+    TRANSFERENCIA = "TRANSFERENCIA"
+}
+export declare class CreatePaymentDto {
+    paymentMethod: PaymentMethod;
+    amount: number;
 }
 export declare class CreateSaleItemDto {
     productId: string;
@@ -12,6 +16,6 @@ export declare class CreateSaleDto {
     tenantId: string;
     branchId: string;
     userId?: string;
-    paymentMethod: PaymentMethod;
+    payments: CreatePaymentDto[];
     items: CreateSaleItemDto[];
 }

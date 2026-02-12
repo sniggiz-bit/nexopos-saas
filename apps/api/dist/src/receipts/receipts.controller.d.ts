@@ -1,4 +1,4 @@
-import { Response } from 'express';
+import type { Response } from 'express';
 import { InternalReceiptService } from '../dte/internal-receipt.service';
 export declare class ReceiptsController {
     private readonly receiptService;

@@ -1,11 +1,16 @@
 import { Injectable, Logger } from '@nestjs/common';
 import axios from 'axios';
 import { PrismaService } from '../prisma/prisma.service';
+import { LiorenHelper, LiorenPayload } from './lioren.helper';
 
 @Injectable()
 export class LiorenService {
     private readonly logger = new Logger(LiorenService.name);
     private readonly apiUrl = 'https://lioren.cl/api/dte';
+
+    // credentials from .env
+    private readonly apiKey = process.env.LIOREN_API_KEY;
+    private readonly defaultToken = process.env.LIOREN_TOKEN;
 
     constructor(private prisma: PrismaService) { }
 
@@ -17,7 +22,7 @@ export class LiorenService {
         try {
             this.logger.log(`[Lioren] Iniciando emisión de DTE para venta ${saleId}...`);
 
-            // 1. Obtener la venta con sus items y configuración del tenant
+            // 1. Obtener la venta con sus items, pagos y configuración del tenant
             const sale = await this.prisma.sale.findUnique({
                 where: { id: saleId },
                 include: {
@@ -26,6 +31,7 @@ export class LiorenService {
                             product: true,
                         },
                     },
+                    payments: true,
                     tenant: {
                         include: {
                             dteConfig: true,
@@ -38,9 +44,11 @@ export class LiorenService {
                 throw new Error(`Venta ${saleId} no encontrada`);
             }
 
-            const token = sale.tenant?.dteConfig?.liorenToken;
+            // Priority: Tenant DTE Config > Env Default Token
+            const token = sale.tenant?.dteConfig?.liorenToken || this.defaultToken;
+
             if (!token) {
-                this.logger.warn(`[Lioren] Tenant ${sale.tenantId} no tiene token configurado.`);
+                this.logger.warn(`[Lioren] Tenant ${sale.tenantId} no tiene token configurado y no hay token por defecto.`);
                 await this.prisma.sale.update({
                     where: { id: saleId },
                     data: { dteStatus: 'ERROR' },
@@ -48,34 +56,41 @@ export class LiorenService {
                 return { success: false, message: 'DteConfig: liorenToken missing' };
             }
 
-            // 2. Mapear los SaleItems según las reglas de Lioren
-            // CRÍTICO: Si el producto es unitType: WEIGHT, envía la cantidad con sus decimales (ej: 0.5). Si es UNIT, envía entero.
+            // 2. Mapear los SaleItems
             const detalles = sale.items.map((item) => {
                 const quantity = Number(item.quantity);
                 return {
                     nombre: item.product.name,
-                    // Si es UNIT, convertimos a entero. Si es WEIGHT, mantenemos decimales.
                     cantidad: item.product.unitType === 'WEIGHT' ? quantity : Math.floor(quantity),
-                    precio: Math.round(item.price), // Lioren espera precios enteros para CLP
+                    precio: Math.round(item.price),
                 };
             });
 
-            // 3. Preparar el Payload para Lioren
-            // Lioren (tipodoc 39 - Boleta) asume que el 'precio' es BRUTO (IVA incluido)
-            const payload = {
+            // 3. Preparar el Pago (usamos el primer método de pago para Lioren)
+            const mainPayment = sale.payments[0];
+            const liorenPayment = LiorenHelper.mapPaymentMethod(mainPayment?.paymentMethod as any);
+
+            // 4. Preparar el Payload para Lioren
+            const payload: any = {
                 token,
+                apikey: this.apiKey, // Added API Key from Env
                 dte: {
                     tipodoc: 39, // Boleta Electrónica
                     detalles,
+                    pago: {
+                        formapago: liorenPayment.formapago,
+                        mediopago: liorenPayment.mediopago,
+                        montopago: Math.round(sale.total)
+                    }
                 },
             };
 
-            this.logger.log(`[Lioren] Enviando solicitud POST a ${this.apiUrl}`);
+            this.logger.log(`[Lioren] Payload: ${JSON.stringify(payload)}`);
 
-            // MOCK MODE: If token is a test token, skip real API call and simulate success
+            // MOCK MODE: If token is a test token or starts with YOUR_
             let responseData;
-            if (token.startsWith('TEST_TOKEN')) {
-                this.logger.log(`[Lioren] MOCK MODE: Simulando emisión exitosa para token de prueba.`);
+            if (token.startsWith('TEST_TOKEN') || token.includes('YOUR_TOKEN')) {
+                this.logger.log(`[Lioren] MOCK MODE: Simulando emisión exitosa.`);
                 responseData = {
                     folio: Math.floor(Math.random() * 10000) + 1,
                     url_pdf: 'https://lioren.cl/ver/boleta/ejemplo-mock',
@@ -87,10 +102,8 @@ export class LiorenService {
 
             if (responseData && responseData.folio && responseData.url_pdf) {
                 const { folio, url_pdf } = responseData;
-
                 this.logger.log(`[Lioren] ✅ DTE emitido: Folio ${folio}`);
 
-                // 4. Actualizar la venta con los datos recibidos
                 await this.prisma.sale.update({
                     where: { id: saleId },
                     data: {
@@ -102,15 +115,12 @@ export class LiorenService {
 
                 return { success: true, folio, url_pdf };
             } else {
-                // Si la respuesta no contiene lo esperado, lanzamos error
                 const errorMsg = responseData?.message || 'Respuesta inválida de Lioren';
                 throw new Error(errorMsg);
             }
 
         } catch (error) {
             this.logger.error(`[Lioren] ❌ Error emitiendo DTE para venta ${saleId}: ${error.message}`);
-
-            // Si falla, marcamos la venta con ERROR para reintento manual
             await this.prisma.sale.update({
                 where: { id: saleId },
                 data: { dteStatus: 'ERROR' },
