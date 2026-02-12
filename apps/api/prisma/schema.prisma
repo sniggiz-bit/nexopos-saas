@@ -44,6 +44,8 @@ model User {
   id        String   @id @default(uuid())
   email     String   @unique
   name      String?
+  password  String?
+  role      UserRole @default(USER)
   tenantId  String
   branchId  String?
   createdAt DateTime @default(now())
@@ -52,6 +54,14 @@ model User {
   branch    Branch?  @relation(fields: [branchId], references: [id])
   tenant    Tenant   @relation(fields: [tenantId], references: [id])
   stockMovements StockMovement[]
+  shiftsOpened CashShift[] @relation("OpenedShifts")
+  shiftsClosed CashShift[] @relation("ClosedShifts")
+}
+
+enum UserRole {
+  ADMIN
+  CASHIER
+  USER
 }
 
 model Category {
@@ -192,8 +202,10 @@ model CashShift {
   id            String    @id @default(uuid())
   branchId      String
   branch        Branch    @relation(fields: [branchId], references: [id])
-  openedBy      String
-  closedBy      String?
+  openedById    String
+  openedBy      User      @relation("OpenedShifts", fields: [openedById], references: [id])
+  closedById    String?
+  closedBy      User?     @relation("ClosedShifts", fields: [closedById], references: [id])
   startTime     DateTime  @default(now())
   endTime       DateTime?
   initialAmount Decimal   @db.Decimal(10, 2)
@@ -261,6 +273,7 @@ model Credit {
   totalAmount Float
   balance     Float
   status      String          @default("OPEN") // OPEN, PAID
+  dueDate     DateTime?
   createdAt   DateTime        @default(now())
   updatedAt   DateTime        @updatedAt
   tenant      Tenant          @relation(fields: [tenantId], references: [id])

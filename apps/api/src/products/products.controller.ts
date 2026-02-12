@@ -9,6 +9,21 @@ export class ProductsController {
     constructor(private readonly productsService: ProductsService) { }
 
     /**
+     * GET /products/critical
+     * Returns products with stock <= minStock
+     * 
+     * @param tenantId - Tenant ID
+     * @param branchId - Branch ID
+     */
+    @Get('critical')
+    async findCritical(
+        @Query('tenantId') tenantId: string = 'tenant-1',
+        @Query('branchId') branchId?: string,
+    ) {
+        return this.productsService.findCritical(tenantId, branchId);
+    }
+
+    /**
      * GET /products
      * Returns all products with calculated stock
      * 

@@ -16,6 +16,8 @@ import { CustomersModule } from './customers/customers.module';
 import { QuotesModule } from './quotes/quotes.module';
 import { CreditsModule } from './credits/credits.module';
 import { InventoryModule } from './inventory/inventory.module';
+import { UsersModule } from './users/users.module';
+import { TreasuryModule } from './treasury/treasury.module';
 
 @Module({
   imports: [
@@ -37,6 +39,8 @@ import { InventoryModule } from './inventory/inventory.module';
     QuotesModule,
     CreditsModule,
     InventoryModule,
+    UsersModule,
+    TreasuryModule,
   ],
   controllers: [AppController],
   providers: [AppService],

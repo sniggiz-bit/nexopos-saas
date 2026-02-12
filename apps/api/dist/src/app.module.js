@@ -25,6 +25,8 @@ const customers_module_1 = require("./customers/customers.module");
 const quotes_module_1 = require("./quotes/quotes.module");
 const credits_module_1 = require("./credits/credits.module");
 const inventory_module_1 = require("./inventory/inventory.module");
+const users_module_1 = require("./users/users.module");
+const treasury_module_1 = require("./treasury/treasury.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -49,6 +51,8 @@ exports.AppModule = AppModule = __decorate([
             quotes_module_1.QuotesModule,
             credits_module_1.CreditsModule,
             inventory_module_1.InventoryModule,
+            users_module_1.UsersModule,
+            treasury_module_1.TreasuryModule,
         ],
         controllers: [app_controller_1.AppController],
         providers: [app_service_1.AppService],

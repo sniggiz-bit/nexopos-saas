@@ -17,6 +17,8 @@ export declare class SalesController {
             updatedAt: Date;
             branchId: string | null;
             email: string;
+            password: string | null;
+            role: import("@prisma/client").$Enums.UserRole;
         } | null;
         customer: {
             id: string;
@@ -41,6 +43,7 @@ export declare class SalesController {
             saleId: string | null;
             balance: number;
             totalAmount: number;
+            dueDate: Date | null;
         } | null;
         items: ({
             product: {
@@ -110,6 +113,7 @@ export declare class SalesController {
             saleId: string | null;
             balance: number;
             totalAmount: number;
+            dueDate: Date | null;
         } | null;
         items: {
             id: string;

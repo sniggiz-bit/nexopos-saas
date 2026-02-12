@@ -33,7 +33,7 @@ let ShiftsService = class ShiftsService {
         return this.prisma.cashShift.create({
             data: {
                 branchId,
-                openedBy: userId,
+                openedById: userId,
                 initialAmount,
                 status: 'OPEN',
                 startTime: new Date(),
@@ -50,6 +50,7 @@ let ShiftsService = class ShiftsService {
                     },
                 },
                 branch: true,
+                openedBy: true,
             },
         });
         if (!shift) {
@@ -86,10 +87,11 @@ let ShiftsService = class ShiftsService {
         const totalIva = totalSales - totalNet;
         const expectedAmount = Number(shift.initialAmount) + totalsByMethod.EFECTIVO;
         const difference = finalAmount - expectedAmount;
+        const closer = await this.prisma.user.findUnique({ where: { id: userId } });
         const summary = {
             shiftId: shift.id,
-            openedBy: shift.openedBy,
-            closedBy: userId,
+            openedBy: shift.openedBy.name || shift.openedBy.email,
+            closedBy: closer?.name || closer?.email || userId,
             startTime: shift.startTime,
             endTime: new Date(),
             initialAmount: Number(shift.initialAmount),
@@ -113,7 +115,7 @@ let ShiftsService = class ShiftsService {
             where: { id: shiftId },
             data: {
                 endTime: summary.endTime,
-                closedBy: userId,
+                closedById: userId,
                 finalAmount,
                 expectedAmount,
                 difference,

@@ -22,6 +22,9 @@ let ProductsController = class ProductsController {
     constructor(productsService) {
         this.productsService = productsService;
     }
+    async findCritical(tenantId = 'tenant-1', branchId) {
+        return this.productsService.findCritical(tenantId, branchId);
+    }
     async findAll(tenantId = 'tenant-1', branchId) {
         return this.productsService.findAll(tenantId, branchId);
     }
@@ -39,6 +42,14 @@ let ProductsController = class ProductsController {
     }
 };
 exports.ProductsController = ProductsController;
+__decorate([
+    (0, common_1.Get)('critical'),
+    __param(0, (0, common_1.Query)('tenantId')),
+    __param(1, (0, common_1.Query)('branchId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:returntype", Promise)
+], ProductsController.prototype, "findCritical", null);
 __decorate([
     (0, common_1.Get)(),
     __param(0, (0, common_1.Query)('tenantId')),

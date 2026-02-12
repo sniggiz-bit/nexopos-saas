@@ -26,7 +26,7 @@ export class ShiftsService {
         return this.prisma.cashShift.create({
             data: {
                 branchId,
-                openedBy: userId,
+                openedById: userId,
                 initialAmount,
                 status: 'OPEN',
                 startTime: new Date(),
@@ -44,6 +44,7 @@ export class ShiftsService {
                     },
                 },
                 branch: true,
+                openedBy: true, // Include User relation
             },
         });
 
@@ -92,10 +93,14 @@ export class ShiftsService {
         const expectedAmount = Number(shift.initialAmount) + totalsByMethod.EFECTIVO;
         const difference = finalAmount - expectedAmount;
 
+        // Get closer name (current user) - ideally we should fetch the user, but for now we might use ID or fetch it.
+        // Let's fetch the user to get the name for the report
+        const closer = await this.prisma.user.findUnique({ where: { id: userId } });
+
         const summary: ShiftSummary = {
             shiftId: shift.id,
-            openedBy: shift.openedBy,
-            closedBy: userId,
+            openedBy: shift.openedBy.name || shift.openedBy.email,
+            closedBy: closer?.name || closer?.email || userId,
             startTime: shift.startTime,
             endTime: new Date(),
             initialAmount: Number(shift.initialAmount),
@@ -121,7 +126,7 @@ export class ShiftsService {
             where: { id: shiftId },
             data: {
                 endTime: summary.endTime,
-                closedBy: userId,
+                closedById: userId,
                 finalAmount,
                 expectedAmount,
                 difference,

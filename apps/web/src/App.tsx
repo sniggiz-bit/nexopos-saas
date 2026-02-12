@@ -14,6 +14,8 @@ import { ClientsPage } from './pages/dashboard/ClientsPage';
 import { QuotesPage } from './pages/dashboard/QuotesPage';
 import { CreateQuotePage } from './pages/dashboard/CreateQuotePage';
 import { CreditsPage } from './pages/dashboard/CreditsPage';
+import { TreasuryPage } from './pages/dashboard/TreasuryPage';
+import { CriticalStockPage } from './pages/dashboard/CriticalStockPage';
 import { SsoLoginPage } from './pages/SsoLoginPage';
 
 // Create a client for TanStack Query
@@ -60,6 +62,8 @@ function App() {
             <Route path="/dashboard/quotes" element={<QuotesPage />} />
             <Route path="/dashboard/quotes/new" element={<CreateQuotePage />} />
             <Route path="/dashboard/credits" element={<CreditsPage />} />
+            <Route path="/dashboard/treasury" element={<TreasuryPage />} />
+            <Route path="/dashboard/reports/critical-stock" element={<CriticalStockPage />} />
             <Route path="/" element={<Navigate to="/pos" replace />} />
           </Routes>
         </Suspense>

@@ -9,8 +9,8 @@ export declare class ShiftsService {
         createdAt: Date;
         updatedAt: Date;
         branchId: string;
-        openedBy: string;
-        closedBy: string | null;
+        openedById: string;
+        closedById: string | null;
         startTime: Date;
         endTime: Date | null;
         initialAmount: import("@prisma/client-runtime-utils").Decimal;
@@ -26,8 +26,8 @@ export declare class ShiftsService {
             createdAt: Date;
             updatedAt: Date;
             branchId: string;
-            openedBy: string;
-            closedBy: string | null;
+            openedById: string;
+            closedById: string | null;
             startTime: Date;
             endTime: Date | null;
             initialAmount: import("@prisma/client-runtime-utils").Decimal;
@@ -44,8 +44,8 @@ export declare class ShiftsService {
         createdAt: Date;
         updatedAt: Date;
         branchId: string;
-        openedBy: string;
-        closedBy: string | null;
+        openedById: string;
+        closedById: string | null;
         startTime: Date;
         endTime: Date | null;
         initialAmount: import("@prisma/client-runtime-utils").Decimal;

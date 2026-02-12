@@ -242,6 +242,30 @@ let ProductsService = class ProductsService {
             },
         });
     }
+    async findCritical(tenantId, branchId = 'branch-1') {
+        const products = await this.prisma.product.findMany({
+            where: {
+                tenantId,
+                isActive: true,
+            },
+            include: {
+                inventory: {
+                    where: { branchId },
+                },
+                category: true,
+                brand: true,
+            },
+        });
+        return products
+            .map((product) => {
+            const stock = product.inventory.reduce((total, inv) => total + Number(inv.quantity), 0);
+            return {
+                ...product,
+                stock,
+            };
+        })
+            .filter((product) => product.stock <= product.minStock);
+    }
 };
 exports.ProductsService = ProductsService;
 exports.ProductsService = ProductsService = __decorate([
