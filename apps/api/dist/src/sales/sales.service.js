@@ -16,17 +16,21 @@ const prisma_service_1 = require("../prisma/prisma.service");
 const dte_service_1 = require("../dte/dte.service");
 const internal_receipt_service_1 = require("../dte/internal-receipt.service");
 const credits_service_1 = require("../credits/credits.service");
+const inventory_service_1 = require("../inventory/inventory.service");
+const client_1 = require("@prisma/client");
 let SalesService = SalesService_1 = class SalesService {
     prisma;
     dteService;
     internalReceiptService;
     creditsService;
+    inventoryService;
     logger = new common_1.Logger(SalesService_1.name);
-    constructor(prisma, dteService, internalReceiptService, creditsService) {
+    constructor(prisma, dteService, internalReceiptService, creditsService, inventoryService) {
         this.prisma = prisma;
         this.dteService = dteService;
         this.internalReceiptService = internalReceiptService;
         this.creditsService = creditsService;
+        this.inventoryService = inventoryService;
     }
     async getSales(filters = {}) {
         const { startDate, endDate, branchId } = filters;
@@ -88,10 +92,14 @@ let SalesService = SalesService_1 = class SalesService {
                 if (!inventory || inventory.quantity.lessThan(item.quantity)) {
                     throw new common_1.BadRequestException(`Insufficient stock for product ${item.productId}`);
                 }
-                await prisma.inventoryLevel.update({
-                    where: { productId_branchId: { productId: item.productId, branchId } },
-                    data: { quantity: { decrement: item.quantity } },
-                });
+                await this.inventoryService.logMovement({
+                    productId: item.productId,
+                    branchId,
+                    quantity: -Number(item.quantity),
+                    type: client_1.MovementType.SALE,
+                    reference: `Venta`,
+                    userId,
+                }, prisma);
             }
             const total = items.reduce((acc, item) => {
                 const price = Number(productPriceMap.get(item.productId) || 0);
@@ -144,6 +152,15 @@ let SalesService = SalesService_1 = class SalesService {
                     }
                 });
             }
+            await prisma.stockMovement.updateMany({
+                where: {
+                    reference: 'Venta',
+                    productId: { in: items.map(i => i.productId) },
+                    branchId,
+                    createdAt: { gte: new Date(Date.now() - 5000) }
+                },
+                data: { reference: `SALE-${createdSale.id}` }
+            });
             return createdSale;
         });
         if (sale.status === 'COMPLETED') {
@@ -223,6 +240,7 @@ exports.SalesService = SalesService = SalesService_1 = __decorate([
     __metadata("design:paramtypes", [prisma_service_1.PrismaService,
         dte_service_1.DteService,
         internal_receipt_service_1.InternalReceiptService,
-        credits_service_1.CreditsService])
+        credits_service_1.CreditsService,
+        inventory_service_1.InventoryService])
 ], SalesService);
 //# sourceMappingURL=sales.service.js.map

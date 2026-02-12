@@ -12,8 +12,8 @@ export declare class CreditsController {
         status: string;
         customerId: string;
         saleId: string | null;
-        totalAmount: number;
         balance: number;
+        totalAmount: number;
     }>;
     findAll(tenantId: string, customerId?: string): Promise<({
         customer: {
@@ -55,8 +55,8 @@ export declare class CreditsController {
         status: string;
         customerId: string;
         saleId: string | null;
-        totalAmount: number;
         balance: number;
+        totalAmount: number;
     })[]>;
     findOne(id: string): Promise<{
         customer: {
@@ -106,8 +106,8 @@ export declare class CreditsController {
         status: string;
         customerId: string;
         saleId: string | null;
-        totalAmount: number;
         balance: number;
+        totalAmount: number;
     }>;
     addPayment(id: string, addPaymentDto: AddPaymentDto): Promise<any>;
 }

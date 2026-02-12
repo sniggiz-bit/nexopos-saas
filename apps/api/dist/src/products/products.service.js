@@ -127,6 +127,17 @@ let ProductsService = class ProductsService {
                         }
                     ] : [],
                 },
+                stockMovements: {
+                    create: createProductDto.initialStock ? [
+                        {
+                            branchId: 'branch-1',
+                            quantity: new client_1.Prisma.Decimal(createProductDto.initialStock),
+                            type: 'INITIAL',
+                            balance: new client_1.Prisma.Decimal(createProductDto.initialStock),
+                            reference: 'Inventario Inicial',
+                        }
+                    ] : [],
+                },
             },
             include: {
                 category: true,
@@ -186,23 +197,6 @@ let ProductsService = class ProductsService {
                 isActive: updateProductDto.isActive,
                 categoryId: updateProductDto.categoryId,
                 brandId: updateProductDto.brandId,
-                inventory: updateProductDto.stock !== undefined ? {
-                    upsert: {
-                        where: {
-                            productId_branchId: {
-                                productId: id,
-                                branchId: 'branch-1',
-                            }
-                        },
-                        create: {
-                            branchId: 'branch-1',
-                            quantity: new client_1.Prisma.Decimal(updateProductDto.stock),
-                        },
-                        update: {
-                            quantity: new client_1.Prisma.Decimal(updateProductDto.stock),
-                        }
-                    }
-                } : undefined,
             },
             include: {
                 category: true,
@@ -210,27 +204,35 @@ let ProductsService = class ProductsService {
                 inventory: true,
             },
         });
-        return {
-            id: product.id,
-            name: product.name,
-            sku: product.sku || undefined,
-            barcode: product.barcode || undefined,
-            price: product.price,
-            costPrice: product.costPrice,
-            minStock: product.minStock,
-            unitType: product.unitType,
-            image: product.image || undefined,
-            isActive: product.isActive,
-            stock: product.inventory.reduce((total, inv) => total + Number(inv.quantity), 0),
-            category: product.category ? {
-                id: product.category.id,
-                name: product.category.name,
-            } : undefined,
-            brand: product.brand ? {
-                id: product.brand.id,
-                name: product.brand.name,
-            } : undefined,
-        };
+        if (updateProductDto.stock !== undefined) {
+            const newStock = new client_1.Prisma.Decimal(updateProductDto.stock);
+            const branchId = 'branch-1';
+            const currentInv = await this.prisma.inventoryLevel.findUnique({
+                where: { productId_branchId: { productId: id, branchId } }
+            });
+            const currentQty = currentInv ? currentInv.quantity : new client_1.Prisma.Decimal(0);
+            const diff = newStock.minus(currentQty);
+            if (!diff.equals(0)) {
+                await this.prisma.$transaction([
+                    this.prisma.inventoryLevel.upsert({
+                        where: { productId_branchId: { productId: id, branchId } },
+                        create: { productId: id, branchId, quantity: newStock },
+                        update: { quantity: newStock }
+                    }),
+                    this.prisma.stockMovement.create({
+                        data: {
+                            productId: id,
+                            branchId,
+                            quantity: diff,
+                            type: 'ADJUSTMENT',
+                            balance: newStock,
+                            reference: 'Ajuste Manual',
+                        }
+                    })
+                ]);
+            }
+        }
+        return this.findOne(id, product.tenantId);
     }
     async remove(id) {
         await this.prisma.product.update({

@@ -35,7 +35,7 @@ export declare class QuotesController {
                 image: string | null;
                 isActive: boolean;
                 minStock: number;
-                unitType: import("@prisma/client/client").$Enums.UnitType;
+                unitType: import("@prisma/client").$Enums.UnitType;
             };
         } & {
             id: string;
@@ -115,7 +115,7 @@ export declare class QuotesController {
                 image: string | null;
                 isActive: boolean;
                 minStock: number;
-                unitType: import("@prisma/client/client").$Enums.UnitType;
+                unitType: import("@prisma/client").$Enums.UnitType;
             };
         } & {
             id: string;

@@ -3,6 +3,7 @@ import { DteService } from '../dte/dte.service';
 import { InternalReceiptService } from '../dte/internal-receipt.service';
 import { CreateSaleDto, CreatePaymentDto } from './dto/create-sale.dto';
 import { CreditsService } from '../credits/credits.service';
+import { InventoryService } from '../inventory/inventory.service';
 interface GetSalesFilters {
     startDate?: string;
     endDate?: string;
@@ -13,8 +14,9 @@ export declare class SalesService {
     private dteService;
     private internalReceiptService;
     private creditsService;
+    private inventoryService;
     private readonly logger;
-    constructor(prisma: PrismaService, dteService: DteService, internalReceiptService: InternalReceiptService, creditsService: CreditsService);
+    constructor(prisma: PrismaService, dteService: DteService, internalReceiptService: InternalReceiptService, creditsService: CreditsService, inventoryService: InventoryService);
     getSales(filters?: GetSalesFilters): Promise<({
         branch: {
             id: string;
@@ -51,8 +53,8 @@ export declare class SalesService {
             status: string;
             customerId: string;
             saleId: string | null;
-            totalAmount: number;
             balance: number;
+            totalAmount: number;
         } | null;
         items: ({
             product: {
@@ -70,7 +72,7 @@ export declare class SalesService {
                 image: string | null;
                 isActive: boolean;
                 minStock: number;
-                unitType: import("@prisma/client/client").$Enums.UnitType;
+                unitType: import("@prisma/client").$Enums.UnitType;
             };
         } & {
             id: string;
@@ -120,8 +122,8 @@ export declare class SalesService {
             status: string;
             customerId: string;
             saleId: string | null;
-            totalAmount: number;
             balance: number;
+            totalAmount: number;
         } | null;
         items: {
             id: string;
@@ -134,7 +136,7 @@ export declare class SalesService {
             id: string;
             createdAt: Date;
             amount: number;
-            paymentMethod: import("@prisma/client/client").$Enums.PaymentMethod;
+            paymentMethod: import("@prisma/client").$Enums.PaymentMethod;
             saleId: string;
         }[];
     } & {

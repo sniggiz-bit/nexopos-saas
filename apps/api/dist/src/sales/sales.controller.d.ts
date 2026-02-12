@@ -39,8 +39,8 @@ export declare class SalesController {
             status: string;
             customerId: string;
             saleId: string | null;
-            totalAmount: number;
             balance: number;
+            totalAmount: number;
         } | null;
         items: ({
             product: {
@@ -58,7 +58,7 @@ export declare class SalesController {
                 image: string | null;
                 isActive: boolean;
                 minStock: number;
-                unitType: import("@prisma/client/client").$Enums.UnitType;
+                unitType: import("@prisma/client").$Enums.UnitType;
             };
         } & {
             id: string;
@@ -108,8 +108,8 @@ export declare class SalesController {
             status: string;
             customerId: string;
             saleId: string | null;
-            totalAmount: number;
             balance: number;
+            totalAmount: number;
         } | null;
         items: {
             id: string;
@@ -122,7 +122,7 @@ export declare class SalesController {
             id: string;
             createdAt: Date;
             amount: number;
-            paymentMethod: import("@prisma/client/client").$Enums.PaymentMethod;
+            paymentMethod: import("@prisma/client").$Enums.PaymentMethod;
             saleId: string;
         }[];
     } & {
