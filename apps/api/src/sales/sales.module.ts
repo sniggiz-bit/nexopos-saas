@@ -6,9 +6,10 @@ import { ReceiptsModule } from '../receipts/receipts.module';
 import { CreditsModule } from '../credits/credits.module';
 
 import { ShiftsModule } from '../shifts/shifts.module';
+import { InventoryModule } from '../inventory/inventory.module';
 
 @Module({
-    imports: [PrismaModule, ReceiptsModule, ShiftsModule, CreditsModule],
+    imports: [PrismaModule, ReceiptsModule, ShiftsModule, CreditsModule, InventoryModule],
     controllers: [SalesController],
     providers: [SalesService],
 })

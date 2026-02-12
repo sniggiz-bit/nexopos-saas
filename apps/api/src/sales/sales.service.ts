@@ -4,6 +4,8 @@ import { DteService } from '../dte/dte.service';
 import { InternalReceiptService } from '../dte/internal-receipt.service';
 import { CreateSaleDto, CreatePaymentDto } from './dto/create-sale.dto';
 import { CreditsService } from '../credits/credits.service';
+import { InventoryService } from '../inventory/inventory.service';
+import { MovementType } from '@prisma/client';
 import * as path from 'path';
 
 interface GetSalesFilters {
@@ -21,6 +23,7 @@ export class SalesService {
         private dteService: DteService,
         private internalReceiptService: InternalReceiptService,
         private creditsService: CreditsService,
+        private inventoryService: InventoryService,
     ) { }
 
     /**
@@ -104,10 +107,16 @@ export class SalesService {
                     throw new BadRequestException(`Insufficient stock for product ${item.productId}`);
                 }
 
-                await prisma.inventoryLevel.update({
-                    where: { productId_branchId: { productId: item.productId, branchId } },
-                    data: { quantity: { decrement: item.quantity } },
-                });
+                await this.inventoryService.logMovement({
+                    productId: item.productId,
+                    branchId,
+                    quantity: -Number(item.quantity), // Negative for sale (OUT)
+                    type: MovementType.SALE,
+                    reference: `Venta`, // We don't have the Sale ID yet, maybe update later or use "Pending"
+                    userId,
+                }, prisma);
+
+                // InventoryLevel update is handled by logMovement
             }
 
             // 3. Calculate Total
@@ -169,6 +178,21 @@ export class SalesService {
                     }
                 });
             }
+
+            // 7. Update Movement References (Async or inside transaction if vital)
+            // Since we created movements with placeholder reference, strict audit might require Sale ID.
+            // Using `updateMany` inside transaction to link movements to this sale is good practice.
+            // However, StockMovement doesn't have saleId field in our current schema plan, it uses `reference` string.
+            // We can update the reference now that we have the Sale ID.
+            await prisma.stockMovement.updateMany({
+                where: {
+                    reference: 'Venta',
+                    productId: { in: items.map(i => i.productId) },
+                    branchId,
+                    createdAt: { gte: new Date(Date.now() - 5000) } // Safety window to match recent movements
+                },
+                data: { reference: `SALE-${createdSale.id}` }
+            });
 
             return createdSale;
         });

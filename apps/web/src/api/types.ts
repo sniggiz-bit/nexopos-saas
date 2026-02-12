@@ -75,5 +75,22 @@ export interface Credit {
     createdAt: string;
     customer?: Customer;
     sale?: any;
+    sale?: any;
     payments: CreditPayment[];
+}
+
+export type MovementType = 'SALE' | 'PURCHASE' | 'ADJUSTMENT' | 'RETURN' | 'TRANSFER_IN' | 'TRANSFER_OUT' | 'INITIAL';
+
+export interface StockMovement {
+    id: string;
+    productId: string;
+    branchId: string;
+    quantity: number;
+    type: MovementType;
+    reference?: string;
+    balance: number;
+    createdAt: string;
+    user?: {
+        name: string | null;
+    };
 }

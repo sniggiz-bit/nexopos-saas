@@ -166,6 +166,17 @@ export class ProductsService {
                         }
                     ] : [],
                 },
+                stockMovements: {
+                    create: createProductDto.initialStock ? [
+                        {
+                            branchId: 'branch-1',
+                            quantity: new Prisma.Decimal(createProductDto.initialStock),
+                            type: 'INITIAL',
+                            balance: new Prisma.Decimal(createProductDto.initialStock),
+                            reference: 'Inventario Inicial',
+                        }
+                    ] : [],
+                },
             },
             include: {
                 category: true,
@@ -246,56 +257,56 @@ export class ProductsService {
                 isActive: updateProductDto.isActive,
                 categoryId: updateProductDto.categoryId,
                 brandId: updateProductDto.brandId,
-                // Handle stock update via upsert for the default branch
-                inventory: updateProductDto.stock !== undefined ? {
-                    upsert: {
-                        where: {
-                            productId_branchId: {
-                                productId: id,
-                                branchId: 'branch-1',
-                            }
-                        },
-                        create: {
-                            branchId: 'branch-1',
-                            quantity: new Prisma.Decimal(updateProductDto.stock),
-                        },
-                        update: {
-                            quantity: new Prisma.Decimal(updateProductDto.stock),
-                        }
-                    }
-                } : undefined,
             },
             include: {
                 category: true,
                 brand: true,
-                inventory: true,
+                inventory: true, // Keep this include to get tenantId for findOne call
             },
         });
 
-        return {
-            id: product.id,
-            name: product.name,
-            sku: product.sku || undefined,
-            barcode: product.barcode || undefined,
-            price: product.price,
-            costPrice: product.costPrice,
-            minStock: product.minStock,
-            unitType: product.unitType as 'UNIT' | 'WEIGHT',
-            image: product.image || undefined,
-            isActive: product.isActive,
-            stock: product.inventory.reduce(
-                (total, inv) => total + Number(inv.quantity),
-                0,
-            ),
-            category: product.category ? {
-                id: product.category.id,
-                name: product.category.name,
-            } : undefined,
-            brand: product.brand ? {
-                id: product.brand.id,
-                name: product.brand.name,
-            } : undefined,
-        };
+        // Handle Stock Update Logging if stock is provided
+        if (updateProductDto.stock !== undefined) {
+            const newStock = new Prisma.Decimal(updateProductDto.stock);
+            const branchId = 'branch-1';
+
+            // Get current stock for this branch
+            const currentInv = await this.prisma.inventoryLevel.findUnique({
+                where: { productId_branchId: { productId: id, branchId } }
+            });
+            const currentQty = currentInv ? currentInv.quantity : new Prisma.Decimal(0);
+            const diff = newStock.minus(currentQty);
+
+            if (!diff.equals(0)) {
+                await this.prisma.$transaction([
+                    // Update Inventory Level
+                    this.prisma.inventoryLevel.upsert({
+                        where: { productId_branchId: { productId: id, branchId } },
+                        create: { productId: id, branchId, quantity: newStock },
+                        update: { quantity: newStock }
+                    }),
+                    // Log Movement
+                    this.prisma.stockMovement.create({
+                        data: {
+                            productId: id,
+                            branchId,
+                            quantity: diff,
+                            type: 'ADJUSTMENT',
+                            balance: newStock,
+                            reference: 'Ajuste Manual',
+                        }
+                    })
+                ]);
+            }
+        }
+
+        // Fetch updated product to return
+        // Note: The previous query `product` might be stale regarding inventory if we just updated it above.
+        // But `updateProductDto.stock` was NOT passed to the initial `prisma.product.update` call in my modified code?
+        // Wait, I need to REMOVE the inventory update from the initial `prisma.product.update` if I'm doing it manually here.
+        // OR better: Do everything in a transaction.
+
+        return this.findOne(id, product.tenantId);
     }
 
     /**

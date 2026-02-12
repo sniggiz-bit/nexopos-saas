@@ -3,13 +3,16 @@ import { DashboardLayout } from '../../components/dashboard/DashboardLayout';
 import { useProducts } from '../../hooks/useProducts';
 import { useDeleteProduct } from '../../hooks/useDeleteProduct';
 import { ProductFormModal } from '../../components/dashboard/ProductFormModal';
-import { Plus, Search, Edit, Trash2 } from 'lucide-react';
+import { InventoryKardexModal } from '../../components/dashboard/InventoryKardexModal';
+import { Plus, Search, Edit, Trash2, History } from 'lucide-react';
 import type { Product } from '../../api/types';
 
 export function ProductsPage() {
     const [searchTerm, setSearchTerm] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [productToEdit, setProductToEdit] = useState<Product | null>(null);
+    const [isKardexOpen, setIsKardexOpen] = useState(false);
+    const [productForKardex, setProductForKardex] = useState<Product | null>(null);
 
     const { data: products, isLoading } = useProducts();
     const deleteProduct = useDeleteProduct();
@@ -33,6 +36,11 @@ export function ProductsPage() {
     const handleCloseModal = () => {
         setIsModalOpen(false);
         setProductToEdit(null);
+    };
+
+    const handleKardex = (product: Product) => {
+        setProductForKardex(product);
+        setIsKardexOpen(true);
     };
 
     return (
@@ -157,6 +165,13 @@ export function ProductsPage() {
                                                 <Edit className="w-4 h-4" />
                                             </button>
                                             <button
+                                                onClick={() => handleKardex(product)}
+                                                className="text-gray-600 hover:text-gray-900 mr-3"
+                                                title="Ver Kardex"
+                                            >
+                                                <History className="w-4 h-4" />
+                                            </button>
+                                            <button
                                                 onClick={() => handleDelete(product)}
                                                 disabled={deleteProduct.isPending}
                                                 className="text-red-600 hover:text-red-900 disabled:opacity-50"
@@ -176,6 +191,15 @@ export function ProductsPage() {
                     isOpen={isModalOpen}
                     onClose={handleCloseModal}
                     initialData={productToEdit}
+                />
+
+                <InventoryKardexModal
+                    isOpen={isKardexOpen}
+                    onClose={() => {
+                        setIsKardexOpen(false);
+                        setProductForKardex(null);
+                    }}
+                    product={productForKardex}
                 />
             </div>
         </DashboardLayout>
