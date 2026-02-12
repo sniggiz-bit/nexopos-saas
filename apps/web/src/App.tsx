@@ -17,6 +17,9 @@ import { CreditsPage } from './pages/dashboard/CreditsPage';
 import { TreasuryPage } from './pages/dashboard/TreasuryPage';
 import { CriticalStockPage } from './pages/dashboard/CriticalStockPage';
 import { SsoLoginPage } from './pages/SsoLoginPage';
+import { LoginPage } from './pages/LoginPage';
+import { AuthProvider } from './context/AuthContext';
+import { ProtectedRoute } from './components/ProtectedRoute';
 
 // Create a client for TanStack Query
 const queryClient = new QueryClient({
@@ -46,33 +49,45 @@ function LoadingScreen() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <Suspense fallback={<LoadingScreen />}>
-          <Routes>
-            <Route path="/auth/sso" element={<SsoLoginPage />} />
-            <Route path="/pos" element={<PosPage />} />
-            <Route path="/dashboard" element={<DashboardOverviewPage />} />
-            <Route path="/dashboard/products" element={<ProductsPage />} />
-            <Route path="/dashboard/inventory" element={<InventoryPage />} />
-            <Route path="/dashboard/categories" element={<CategoriesPage />} />
-            <Route path="/dashboard/brands" element={<BrandsPage />} />
-            <Route path="/dashboard/settings" element={<SettingsPage />} />
-            <Route path="/dashboard/sales" element={<SalesHistoryPage />} />
-            <Route path="/dashboard/clients" element={<ClientsPage />} />
-            <Route path="/dashboard/quotes" element={<QuotesPage />} />
-            <Route path="/dashboard/quotes/new" element={<CreateQuotePage />} />
-            <Route path="/dashboard/credits" element={<CreditsPage />} />
-            <Route path="/dashboard/treasury" element={<TreasuryPage />} />
-            <Route path="/dashboard/reports/critical-stock" element={<CriticalStockPage />} />
-            <Route path="/" element={<Navigate to="/pos" replace />} />
-          </Routes>
-        </Suspense>
-        <Toaster />
-      </BrowserRouter>
+      <AuthProvider>
+        <BrowserRouter>
+          <Suspense fallback={<LoadingScreen />}>
+            <Routes>
+              {/* Public Routes */}
+              <Route path="/auth/sso" element={<SsoLoginPage />} />
+              <Route path="/login" element={<LoginPage />} />
+
+              {/* Protected Routes */}
+              <Route element={<ProtectedRoute allowedRoles={['ADMIN', 'CASHIER']} />}>
+                <Route path="/pos" element={<PosPage />} />
+              </Route>
+
+              <Route element={<ProtectedRoute allowedRoles={['ADMIN']} />}>
+                <Route path="/dashboard" element={<DashboardOverviewPage />} />
+                <Route path="/dashboard/products" element={<ProductsPage />} />
+                <Route path="/dashboard/inventory" element={<InventoryPage />} />
+                <Route path="/dashboard/categories" element={<CategoriesPage />} />
+                <Route path="/dashboard/brands" element={<BrandsPage />} />
+                <Route path="/dashboard/settings" element={<SettingsPage />} />
+                <Route path="/dashboard/sales" element={<SalesHistoryPage />} />
+                <Route path="/dashboard/clients" element={<ClientsPage />} />
+                <Route path="/dashboard/quotes" element={<QuotesPage />} />
+                <Route path="/dashboard/quotes/new" element={<CreateQuotePage />} />
+                <Route path="/dashboard/credits" element={<CreditsPage />} />
+                <Route path="/dashboard/treasury" element={<TreasuryPage />} />
+                <Route path="/dashboard/reports/critical-stock" element={<CriticalStockPage />} />
+              </Route>
+
+              {/* Default Redirect */}
+              <Route path="/" element={<Navigate to="/pos" replace />} />
+            </Routes>
+          </Suspense>
+          <Toaster />
+        </BrowserRouter>
+      </AuthProvider>
     </QueryClientProvider>
   );
 }
 
 
 export default App;
-
