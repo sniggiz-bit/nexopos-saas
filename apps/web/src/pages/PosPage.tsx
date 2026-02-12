@@ -117,7 +117,10 @@ export function PosPage() {
                 productId: item.productId,
                 quantity: item.quantity,
             })),
-            paymentMethod: PaymentMethod.CASH,
+            payments: [{
+                paymentMethod: PaymentMethod.CASH,
+                amount: total
+            }],
         };
 
         createSale(saleData);

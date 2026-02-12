@@ -53,6 +53,9 @@ class CreateSaleDto {
     userId;
     payments;
     items;
+    status;
+    customerId;
+    quoteId;
 }
 exports.CreateSaleDto = CreateSaleDto;
 __decorate([
@@ -80,4 +83,19 @@ __decorate([
     (0, class_transformer_1.Type)(() => CreateSaleItemDto),
     __metadata("design:type", Array)
 ], CreateSaleDto.prototype, "items", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsEnum)(['COMPLETED', 'PRE_SALE']),
+    __metadata("design:type", String)
+], CreateSaleDto.prototype, "status", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CreateSaleDto.prototype, "customerId", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CreateSaleDto.prototype, "quoteId", void 0);
 //# sourceMappingURL=create-sale.dto.js.map

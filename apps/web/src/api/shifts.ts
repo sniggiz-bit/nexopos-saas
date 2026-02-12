@@ -36,7 +36,12 @@ export const openShift = async (data: OpenShiftRequest): Promise<Shift> => {
     return response.data;
 };
 
-export const closeShift = async (data: CloseShiftRequest): Promise<Shift> => {
+export interface CloseShiftResponse {
+    shift: Shift;
+    textReport: string;
+}
+
+export const closeShift = async (data: CloseShiftRequest): Promise<CloseShiftResponse> => {
     const response = await api.post('/shifts/close', data);
     return response.data;
 };

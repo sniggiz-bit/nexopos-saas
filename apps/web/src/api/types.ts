@@ -29,3 +29,51 @@ export interface ProductsResponse {
     total: number;
 }
 
+
+export interface Customer {
+    id: string;
+    name: string;
+    rut: string;
+    giro?: string;
+    address?: string;
+    comuna?: string;
+    email?: string;
+    phone?: string;
+    tenantId: string;
+}
+
+export interface QuoteItem {
+    id: string;
+    productId: string;
+    quantity: number;
+    price: number;
+    product?: Product;
+}
+
+export interface Quote {
+    id: string;
+    total: number;
+    status: 'DRAFT' | 'ISSUED' | 'CONVERTED';
+    createdAt: string;
+    expiryDate?: string;
+    customer?: Customer;
+    items: QuoteItem[];
+}
+
+export interface CreditPayment {
+    id: string;
+    amount: number;
+    paymentMethod: string;
+    createdAt: string;
+}
+
+export interface Credit {
+    id: string;
+    totalAmount: number;
+    balance: number;
+    status: 'OPEN' | 'PAID';
+    createdAt: string;
+    customer?: Customer;
+    sale?: any;
+    payments: CreditPayment[];
+}

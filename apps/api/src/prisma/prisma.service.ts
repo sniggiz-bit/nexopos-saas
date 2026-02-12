@@ -75,4 +75,20 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
   get cashShift() {
     return this.prisma.cashShift;
   }
+
+  get customer() {
+    return this.prisma.customer;
+  }
+
+  get quote() {
+    return this.prisma.quote;
+  }
+
+  get credit() {
+    return this.prisma.credit;
+  }
+
+  get creditPayment() {
+    return this.prisma.creditPayment;
+  }
 }

@@ -10,9 +10,15 @@ export const PaymentMethod = {
 export type PaymentMethod = typeof PaymentMethod[keyof typeof PaymentMethod];
 
 
+
 export interface SaleItem {
     productId: string;
     quantity: number;
+}
+
+export interface PaymentRequest {
+    paymentMethod: string;
+    amount: number;
 }
 
 export interface CreateSaleRequest {
@@ -20,7 +26,10 @@ export interface CreateSaleRequest {
     branchId: string;
     userId?: string;
     items: SaleItem[];
-    paymentMethod: PaymentMethod;
+    payments: PaymentRequest[];
+    status?: 'COMPLETED' | 'PRE_SALE';
+    customerId?: string;
+    quoteId?: string;
 }
 
 
@@ -30,7 +39,7 @@ export interface Sale {
     branchId: string;
     userId?: string;
     total: number;
-    paymentMethod: PaymentMethod;
+    status: 'COMPLETED' | 'PRE_SALE';
     dteFolio?: number;
     dteStatus?: string;
     dtePdfUrl?: string;
@@ -47,6 +56,11 @@ export interface Sale {
             sku?: string;
         };
     }[];
+    payments?: {
+        id: string;
+        amount: number;
+        paymentMethod: string;
+    }[];
     branch?: {
         id: string;
         name: string;
@@ -55,6 +69,11 @@ export interface Sale {
         id: string;
         name?: string;
         email: string;
+    };
+    customer?: {
+        id: string;
+        name: string;
+        rut: string;
     };
 }
 
@@ -70,6 +89,14 @@ export interface GetSalesParams {
  */
 export async function createSale(saleData: CreateSaleRequest): Promise<Sale> {
     const response = await apiClient.post<Sale>('/sales', saleData);
+    return response.data;
+}
+
+/**
+ * Complete a pre-sale
+ */
+export async function completeSale(id: string, payments: PaymentRequest[]): Promise<Sale> {
+    const response = await apiClient.post<Sale>(`/sales/${id}/complete`, payments);
     return response.data;
 }
 

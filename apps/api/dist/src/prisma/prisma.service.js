@@ -67,6 +67,18 @@ let PrismaService = class PrismaService {
     get cashShift() {
         return this.prisma.cashShift;
     }
+    get customer() {
+        return this.prisma.customer;
+    }
+    get quote() {
+        return this.prisma.quote;
+    }
+    get credit() {
+        return this.prisma.credit;
+    }
+    get creditPayment() {
+        return this.prisma.creditPayment;
+    }
 };
 exports.PrismaService = PrismaService;
 exports.PrismaService = PrismaService = __decorate([

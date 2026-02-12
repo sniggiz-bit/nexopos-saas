@@ -10,6 +10,7 @@ exports.ShiftsModule = void 0;
 const common_1 = require("@nestjs/common");
 const shifts_controller_1 = require("./shifts.controller");
 const shifts_service_1 = require("./shifts.service");
+const shift_report_service_1 = require("./shift-report.service");
 const prisma_module_1 = require("../prisma/prisma.module");
 let ShiftsModule = class ShiftsModule {
 };
@@ -18,8 +19,8 @@ exports.ShiftsModule = ShiftsModule = __decorate([
     (0, common_1.Module)({
         imports: [prisma_module_1.PrismaModule],
         controllers: [shifts_controller_1.ShiftsController],
-        providers: [shifts_service_1.ShiftsService],
-        exports: [shifts_service_1.ShiftsService],
+        providers: [shifts_service_1.ShiftsService, shift_report_service_1.ShiftReportService],
+        exports: [shifts_service_1.ShiftsService, shift_report_service_1.ShiftReportService],
     })
 ], ShiftsModule);
 //# sourceMappingURL=shifts.module.js.map

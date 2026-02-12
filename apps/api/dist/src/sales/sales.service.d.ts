@@ -1,7 +1,8 @@
 import { PrismaService } from '../prisma/prisma.service';
 import { DteService } from '../dte/dte.service';
 import { InternalReceiptService } from '../dte/internal-receipt.service';
-import { CreateSaleDto } from './dto/create-sale.dto';
+import { CreateSaleDto, CreatePaymentDto } from './dto/create-sale.dto';
+import { CreditsService } from '../credits/credits.service';
 interface GetSalesFilters {
     startDate?: string;
     endDate?: string;
@@ -11,32 +12,57 @@ export declare class SalesService {
     private prisma;
     private dteService;
     private internalReceiptService;
+    private creditsService;
     private readonly logger;
-    constructor(prisma: PrismaService, dteService: DteService, internalReceiptService: InternalReceiptService);
+    constructor(prisma: PrismaService, dteService: DteService, internalReceiptService: InternalReceiptService, creditsService: CreditsService);
     getSales(filters?: GetSalesFilters): Promise<({
         branch: {
             id: string;
-            name: string;
             tenantId: string;
+            name: string;
         };
         user: {
             id: string;
+            tenantId: string;
+            branchId: string | null;
+            createdAt: Date;
+            updatedAt: Date;
             name: string | null;
+            email: string;
+        } | null;
+        customer: {
+            id: string;
             tenantId: string;
             createdAt: Date;
             updatedAt: Date;
-            branchId: string | null;
-            email: string;
+            name: string;
+            email: string | null;
+            rut: string;
+            giro: string | null;
+            address: string | null;
+            comuna: string | null;
+            phone: string | null;
+        } | null;
+        credit: {
+            id: string;
+            tenantId: string;
+            customerId: string;
+            status: string;
+            createdAt: Date;
+            updatedAt: Date;
+            saleId: string | null;
+            totalAmount: number;
+            balance: number;
         } | null;
         items: ({
             product: {
                 id: string;
-                name: string;
-                sku: string | null;
-                price: number;
                 tenantId: string;
                 createdAt: Date;
                 updatedAt: Date;
+                name: string;
+                price: number;
+                sku: string | null;
                 barcode: string | null;
                 brandId: string | null;
                 categoryId: string | null;
@@ -48,87 +74,87 @@ export declare class SalesService {
             };
         } & {
             id: string;
-            price: number;
+            saleId: string;
             productId: string;
             quantity: import("@prisma/client-runtime-utils").Decimal;
-            saleId: string;
+            price: number;
         })[];
     } & {
         id: string;
+        total: number;
         tenantId: string;
+        branchId: string;
+        userId: string | null;
+        cashShiftId: string | null;
+        customerId: string | null;
+        quoteId: string | null;
+        status: string;
         createdAt: Date;
         updatedAt: Date;
-        branchId: string;
-        total: number;
         dteFolio: number | null;
         dteStatus: string;
         dteType: number;
         dtePdfUrl: string | null;
         internalReceiptUrl: string | null;
-        userId: string | null;
-        cashShiftId: string | null;
     })[]>;
-    createSale(createSaleDto: CreateSaleDto): Promise<({
-        branch: {
+    createSale(createSaleDto: CreateSaleDto): Promise<any>;
+    completePreSale(id: string, payments: CreatePaymentDto[]): Promise<({
+        customer: {
             id: string;
-            name: string;
-            tenantId: string;
-        };
-        user: {
-            id: string;
-            name: string | null;
             tenantId: string;
             createdAt: Date;
             updatedAt: Date;
-            branchId: string | null;
-            email: string;
+            name: string;
+            email: string | null;
+            rut: string;
+            giro: string | null;
+            address: string | null;
+            comuna: string | null;
+            phone: string | null;
         } | null;
-        items: ({
-            product: {
-                id: string;
-                name: string;
-                sku: string | null;
-                price: number;
-                tenantId: string;
-                createdAt: Date;
-                updatedAt: Date;
-                barcode: string | null;
-                brandId: string | null;
-                categoryId: string | null;
-                costPrice: number;
-                image: string | null;
-                isActive: boolean;
-                minStock: number;
-                unitType: import("@prisma/client/client").$Enums.UnitType;
-            };
-        } & {
+        credit: {
             id: string;
-            price: number;
+            tenantId: string;
+            customerId: string;
+            status: string;
+            createdAt: Date;
+            updatedAt: Date;
+            saleId: string | null;
+            totalAmount: number;
+            balance: number;
+        } | null;
+        items: {
+            id: string;
+            saleId: string;
             productId: string;
             quantity: import("@prisma/client-runtime-utils").Decimal;
-            saleId: string;
-        })[];
+            price: number;
+        }[];
         payments: {
             id: string;
             createdAt: Date;
+            saleId: string;
             amount: number;
             paymentMethod: import("@prisma/client/client").$Enums.PaymentMethod;
-            saleId: string;
         }[];
     } & {
         id: string;
+        total: number;
         tenantId: string;
+        branchId: string;
+        userId: string | null;
+        cashShiftId: string | null;
+        customerId: string | null;
+        quoteId: string | null;
+        status: string;
         createdAt: Date;
         updatedAt: Date;
-        branchId: string;
-        total: number;
         dteFolio: number | null;
         dteStatus: string;
         dteType: number;
         dtePdfUrl: string | null;
         internalReceiptUrl: string | null;
-        userId: string | null;
-        cashShiftId: string | null;
     }) | null>;
+    private emitDteAndReceipt;
 }
 export {};

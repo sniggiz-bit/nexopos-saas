@@ -1,5 +1,6 @@
 import { DashboardLayout } from '../../components/dashboard/DashboardLayout';
 import { Package, ShoppingCart, TrendingUp, AlertTriangle } from 'lucide-react';
+import { NexoPosAccessButton } from '../../components/NexoPosAccessButton';
 
 export function DashboardOverviewPage() {
     return (
@@ -42,6 +43,14 @@ export function DashboardOverviewPage() {
                         Gestiona productos, inventario, categorías y configuración de facturación desde aquí.
                     </p>
                 </div>
+            </div>
+
+            <div className="flex justify-end mt-6">
+                {/* Temporary hardcoded IDs for testing */}
+                <NexoPosAccessButton
+                    userId="user-123"
+                    tenantId="tenant-123"
+                />
             </div>
         </DashboardLayout>
     );

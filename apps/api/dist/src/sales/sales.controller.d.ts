@@ -6,27 +6,51 @@ export declare class SalesController {
     findAll(startDate?: string, endDate?: string, branchId?: string): Promise<({
         branch: {
             id: string;
-            name: string;
             tenantId: string;
+            name: string;
         };
         user: {
+            branchId: string | null;
             id: string;
-            name: string | null;
             tenantId: string;
             createdAt: Date;
             updatedAt: Date;
-            branchId: string | null;
+            name: string | null;
             email: string;
+        } | null;
+        customer: {
+            id: string;
+            tenantId: string;
+            createdAt: Date;
+            updatedAt: Date;
+            name: string;
+            email: string | null;
+            rut: string;
+            giro: string | null;
+            address: string | null;
+            comuna: string | null;
+            phone: string | null;
+        } | null;
+        credit: {
+            id: string;
+            tenantId: string;
+            customerId: string;
+            status: string;
+            createdAt: Date;
+            updatedAt: Date;
+            saleId: string | null;
+            totalAmount: number;
+            balance: number;
         } | null;
         items: ({
             product: {
                 id: string;
-                name: string;
-                sku: string | null;
-                price: number;
                 tenantId: string;
                 createdAt: Date;
                 updatedAt: Date;
+                name: string;
+                price: number;
+                sku: string | null;
                 barcode: string | null;
                 brandId: string | null;
                 categoryId: string | null;
@@ -38,86 +62,85 @@ export declare class SalesController {
             };
         } & {
             id: string;
-            price: number;
+            saleId: string;
             productId: string;
             quantity: import("@prisma/client-runtime-utils").Decimal;
-            saleId: string;
+            price: number;
         })[];
     } & {
+        branchId: string;
         id: string;
+        total: number;
         tenantId: string;
+        userId: string | null;
+        cashShiftId: string | null;
+        customerId: string | null;
+        quoteId: string | null;
+        status: string;
         createdAt: Date;
         updatedAt: Date;
-        branchId: string;
-        total: number;
         dteFolio: number | null;
         dteStatus: string;
         dteType: number;
         dtePdfUrl: string | null;
         internalReceiptUrl: string | null;
-        userId: string | null;
-        cashShiftId: string | null;
     })[]>;
-    create(createSaleDto: CreateSaleDto): Promise<({
-        branch: {
+    create(createSaleDto: CreateSaleDto): Promise<any>;
+    complete(id: string, payments: CreatePaymentDto[]): Promise<({
+        customer: {
             id: string;
-            name: string;
-            tenantId: string;
-        };
-        user: {
-            id: string;
-            name: string | null;
             tenantId: string;
             createdAt: Date;
             updatedAt: Date;
-            branchId: string | null;
-            email: string;
+            name: string;
+            email: string | null;
+            rut: string;
+            giro: string | null;
+            address: string | null;
+            comuna: string | null;
+            phone: string | null;
         } | null;
-        items: ({
-            product: {
-                id: string;
-                name: string;
-                sku: string | null;
-                price: number;
-                tenantId: string;
-                createdAt: Date;
-                updatedAt: Date;
-                barcode: string | null;
-                brandId: string | null;
-                categoryId: string | null;
-                costPrice: number;
-                image: string | null;
-                isActive: boolean;
-                minStock: number;
-                unitType: import("@prisma/client/client").$Enums.UnitType;
-            };
-        } & {
+        credit: {
             id: string;
-            price: number;
+            tenantId: string;
+            customerId: string;
+            status: string;
+            createdAt: Date;
+            updatedAt: Date;
+            saleId: string | null;
+            totalAmount: number;
+            balance: number;
+        } | null;
+        items: {
+            id: string;
+            saleId: string;
             productId: string;
             quantity: import("@prisma/client-runtime-utils").Decimal;
-            saleId: string;
-        })[];
+            price: number;
+        }[];
         payments: {
             id: string;
             createdAt: Date;
+            saleId: string;
             amount: number;
             paymentMethod: import("@prisma/client/client").$Enums.PaymentMethod;
-            saleId: string;
         }[];
     } & {
+        branchId: string;
         id: string;
+        total: number;
         tenantId: string;
+        userId: string | null;
+        cashShiftId: string | null;
+        customerId: string | null;
+        quoteId: string | null;
+        status: string;
         createdAt: Date;
         updatedAt: Date;
-        branchId: string;
-        total: number;
         dteFolio: number | null;
         dteStatus: string;
         dteType: number;
         dtePdfUrl: string | null;
         internalReceiptUrl: string | null;
-        userId: string | null;
-        cashShiftId: string | null;
     }) | null>;
 }

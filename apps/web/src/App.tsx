@@ -10,6 +10,11 @@ import { CategoriesPage } from './pages/dashboard/CategoriesPage';
 import { BrandsPage } from './pages/dashboard/BrandsPage';
 import { SettingsPage } from './pages/dashboard/SettingsPage';
 import { SalesHistoryPage } from './pages/dashboard/SalesHistoryPage';
+import { ClientsPage } from './pages/dashboard/ClientsPage';
+import { QuotesPage } from './pages/dashboard/QuotesPage';
+import { CreateQuotePage } from './pages/dashboard/CreateQuotePage';
+import { CreditsPage } from './pages/dashboard/CreditsPage';
+import { SsoLoginPage } from './pages/SsoLoginPage';
 
 // Create a client for TanStack Query
 const queryClient = new QueryClient({
@@ -42,6 +47,7 @@ function App() {
       <BrowserRouter>
         <Suspense fallback={<LoadingScreen />}>
           <Routes>
+            <Route path="/auth/sso" element={<SsoLoginPage />} />
             <Route path="/pos" element={<PosPage />} />
             <Route path="/dashboard" element={<DashboardOverviewPage />} />
             <Route path="/dashboard/products" element={<ProductsPage />} />
@@ -50,6 +56,10 @@ function App() {
             <Route path="/dashboard/brands" element={<BrandsPage />} />
             <Route path="/dashboard/settings" element={<SettingsPage />} />
             <Route path="/dashboard/sales" element={<SalesHistoryPage />} />
+            <Route path="/dashboard/clients" element={<ClientsPage />} />
+            <Route path="/dashboard/quotes" element={<QuotesPage />} />
+            <Route path="/dashboard/quotes/new" element={<CreateQuotePage />} />
+            <Route path="/dashboard/credits" element={<CreditsPage />} />
             <Route path="/" element={<Navigate to="/pos" replace />} />
           </Routes>
         </Suspense>

@@ -7,7 +7,10 @@ import {
     FolderTree,
     Tag,
     Settings,
-    Receipt
+    Receipt,
+    Users,
+    FileText,
+    CreditCard
 } from 'lucide-react';
 
 interface DashboardLayoutProps {
@@ -20,6 +23,9 @@ const navigation = [
     { name: 'Inventario', href: '/dashboard/inventory', icon: Warehouse },
     { name: 'Categorías', href: '/dashboard/categories', icon: FolderTree },
     { name: 'Marcas', href: '/dashboard/brands', icon: Tag },
+    { name: 'Clientes', href: '/dashboard/clients', icon: Users },
+    { name: 'Cotizaciones', href: '/dashboard/quotes', icon: FileText },
+    { name: 'Créditos', href: '/dashboard/credits', icon: CreditCard },
     { name: 'Historial de Ventas', href: '/dashboard/sales', icon: Receipt },
     { name: 'Configuración', href: '/dashboard/settings', icon: Settings },
 ];

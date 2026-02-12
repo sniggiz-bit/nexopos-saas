@@ -20,6 +20,10 @@ const brands_module_1 = require("./brands/brands.module");
 const dte_config_module_1 = require("./dte-config/dte-config.module");
 const receipts_module_1 = require("./receipts/receipts.module");
 const shifts_module_1 = require("./shifts/shifts.module");
+const auth_module_1 = require("./auth/auth.module");
+const customers_module_1 = require("./customers/customers.module");
+const quotes_module_1 = require("./quotes/quotes.module");
+const credits_module_1 = require("./credits/credits.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -39,6 +43,10 @@ exports.AppModule = AppModule = __decorate([
             dte_config_module_1.DteConfigModule,
             receipts_module_1.ReceiptsModule,
             shifts_module_1.ShiftsModule,
+            auth_module_1.AuthModule,
+            customers_module_1.CustomersModule,
+            quotes_module_1.QuotesModule,
+            credits_module_1.CreditsModule,
         ],
         controllers: [app_controller_1.AppController],
         providers: [app_service_1.AppService],

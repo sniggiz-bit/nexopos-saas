@@ -18,4 +18,7 @@ export declare class CreateSaleDto {
     userId?: string;
     payments: CreatePaymentDto[];
     items: CreateSaleItemDto[];
+    status?: 'COMPLETED' | 'PRE_SALE';
+    customerId?: string;
+    quoteId?: string;
 }

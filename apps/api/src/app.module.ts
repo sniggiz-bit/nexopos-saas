@@ -11,6 +11,10 @@ import { BrandsModule } from './brands/brands.module';
 import { DteConfigModule } from './dte-config/dte-config.module';
 import { ReceiptsModule } from './receipts/receipts.module';
 import { ShiftsModule } from './shifts/shifts.module';
+import { AuthModule } from './auth/auth.module';
+import { CustomersModule } from './customers/customers.module';
+import { QuotesModule } from './quotes/quotes.module';
+import { CreditsModule } from './credits/credits.module';
 
 @Module({
   imports: [
@@ -27,6 +31,10 @@ import { ShiftsModule } from './shifts/shifts.module';
     DteConfigModule,
     ReceiptsModule,
     ShiftsModule,
+    AuthModule,
+    CustomersModule,
+    QuotesModule,
+    CreditsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

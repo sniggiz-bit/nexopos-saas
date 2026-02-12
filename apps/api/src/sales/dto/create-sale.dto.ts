@@ -48,4 +48,16 @@ export class CreateSaleDto {
     @ValidateNested({ each: true })
     @Type(() => CreateSaleItemDto)
     items: CreateSaleItemDto[];
+
+    @IsOptional()
+    @IsEnum(['COMPLETED', 'PRE_SALE'])
+    status?: 'COMPLETED' | 'PRE_SALE';
+
+    @IsOptional()
+    @IsString()
+    customerId?: string;
+
+    @IsOptional()
+    @IsString()
+    quoteId?: string;
 }

@@ -12,10 +12,11 @@ interface CartProps {
     onRemove: (productId: string) => void;
     onCheckout: () => void;
     isProcessing?: boolean;
+    checkoutLabel?: string;
 }
 
 
-export function Cart({ items, onUpdateQuantity, onRemove, onCheckout, isProcessing }: CartProps) {
+export function Cart({ items, onUpdateQuantity, onRemove, onCheckout, isProcessing, checkoutLabel = 'Pagar' }: CartProps) {
     const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
     const netAmount = total / 1.19;
     const taxValue = total - netAmount;
@@ -77,7 +78,7 @@ export function Cart({ items, onUpdateQuantity, onRemove, onCheckout, isProcessi
                     onClick={onCheckout}
                     disabled={isEmpty || isProcessing}
                 >
-                    {isProcessing ? 'Procesando...' : 'Pagar'}
+                    {isProcessing ? 'Procesando...' : checkoutLabel}
                 </Button>
             </CardFooter>
         </Card>

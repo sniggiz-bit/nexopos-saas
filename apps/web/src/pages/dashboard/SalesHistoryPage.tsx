@@ -1,5 +1,6 @@
 import { DashboardLayout } from '../../components/dashboard/DashboardLayout';
 import { useSales } from '../../hooks/useSales';
+import { Sale } from '../../api/sales';
 import { FileText, Eye } from 'lucide-react';
 import { Card } from '../../components/ui/card';
 
@@ -27,14 +28,16 @@ export function SalesHistoryPage() {
         }).format(amount);
     };
 
-    const getPaymentMethodLabel = (method: string) => {
+    const getPaymentMethodsLabel = (payments: any[]) => {
+        if (!payments || payments.length === 0) return 'N/A';
         const labels: Record<string, string> = {
             CASH: 'Efectivo',
             CARD: 'Tarjeta',
             TRANSFER: 'Transferencia',
             DEBIT: 'Débito',
+            CREDITO: 'Crédito',
         };
-        return labels[method] || method;
+        return payments.map(p => labels[p.paymentMethod] || p.paymentMethod).join(', ');
     };
 
     const getStatusBadge = (status?: string) => {
@@ -72,12 +75,12 @@ export function SalesHistoryPage() {
         window.open(fullUrl, '_blank');
     };
 
-    const isPdfAvailable = (sale: typeof sales[0]) => {
+    const isPdfAvailable = (sale: Sale) => {
         // PDF is available if URL exists and is not a mock URL
         return (sale.dtePdfUrl && !sale.dtePdfUrl.includes('ejemplo-mock')) || !!sale.internalReceiptUrl;
     };
 
-    const getPdfUrl = (sale: typeof sales[0]): string | null => {
+    const getPdfUrl = (sale: Sale): string | null => {
         // Prefer DTE PDF if available and not mock
         if (sale.dtePdfUrl && !sale.dtePdfUrl.includes('ejemplo-mock')) {
             return sale.dtePdfUrl;
@@ -86,7 +89,7 @@ export function SalesHistoryPage() {
         return sale.internalReceiptUrl || null;
     };
 
-    const getPdfButtonLabel = (sale: typeof sales[0]): string => {
+    const getPdfButtonLabel = (sale: Sale): string => {
         if (sale.dtePdfUrl && !sale.dtePdfUrl.includes('ejemplo-mock')) {
             return 'Ver Boleta';
         }
@@ -178,7 +181,7 @@ export function SalesHistoryPage() {
                                                 {formatCurrency(sale.total)}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                {getPaymentMethodLabel(sale.paymentMethod)}
+                                                {getPaymentMethodsLabel(sale.payments || [])}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 {getStatusBadge(sale.dteStatus)}

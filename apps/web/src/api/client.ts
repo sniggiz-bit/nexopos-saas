@@ -9,6 +9,8 @@ export const apiClient = axios.create({
     },
 });
 
+export const api = apiClient;
+
 // Request interceptor for adding auth tokens if needed
 apiClient.interceptors.request.use(
     (config) => {

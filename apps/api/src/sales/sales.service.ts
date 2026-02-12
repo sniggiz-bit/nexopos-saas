@@ -1,8 +1,9 @@
-import { Injectable, Logger, BadRequestException } from '@nestjs/common';
+import { Injectable, Logger, BadRequestException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { DteService } from '../dte/dte.service';
 import { InternalReceiptService } from '../dte/internal-receipt.service';
-import { CreateSaleDto } from './dto/create-sale.dto';
+import { CreateSaleDto, CreatePaymentDto } from './dto/create-sale.dto';
+import { CreditsService } from '../credits/credits.service';
 import * as path from 'path';
 
 interface GetSalesFilters {
@@ -19,242 +20,243 @@ export class SalesService {
         private prisma: PrismaService,
         private dteService: DteService,
         private internalReceiptService: InternalReceiptService,
+        private creditsService: CreditsService,
     ) { }
 
     /**
      * Get all sales with optional filters
-     * 
-     * @param filters - Optional filters for date range and branch
-     * @returns Array of sales with items, products, branch, and user data
      */
     async getSales(filters: GetSalesFilters = {}) {
         const { startDate, endDate, branchId } = filters;
-
-        // Build the where clause dynamically based on provided filters
         const where: any = {};
 
         if (startDate || endDate) {
             where.createdAt = {};
-            if (startDate) {
-                where.createdAt.gte = new Date(startDate);
-            }
-            if (endDate) {
-                where.createdAt.lte = new Date(endDate);
-            }
+            if (startDate) where.createdAt.gte = new Date(startDate);
+            if (endDate) where.createdAt.lte = new Date(endDate);
         }
 
-        if (branchId) {
-            where.branchId = branchId;
-        }
+        if (branchId) where.branchId = branchId;
 
         return this.prisma.sale.findMany({
             where,
-            orderBy: {
-                createdAt: 'desc', // Most recent first
-            },
+            orderBy: { createdAt: 'desc' },
             include: {
-                items: {
-                    include: {
-                        product: true, // Include product details for each item
-                    },
-                },
+                items: { include: { product: true } },
                 branch: true,
                 user: true,
+                customer: true,
+                credit: true,
             },
         });
     }
 
     async createSale(createSaleDto: CreateSaleDto) {
-        const logFile = 'C:\\Users\\user\\sales-debug.log';
-        const log = (msg: string) => {
-            const time = new Date().toISOString();
-            const fs = require('fs');
-            fs.appendFileSync(logFile, `[${time}] ${msg}\n`);
-            this.logger.log(msg);
-        };
+        const { tenantId, branchId, userId, items, payments, status = 'COMPLETED', customerId, quoteId } = createSaleDto;
 
-        log(`[Sales Service] Starting creation of sale for tenant ${createSaleDto.tenantId}`);
-        // Log the DTO for detail
-        log(`- Items count: ${createSaleDto.items.length}`);
-        log(`- Payments count: ${createSaleDto.payments.length}`);
-        const { tenantId, branchId, userId, items, payments } = createSaleDto;
-
-        // Validate items array is not empty
         if (!items || items.length === 0) {
             throw new BadRequestException('Sale must contain at least one item');
         }
 
-        // Validate payments array is not empty
-        if (!payments || payments.length === 0) {
-            throw new BadRequestException('Sale must contain at least one payment method');
+        // Logic for Pre-sales:
+        // - Allow 0 payments if PRE_SALE
+        if (status === 'COMPLETED') {
+            if (!payments || payments.length === 0) {
+                throw new BadRequestException('Sale must contain at least one payment method');
+            }
         }
 
-        // ============================================
-        // ACID TRANSACTION - All or Nothing
-        // ============================================
+        // Validate Credit Payment
+        const hasCreditPayment = payments?.some(p => p.paymentMethod === 'CREDITO');
+        if (hasCreditPayment && !customerId) {
+            throw new BadRequestException('Customer is required for CREDIT payments');
+        }
+
         const sale = await this.prisma.$transaction(async (prisma) => {
-            // 1. Validate all products exist and fetch their prices from DB
+            // 1. Validate products
             const productIds = items.map(item => item.productId);
             const products = await prisma.product.findMany({
-                where: {
-                    id: { in: productIds },
-                    tenantId, // Ensure products belong to the tenant (security)
-                },
+                where: { id: { in: productIds }, tenantId },
             });
 
             if (products.length !== productIds.length) {
-                const foundIds = products.map(p => p.id);
-                const missingIds = productIds.filter(id => !foundIds.includes(id));
-                throw new BadRequestException(
-                    `Products not found or don't belong to tenant: ${missingIds.join(', ')}`
-                );
+                throw new BadRequestException('Some products were not found');
             }
 
             // 1.5. Validate Open Shift
-            let currentShift = await prisma.cashShift.findFirst({
-                where: {
-                    branchId,
-                    status: 'OPEN',
-                },
+            const currentShift = await prisma.cashShift.findFirst({
+                where: { branchId, status: 'OPEN' },
             });
 
             if (!currentShift) {
-                throw new BadRequestException('No hay turno de caja abierto. Debe abrir caja para realizar ventas.');
+                throw new BadRequestException('No open shift found. Please open a shift first.');
             }
 
-            // Create a map for quick price lookup
-            const productPriceMap = new Map(
-                products.map(p => [p.id, p.price])
-            );
+            const productPriceMap = new Map(products.map(p => [p.id, p.price]));
 
-            // 2. Validate stock availability for ALL items BEFORE processing
+            // 2. Validate and Update Stock
             for (const item of items) {
                 const inventory = await prisma.inventoryLevel.findUnique({
-                    where: {
-                        productId_branchId: {
-                            productId: item.productId,
-                            branchId: branchId,
-                        },
-                    },
+                    where: { productId_branchId: { productId: item.productId, branchId } },
                 });
 
-                if (!inventory) {
-                    throw new BadRequestException(
-                        `Product ${item.productId} not found in branch inventory`
-                    );
+                if (!inventory || inventory.quantity.lessThan(item.quantity)) {
+                    throw new BadRequestException(`Insufficient stock for product ${item.productId}`);
                 }
 
-                if (inventory.quantity < item.quantity) {
-                    throw new BadRequestException(
-                        `Insufficient stock for product ${item.productId}. Available: ${inventory.quantity}, Requested: ${item.quantity}`
-                    );
-                }
-            }
-
-            // 3. All validations passed - now execute the sale
-            // Decrement stock for all items
-            for (const item of items) {
                 await prisma.inventoryLevel.update({
-                    where: {
-                        productId_branchId: {
-                            productId: item.productId,
-                            branchId: branchId,
-                        },
-                    },
-                    data: {
-                        quantity: { decrement: item.quantity },
-                    },
+                    where: { productId_branchId: { productId: item.productId, branchId } },
+                    data: { quantity: { decrement: item.quantity } },
                 });
             }
 
-            // 4. Calculate total using DB prices (SECURITY: Never trust client prices)
+            // 3. Calculate Total
             const total = items.reduce((acc, item) => {
-                const priceFromDB = Number(productPriceMap.get(item.productId) || 0);
-                return acc + (priceFromDB * Number(item.quantity));
+                const price = Number(productPriceMap.get(item.productId) || 0);
+                return acc + (price * Number(item.quantity));
             }, 0);
 
-            // 5. Validate total payments match sale total
-            const totalPaid = payments.reduce((acc, p) => acc + p.amount, 0);
-            if (Math.abs(totalPaid - total) > 0.01) {
-                throw new BadRequestException(`El total pagado ($${totalPaid}) no coincide con el total de la venta ($${total}).`);
+            // 4. Validate Payments (only for COMPLETED)
+            if (status === 'COMPLETED') {
+                const totalPaid = payments.reduce((acc, p) => acc + p.amount, 0);
+                if (Math.abs(totalPaid - total) > 0.01) {
+                    throw new BadRequestException(`Paid amount ($${totalPaid}) does not match total ($${total})`);
+                }
             }
 
-            // 6. Create Sale, SaleItems, and Payments
-            const sale = await prisma.sale.create({
+            // 5. Create Sale
+            const createdSale = await prisma.sale.create({
                 data: {
                     tenantId,
                     branchId,
                     userId,
                     cashShiftId: currentShift.id,
                     total,
+                    status,
+                    customerId,
+                    quoteId,
                     items: {
-                        create: items.map((item) => {
-                            const priceFromDB = Number(productPriceMap.get(item.productId) || 0);
-                            return {
-                                productId: item.productId,
-                                quantity: item.quantity,
-                                price: priceFromDB,
-                            };
-                        }),
+                        create: items.map(item => ({
+                            productId: item.productId,
+                            quantity: item.quantity,
+                            price: Number(productPriceMap.get(item.productId) || 0),
+                        })),
                     },
                     payments: {
-                        create: payments.map((p) => ({
+                        create: payments?.map(p => ({
                             paymentMethod: p.paymentMethod,
                             amount: p.amount,
                         })),
                     },
                 },
-                include: {
-                    items: {
-                        include: {
-                            product: true,
-                        },
-                    },
-                    payments: true,
-                    branch: true,
-                    user: true,
-                },
+                include: { items: { include: { product: true } }, payments: true, customer: true },
             });
 
-            return sale;
+            // 6. Handling Credit Creation
+            if (status === 'COMPLETED' && hasCreditPayment) {
+                const creditAmount = payments
+                    .filter(p => p.paymentMethod === 'CREDITO')
+                    .reduce((acc, p) => acc + p.amount, 0);
+
+                await prisma.credit.create({
+                    data: {
+                        tenantId,
+                        customerId: customerId!,
+                        saleId: createdSale.id,
+                        totalAmount: creditAmount,
+                        balance: creditAmount,
+                        status: 'OPEN',
+                    }
+                });
+            }
+
+            return createdSale;
         });
 
-        // ============================================
-        // DTE EMISSION - SYNC FOR FRONTEND FEEDBACK
-        // ============================================
-        log(`[Sales Service] Emitting DTE for sale ${sale.id}...`);
-        try {
-            await this.dteService.emitirDte(sale.id);
-            log(`- DTE emitted successfully`);
-        } catch (error) {
-            log(`- DTE emission FAILED: ${error.message}`);
-            this.logger.error(`[Sales Service] Error emitiendo DTE para venta ${sale.id}:`, error.message);
+        // Post-Sale Actions (DTE, etc)
+        if (sale.status === 'COMPLETED') {
+            this.emitDteAndReceipt(sale.id);
         }
 
-        // ============================================
-        // INTERNAL RECEIPT GENERATION
-        // ============================================
-        log(`[Sales Service] Requesting internal receipt for sale ${sale.id}...`);
-        try {
-            await this.internalReceiptService.generateReceipt(sale.id);
-            log(`- Internal receipt generated successfully`);
-        } catch (error) {
-            log(`- Internal receipt generation FAILED: ${error.message}`);
-            this.logger.error(`[Sales Service] Error generando ticket interno para venta ${sale.id}:`, error.message);
-        }
+        return sale;
+    }
 
-        // Fetch the updated sale with DTE data and receipt URL
-        log(`[Sales Service] Fetching final sale object...`);
-        const finalSale = await this.prisma.sale.findUnique({
-            where: { id: sale.id },
-            include: {
-                items: { include: { product: true } },
-                payments: true,
-                branch: true,
-                user: true,
-            },
+    async completePreSale(id: string, payments: CreatePaymentDto[]) {
+        const sale = await this.prisma.sale.findUnique({
+            where: { id },
+            include: { items: true },
         });
 
-        return finalSale;
+        if (!sale) throw new NotFoundException('Sale not found');
+        if (sale.status !== 'PRE_SALE') throw new BadRequestException('Sale is not a pre-sale');
+
+        // Validate Payments matching total
+        const totalPaid = payments.reduce((acc, p) => acc + p.amount, 0);
+        if (Math.abs(totalPaid - sale.total) > 0.01) {
+            throw new BadRequestException(`Paid amount ($${totalPaid}) does not match total ($${sale.total})`);
+        }
+
+        // Validate Credit
+        const hasCreditPayment = payments.some(p => p.paymentMethod === 'CREDITO');
+        if (hasCreditPayment && !sale.customerId) {
+            throw new BadRequestException('Customer is required for CREDIT payments');
+        }
+
+        await this.prisma.$transaction(async (prisma) => {
+            // 1. Add payments
+            await prisma.payment.createMany({
+                data: payments.map(p => ({
+                    saleId: id,
+                    amount: p.amount,
+                    paymentMethod: p.paymentMethod as any, // Cast enum
+                })),
+            });
+
+            // 2. Update status
+            await prisma.sale.update({
+                where: { id },
+                data: { status: 'COMPLETED' },
+            });
+
+            // 3. Create Credit if needed
+            if (hasCreditPayment) {
+                const creditAmount = payments
+                    .filter(p => p.paymentMethod === 'CREDITO')
+                    .reduce((acc, p) => acc + p.amount, 0);
+
+                await prisma.credit.create({
+                    data: {
+                        tenantId: sale.tenantId,
+                        customerId: sale.customerId!,
+                        saleId: sale.id,
+                        totalAmount: creditAmount,
+                        balance: creditAmount,
+                        status: 'OPEN',
+                    }
+                });
+            }
+        });
+
+        // Emit DTE/Receipt
+        this.emitDteAndReceipt(id);
+
+        return this.prisma.sale.findUnique({
+            where: { id },
+            include: { items: true, payments: true, customer: true, credit: true },
+        });
+    }
+
+    private async emitDteAndReceipt(saleId: string) {
+        try {
+            await this.dteService.emitirDte(saleId);
+        } catch (e) {
+            this.logger.error(`Failed to emit DTE for sale ${saleId}`, e);
+        }
+
+        try {
+            await this.internalReceiptService.generateReceipt(saleId);
+        } catch (e) {
+            this.logger.error(`Failed to generate receipt for sale ${saleId}`, e);
+        }
     }
 }

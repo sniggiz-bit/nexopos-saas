@@ -21,9 +21,9 @@ export function ProductCard({ product, onAddToCart }: ProductCardProps) {
         >
             <CardContent className="p-4">
                 <div className="aspect-square bg-muted rounded-lg mb-3 flex items-center justify-center">
-                    {product.imageUrl ? (
+                    {product.image ? (
                         <img
-                            src={product.imageUrl}
+                            src={product.image}
                             alt={product.name}
                             className="w-full h-full object-cover rounded-lg"
                         />
@@ -42,11 +42,7 @@ export function ProductCard({ product, onAddToCart }: ProductCardProps) {
                         ) : null}
                     </div>
 
-                    {product.description && (
-                        <p className="text-xs text-muted-foreground line-clamp-1">
-                            {product.description}
-                        </p>
-                    )}
+
 
                     <div className="flex items-center justify-between">
                         <span className="text-lg font-bold text-primary">

@@ -12,10 +12,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.ShiftsService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma/prisma.service");
+const shift_report_service_1 = require("./shift-report.service");
 let ShiftsService = class ShiftsService {
     prisma;
-    constructor(prisma) {
+    shiftReportService;
+    constructor(prisma, shiftReportService) {
         this.prisma = prisma;
+        this.shiftReportService = shiftReportService;
     }
     async openShift(tenantId, branchId, userId, initialAmount) {
         const existingShift = await this.prisma.cashShift.findFirst({
@@ -46,6 +49,7 @@ let ShiftsService = class ShiftsService {
                         payments: true,
                     },
                 },
+                branch: true,
             },
         });
         if (!shift) {
@@ -60,27 +64,67 @@ let ShiftsService = class ShiftsService {
             CREDITO: 0,
             TRANSFERENCIA: 0,
         };
+        let totalSales = 0;
+        let dteCount = 0;
+        let ticketCount = 0;
         shift.sales.forEach(sale => {
+            if (sale.dteFolio) {
+                dteCount++;
+            }
+            else {
+                ticketCount++;
+            }
             sale.payments.forEach(payment => {
                 const method = payment.paymentMethod;
                 if (totalsByMethod.hasOwnProperty(method)) {
                     totalsByMethod[method] += payment.amount;
                 }
+                totalSales += payment.amount;
             });
         });
+        const totalNet = Math.round(totalSales / 1.19);
+        const totalIva = totalSales - totalNet;
         const expectedAmount = Number(shift.initialAmount) + totalsByMethod.EFECTIVO;
         const difference = finalAmount - expectedAmount;
-        return this.prisma.cashShift.update({
+        const summary = {
+            shiftId: shift.id,
+            openedBy: shift.openedBy,
+            closedBy: userId,
+            startTime: shift.startTime,
+            endTime: new Date(),
+            initialAmount: Number(shift.initialAmount),
+            finalAmount,
+            expectedAmount,
+            difference,
+            totalSales,
+            paymentMethods: totalsByMethod,
+            taxSummary: {
+                totalNet,
+                totalIva,
+                totalGross: totalSales,
+            },
+            documents: {
+                dtes: dteCount,
+                tickets: ticketCount,
+            },
+        };
+        const textReport = this.shiftReportService.generateTextReport(summary, shift.branch.name);
+        const updatedShift = await this.prisma.cashShift.update({
             where: { id: shiftId },
             data: {
-                endTime: new Date(),
+                endTime: summary.endTime,
                 closedBy: userId,
                 finalAmount,
                 expectedAmount,
                 difference,
                 status: 'CLOSED',
+                metadata: summary,
             },
         });
+        return {
+            shift: updatedShift,
+            textReport,
+        };
     }
     async getCurrentShift(branchId) {
         return this.prisma.cashShift.findFirst({
@@ -94,6 +138,7 @@ let ShiftsService = class ShiftsService {
 exports.ShiftsService = ShiftsService;
 exports.ShiftsService = ShiftsService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService])
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService,
+        shift_report_service_1.ShiftReportService])
 ], ShiftsService);
 //# sourceMappingURL=shifts.service.js.map

@@ -23,6 +23,9 @@ model Tenant {
   products   Product[]
   sales      Sale[]
   users      User[]
+  customers  Customer[]
+  quotes     Quote[]
+  credits    Credit[]
 }
 
 model Branch {
@@ -94,6 +97,7 @@ model Product {
   category   Category?        @relation(fields: [categoryId], references: [id])
   tenant     Tenant           @relation(fields: [tenantId], references: [id])
   saleItems  SaleItem[]
+  quoteItems QuoteItem[]
 
   @@unique([barcode, tenantId])
 }
@@ -117,6 +121,9 @@ model Sale {
   branchId           String
   userId             String?
   cashShiftId        String?
+  customerId         String?
+  quoteId            String?
+  status             String     @default("COMPLETED") // COMPLETED, PRE_SALE
   createdAt          DateTime   @default(now())
   updatedAt          DateTime   @updatedAt
   dteFolio           Int?
@@ -128,6 +135,9 @@ model Sale {
   tenant             Tenant     @relation(fields: [tenantId], references: [id])
   user               User?      @relation(fields: [userId], references: [id])
   cashShift          CashShift? @relation(fields: [cashShiftId], references: [id])
+  customer           Customer?  @relation(fields: [customerId], references: [id])
+  quote              Quote?     @relation(fields: [quoteId], references: [id])
+  credit             Credit?
   items              SaleItem[]
   payments           Payment[]
 }
@@ -188,7 +198,81 @@ model CashShift {
   expectedAmount Decimal? @db.Decimal(10, 2)
   difference    Decimal?  @db.Decimal(10, 2)
   status        String    @default("OPEN")
-  sales         Sale[]
+  metadata      Json?
+  sales          Sale[]
+  creditPayments CreditPayment[]
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+}
+
+model Customer {
+  id        String   @id @default(uuid())
+  tenantId  String
+  name      String
+  rut       String
+  giro      String?
+  address   String?
+  comuna    String?
+  email     String?
+  phone     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  sales     Sale[]
+  quotes    Quote[]
+  credits   Credit[]
+  
+  @@unique([rut, tenantId])
+}
+
+model Quote {
+  id         String      @id @default(uuid())
+  tenantId   String
+  customerId String?
+  total      Float
+  status     String      @default("DRAFT") // DRAFT, ISSUED, CONVERTED
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+  expiryDate DateTime?
+  items      QuoteItem[]
+  tenant     Tenant      @relation(fields: [tenantId], references: [id])
+  customer   Customer?   @relation(fields: [customerId], references: [id])
+  sales      Sale[]
+}
+
+model QuoteItem {
+  id        String  @id @default(uuid())
+  quoteId   String
+  productId String
+  quantity  Decimal @db.Decimal(10, 3)
+  price     Float
+  quote     Quote   @relation(fields: [quoteId], references: [id])
+  product   Product @relation(fields: [productId], references: [id])
+}
+
+model Credit {
+  id          String          @id @default(uuid())
+  tenantId    String
+  customerId  String
+  saleId      String?         @unique
+  totalAmount Float
+  balance     Float
+  status      String          @default("OPEN") // OPEN, PAID
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  tenant      Tenant          @relation(fields: [tenantId], references: [id])
+  customer    Customer        @relation(fields: [customerId], references: [id])
+  sale        Sale?           @relation(fields: [saleId], references: [id])
+  payments    CreditPayment[]
+}
+
+model CreditPayment {
+  id            String    @id @default(uuid())
+  creditId      String
+  amount        Float
+  paymentMethod String
+  cashShiftId   String?
   createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  credit        Credit    @relation(fields: [creditId], references: [id])
+  cashShift     CashShift? @relation(fields: [cashShiftId], references: [id])
 }
