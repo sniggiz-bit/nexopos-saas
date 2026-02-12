@@ -13,6 +13,7 @@ import { useCurrentShift } from '@/hooks/useShifts';
 import { OpenShiftModal } from '@/components/pos/OpenShiftModal';
 import { CloseShiftModal } from '@/components/pos/CloseShiftModal';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/context/AuthContext';
 
 
 export function PosPage() {
@@ -23,8 +24,8 @@ export function PosPage() {
     const { toast } = useToast();
     const queryClient = useQueryClient();
 
-    // TODO: Get branchId from context/auth
-    const branchId = 'branch-1';
+    const { user } = useAuth();
+    const branchId = user?.branchId || '';
     const { data: currentShift, isLoading: isLoadingShift } = useCurrentShift(branchId);
 
     const { data: products = [], isLoading } = useProducts();

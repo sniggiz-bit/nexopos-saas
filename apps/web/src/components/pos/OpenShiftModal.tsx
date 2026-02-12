@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import {
     Dialog,
@@ -12,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useOpenShift } from '@/hooks/useShifts';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/context/AuthContext';
 
 interface OpenShiftModalProps {
     isOpen: boolean;
@@ -21,6 +21,7 @@ export function OpenShiftModal({ isOpen }: OpenShiftModalProps) {
     const [initialAmount, setInitialAmount] = useState('');
     const { mutate: openShift, isPending } = useOpenShift();
     const { toast } = useToast();
+    const { user } = useAuth();
 
     const handleOpenShift = () => {
         const amount = parseFloat(initialAmount);
@@ -33,11 +34,24 @@ export function OpenShiftModal({ isOpen }: OpenShiftModalProps) {
             return;
         }
 
+        const branchId = user?.branchId;
+        const userId = user?.id;
+        const tenantId = user?.tenantId;
+
+        if (!branchId || !userId || !tenantId) {
+            toast({
+                variant: 'destructive',
+                title: 'Error de Sesión',
+                description: 'No se pudo obtener la información del usuario. Intente recargar.',
+            });
+            return;
+        }
+
         openShift(
             {
-                branchId: 'branch-1', // TODO: Get from context
-                userId: 'user-1', // TODO: Get from context
-                tenantId: 'tenant-1', // TODO: Get from context
+                branchId,
+                userId,
+                tenantId,
                 initialAmount: amount,
             },
             {

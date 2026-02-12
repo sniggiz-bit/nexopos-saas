@@ -17,17 +17,17 @@ export function ProtectedRoute({ allowedRoles }: ProtectedRouteProps) {
         return <Navigate to="/login" state={{ from: location }} replace />;
     }
 
-    if (allowedRoles && user && !allowedRoles.includes(user.role)) {
-        // Redirect based on role if they don't have permission
-        if (user.role === 'CASHIER') {
-            return <Navigate to="/pos" replace />;
+    if (allowedRoles && user) {
+        if (!allowedRoles.includes(user.role)) {
+            // User has a role but it's not allowed for this route
+            if (user.role === 'CASHIER') {
+                return <Navigate to="/pos" replace />;
+            }
+            if (user.role === 'ADMIN') {
+                return <Navigate to="/dashboard" replace />;
+            }
+            return <Navigate to="/" replace />;
         }
-        if (user.role === 'ADMIN') {
-            // If admin tries to access a restricted route (unlikely based on current logic, but safeguard)
-            return <Navigate to="/dashboard" replace />;
-        }
-        // Default fallback
-        return <Navigate to="/" replace />;
     }
 
     return <Outlet />;

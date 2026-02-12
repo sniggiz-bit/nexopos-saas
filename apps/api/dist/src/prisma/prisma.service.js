@@ -79,6 +79,15 @@ let PrismaService = class PrismaService {
     get creditPayment() {
         return this.prisma.creditPayment;
     }
+    get payment() {
+        return this.prisma.payment;
+    }
+    get stockMovement() {
+        return this.prisma.stockMovement;
+    }
+    get quoteItem() {
+        return this.prisma.quoteItem;
+    }
 };
 exports.PrismaService = PrismaService;
 exports.PrismaService = PrismaService = __decorate([

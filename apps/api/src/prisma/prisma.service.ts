@@ -91,4 +91,16 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
   get creditPayment() {
     return this.prisma.creditPayment;
   }
+
+  get payment() {
+    return this.prisma.payment;
+  }
+
+  get stockMovement() {
+    return this.prisma.stockMovement;
+  }
+
+  get quoteItem() {
+    return this.prisma.quoteItem;
+  }
 }

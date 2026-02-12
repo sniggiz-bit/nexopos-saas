@@ -13,34 +13,34 @@ export declare class ProductsService {
     remove(id: string): Promise<void>;
     findCritical(tenantId: string, branchId?: string): Promise<{
         stock: number;
+        brand: {
+            name: string;
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            tenantId: string;
+        } | null;
+        category: {
+            name: string;
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            tenantId: string;
+        } | null;
         inventory: {
             id: string;
             updatedAt: Date;
-            productId: string;
             branchId: string;
+            productId: string;
             quantity: Prisma.Decimal;
         }[];
-        brand: {
-            id: string;
-            name: string;
-            tenantId: string;
-            createdAt: Date;
-            updatedAt: Date;
-        } | null;
-        category: {
-            id: string;
-            name: string;
-            tenantId: string;
-            createdAt: Date;
-            updatedAt: Date;
-        } | null;
-        id: string;
         name: string;
-        sku: string | null;
-        price: number;
-        tenantId: string;
+        id: string;
         createdAt: Date;
         updatedAt: Date;
+        tenantId: string;
+        sku: string | null;
+        price: number;
         barcode: string | null;
         brandId: string | null;
         categoryId: string | null;

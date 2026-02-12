@@ -11,7 +11,8 @@ import {
     FileText,
     CreditCard,
     AlertTriangle,
-    BarChart3
+    BarChart3,
+    History
 } from 'lucide-react';
 
 interface DashboardLayoutProps {
@@ -20,13 +21,13 @@ interface DashboardLayoutProps {
 
 const navigation = [
     { name: 'Resumen', href: '/dashboard', icon: LayoutDashboard },
+    { name: 'Ventas', href: '/dashboard/sales', icon: History },
     { name: 'Productos', href: '/dashboard/products', icon: Package },
     { name: 'Inventario', href: '/dashboard/inventory', icon: Warehouse },
     { name: 'Categorías', href: '/dashboard/categories', icon: FolderTree },
     { name: 'Marcas', href: '/dashboard/brands', icon: Tag },
     { name: 'Clientes', href: '/dashboard/clients', icon: Users },
     { name: 'Cotizaciones', href: '/dashboard/quotes', icon: FileText },
-    { name: 'Créditos', href: '/dashboard/credits', icon: CreditCard },
     { name: 'Créditos', href: '/dashboard/credits', icon: CreditCard },
     { name: 'Tesorería', href: '/dashboard/treasury', icon: BarChart3 },
     { name: 'Stock Crítico', href: '/dashboard/reports/critical-stock', icon: AlertTriangle },

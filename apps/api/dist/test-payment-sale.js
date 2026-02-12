@@ -21,7 +21,7 @@ async function main() {
         shift = await prisma.cashShift.create({
             data: {
                 branchId: branch.id,
-                openedBy: user.id,
+                openedById: user.id,
                 initialAmount: 10000,
                 status: 'OPEN',
             }

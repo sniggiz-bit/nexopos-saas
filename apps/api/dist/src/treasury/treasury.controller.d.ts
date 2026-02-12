@@ -6,31 +6,34 @@ export declare class TreasuryController {
         total: number;
         count: number;
     }>;
-    getCashFlow(tenantId: string): Promise<any>;
+    getCashFlow(tenantId: string): Promise<{
+        method: import("@prisma/client").$Enums.PaymentMethod;
+        amount: number;
+    }[]>;
     getMaturities(tenantId: string): Promise<({
         customer: {
-            id: string;
             name: string;
-            tenantId: string;
-            createdAt: Date;
-            updatedAt: Date;
+            id: string;
             rut: string;
             giro: string | null;
             address: string | null;
+            createdAt: Date;
+            updatedAt: Date;
+            tenantId: string;
             email: string | null;
             comuna: string | null;
             phone: string | null;
         };
     } & {
         id: string;
-        tenantId: string;
         createdAt: Date;
         updatedAt: Date;
-        status: string;
+        tenantId: string;
         customerId: string;
+        status: string;
         saleId: string | null;
-        balance: number;
         totalAmount: number;
+        balance: number;
         dueDate: Date | null;
     })[]>;
 }

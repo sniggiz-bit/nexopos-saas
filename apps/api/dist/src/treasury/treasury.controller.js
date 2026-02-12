@@ -11,7 +11,6 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.TreasuryController = void 0;
 const common_1 = require("@nestjs/common");
@@ -55,6 +54,6 @@ __decorate([
 ], TreasuryController.prototype, "getMaturities", null);
 exports.TreasuryController = TreasuryController = __decorate([
     (0, common_1.Controller)('treasury'),
-    __metadata("design:paramtypes", [typeof (_a = typeof treasury_service_1.TreasuryService !== "undefined" && treasury_service_1.TreasuryService) === "function" ? _a : Object])
+    __metadata("design:paramtypes", [treasury_service_1.TreasuryService])
 ], TreasuryController);
 //# sourceMappingURL=treasury.controller.js.map

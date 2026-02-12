@@ -1,21 +1,53 @@
-import { useQuery } from '@tanstack/react-query';
-import { apiClient } from '../api/client';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { getCategories, createCategory, updateCategory, deleteCategory, CreateCategoryData } from '../api/categories';
+import { toast } from 'react-hot-toast';
 
-interface Category {
-    id: string;
-    name: string;
-    productCount?: number;
-}
-
-async function getCategories(tenantId: string = 'tenant-1'): Promise<Category[]> {
-    const response = await apiClient.get<Category[]>(`/categories?tenantId=${tenantId}`);
-    return response.data;
-}
-
-export function useCategories(tenantId?: string) {
-    return useQuery<Category[], Error>({
+export function useCategories(tenantId: string = 'tenant-1') {
+    return useQuery({
         queryKey: ['categories', tenantId],
         queryFn: () => getCategories(tenantId),
-        staleTime: 1000 * 60 * 5, // 5 minutes
+    });
+}
+
+export function useCreateCategory() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: (data: CreateCategoryData) => createCategory(data),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['categories'] });
+            toast.success('Categoría creada exitosamente');
+        },
+        onError: () => {
+            toast.error('Error al crear la categoría');
+        }
+    });
+}
+
+export function useUpdateCategory() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({ id, data }: { id: string, data: any }) => updateCategory(id, data),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['categories'] });
+            toast.success('Categoría actualizada exitosamente');
+        },
+        onError: () => {
+            toast.error('Error al actualizar la categoría');
+        }
+    });
+}
+
+export function useDeleteCategory() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: (id: string) => deleteCategory(id),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['categories'] });
+            toast.success('Categoría eliminada exitosamente');
+        },
+        onError: (error: any) => {
+            const message = error.response?.data?.message || 'Error al eliminar la categoría';
+            toast.error(message);
+        }
     });
 }

@@ -6,27 +6,27 @@ export declare class QuotesService {
     constructor(prisma: PrismaService);
     create(createQuoteDto: CreateQuoteDto): Promise<{
         customer: {
-            id: string;
             name: string;
-            tenantId: string;
-            createdAt: Date;
-            updatedAt: Date;
+            id: string;
             rut: string;
             giro: string | null;
             address: string | null;
+            createdAt: Date;
+            updatedAt: Date;
+            tenantId: string;
             email: string | null;
             comuna: string | null;
             phone: string | null;
         } | null;
         items: ({
             product: {
-                id: string;
                 name: string;
-                sku: string | null;
-                price: number;
-                tenantId: string;
+                id: string;
                 createdAt: Date;
                 updatedAt: Date;
+                tenantId: string;
+                sku: string | null;
+                price: number;
                 barcode: string | null;
                 brandId: string | null;
                 categoryId: string | null;
@@ -39,30 +39,30 @@ export declare class QuotesService {
         } & {
             id: string;
             price: number;
+            quoteId: string;
             productId: string;
             quantity: import("@prisma/client-runtime-utils").Decimal;
-            quoteId: string;
         })[];
     } & {
         id: string;
-        tenantId: string;
         createdAt: Date;
         updatedAt: Date;
-        status: string;
+        tenantId: string;
         total: number;
         customerId: string | null;
+        status: string;
         expiryDate: Date | null;
     }>;
     findAll(tenantId: string): Promise<({
         customer: {
-            id: string;
             name: string;
-            tenantId: string;
-            createdAt: Date;
-            updatedAt: Date;
+            id: string;
             rut: string;
             giro: string | null;
             address: string | null;
+            createdAt: Date;
+            updatedAt: Date;
+            tenantId: string;
             email: string | null;
             comuna: string | null;
             phone: string | null;
@@ -70,43 +70,43 @@ export declare class QuotesService {
         items: {
             id: string;
             price: number;
+            quoteId: string;
             productId: string;
             quantity: import("@prisma/client-runtime-utils").Decimal;
-            quoteId: string;
         }[];
     } & {
         id: string;
-        tenantId: string;
         createdAt: Date;
         updatedAt: Date;
-        status: string;
+        tenantId: string;
         total: number;
         customerId: string | null;
+        status: string;
         expiryDate: Date | null;
     })[]>;
     findOne(id: string): Promise<{
         customer: {
-            id: string;
             name: string;
-            tenantId: string;
-            createdAt: Date;
-            updatedAt: Date;
+            id: string;
             rut: string;
             giro: string | null;
             address: string | null;
+            createdAt: Date;
+            updatedAt: Date;
+            tenantId: string;
             email: string | null;
             comuna: string | null;
             phone: string | null;
         } | null;
         items: ({
             product: {
-                id: string;
                 name: string;
-                sku: string | null;
-                price: number;
-                tenantId: string;
+                id: string;
                 createdAt: Date;
                 updatedAt: Date;
+                tenantId: string;
+                sku: string | null;
+                price: number;
                 barcode: string | null;
                 brandId: string | null;
                 categoryId: string | null;
@@ -119,38 +119,38 @@ export declare class QuotesService {
         } & {
             id: string;
             price: number;
+            quoteId: string;
             productId: string;
             quantity: import("@prisma/client-runtime-utils").Decimal;
-            quoteId: string;
         })[];
     } & {
         id: string;
-        tenantId: string;
         createdAt: Date;
         updatedAt: Date;
-        status: string;
+        tenantId: string;
         total: number;
         customerId: string | null;
+        status: string;
         expiryDate: Date | null;
     }>;
     update(id: string, updateQuoteDto: UpdateQuoteDto): Promise<{
         id: string;
-        tenantId: string;
         createdAt: Date;
         updatedAt: Date;
-        status: string;
+        tenantId: string;
         total: number;
         customerId: string | null;
+        status: string;
         expiryDate: Date | null;
     }>;
     remove(id: string): Promise<{
         id: string;
-        tenantId: string;
         createdAt: Date;
         updatedAt: Date;
-        status: string;
+        tenantId: string;
         total: number;
         customerId: string | null;
+        status: string;
         expiryDate: Date | null;
     }>;
     generatePdf(id: string): Promise<Buffer>;
