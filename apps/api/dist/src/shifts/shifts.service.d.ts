@@ -9,7 +9,6 @@ export declare class ShiftsService {
         createdAt: Date;
         updatedAt: Date;
         branchId: string;
-        status: string;
         openedBy: string;
         closedBy: string | null;
         startTime: Date;
@@ -18,6 +17,7 @@ export declare class ShiftsService {
         finalAmount: import("@prisma/client-runtime-utils").Decimal | null;
         expectedAmount: import("@prisma/client-runtime-utils").Decimal | null;
         difference: import("@prisma/client-runtime-utils").Decimal | null;
+        status: string;
         metadata: import("@prisma/client/runtime/client").JsonValue | null;
     }>;
     closeShift(shiftId: string, userId: string, finalAmount: number): Promise<{
@@ -26,7 +26,6 @@ export declare class ShiftsService {
             createdAt: Date;
             updatedAt: Date;
             branchId: string;
-            status: string;
             openedBy: string;
             closedBy: string | null;
             startTime: Date;
@@ -35,6 +34,7 @@ export declare class ShiftsService {
             finalAmount: import("@prisma/client-runtime-utils").Decimal | null;
             expectedAmount: import("@prisma/client-runtime-utils").Decimal | null;
             difference: import("@prisma/client-runtime-utils").Decimal | null;
+            status: string;
             metadata: import("@prisma/client/runtime/client").JsonValue | null;
         };
         textReport: string;
@@ -44,7 +44,6 @@ export declare class ShiftsService {
         createdAt: Date;
         updatedAt: Date;
         branchId: string;
-        status: string;
         openedBy: string;
         closedBy: string | null;
         startTime: Date;
@@ -53,6 +52,7 @@ export declare class ShiftsService {
         finalAmount: import("@prisma/client-runtime-utils").Decimal | null;
         expectedAmount: import("@prisma/client-runtime-utils").Decimal | null;
         difference: import("@prisma/client-runtime-utils").Decimal | null;
+        status: string;
         metadata: import("@prisma/client/runtime/client").JsonValue | null;
     } | null>;
 }

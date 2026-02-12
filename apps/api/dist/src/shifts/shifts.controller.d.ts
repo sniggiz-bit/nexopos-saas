@@ -12,7 +12,6 @@ export declare class ShiftsController {
         createdAt: Date;
         updatedAt: Date;
         branchId: string;
-        status: string;
         openedBy: string;
         closedBy: string | null;
         startTime: Date;
@@ -21,6 +20,7 @@ export declare class ShiftsController {
         finalAmount: import("@prisma/client-runtime-utils").Decimal | null;
         expectedAmount: import("@prisma/client-runtime-utils").Decimal | null;
         difference: import("@prisma/client-runtime-utils").Decimal | null;
+        status: string;
         metadata: import("@prisma/client/runtime/client").JsonValue | null;
     }>;
     closeShift(body: {
@@ -33,7 +33,6 @@ export declare class ShiftsController {
             createdAt: Date;
             updatedAt: Date;
             branchId: string;
-            status: string;
             openedBy: string;
             closedBy: string | null;
             startTime: Date;
@@ -42,6 +41,7 @@ export declare class ShiftsController {
             finalAmount: import("@prisma/client-runtime-utils").Decimal | null;
             expectedAmount: import("@prisma/client-runtime-utils").Decimal | null;
             difference: import("@prisma/client-runtime-utils").Decimal | null;
+            status: string;
             metadata: import("@prisma/client/runtime/client").JsonValue | null;
         };
         textReport: string;
@@ -51,7 +51,6 @@ export declare class ShiftsController {
         createdAt: Date;
         updatedAt: Date;
         branchId: string;
-        status: string;
         openedBy: string;
         closedBy: string | null;
         startTime: Date;
@@ -60,6 +59,7 @@ export declare class ShiftsController {
         finalAmount: import("@prisma/client-runtime-utils").Decimal | null;
         expectedAmount: import("@prisma/client-runtime-utils").Decimal | null;
         difference: import("@prisma/client-runtime-utils").Decimal | null;
+        status: string;
         metadata: import("@prisma/client/runtime/client").JsonValue | null;
     } | null>;
 }
