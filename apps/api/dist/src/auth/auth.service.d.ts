@@ -23,4 +23,15 @@ export declare class AuthService {
         access_token: string;
     }>;
     validateSsoToken(token: string): Promise<any>;
+    impersonate(userId: string): Promise<{
+        access_token: string;
+        user: {
+            id: any;
+            email: any;
+            name: any;
+            role: any;
+            tenantId: any;
+            branchId: any;
+        };
+    }>;
 }

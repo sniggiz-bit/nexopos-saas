@@ -25,4 +25,15 @@ export declare class AuthController {
         isValid: boolean;
         user: any;
     }>;
+    impersonate(userId: string): Promise<{
+        access_token: string;
+        user: {
+            id: any;
+            email: any;
+            name: any;
+            role: any;
+            tenantId: any;
+            branchId: any;
+        };
+    }>;
 }

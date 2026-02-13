@@ -1,5 +1,8 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import SuperAdminLayout from './layouts/SuperAdminLayout';
+import AdminDashboardPage from './pages/admin/AdminDashboardPage';
+import TenantsPage from './pages/admin/TenantsPage';
 import { PosPage } from './pages/PosPage';
 import { Toaster } from 'react-hot-toast';
 import { Suspense } from 'react';
@@ -18,7 +21,7 @@ import { TreasuryPage } from './pages/dashboard/TreasuryPage';
 import { CriticalStockPage } from './pages/dashboard/CriticalStockPage';
 import { SsoLoginPage } from './pages/SsoLoginPage';
 import { LoginPage } from './pages/LoginPage';
-import { AuthProvider } from './context/AuthContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 
 // Create a client for TanStack Query
@@ -30,6 +33,18 @@ const queryClient = new QueryClient({
     },
   },
 });
+
+function RoleBasedRedirect() {
+  const { user, isLoading } = useAuth();
+
+  if (isLoading) return <LoadingScreen />;
+
+  if (user?.role === 'SUPER_ADMIN') {
+    return <Navigate to="/admin/dashboard" replace />;
+  }
+
+  return <Navigate to="/pos" replace />;
+}
 
 function LoadingScreen() {
   return (
@@ -57,6 +72,15 @@ function App() {
               <Route path="/auth/sso" element={<SsoLoginPage />} />
               <Route path="/login" element={<LoginPage />} />
 
+              {/* Super Admin Routes */}
+              <Route element={<ProtectedRoute allowedRoles={['SUPER_ADMIN']} />}>
+                <Route path="/admin" element={<SuperAdminLayout />}>
+                  <Route index element={<Navigate to="/admin/dashboard" replace />} />
+                  <Route path="dashboard" element={<AdminDashboardPage />} />
+                  <Route path="tenants" element={<TenantsPage />} />
+                </Route>
+              </Route>
+
               {/* Protected Routes */}
               <Route element={<ProtectedRoute allowedRoles={['ADMIN', 'CASHIER']} />}>
                 <Route path="/pos" element={<PosPage />} />
@@ -79,7 +103,8 @@ function App() {
               </Route>
 
               {/* Default Redirect */}
-              <Route path="/" element={<Navigate to="/pos" replace />} />
+              {/* Default Redirect - Handle Role Based Redirect */}
+              <Route path="/" element={<RoleBasedRedirect />} />
             </Routes>
           </Suspense>
           <Toaster />

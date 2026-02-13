@@ -62,6 +62,7 @@ enum UserRole {
   ADMIN
   CASHIER
   USER
+  SUPER_ADMIN
 }
 
 model Category {

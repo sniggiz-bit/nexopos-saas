@@ -18,11 +18,6 @@ export declare class SalesService {
     private readonly logger;
     constructor(prisma: PrismaService, dteService: DteService, internalReceiptService: InternalReceiptService, creditsService: CreditsService, inventoryService: InventoryService);
     getSales(filters?: GetSalesFilters): Promise<({
-        branch: {
-            id: string;
-            name: string;
-            tenantId: string;
-        };
         user: {
             id: string;
             email: string;
@@ -34,6 +29,11 @@ export declare class SalesService {
             createdAt: Date;
             updatedAt: Date;
         } | null;
+        branch: {
+            id: string;
+            name: string;
+            tenantId: string;
+        };
         customer: {
             id: string;
             email: string | null;

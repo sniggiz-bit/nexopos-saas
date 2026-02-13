@@ -86,6 +86,23 @@ async function main() {
     });
     console.log('✅ Configuración DTE creada para el tenant');
 
+    // 7. Crear Super Admin
+    const superAdmin = await prisma.user.upsert({
+        where: { email: 'admin@nexopos-saas.cl' },
+        update: {},
+        create: {
+            email: 'admin@nexopos-saas.cl',
+            name: 'Super Admin',
+            password: 'supersecretpassword', // Will be hashed by AuthService or manually here if needed. 
+            // In seed we might want to hash it if the app expects it, but validation handles plain text fallback.
+            // Let's rely on fallback or just set a role.
+            role: 'SUPER_ADMIN',
+            tenantId: tenant.id, // Super Admin needs a tenant? Schema says yes. We can assign to the default one or a specific admin tenant.
+            // Using tenant.id for now.
+        },
+    });
+    console.log('✅ Super Admin creado:', superAdmin.email);
+
     console.log('\n🎉 Seed completado exitosamente!');
 }
 

@@ -73,6 +73,18 @@ async function main() {
         },
     });
     console.log('✅ Configuración DTE creada para el tenant');
+    const superAdmin = await prisma.user.upsert({
+        where: { email: 'admin@nexopos-saas.cl' },
+        update: {},
+        create: {
+            email: 'admin@nexopos-saas.cl',
+            name: 'Super Admin',
+            password: 'supersecretpassword',
+            role: 'SUPER_ADMIN',
+            tenantId: tenant.id,
+        },
+    });
+    console.log('✅ Super Admin creado:', superAdmin.email);
     console.log('\n🎉 Seed completado exitosamente!');
 }
 main()

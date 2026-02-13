@@ -4,11 +4,6 @@ export declare class SalesController {
     private readonly salesService;
     constructor(salesService: SalesService);
     findAll(startDate?: string, endDate?: string, branchId?: string): Promise<({
-        branch: {
-            id: string;
-            name: string;
-            tenantId: string;
-        };
         user: {
             id: string;
             email: string;
@@ -20,6 +15,11 @@ export declare class SalesController {
             createdAt: Date;
             updatedAt: Date;
         } | null;
+        branch: {
+            id: string;
+            name: string;
+            tenantId: string;
+        };
         customer: {
             id: string;
             email: string | null;

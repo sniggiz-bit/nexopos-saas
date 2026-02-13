@@ -4,7 +4,7 @@ interface User {
     id: string;
     email: string;
     name: string | null;
-    role: 'ADMIN' | 'CASHIER' | 'USER';
+    role: 'ADMIN' | 'CASHIER' | 'USER' | 'SUPER_ADMIN';
     tenantId: string;
     branchId: string | null;
 }

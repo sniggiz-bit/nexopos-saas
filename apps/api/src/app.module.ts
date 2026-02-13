@@ -19,6 +19,7 @@ import { InventoryModule } from './inventory/inventory.module';
 import { UsersModule } from './users/users.module';
 import { TreasuryModule } from './treasury/treasury.module';
 import { DashboardModule } from './dashboard/dashboard.module';
+import { AdminModule } from './admin/admin.module';
 
 @Module({
   imports: [
