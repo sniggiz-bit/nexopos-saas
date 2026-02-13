@@ -20,6 +20,10 @@ import { UsersModule } from './users/users.module';
 import { TreasuryModule } from './treasury/treasury.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { AdminModule } from './admin/admin.module';
+import { PlansModule } from './plans/plans.module';
+import { TenantsModule } from './tenants/tenants.module';
+import { AnnouncementsModule } from './announcements/announcements.module';
+import { SystemLogsModule } from './system-logs/system-logs.module';
 
 @Module({
   imports: [
@@ -43,7 +47,12 @@ import { AdminModule } from './admin/admin.module';
     InventoryModule,
     UsersModule,
     TreasuryModule,
+    TreasuryModule,
     DashboardModule,
+    PlansModule,
+    TenantsModule,
+    AnnouncementsModule,
+    SystemLogsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -26,4 +26,7 @@ export declare class PrismaService implements OnModuleInit, OnModuleDestroy {
     get payment(): import("@prisma/client").Prisma.PaymentDelegate<import("@prisma/client/runtime/client").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;
     get stockMovement(): import("@prisma/client").Prisma.StockMovementDelegate<import("@prisma/client/runtime/client").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;
     get quoteItem(): import("@prisma/client").Prisma.QuoteItemDelegate<import("@prisma/client/runtime/client").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;
+    get plan(): import("@prisma/client").Prisma.PlanDelegate<import("@prisma/client/runtime/client").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;
+    get systemLog(): import("@prisma/client").Prisma.SystemLogDelegate<import("@prisma/client/runtime/client").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;
+    get announcement(): import("@prisma/client").Prisma.AnnouncementDelegate<import("@prisma/client/runtime/client").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;
 }

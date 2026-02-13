@@ -23,11 +23,17 @@ let AuthController = class AuthController {
         this.authService = authService;
     }
     async login(signInDto) {
-        const user = await this.authService.validateUser(signInDto.email, signInDto.password);
-        if (!user) {
-            throw new common_1.UnauthorizedException('Invalid credentials');
+        try {
+            const user = await this.authService.validateUser(signInDto.email, signInDto.password);
+            if (!user) {
+                throw new common_1.UnauthorizedException('Invalid credentials');
+            }
+            return await this.authService.login(user);
         }
-        return this.authService.login(user);
+        catch (error) {
+            console.error('Login Error:', error);
+            throw error;
+        }
     }
     signIn(signInDto) {
         return this.authService.generateSsoToken(signInDto);

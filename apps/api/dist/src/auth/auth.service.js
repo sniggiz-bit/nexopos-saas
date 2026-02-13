@@ -96,7 +96,17 @@ let AuthService = class AuthService {
     async login(user) {
         try {
             console.log(`[AuthService] Logging in user: ${user.id}, Role: ${user.role}`);
-            const payload = { sub: user.id, email: user.email, role: user.role, tenantId: user.tenantId, branchId: user.branchId };
+            const payload = {
+                sub: user.id,
+                email: user.email,
+                role: user.role
+            };
+            if (user.tenantId) {
+                payload.tenantId = user.tenantId;
+            }
+            if (user.branchId) {
+                payload.branchId = user.branchId;
+            }
             const token = await this.jwtService.signAsync(payload);
             console.log(`[AuthService] Token generated successfully`);
             return {
@@ -106,8 +116,8 @@ let AuthService = class AuthService {
                     email: user.email,
                     name: user.name,
                     role: user.role,
-                    tenantId: user.tenantId,
-                    branchId: user.branchId
+                    tenantId: user.tenantId || null,
+                    branchId: user.branchId || null
                 }
             };
         }

@@ -32,11 +32,22 @@ export default function TenantsPage() {
 
     const fetchTenants = async () => {
         try {
-            const response = await axios.get(`${import.meta.env.VITE_API_URL}/admin/tenants`, {
+            const response = await axios.get(`${import.meta.env.VITE_API_URL}/tenants`, {
                 params: { search: searchTerm },
                 headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
             });
-            setTenants(response.data.data);
+            // Backend returns array directly now
+            const rawTenants = response.data;
+
+            // Map backend structure to frontend interface if needed, or update interface
+            // The backend now returns { ..., users: [ { name, email, ... } ], _count: { ... } }
+            // We need to map 'users[0]' to 'owner'
+            const mappedTenants = rawTenants.map((t: any) => ({
+                ...t,
+                owner: t.users?.[0] || { name: 'Sin Dueño', email: 'N/A' }
+            }));
+
+            setTenants(mappedTenants);
         } catch (error) {
             console.error('Error fetching tenants:', error);
         } finally {

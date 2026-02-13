@@ -57,9 +57,27 @@ export class AuthService {
     async login(user: any) {
         try {
             console.log(`[AuthService] Logging in user: ${user.id}, Role: ${user.role}`);
-            const payload = { sub: user.id, email: user.email, role: user.role, tenantId: user.tenantId, branchId: user.branchId };
+
+            // Build payload conditionally to avoid null values
+            const payload: any = {
+                sub: user.id,
+                email: user.email,
+                role: user.role
+            };
+
+            // Only add tenantId if it exists
+            if (user.tenantId) {
+                payload.tenantId = user.tenantId;
+            }
+
+            // Only add branchId if it exists
+            if (user.branchId) {
+                payload.branchId = user.branchId;
+            }
+
             const token = await this.jwtService.signAsync(payload);
             console.log(`[AuthService] Token generated successfully`);
+
             return {
                 access_token: token,
                 user: {
@@ -67,8 +85,8 @@ export class AuthService {
                     email: user.email,
                     name: user.name,
                     role: user.role,
-                    tenantId: user.tenantId,
-                    branchId: user.branchId
+                    tenantId: user.tenantId || null,
+                    branchId: user.branchId || null
                 }
             };
         } catch (error) {

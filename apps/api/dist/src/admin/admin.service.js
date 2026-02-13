@@ -58,6 +58,7 @@ let AdminService = class AdminService {
                         },
                         take: 1,
                         select: {
+                            id: true,
                             name: true,
                             email: true
                         }

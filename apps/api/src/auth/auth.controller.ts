@@ -10,11 +10,16 @@ export class AuthController {
     @HttpCode(HttpStatus.OK)
     @Post('login')
     async login(@Body() signInDto: Record<string, any>) {
-        const user = await this.authService.validateUser(signInDto.email, signInDto.password);
-        if (!user) {
-            throw new UnauthorizedException('Invalid credentials');
+        try {
+            const user = await this.authService.validateUser(signInDto.email, signInDto.password);
+            if (!user) {
+                throw new UnauthorizedException('Invalid credentials');
+            }
+            return await this.authService.login(user);
+        } catch (error) {
+            console.error('Login Error:', error);
+            throw error;
         }
-        return this.authService.login(user);
     }
 
     @HttpCode(HttpStatus.OK)

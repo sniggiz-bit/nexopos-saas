@@ -1,0 +1,78 @@
+import { TenantsService } from './tenants.service';
+export declare class TenantsController {
+    private readonly tenantsService;
+    constructor(tenantsService: TenantsService);
+    findAll(): Promise<{
+        id: string;
+        name: string;
+        createdAt: Date;
+        updatedAt: Date;
+        rut: string | null;
+        giro: string | null;
+        address: string | null;
+        planId: string | null;
+        status: string;
+        nextPayment: Date | null;
+        maxUsers: number | null;
+        maxProducts: number | null;
+    }[]>;
+    findOne(id: string): Promise<{
+        id: string;
+        name: string;
+        createdAt: Date;
+        updatedAt: Date;
+        rut: string | null;
+        giro: string | null;
+        address: string | null;
+        planId: string | null;
+        status: string;
+        nextPayment: Date | null;
+        maxUsers: number | null;
+        maxProducts: number | null;
+    } | null>;
+    updateLimits(id: string, body: {
+        maxUsers?: number;
+        maxProducts?: number;
+    }): Promise<{
+        id: string;
+        name: string;
+        createdAt: Date;
+        updatedAt: Date;
+        rut: string | null;
+        giro: string | null;
+        address: string | null;
+        planId: string | null;
+        status: string;
+        nextPayment: Date | null;
+        maxUsers: number | null;
+        maxProducts: number | null;
+    }>;
+    suspend(id: string): Promise<{
+        id: string;
+        name: string;
+        createdAt: Date;
+        updatedAt: Date;
+        rut: string | null;
+        giro: string | null;
+        address: string | null;
+        planId: string | null;
+        status: string;
+        nextPayment: Date | null;
+        maxUsers: number | null;
+        maxProducts: number | null;
+    }>;
+    activate(id: string): Promise<{
+        id: string;
+        name: string;
+        createdAt: Date;
+        updatedAt: Date;
+        rut: string | null;
+        giro: string | null;
+        address: string | null;
+        planId: string | null;
+        status: string;
+        nextPayment: Date | null;
+        maxUsers: number | null;
+        maxProducts: number | null;
+    }>;
+}

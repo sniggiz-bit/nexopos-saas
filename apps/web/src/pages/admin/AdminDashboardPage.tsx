@@ -1,6 +1,29 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Users, DollarSign, Activity, TrendingUp } from 'lucide-react';
+import {
+    Chart as ChartJS,
+    CategoryScale,
+    LinearScale,
+    PointElement,
+    LineElement,
+    ArcElement,
+    Title,
+    Tooltip,
+    Legend,
+} from 'chart.js';
+import { Line, Doughnut } from 'react-chartjs-2';
+
+ChartJS.register(
+    CategoryScale,
+    LinearScale,
+    PointElement,
+    LineElement,
+    ArcElement,
+    Title,
+    Tooltip,
+    Legend
+);
 
 interface DashboardMetrics {
     totalTenants: number;
@@ -35,7 +58,6 @@ export default function AdminDashboardPage() {
     useEffect(() => {
         const fetchMetrics = async () => {
             try {
-                // Replace with actual API call
                 const response = await axios.get(`${import.meta.env.VITE_API_URL}/admin/dashboard`, {
                     headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
                 });
@@ -49,6 +71,77 @@ export default function AdminDashboardPage() {
 
         fetchMetrics();
     }, []);
+
+    // Mock data for growth chart
+    const growthData = {
+        labels: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun'],
+        datasets: [
+            {
+                label: 'Nuevos Tenants',
+                data: [5, 8, 12, 15, 18, metrics?.totalTenants || 20],
+                borderColor: 'rgb(168, 85, 247)',
+                backgroundColor: 'rgba(168, 85, 247, 0.1)',
+                tension: 0.4,
+            },
+        ],
+    };
+
+    // Mock data for plan distribution
+    const planData = {
+        labels: ['Plan Básico', 'Plan Pro', 'Plan Enterprise'],
+        datasets: [
+            {
+                data: [45, 35, 20],
+                backgroundColor: [
+                    'rgba(168, 85, 247, 0.8)',
+                    'rgba(59, 130, 246, 0.8)',
+                    'rgba(16, 185, 129, 0.8)',
+                ],
+                borderColor: [
+                    'rgb(168, 85, 247)',
+                    'rgb(59, 130, 246)',
+                    'rgb(16, 185, 129)',
+                ],
+                borderWidth: 2,
+            },
+        ],
+    };
+
+    const chartOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                labels: {
+                    color: 'rgb(163, 163, 163)',
+                },
+            },
+        },
+        scales: {
+            y: {
+                ticks: { color: 'rgb(163, 163, 163)' },
+                grid: { color: 'rgba(163, 163, 163, 0.1)' },
+            },
+            x: {
+                ticks: { color: 'rgb(163, 163, 163)' },
+                grid: { color: 'rgba(163, 163, 163, 0.1)' },
+            },
+        },
+    };
+
+    const doughnutOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'bottom' as const,
+                labels: {
+                    color: 'rgb(163, 163, 163)',
+                    padding: 20,
+                },
+            },
+        },
+    };
 
     if (loading) {
         return <div className="text-white">Cargando métricas...</div>;
@@ -78,11 +171,17 @@ export default function AdminDashboardPage() {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="bg-neutral-800 border border-neutral-700 rounded-xl p-6 h-96 flex items-center justify-center">
-                    <span className="text-neutral-500">Métricas de crecimiento (Próximamente... Chart.js)</span>
+                <div className="bg-neutral-800 border border-neutral-700 rounded-xl p-6 h-96">
+                    <h3 className="text-white font-semibold mb-4">Crecimiento de Tenants</h3>
+                    <div className="h-80">
+                        <Line data={growthData} options={chartOptions} />
+                    </div>
                 </div>
-                <div className="bg-neutral-800 border border-neutral-700 rounded-xl p-6 h-96 flex items-center justify-center">
-                    <span className="text-neutral-500">Distribución de Planes (Próximamente...)</span>
+                <div className="bg-neutral-800 border border-neutral-700 rounded-xl p-6 h-96">
+                    <h3 className="text-white font-semibold mb-4">Distribución de Planes</h3>
+                    <div className="h-80">
+                        <Doughnut data={planData} options={doughnutOptions} />
+                    </div>
                 </div>
             </div>
         </div>

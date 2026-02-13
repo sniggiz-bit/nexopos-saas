@@ -28,6 +28,10 @@ const inventory_module_1 = require("./inventory/inventory.module");
 const users_module_1 = require("./users/users.module");
 const treasury_module_1 = require("./treasury/treasury.module");
 const dashboard_module_1 = require("./dashboard/dashboard.module");
+const plans_module_1 = require("./plans/plans.module");
+const tenants_module_1 = require("./tenants/tenants.module");
+const announcements_module_1 = require("./announcements/announcements.module");
+const system_logs_module_1 = require("./system-logs/system-logs.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -54,7 +58,12 @@ exports.AppModule = AppModule = __decorate([
             inventory_module_1.InventoryModule,
             users_module_1.UsersModule,
             treasury_module_1.TreasuryModule,
+            treasury_module_1.TreasuryModule,
             dashboard_module_1.DashboardModule,
+            plans_module_1.PlansModule,
+            tenants_module_1.TenantsModule,
+            announcements_module_1.AnnouncementsModule,
+            system_logs_module_1.SystemLogsModule,
         ],
         controllers: [app_controller_1.AppController],
         providers: [app_service_1.AppService],

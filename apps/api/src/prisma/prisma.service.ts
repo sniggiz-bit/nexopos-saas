@@ -103,4 +103,16 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
   get quoteItem() {
     return this.prisma.quoteItem;
   }
+
+  get plan() {
+    return this.prisma.plan;
+  }
+
+  get systemLog() {
+    return this.prisma.systemLog;
+  }
+
+  get announcement() {
+    return this.prisma.announcement;
+  }
 }

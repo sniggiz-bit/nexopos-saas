@@ -10,6 +10,7 @@ export declare class AdminService {
     getTenants(page?: number, limit?: number, search?: string): Promise<{
         data: {
             owner: {
+                id: string;
                 email: string;
                 name: string | null;
             };
@@ -19,6 +20,7 @@ export declare class AdminService {
                 users: number;
             };
             users: {
+                id: string;
                 email: string;
                 name: string | null;
             }[];
@@ -29,6 +31,10 @@ export declare class AdminService {
             rut: string | null;
             giro: string | null;
             address: string | null;
+            planId: string | null;
+            nextPayment: Date | null;
+            maxUsers: number | null;
+            maxProducts: number | null;
         }[];
         total: number;
         page: number;

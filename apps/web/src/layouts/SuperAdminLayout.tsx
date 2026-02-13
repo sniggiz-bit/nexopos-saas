@@ -8,7 +8,9 @@ import {
     Menu,
     X,
     CreditCard,
-    Settings
+    Settings,
+    Activity,
+    Megaphone
 } from 'lucide-react';
 
 export default function SuperAdminLayout() {
@@ -27,7 +29,8 @@ export default function SuperAdminLayout() {
         { icon: LayoutDashboard, label: 'Dashboard', path: '/admin/dashboard' },
         { icon: Users, label: 'Tenants', path: '/admin/tenants' },
         { icon: CreditCard, label: 'Subscription Plans', path: '/admin/plans' },
-        { icon: Settings, label: 'System Settings', path: '/admin/settings' },
+        { icon: Activity, label: 'System Health', path: '/admin/system-health' },
+        { icon: Megaphone, label: 'Announcements', path: '/admin/announcements' },
     ];
 
     const handleLogout = () => {
@@ -72,8 +75,8 @@ export default function SuperAdminLayout() {
                                     <button
                                         onClick={() => navigate(item.path)}
                                         className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group ${isActive
-                                                ? 'bg-neutral-800 text-white shadow-lg shadow-purple-900/20 border border-neutral-700'
-                                                : 'text-neutral-400 hover:bg-neutral-800 hover:text-white'
+                                            ? 'bg-neutral-800 text-white shadow-lg shadow-purple-900/20 border border-neutral-700'
+                                            : 'text-neutral-400 hover:bg-neutral-800 hover:text-white'
                                             }`}
                                     >
                                         <item.icon size={20} className={`${isActive ? 'text-purple-400' : 'text-neutral-500 group-hover:text-purple-400'}`} />

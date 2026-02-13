@@ -3,6 +3,9 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import SuperAdminLayout from './layouts/SuperAdminLayout';
 import AdminDashboardPage from './pages/admin/AdminDashboardPage';
 import TenantsPage from './pages/admin/TenantsPage';
+import PlansPage from './pages/admin/PlansPage';
+import SystemHealthPage from './pages/admin/SystemHealthPage';
+import AnnouncementsPage from './pages/admin/AnnouncementsPage';
 import { PosPage } from './pages/PosPage';
 import { Toaster } from 'react-hot-toast';
 import { Suspense } from 'react';
@@ -78,6 +81,9 @@ function App() {
                   <Route index element={<Navigate to="/admin/dashboard" replace />} />
                   <Route path="dashboard" element={<AdminDashboardPage />} />
                   <Route path="tenants" element={<TenantsPage />} />
+                  <Route path="plans" element={<PlansPage />} />
+                  <Route path="system-health" element={<SystemHealthPage />} />
+                  <Route path="announcements" element={<AnnouncementsPage />} />
                 </Route>
               </Route>
 

@@ -12,6 +12,7 @@ export declare class ShiftsController {
         branchId: string;
         createdAt: Date;
         updatedAt: Date;
+        status: string;
         openedById: string;
         closedById: string | null;
         startTime: Date;
@@ -20,7 +21,6 @@ export declare class ShiftsController {
         finalAmount: import("@prisma/client-runtime-utils").Decimal | null;
         expectedAmount: import("@prisma/client-runtime-utils").Decimal | null;
         difference: import("@prisma/client-runtime-utils").Decimal | null;
-        status: string;
         metadata: import("@prisma/client/runtime/client").JsonValue | null;
     }>;
     closeShift(body: {
@@ -33,6 +33,7 @@ export declare class ShiftsController {
             branchId: string;
             createdAt: Date;
             updatedAt: Date;
+            status: string;
             openedById: string;
             closedById: string | null;
             startTime: Date;
@@ -41,7 +42,6 @@ export declare class ShiftsController {
             finalAmount: import("@prisma/client-runtime-utils").Decimal | null;
             expectedAmount: import("@prisma/client-runtime-utils").Decimal | null;
             difference: import("@prisma/client-runtime-utils").Decimal | null;
-            status: string;
             metadata: import("@prisma/client/runtime/client").JsonValue | null;
         };
         textReport: string;
@@ -51,6 +51,7 @@ export declare class ShiftsController {
         branchId: string;
         createdAt: Date;
         updatedAt: Date;
+        status: string;
         openedById: string;
         closedById: string | null;
         startTime: Date;
@@ -59,7 +60,6 @@ export declare class ShiftsController {
         finalAmount: import("@prisma/client-runtime-utils").Decimal | null;
         expectedAmount: import("@prisma/client-runtime-utils").Decimal | null;
         difference: import("@prisma/client-runtime-utils").Decimal | null;
-        status: string;
         metadata: import("@prisma/client/runtime/client").JsonValue | null;
     } | null>;
 }
