@@ -5,45 +5,44 @@ export declare class UsersService {
     private prisma;
     constructor(prisma: PrismaService);
     create(createUserDto: CreateUserDto): Promise<{
-        name: string | null;
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
-        tenantId: string;
-        branchId: string | null;
         email: string;
+        name: string | null;
         password: string | null;
         role: import("@prisma/client").$Enums.UserRole;
+        tenantId: string;
+        branchId: string | null;
+        createdAt: Date;
+        updatedAt: Date;
     }>;
     findAll(tenantId: string, role?: string): import("@prisma/client").Prisma.PrismaPromise<({
         branch: {
-            name: string;
             id: string;
+            name: string;
             tenantId: string;
         } | null;
     } & {
-        name: string | null;
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
-        tenantId: string;
-        branchId: string | null;
         email: string;
+        name: string | null;
         password: string | null;
         role: import("@prisma/client").$Enums.UserRole;
+        tenantId: string;
+        branchId: string | null;
+        createdAt: Date;
+        updatedAt: Date;
     })[]>;
     findOne(id: string): import("@prisma/client").Prisma.Prisma__UserClient<({
         branch: {
-            name: string;
             id: string;
+            name: string;
             tenantId: string;
         } | null;
         shiftsOpened: {
             id: string;
+            branchId: string;
             createdAt: Date;
             updatedAt: Date;
-            branchId: string;
-            status: string;
             openedById: string;
             closedById: string | null;
             startTime: Date;
@@ -52,39 +51,40 @@ export declare class UsersService {
             finalAmount: import("@prisma/client-runtime-utils").Decimal | null;
             expectedAmount: import("@prisma/client-runtime-utils").Decimal | null;
             difference: import("@prisma/client-runtime-utils").Decimal | null;
+            status: string;
             metadata: import("@prisma/client/runtime/client").JsonValue | null;
         }[];
     } & {
-        name: string | null;
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
-        tenantId: string;
-        branchId: string | null;
         email: string;
+        name: string | null;
         password: string | null;
         role: import("@prisma/client").$Enums.UserRole;
+        tenantId: string;
+        branchId: string | null;
+        createdAt: Date;
+        updatedAt: Date;
     }) | null, null, import("@prisma/client/runtime/client").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;
     update(id: string, updateUserDto: UpdateUserDto): import("@prisma/client").Prisma.Prisma__UserClient<{
-        name: string | null;
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
-        tenantId: string;
-        branchId: string | null;
         email: string;
+        name: string | null;
         password: string | null;
         role: import("@prisma/client").$Enums.UserRole;
+        tenantId: string;
+        branchId: string | null;
+        createdAt: Date;
+        updatedAt: Date;
     }, never, import("@prisma/client/runtime/client").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;
     remove(id: string): import("@prisma/client").Prisma.Prisma__UserClient<{
-        name: string | null;
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
-        tenantId: string;
-        branchId: string | null;
         email: string;
+        name: string | null;
         password: string | null;
         role: import("@prisma/client").$Enums.UserRole;
+        tenantId: string;
+        branchId: string | null;
+        createdAt: Date;
+        updatedAt: Date;
     }, never, import("@prisma/client/runtime/client").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;
 }

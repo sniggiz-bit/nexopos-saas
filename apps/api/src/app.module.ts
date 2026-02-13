@@ -18,6 +18,7 @@ import { CreditsModule } from './credits/credits.module';
 import { InventoryModule } from './inventory/inventory.module';
 import { UsersModule } from './users/users.module';
 import { TreasuryModule } from './treasury/treasury.module';
+import { DashboardModule } from './dashboard/dashboard.module';
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { TreasuryModule } from './treasury/treasury.module';
     InventoryModule,
     UsersModule,
     TreasuryModule,
+    DashboardModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -11,6 +11,18 @@ import { Separator } from '@/components/ui/separator';
 import { formatPrice } from '@/utils/formatters';
 import { CheckCircle2, XCircle } from 'lucide-react';
 import { type CartItemData } from './CartItem';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
+import { usePrintSettings, type PrintFormat } from '@/hooks/usePrintSettings';
+import { printSaleAction } from './receipts/ReceiptRenderer';
+import { useEffect, useState } from 'react';
 
 interface PaymentModalProps {
     isOpen: boolean;
@@ -39,6 +51,23 @@ export function PaymentModal({
     isError,
     saleResult,
 }: PaymentModalProps) {
+    const { autoPrint, setAutoPrint, defaultFormat, setDefaultFormat } = usePrintSettings();
+    const [hasAttemptedAutoPrint, setHasAttemptedAutoPrint] = useState(false);
+
+    // Auto-print effect
+    useEffect(() => {
+        if (isSuccess && saleResult && autoPrint && !hasAttemptedAutoPrint) {
+            setHasAttemptedAutoPrint(true);
+            printSaleAction(saleResult, defaultFormat);
+        }
+    }, [isSuccess, saleResult, autoPrint, defaultFormat, hasAttemptedAutoPrint]);
+
+    // Reset auto-print state when modal opens/closes
+    useEffect(() => {
+        if (!isOpen) {
+            setHasAttemptedAutoPrint(false);
+        }
+    }, [isOpen]);
     if (isSuccess) {
         return (
             <Dialog open={isOpen} onOpenChange={onClose}>
@@ -83,6 +112,14 @@ export function PaymentModal({
                                 Ver Ticket Interno (PDF)
                             </Button>
                         )}
+
+                        <Button
+                            className="w-full"
+                            variant="secondary"
+                            onClick={() => printSaleAction(saleResult, defaultFormat)}
+                        >
+                            Imprimir Ticket ({defaultFormat})
+                        </Button>
                     </div>
 
                     <DialogFooter>
@@ -163,6 +200,41 @@ export function PaymentModal({
                                 <span className="text-[10px] font-normal text-muted-foreground uppercase">IVA Incluido</span>
                             </div>
                             <span className="text-primary text-2xl">{formatPrice(total)}</span>
+                        </div>
+                    </div>
+
+                    <Separator />
+
+                    <div className="space-y-4 pt-2">
+                        <div className="flex items-center justify-between">
+                            <div className="space-y-0.5">
+                                <Label htmlFor="auto-print">Imprimir al finalizar</Label>
+                                <p className="text-[10px] text-muted-foreground">
+                                    Dispara la impresión automáticamente tras el éxito
+                                </p>
+                            </div>
+                            <Switch
+                                id="auto-print"
+                                checked={autoPrint}
+                                onCheckedChange={setAutoPrint}
+                            />
+                        </div>
+
+                        <div className="space-y-1.5">
+                            <Label htmlFor="print-format">Formato de impresión</Label>
+                            <Select
+                                value={defaultFormat}
+                                onValueChange={(value) => setDefaultFormat(value as PrintFormat)}
+                            >
+                                <SelectTrigger id="print-format" className="h-8">
+                                    <SelectValue placeholder="Seleccionar formato" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="80mm">Ticket 80mm</SelectItem>
+                                    <SelectItem value="50mm">Ticket 50mm</SelectItem>
+                                    <SelectItem value="A4">Boleta A4</SelectItem>
+                                </SelectContent>
+                            </Select>
                         </div>
                     </div>
                 </div>

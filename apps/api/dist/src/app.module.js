@@ -27,6 +27,7 @@ const credits_module_1 = require("./credits/credits.module");
 const inventory_module_1 = require("./inventory/inventory.module");
 const users_module_1 = require("./users/users.module");
 const treasury_module_1 = require("./treasury/treasury.module");
+const dashboard_module_1 = require("./dashboard/dashboard.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -53,6 +54,7 @@ exports.AppModule = AppModule = __decorate([
             inventory_module_1.InventoryModule,
             users_module_1.UsersModule,
             treasury_module_1.TreasuryModule,
+            dashboard_module_1.DashboardModule,
         ],
         controllers: [app_controller_1.AppController],
         providers: [app_service_1.AppService],

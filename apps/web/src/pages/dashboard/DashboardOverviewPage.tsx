@@ -1,8 +1,24 @@
 import { DashboardLayout } from '../../components/dashboard/DashboardLayout';
 import { Package, ShoppingCart, TrendingUp, AlertTriangle } from 'lucide-react';
 import { NexoPosAccessButton } from '../../components/NexoPosAccessButton';
+import { useDashboardStats } from '../../hooks/useDashboard';
+import { useAuth } from '../../context/AuthContext';
+import { formatPrice } from '../../utils/formatters';
 
 export function DashboardOverviewPage() {
+    const { user } = useAuth();
+    const { data: stats, isLoading } = useDashboardStats(user?.tenantId || '', user?.branchId || 'branch-1');
+
+    if (isLoading) {
+        return (
+            <DashboardLayout>
+                <div className="flex items-center justify-center h-64">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+                </div>
+            </DashboardLayout>
+        );
+    }
+
     return (
         <DashboardLayout>
             <div className="space-y-6">
@@ -10,25 +26,25 @@ export function DashboardOverviewPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     <StatCard
                         title="Total Productos"
-                        value="0"
+                        value={stats?.totalProducts?.toString() || '0'}
                         icon={Package}
                         color="blue"
                     />
                     <StatCard
                         title="Ventas Hoy"
-                        value="$0"
+                        value={formatPrice(stats?.salesToday || 0)}
                         icon={ShoppingCart}
                         color="green"
                     />
                     <StatCard
                         title="Stock Bajo"
-                        value="0"
+                        value={stats?.lowStockCount?.toString() || '0'}
                         icon={AlertTriangle}
                         color="yellow"
                     />
                     <StatCard
                         title="Ingresos Mes"
-                        value="$0"
+                        value={formatPrice(stats?.monthRevenue || 0)}
                         icon={TrendingUp}
                         color="purple"
                     />
@@ -46,10 +62,9 @@ export function DashboardOverviewPage() {
             </div>
 
             <div className="flex justify-end mt-6">
-                {/* Temporary hardcoded IDs for testing */}
                 <NexoPosAccessButton
-                    userId="user-123"
-                    tenantId="tenant-123"
+                    userId={user?.id || ''}
+                    tenantId={user?.tenantId || ''}
                 />
             </div>
         </DashboardLayout>

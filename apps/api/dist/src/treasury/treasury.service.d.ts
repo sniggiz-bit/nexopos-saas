@@ -12,28 +12,28 @@ export declare class TreasuryService {
     }[]>;
     getMaturities(tenantId: string): Promise<({
         customer: {
-            name: string;
             id: string;
+            email: string | null;
+            name: string;
+            tenantId: string;
+            createdAt: Date;
+            updatedAt: Date;
             rut: string;
             giro: string | null;
             address: string | null;
-            createdAt: Date;
-            updatedAt: Date;
-            tenantId: string;
-            email: string | null;
             comuna: string | null;
             phone: string | null;
         };
     } & {
         id: string;
+        tenantId: string;
         createdAt: Date;
         updatedAt: Date;
-        tenantId: string;
-        customerId: string;
         status: string;
+        customerId: string;
         saleId: string | null;
-        totalAmount: number;
         balance: number;
+        totalAmount: number;
         dueDate: Date | null;
     })[]>;
 }

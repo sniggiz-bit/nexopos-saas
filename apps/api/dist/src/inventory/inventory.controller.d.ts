@@ -8,13 +8,13 @@ export declare class InventoryController {
         } | null;
     } & {
         id: string;
-        createdAt: Date;
         branchId: string;
-        userId: string | null;
-        balance: import("@prisma/client-runtime-utils").Decimal;
+        createdAt: Date;
         productId: string;
         quantity: import("@prisma/client-runtime-utils").Decimal;
+        userId: string | null;
         type: import("@prisma/client").$Enums.MovementType;
         reference: string | null;
+        balance: import("@prisma/client-runtime-utils").Decimal;
     })[]>;
 }

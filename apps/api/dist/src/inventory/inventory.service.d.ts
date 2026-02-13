@@ -14,13 +14,13 @@ export declare class InventoryService {
         } | null;
     } & {
         id: string;
-        createdAt: Date;
         branchId: string;
-        userId: string | null;
-        balance: Prisma.Decimal;
+        createdAt: Date;
         productId: string;
         quantity: Prisma.Decimal;
+        userId: string | null;
         type: import("@prisma/client").$Enums.MovementType;
         reference: string | null;
+        balance: Prisma.Decimal;
     })[]>;
 }

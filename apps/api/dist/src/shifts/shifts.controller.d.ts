@@ -9,10 +9,9 @@ export declare class ShiftsController {
         tenantId: string;
     }): Promise<{
         id: string;
+        branchId: string;
         createdAt: Date;
         updatedAt: Date;
-        branchId: string;
-        status: string;
         openedById: string;
         closedById: string | null;
         startTime: Date;
@@ -21,6 +20,7 @@ export declare class ShiftsController {
         finalAmount: import("@prisma/client-runtime-utils").Decimal | null;
         expectedAmount: import("@prisma/client-runtime-utils").Decimal | null;
         difference: import("@prisma/client-runtime-utils").Decimal | null;
+        status: string;
         metadata: import("@prisma/client/runtime/client").JsonValue | null;
     }>;
     closeShift(body: {
@@ -30,10 +30,9 @@ export declare class ShiftsController {
     }): Promise<{
         shift: {
             id: string;
+            branchId: string;
             createdAt: Date;
             updatedAt: Date;
-            branchId: string;
-            status: string;
             openedById: string;
             closedById: string | null;
             startTime: Date;
@@ -42,16 +41,16 @@ export declare class ShiftsController {
             finalAmount: import("@prisma/client-runtime-utils").Decimal | null;
             expectedAmount: import("@prisma/client-runtime-utils").Decimal | null;
             difference: import("@prisma/client-runtime-utils").Decimal | null;
+            status: string;
             metadata: import("@prisma/client/runtime/client").JsonValue | null;
         };
         textReport: string;
     }>;
     getCurrentShift(branchId: string): Promise<{
         id: string;
+        branchId: string;
         createdAt: Date;
         updatedAt: Date;
-        branchId: string;
-        status: string;
         openedById: string;
         closedById: string | null;
         startTime: Date;
@@ -60,6 +59,7 @@ export declare class ShiftsController {
         finalAmount: import("@prisma/client-runtime-utils").Decimal | null;
         expectedAmount: import("@prisma/client-runtime-utils").Decimal | null;
         difference: import("@prisma/client-runtime-utils").Decimal | null;
+        status: string;
         metadata: import("@prisma/client/runtime/client").JsonValue | null;
     } | null>;
 }

@@ -7,25 +7,25 @@ export declare class QuotesController {
     constructor(quotesService: QuotesService);
     create(createQuoteDto: CreateQuoteDto): Promise<{
         customer: {
-            name: string;
             id: string;
+            email: string | null;
+            name: string;
+            tenantId: string;
+            createdAt: Date;
+            updatedAt: Date;
             rut: string;
             giro: string | null;
             address: string | null;
-            createdAt: Date;
-            updatedAt: Date;
-            tenantId: string;
-            email: string | null;
             comuna: string | null;
             phone: string | null;
         } | null;
         items: ({
             product: {
-                name: string;
                 id: string;
+                name: string;
+                tenantId: string;
                 createdAt: Date;
                 updatedAt: Date;
-                tenantId: string;
                 sku: string | null;
                 price: number;
                 barcode: string | null;
@@ -40,72 +40,72 @@ export declare class QuotesController {
         } & {
             id: string;
             price: number;
-            quoteId: string;
             productId: string;
             quantity: import("@prisma/client-runtime-utils").Decimal;
+            quoteId: string;
         })[];
     } & {
         id: string;
+        tenantId: string;
         createdAt: Date;
         updatedAt: Date;
-        tenantId: string;
+        status: string;
         total: number;
         customerId: string | null;
-        status: string;
         expiryDate: Date | null;
     }>;
     findAll(tenantId?: string): Promise<({
         customer: {
-            name: string;
             id: string;
+            email: string | null;
+            name: string;
+            tenantId: string;
+            createdAt: Date;
+            updatedAt: Date;
             rut: string;
             giro: string | null;
             address: string | null;
-            createdAt: Date;
-            updatedAt: Date;
-            tenantId: string;
-            email: string | null;
             comuna: string | null;
             phone: string | null;
         } | null;
         items: {
             id: string;
             price: number;
-            quoteId: string;
             productId: string;
             quantity: import("@prisma/client-runtime-utils").Decimal;
+            quoteId: string;
         }[];
     } & {
         id: string;
+        tenantId: string;
         createdAt: Date;
         updatedAt: Date;
-        tenantId: string;
+        status: string;
         total: number;
         customerId: string | null;
-        status: string;
         expiryDate: Date | null;
     })[]>;
     findOne(id: string): Promise<{
         customer: {
-            name: string;
             id: string;
+            email: string | null;
+            name: string;
+            tenantId: string;
+            createdAt: Date;
+            updatedAt: Date;
             rut: string;
             giro: string | null;
             address: string | null;
-            createdAt: Date;
-            updatedAt: Date;
-            tenantId: string;
-            email: string | null;
             comuna: string | null;
             phone: string | null;
         } | null;
         items: ({
             product: {
-                name: string;
                 id: string;
+                name: string;
+                tenantId: string;
                 createdAt: Date;
                 updatedAt: Date;
-                tenantId: string;
                 sku: string | null;
                 price: number;
                 barcode: string | null;
@@ -120,39 +120,39 @@ export declare class QuotesController {
         } & {
             id: string;
             price: number;
-            quoteId: string;
             productId: string;
             quantity: import("@prisma/client-runtime-utils").Decimal;
+            quoteId: string;
         })[];
     } & {
         id: string;
+        tenantId: string;
         createdAt: Date;
         updatedAt: Date;
-        tenantId: string;
+        status: string;
         total: number;
         customerId: string | null;
-        status: string;
         expiryDate: Date | null;
     }>;
     generatePdf(id: string, res: Response): Promise<void>;
     update(id: string, updateQuoteDto: UpdateQuoteDto): Promise<{
         id: string;
+        tenantId: string;
         createdAt: Date;
         updatedAt: Date;
-        tenantId: string;
+        status: string;
         total: number;
         customerId: string | null;
-        status: string;
         expiryDate: Date | null;
     }>;
     remove(id: string): Promise<{
         id: string;
+        tenantId: string;
         createdAt: Date;
         updatedAt: Date;
-        tenantId: string;
+        status: string;
         total: number;
         customerId: string | null;
-        status: string;
         expiryDate: Date | null;
     }>;
 }
