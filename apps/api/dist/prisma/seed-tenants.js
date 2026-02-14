@@ -84,6 +84,7 @@ async function main() {
         const tenant = await prisma.tenant.create({
             data: {
                 name: t.name,
+                slug: t.name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9\s-]/g, '').trim().replace(/\s+/g, '-'),
                 status: t.status,
                 planId: t.plan.id,
                 nextPayment: t.expired

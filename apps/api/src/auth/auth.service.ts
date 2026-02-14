@@ -1,14 +1,17 @@
 
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, ConflictException, BadRequestException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
+import { EmailService } from '../email/email.service';
 import * as bcrypt from 'bcrypt';
+import { RegisterTenantDto } from './dto/register-tenant.dto';
 
 @Injectable()
 export class AuthService {
     constructor(
         private jwtService: JwtService,
         private prisma: PrismaService,
+        private emailService: EmailService,
     ) { }
 
     async validateUser(email: string, pass: string): Promise<any> {
@@ -123,5 +126,137 @@ export class AuthService {
         // Return the same payload structure as login
         // But we are bypassing password validation
         return this.login(user);
+    }
+
+    /**
+     * Register a new tenant with atomic transaction
+     * Creates: Tenant, Branch (Casa Matriz), User (ADMIN)
+     */
+    async registerTenant(dto: RegisterTenantDto) {
+        // Check if email already exists
+        const existingUser = await this.prisma.user.findUnique({
+            where: { email: dto.email }
+        });
+
+        if (existingUser) {
+            throw new ConflictException('El email ya está registrado');
+        }
+
+        // Generate unique slug from company name
+        const baseSlug = this.generateSlug(dto.companyName);
+        const slug = await this.ensureUniqueSlug(baseSlug);
+
+        // Hash password
+        const hashedPassword = await bcrypt.hash(dto.password, 10);
+
+        try {
+            // Atomic transaction: Create Tenant, Branch, and User
+            const result = await this.prisma.$transaction(async (tx) => {
+                // 1. Create Tenant
+                const tenant = await tx.tenant.create({
+                    data: {
+                        name: dto.companyName,
+                        slug,
+                        phone: dto.phone,
+                        rut: dto.rut,
+                        giro: dto.giro,
+                        address: dto.address,
+                        status: 'ACTIVE',
+                    },
+                });
+
+                // 2. Create default Branch (Casa Matriz)
+                const branch = await tx.branch.create({
+                    data: {
+                        name: 'Casa Matriz',
+                        isMain: true,
+                        tenantId: tenant.id,
+                    },
+                });
+
+                // 3. Create User (ADMIN role)
+                const user = await tx.user.create({
+                    data: {
+                        email: dto.email,
+                        name: dto.userName,
+                        password: hashedPassword,
+                        role: 'ADMIN',
+                        tenantId: tenant.id,
+                        branchId: branch.id,
+                    },
+                });
+
+                return { tenant, branch, user };
+            });
+
+            // 4. Send welcome email (non-blocking)
+            this.emailService.sendWelcomeEmail(
+                dto.email,
+                dto.userName,
+                {
+                    email: dto.email,
+                    password: dto.password,
+                    companyName: dto.companyName,
+                }
+            ).catch(err => {
+                console.error('Failed to send welcome email:', err);
+            });
+
+            // 5. Generate JWT token for auto-login
+            const token = await this.login(result.user);
+
+            return {
+                ...token,
+                tenant: {
+                    id: result.tenant.id,
+                    name: result.tenant.name,
+                    slug: result.tenant.slug,
+                },
+                branch: {
+                    id: result.branch.id,
+                    name: result.branch.name,
+                },
+            };
+        } catch (error) {
+            console.error('Error registering tenant:', error);
+            throw new BadRequestException('Error al crear la cuenta. Por favor intenta nuevamente.');
+        }
+    }
+
+    /**
+     * Generate slug from company name
+     * Example: "Botillería El Cielo" -> "botilleria-el-cielo"
+     */
+    private generateSlug(companyName: string): string {
+        return companyName
+            .toLowerCase()
+            .normalize('NFD') // Normalize to decomposed form
+            .replace(/[\u0300-\u036f]/g, '') // Remove diacritics
+            .replace(/[^a-z0-9\s-]/g, '') // Remove special characters
+            .trim()
+            .replace(/\s+/g, '-') // Replace spaces with hyphens
+            .replace(/-+/g, '-'); // Replace multiple hyphens with single
+    }
+
+    /**
+     * Ensure slug is unique by appending suffix if needed
+     * Example: "botilleria-el-cielo" -> "botilleria-el-cielo-1" if exists
+     */
+    private async ensureUniqueSlug(baseSlug: string): Promise<string> {
+        let slug = baseSlug;
+        let suffix = 1;
+
+        while (true) {
+            const existing = await this.prisma.tenant.findUnique({
+                where: { slug },
+            });
+
+            if (!existing) {
+                return slug;
+            }
+
+            slug = `${baseSlug}-${suffix}`;
+            suffix++;
+        }
     }
 }

@@ -17,7 +17,6 @@ export class ProductsService {
      */
     async findAll(
         tenantId: string,
-        branchId: string = 'branch-1',
     ): Promise<ProductResponseDto[]> {
         // Fetch products with their inventory levels for the specified branch
         const products = await this.prisma.product.findMany({
@@ -27,8 +26,8 @@ export class ProductsService {
             },
             include: {
                 inventory: {
-                    where: {
-                        branchId,
+                    include: {
+                        branch: true,
                     },
                 },
                 category: true,
@@ -52,6 +51,11 @@ export class ProductsService {
                 (total, inv) => total + Number(inv.quantity),
                 0,
             ),
+            inventoryLevels: product.inventory.map(inv => ({
+                branchId: inv.branchId,
+                branchName: inv.branch?.name || 'Desconocida',
+                quantity: Number(inv.quantity),
+            })),
             category: product.category ? {
                 id: product.category.id,
                 name: product.category.name,
@@ -73,7 +77,6 @@ export class ProductsService {
     async findOne(
         id: string,
         tenantId: string,
-        branchId: string = 'branch-1',
     ): Promise<ProductResponseDto> {
         const product = await this.prisma.product.findFirst({
             where: {
@@ -82,8 +85,8 @@ export class ProductsService {
             },
             include: {
                 inventory: {
-                    where: {
-                        branchId,
+                    include: {
+                        branch: true,
                     },
                 },
                 category: true,
@@ -110,6 +113,11 @@ export class ProductsService {
                 (total, inv) => total + Number(inv.quantity),
                 0,
             ),
+            inventoryLevels: product.inventory.map(inv => ({
+                branchId: inv.branchId,
+                branchName: inv.branch?.name || 'Desconocida',
+                quantity: Number(inv.quantity),
+            })),
             category: product.category ? {
                 id: product.category.id,
                 name: product.category.name,
@@ -271,7 +279,7 @@ export class ProductsService {
             const branchId = 'branch-1';
 
             // Get current stock for this branch
-            const currentInv = await this.prisma.inventoryLevel.findUnique({
+            const currentInv = await this.prisma.inventory.findUnique({
                 where: { productId_branchId: { productId: id, branchId } }
             });
             const currentQty = currentInv ? currentInv.quantity : new Prisma.Decimal(0);
@@ -280,7 +288,7 @@ export class ProductsService {
             if (!diff.equals(0)) {
                 await this.prisma.$transaction([
                     // Update Inventory Level
-                    this.prisma.inventoryLevel.upsert({
+                    this.prisma.inventory.upsert({
                         where: { productId_branchId: { productId: id, branchId } },
                         create: { productId: id, branchId, quantity: newStock },
                         update: { quantity: newStock }

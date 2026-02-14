@@ -45,6 +45,9 @@ let AuthController = class AuthController {
         const payload = await this.authService.validateSsoToken(body.token);
         return { isValid: true, user: payload };
     }
+    async registerTenant(dto) {
+        return this.authService.registerTenant(dto);
+    }
     async impersonate(userId) {
         return this.authService.impersonate(userId);
     }
@@ -74,6 +77,14 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "validate", null);
+__decorate([
+    (0, common_1.HttpCode)(common_1.HttpStatus.CREATED),
+    (0, common_1.Post)('register-tenant'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "registerTenant", null);
 __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, super_admin_guard_1.SuperAdminGuard),
     (0, common_1.Post)('impersonate/:userId'),

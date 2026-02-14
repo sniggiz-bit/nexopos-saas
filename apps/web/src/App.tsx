@@ -22,8 +22,12 @@ import { CreateQuotePage } from './pages/dashboard/CreateQuotePage';
 import { CreditsPage } from './pages/dashboard/CreditsPage';
 import { TreasuryPage } from './pages/dashboard/TreasuryPage';
 import { CriticalStockPage } from './pages/dashboard/CriticalStockPage';
+import BranchesPage from './pages/admin/BranchesPage';
+import NewTransferPage from './pages/admin/transfers/NewTransferPage';
 import { SsoLoginPage } from './pages/SsoLoginPage';
 import { LoginPage } from './pages/LoginPage';
+import { LandingPage } from './pages/LandingPage';
+import { RegisterPage } from './pages/RegisterPage';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
@@ -42,6 +46,11 @@ function RoleBasedRedirect() {
   const { user, isLoading } = useAuth();
 
   if (isLoading) return <LoadingScreen />;
+
+  // If not authenticated, show landing page
+  if (!user) {
+    return <Navigate to="/landing" replace />;
+  }
 
   if (user?.role === 'SUPER_ADMIN') {
     return <Navigate to="/admin/dashboard" replace />;
@@ -73,6 +82,8 @@ function App() {
           <Suspense fallback={<LoadingScreen />}>
             <Routes>
               {/* Public Routes */}
+              <Route path="/landing" element={<LandingPage />} />
+              <Route path="/register" element={<RegisterPage />} />
               <Route path="/auth/sso" element={<SsoLoginPage />} />
               <Route path="/login" element={<LoginPage />} />
 
@@ -111,6 +122,10 @@ function App() {
                 <Route path="/dashboard/credits" element={<CreditsPage />} />
                 <Route path="/dashboard/treasury" element={<TreasuryPage />} />
                 <Route path="/dashboard/reports/critical-stock" element={<CriticalStockPage />} />
+                <Route path="/dashboard/branches" element={<BranchesPage />} />
+                <Route path="/admin/branches" element={<BranchesPage />} /> {/* Alias for convenience if accessed via admin URL directly */}
+                <Route path="/dashboard/transfers/new" element={<NewTransferPage />} />
+                <Route path="/admin/transfers/new" element={<NewTransferPage />} /> {/* Alias */}
               </Route>
 
               {/* Default Redirect */}

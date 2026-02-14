@@ -3,13 +3,15 @@ export declare class TenantsController {
     private readonly tenantsService;
     constructor(tenantsService: TenantsService);
     findAll(search?: string): Promise<{
-        name: string;
         id: string;
+        name: string;
+        createdAt: Date;
+        updatedAt: Date;
+        slug: string;
+        phone: string | null;
         rut: string | null;
         giro: string | null;
         address: string | null;
-        createdAt: Date;
-        updatedAt: Date;
         planId: string | null;
         status: string;
         nextPayment: Date | null;
@@ -17,13 +19,15 @@ export declare class TenantsController {
         maxProducts: number | null;
     }[]>;
     findOne(id: string): Promise<{
-        name: string;
         id: string;
+        name: string;
+        createdAt: Date;
+        updatedAt: Date;
+        slug: string;
+        phone: string | null;
         rut: string | null;
         giro: string | null;
         address: string | null;
-        createdAt: Date;
-        updatedAt: Date;
         planId: string | null;
         status: string;
         nextPayment: Date | null;
@@ -34,13 +38,15 @@ export declare class TenantsController {
         maxUsers?: number;
         maxProducts?: number;
     }): Promise<{
-        name: string;
         id: string;
+        name: string;
+        createdAt: Date;
+        updatedAt: Date;
+        slug: string;
+        phone: string | null;
         rut: string | null;
         giro: string | null;
         address: string | null;
-        createdAt: Date;
-        updatedAt: Date;
         planId: string | null;
         status: string;
         nextPayment: Date | null;
@@ -48,13 +54,15 @@ export declare class TenantsController {
         maxProducts: number | null;
     }>;
     suspend(id: string): Promise<{
-        name: string;
         id: string;
+        name: string;
+        createdAt: Date;
+        updatedAt: Date;
+        slug: string;
+        phone: string | null;
         rut: string | null;
         giro: string | null;
         address: string | null;
-        createdAt: Date;
-        updatedAt: Date;
         planId: string | null;
         status: string;
         nextPayment: Date | null;
@@ -62,13 +70,15 @@ export declare class TenantsController {
         maxProducts: number | null;
     }>;
     activate(id: string): Promise<{
-        name: string;
         id: string;
+        name: string;
+        createdAt: Date;
+        updatedAt: Date;
+        slug: string;
+        phone: string | null;
         rut: string | null;
         giro: string | null;
         address: string | null;
-        createdAt: Date;
-        updatedAt: Date;
         planId: string | null;
         status: string;
         nextPayment: Date | null;

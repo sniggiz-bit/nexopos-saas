@@ -12,11 +12,11 @@ export declare class QuotesService {
             tenantId: string;
             createdAt: Date;
             updatedAt: Date;
+            phone: string | null;
             rut: string;
             giro: string | null;
             address: string | null;
             comuna: string | null;
-            phone: string | null;
         } | null;
         items: ({
             product: {
@@ -34,6 +34,7 @@ export declare class QuotesService {
                 image: string | null;
                 isActive: boolean;
                 minStock: number;
+                stock: number | null;
                 unitType: import("@prisma/client").$Enums.UnitType;
             };
         } & {
@@ -61,11 +62,11 @@ export declare class QuotesService {
             tenantId: string;
             createdAt: Date;
             updatedAt: Date;
+            phone: string | null;
             rut: string;
             giro: string | null;
             address: string | null;
             comuna: string | null;
-            phone: string | null;
         } | null;
         items: {
             id: string;
@@ -92,11 +93,11 @@ export declare class QuotesService {
             tenantId: string;
             createdAt: Date;
             updatedAt: Date;
+            phone: string | null;
             rut: string;
             giro: string | null;
             address: string | null;
             comuna: string | null;
-            phone: string | null;
         } | null;
         items: ({
             product: {
@@ -114,6 +115,7 @@ export declare class QuotesService {
                 image: string | null;
                 isActive: boolean;
                 minStock: number;
+                stock: number | null;
                 unitType: import("@prisma/client").$Enums.UnitType;
             };
         } & {

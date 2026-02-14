@@ -20,6 +20,10 @@ export declare class UsersController {
             id: string;
             name: string;
             tenantId: string;
+            createdAt: Date;
+            updatedAt: Date;
+            address: string | null;
+            isMain: boolean;
         } | null;
     } & {
         id: string;
@@ -37,6 +41,10 @@ export declare class UsersController {
             id: string;
             name: string;
             tenantId: string;
+            createdAt: Date;
+            updatedAt: Date;
+            address: string | null;
+            isMain: boolean;
         } | null;
         shiftsOpened: {
             id: string;

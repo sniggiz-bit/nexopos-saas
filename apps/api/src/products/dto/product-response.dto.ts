@@ -22,5 +22,10 @@ export class ProductResponseDto {
         id: string;
         name: string;
     };
+    inventoryLevels?: {
+        branchId: string;
+        branchName: string;
+        quantity: number;
+    }[];
 }
 

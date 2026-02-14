@@ -38,13 +38,23 @@ export class AuthController {
         return { isValid: true, user: payload };
     }
 
+    /**
+     * Public endpoint for tenant registration (Self-Service Onboarding)
+     * No authentication required
+     */
+    @HttpCode(HttpStatus.CREATED)
+    @Post('register-tenant')
+    async registerTenant(@Body() dto: any) {
+        return this.authService.registerTenant(dto);
+    }
+
     // This endpoint should be guarded by SuperAdminGuard, but we'll leave it to the module definition
     // For now we assume the caller has checked permissions or the route is protected at Controller level if added there.
     // However, the requirement said "POST /auth/impersonate/:userId. Este endpoint debe validar que soy SUPER_ADMIN"
     // So we need to add the guard here or ensure the controller is not global-guarded if we want mixed access.
     // AuthController usually is public. We need to apply guard specifically here.
     // But we need to import SuperAdminGuard and UseGuards.
-    // Let's add the imports in a separate call or just rely on the implementation plan's structure if I can edit imports too.
+    // Let's add the method first, then add imports in a separate call or just rely on the implementation plan's structure if I can edit imports too.
     // I'll add the method first, then add imports.
     @UseGuards(JwtAuthGuard, SuperAdminGuard)
     @Post('impersonate/:userId')

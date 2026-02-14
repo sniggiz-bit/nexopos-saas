@@ -18,11 +18,11 @@ export declare class TreasuryService {
             tenantId: string;
             createdAt: Date;
             updatedAt: Date;
+            phone: string | null;
             rut: string;
             giro: string | null;
             address: string | null;
             comuna: string | null;
-            phone: string | null;
         };
     } & {
         id: string;

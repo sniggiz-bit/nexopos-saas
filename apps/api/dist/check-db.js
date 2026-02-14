@@ -12,7 +12,7 @@ async function check() {
     });
     console.log(`\nProducts for Tenant ${tenantId}:`);
     for (const p of products) {
-        const inventory = await prisma.inventoryLevel.findUnique({
+        const inventory = await prisma.inventory.findUnique({
             where: {
                 productId_branchId: {
                     productId: p.id,

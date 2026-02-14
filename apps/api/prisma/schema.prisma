@@ -11,6 +11,8 @@ datasource db {
 model Tenant {
   id         String     @id @default(uuid())
   name       String
+  slug       String     @unique
+  phone      String?
   rut        String?
   giro       String?
   address    String?
@@ -36,15 +38,21 @@ model Tenant {
 }
 
 model Branch {
-  id        String           @id @default(uuid())
-  name      String
-  tenantId  String
-  tenant    Tenant           @relation(fields: [tenantId], references: [id])
-  inventory InventoryLevel[]
-  sales     Sale[]
-  users     User[]
-  cashShifts CashShift[]
+  id             String           @id @default(uuid())
+  name           String
+  address        String?
+  isMain         Boolean          @default(false)
+  tenantId       String
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt @default(now())
+  tenant         Tenant           @relation(fields: [tenantId], references: [id])
+  inventory      Inventory[]
+  sales          Sale[]
+  users          User[]
+  cashShifts     CashShift[]
   stockMovements StockMovement[]
+  transfersFrom  Transfer[]       @relation("OriginBranch")
+  transfersTo    Transfer[]       @relation("DestinationBranch")
 }
 
 model User {
@@ -63,6 +71,8 @@ model User {
   stockMovements StockMovement[]
   shiftsOpened CashShift[] @relation("OpenedShifts")
   shiftsClosed CashShift[] @relation("ClosedShifts")
+  requestedTransfers Transfer[] @relation("RequestedBy")
+  processedTransfers Transfer[] @relation("ProcessedBy")
 }
 
 enum UserRole {
@@ -110,29 +120,69 @@ model Product {
   costPrice  Int              @default(0)
   image      String?
   isActive   Boolean          @default(true)
-  minStock   Int              @default(0)
+  minStock   Int              @default(0) // Global minStock, deprecated in favor of Inventory.minStock
+  stock      Int?             // @deprecated - Used for migration only
   unitType   UnitType         @default(UNIT)
-  inventory  InventoryLevel[]
+  inventory  Inventory[]
   brand      Brand?           @relation(fields: [brandId], references: [id])
   category   Category?        @relation(fields: [categoryId], references: [id])
   tenant     Tenant           @relation(fields: [tenantId], references: [id])
   saleItems  SaleItem[]
   quoteItems QuoteItem[]
   stockMovements StockMovement[]
+  transferItems TransferItem[]
 
   @@unique([barcode, tenantId])
 }
 
-model InventoryLevel {
+model Inventory {
   id        String   @id @default(uuid())
   productId String
   branchId  String
   quantity  Decimal  @default(0) @db.Decimal(10, 3)
+  minStock  Int      @default(0)
   updatedAt DateTime @updatedAt
   branch    Branch   @relation(fields: [branchId], references: [id])
   product   Product  @relation(fields: [productId], references: [id])
 
   @@unique([productId, branchId])
+  @@map("InventoryLevel")
+}
+
+model Transfer {
+  id              String         @id @default(uuid())
+  originBranchId  String
+  destBranchId    String
+  status          TransferStatus @default(PENDING)
+  requestedById   String
+  processedById   String?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  note            String?
+
+  originBranch    Branch         @relation("OriginBranch", fields: [originBranchId], references: [id])
+  destinationBranch Branch       @relation("DestinationBranch", fields: [destBranchId], references: [id])
+  requestedBy     User           @relation("RequestedBy", fields: [requestedById], references: [id])
+  processedBy     User?          @relation("ProcessedBy", fields: [processedById], references: [id])
+  items           TransferItem[]
+}
+
+model TransferItem {
+  id          String   @id @default(uuid())
+  transferId  String
+  productId   String
+  quantity    Decimal  @db.Decimal(10, 3)
+  
+  transfer    Transfer @relation(fields: [transferId], references: [id])
+  product     Product  @relation(fields: [productId], references: [id])
+}
+
+enum TransferStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  COMPLETED
+  CANCELLED
 }
 
 model Sale {
@@ -330,10 +380,14 @@ enum MovementType {
 model Plan {
   id          String   @id @default(uuid())
   name        String
+  description String?
   price       Int
+  features    Json?    // Array of benefit strings
   maxUsers    Int
   maxProducts Int
   maxStorage  Int      @default(0) // In MB
+  isRecommended Boolean @default(false)
+  isVisible   Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   tenants     Tenant[]

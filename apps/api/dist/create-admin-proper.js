@@ -12,7 +12,7 @@ async function main() {
     const tenant = await prisma.tenant.upsert({
         where: { id: 'tenant-1' },
         update: {},
-        create: { id: 'tenant-1', name: 'Comercial Chile SpA' },
+        create: { id: 'tenant-1', name: 'Comercial Chile SpA', slug: 'comercial-chile-spa' },
     });
     const branch = await prisma.branch.upsert({
         where: { id: 'branch-1' },

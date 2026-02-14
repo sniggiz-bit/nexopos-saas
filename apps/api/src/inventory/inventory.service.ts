@@ -18,7 +18,7 @@ export class InventoryService {
         const prisma = tx || this.prisma;
 
         // 1. Get current stock to calculate new balance
-        const currentInventory = await prisma.inventoryLevel.findUnique({
+        const currentInventory = await prisma.inventory.findUnique({
             where: {
                 productId_branchId: {
                     productId: data.productId,
@@ -52,7 +52,7 @@ export class InventoryService {
         // OR we just log the movement here and trust the caller to update the level.
         // BETTER APPROACH: The caller (SalesService) should call this method, and THIS method updates both.
 
-        await prisma.inventoryLevel.upsert({
+        await prisma.inventory.upsert({
             where: {
                 productId_branchId: {
                     productId: data.productId,

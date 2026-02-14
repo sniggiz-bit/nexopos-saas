@@ -11,11 +11,11 @@ export declare class CustomersController {
         tenantId: string;
         createdAt: Date;
         updatedAt: Date;
+        phone: string | null;
         rut: string;
         giro: string | null;
         address: string | null;
         comuna: string | null;
-        phone: string | null;
     }>;
     findAll(tenantId?: string): Promise<{
         id: string;
@@ -24,11 +24,11 @@ export declare class CustomersController {
         tenantId: string;
         createdAt: Date;
         updatedAt: Date;
+        phone: string | null;
         rut: string;
         giro: string | null;
         address: string | null;
         comuna: string | null;
-        phone: string | null;
     }[]>;
     findOne(id: string): Promise<({
         _count: {
@@ -43,11 +43,11 @@ export declare class CustomersController {
         tenantId: string;
         createdAt: Date;
         updatedAt: Date;
+        phone: string | null;
         rut: string;
         giro: string | null;
         address: string | null;
         comuna: string | null;
-        phone: string | null;
     }) | null>;
     update(id: string, updateCustomerDto: UpdateCustomerDto): Promise<{
         id: string;
@@ -56,11 +56,11 @@ export declare class CustomersController {
         tenantId: string;
         createdAt: Date;
         updatedAt: Date;
+        phone: string | null;
         rut: string;
         giro: string | null;
         address: string | null;
         comuna: string | null;
-        phone: string | null;
     }>;
     remove(id: string): Promise<{
         id: string;
@@ -69,10 +69,10 @@ export declare class CustomersController {
         tenantId: string;
         createdAt: Date;
         updatedAt: Date;
+        phone: string | null;
         rut: string;
         giro: string | null;
         address: string | null;
         comuna: string | null;
-        phone: string | null;
     }>;
 }

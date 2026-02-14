@@ -22,6 +22,11 @@ export interface Product {
     tenantId: string;
     createdAt: string;
     updatedAt: string;
+    inventoryLevels?: {
+        branchId: string;
+        branchName: string;
+        quantity: number;
+    }[];
 }
 
 export interface ProductsResponse {
@@ -74,7 +79,6 @@ export interface Credit {
     status: 'OPEN' | 'PAID';
     createdAt: string;
     customer?: Customer;
-    sale?: any;
     sale?: any;
     payments: CreditPayment[];
 }

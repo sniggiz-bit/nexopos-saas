@@ -24,6 +24,8 @@ import { PlansModule } from './plans/plans.module';
 import { TenantsModule } from './tenants/tenants.module';
 import { AnnouncementsModule } from './announcements/announcements.module';
 import { SystemLogsModule } from './system-logs/system-logs.module';
+import { BranchesModule } from './branches/branches.module';
+import { TransfersModule } from './transfers/transfers.module';
 
 @Module({
   imports: [
@@ -47,12 +49,13 @@ import { SystemLogsModule } from './system-logs/system-logs.module';
     InventoryModule,
     UsersModule,
     TreasuryModule,
-    TreasuryModule,
     DashboardModule,
     PlansModule,
     TenantsModule,
     AnnouncementsModule,
     SystemLogsModule,
+    BranchesModule,
+    TransfersModule,
   ],
   controllers: [AppController],
   providers: [AppService],

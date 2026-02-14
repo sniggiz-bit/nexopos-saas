@@ -36,7 +36,7 @@ export class ProductsController {
         @Query('tenantId') tenantId: string = 'tenant-1', // Default tenant for development
         @Query('branchId') branchId?: string,
     ): Promise<ProductResponseDto[]> {
-        return this.productsService.findAll(tenantId, branchId);
+        return this.productsService.findAll(tenantId);
     }
 
     /**
@@ -54,7 +54,7 @@ export class ProductsController {
         @Query('tenantId') tenantId: string = 'tenant-1',
         @Query('branchId') branchId?: string,
     ): Promise<ProductResponseDto> {
-        return this.productsService.findOne(id, tenantId, branchId);
+        return this.productsService.findOne(id, tenantId);
     }
 
     /**

@@ -91,12 +91,30 @@ export function InventoryPage() {
                                             <div className="text-xs font-mono text-gray-600">EAN: {product.barcode || '-'}</div>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-center">
-                                            <span className={`text-lg font-bold ${product.stock <= product.minStock ? 'text-red-600' : 'text-gray-900'}`}>
-                                                {product.stock}
-                                            </span>
-                                            <span className="text-xs text-gray-400 ml-1">
-                                                {product.unitType === 'WEIGHT' ? 'kg' : 'uds'}
-                                            </span>
+                                            <div className="relative group cursor-help">
+                                                <span className={`text-lg font-bold ${product.stock <= product.minStock ? 'text-red-600' : 'text-gray-900'}`}>
+                                                    {product.stock}
+                                                </span>
+                                                <span className="text-xs text-gray-400 ml-1">
+                                                    {product.unitType === 'WEIGHT' ? 'kg' : 'uds'}
+                                                </span>
+
+                                                {/* Tooltip for Branch Breakdown */}
+                                                {product.inventoryLevels && product.inventoryLevels.length > 0 && (
+                                                    <div className="absolute z-50 bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block w-48 bg-gray-900 text-white text-xs rounded-lg shadow-xl p-3">
+                                                        <div className="font-bold mb-1 border-b border-gray-700 pb-1">Desglose por Sucursal</div>
+                                                        <div className="space-y-1">
+                                                            {product.inventoryLevels.map((lvl) => (
+                                                                <div key={lvl.branchId} className="flex justify-between">
+                                                                    <span>{lvl.branchName}:</span>
+                                                                    <span className="font-mono">{lvl.quantity}</span>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                        <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-8 border-transparent border-t-gray-900"></div>
+                                                    </div>
+                                                )}
+                                            </div>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-center">
                                             {product.stock <= 0 ? (

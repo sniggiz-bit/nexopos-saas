@@ -26,10 +26,10 @@ let ProductsController = class ProductsController {
         return this.productsService.findCritical(tenantId, branchId);
     }
     async findAll(tenantId = 'tenant-1', branchId) {
-        return this.productsService.findAll(tenantId, branchId);
+        return this.productsService.findAll(tenantId);
     }
     async findOne(id, tenantId = 'tenant-1', branchId) {
-        return this.productsService.findOne(id, tenantId, branchId);
+        return this.productsService.findOne(id, tenantId);
     }
     async create(createProductDto) {
         return this.productsService.create(createProductDto);

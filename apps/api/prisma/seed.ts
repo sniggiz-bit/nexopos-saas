@@ -12,7 +12,8 @@ async function main() {
         update: {},
         create: {
             id: 'tenant-1',
-            name: 'Comercial Chile SpA',
+            name: 'Demo Tenant',
+            slug: 'demo-tenant',
         },
     });
     console.log('✅ Tenant creado:', tenant.name);
@@ -57,7 +58,7 @@ async function main() {
     console.log('✅ Producto creado:', product.name, `- $${product.price} CLP`);
 
     // 5. Crear InventoryLevel
-    const inventory = await prisma.inventoryLevel.upsert({
+    const inventory = await prisma.inventory.upsert({
         where: {
             productId_branchId: {
                 productId: product.id,

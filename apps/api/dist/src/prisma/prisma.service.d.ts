@@ -9,7 +9,7 @@ export declare class PrismaService implements OnModuleInit, OnModuleDestroy {
     get client(): PrismaClient<import("@prisma/client").Prisma.PrismaClientOptions, never, import("@prisma/client/runtime/client").DefaultArgs>;
     get $transaction(): any;
     get product(): import("@prisma/client").Prisma.ProductDelegate<import("@prisma/client/runtime/client").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;
-    get inventoryLevel(): import("@prisma/client").Prisma.InventoryLevelDelegate<import("@prisma/client/runtime/client").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;
+    get inventory(): import("@prisma/client").Prisma.InventoryDelegate<import("@prisma/client/runtime/client").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;
     get sale(): import("@prisma/client").Prisma.SaleDelegate<import("@prisma/client/runtime/client").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;
     get saleItem(): import("@prisma/client").Prisma.SaleItemDelegate<import("@prisma/client/runtime/client").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;
     get tenant(): import("@prisma/client").Prisma.TenantDelegate<import("@prisma/client/runtime/client").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;

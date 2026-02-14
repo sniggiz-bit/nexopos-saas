@@ -18,7 +18,7 @@ let ProductsService = class ProductsService {
     constructor(prisma) {
         this.prisma = prisma;
     }
-    async findAll(tenantId, branchId = 'branch-1') {
+    async findAll(tenantId) {
         const products = await this.prisma.product.findMany({
             where: {
                 tenantId,
@@ -26,8 +26,8 @@ let ProductsService = class ProductsService {
             },
             include: {
                 inventory: {
-                    where: {
-                        branchId,
+                    include: {
+                        branch: true,
                     },
                 },
                 category: true,
@@ -46,6 +46,11 @@ let ProductsService = class ProductsService {
             image: product.image || undefined,
             isActive: product.isActive,
             stock: product.inventory.reduce((total, inv) => total + Number(inv.quantity), 0),
+            inventoryLevels: product.inventory.map(inv => ({
+                branchId: inv.branchId,
+                branchName: inv.branch?.name || 'Desconocida',
+                quantity: Number(inv.quantity),
+            })),
             category: product.category ? {
                 id: product.category.id,
                 name: product.category.name,
@@ -56,7 +61,7 @@ let ProductsService = class ProductsService {
             } : undefined,
         }));
     }
-    async findOne(id, tenantId, branchId = 'branch-1') {
+    async findOne(id, tenantId) {
         const product = await this.prisma.product.findFirst({
             where: {
                 id,
@@ -64,8 +69,8 @@ let ProductsService = class ProductsService {
             },
             include: {
                 inventory: {
-                    where: {
-                        branchId,
+                    include: {
+                        branch: true,
                     },
                 },
                 category: true,
@@ -87,6 +92,11 @@ let ProductsService = class ProductsService {
             image: product.image || undefined,
             isActive: product.isActive,
             stock: product.inventory.reduce((total, inv) => total + Number(inv.quantity), 0),
+            inventoryLevels: product.inventory.map(inv => ({
+                branchId: inv.branchId,
+                branchName: inv.branch?.name || 'Desconocida',
+                quantity: Number(inv.quantity),
+            })),
             category: product.category ? {
                 id: product.category.id,
                 name: product.category.name,
@@ -207,14 +217,14 @@ let ProductsService = class ProductsService {
         if (updateProductDto.stock !== undefined) {
             const newStock = new client_1.Prisma.Decimal(updateProductDto.stock);
             const branchId = 'branch-1';
-            const currentInv = await this.prisma.inventoryLevel.findUnique({
+            const currentInv = await this.prisma.inventory.findUnique({
                 where: { productId_branchId: { productId: id, branchId } }
             });
             const currentQty = currentInv ? currentInv.quantity : new client_1.Prisma.Decimal(0);
             const diff = newStock.minus(currentQty);
             if (!diff.equals(0)) {
                 await this.prisma.$transaction([
-                    this.prisma.inventoryLevel.upsert({
+                    this.prisma.inventory.upsert({
                         where: { productId_branchId: { productId: id, branchId } },
                         create: { productId: id, branchId, quantity: newStock },
                         update: { quantity: newStock }

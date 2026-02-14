@@ -28,6 +28,8 @@ export declare class AdminService {
             name: string;
             createdAt: Date;
             updatedAt: Date;
+            slug: string;
+            phone: string | null;
             rut: string | null;
             giro: string | null;
             address: string | null;

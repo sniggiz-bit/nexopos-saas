@@ -36,8 +36,8 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
     return this.prisma.product;
   }
 
-  get inventoryLevel() {
-    return this.prisma.inventoryLevel;
+  get inventory() {
+    return this.prisma.inventory;
   }
 
   get sale() {

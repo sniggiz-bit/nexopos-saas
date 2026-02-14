@@ -46,13 +46,16 @@ exports.AuthService = void 0;
 const common_1 = require("@nestjs/common");
 const jwt_1 = require("@nestjs/jwt");
 const prisma_service_1 = require("../prisma/prisma.service");
+const email_service_1 = require("../email/email.service");
 const bcrypt = __importStar(require("bcrypt"));
 let AuthService = class AuthService {
     jwtService;
     prisma;
-    constructor(jwtService, prisma) {
+    emailService;
+    constructor(jwtService, prisma, emailService) {
         this.jwtService = jwtService;
         this.prisma = prisma;
+        this.emailService = emailService;
     }
     async validateUser(email, pass) {
         try {
@@ -150,11 +153,104 @@ let AuthService = class AuthService {
         }
         return this.login(user);
     }
+    async registerTenant(dto) {
+        const existingUser = await this.prisma.user.findUnique({
+            where: { email: dto.email }
+        });
+        if (existingUser) {
+            throw new common_1.ConflictException('El email ya está registrado');
+        }
+        const baseSlug = this.generateSlug(dto.companyName);
+        const slug = await this.ensureUniqueSlug(baseSlug);
+        const hashedPassword = await bcrypt.hash(dto.password, 10);
+        try {
+            const result = await this.prisma.$transaction(async (tx) => {
+                const tenant = await tx.tenant.create({
+                    data: {
+                        name: dto.companyName,
+                        slug,
+                        phone: dto.phone,
+                        rut: dto.rut,
+                        giro: dto.giro,
+                        address: dto.address,
+                        status: 'ACTIVE',
+                    },
+                });
+                const branch = await tx.branch.create({
+                    data: {
+                        name: 'Casa Matriz',
+                        isMain: true,
+                        tenantId: tenant.id,
+                    },
+                });
+                const user = await tx.user.create({
+                    data: {
+                        email: dto.email,
+                        name: dto.userName,
+                        password: hashedPassword,
+                        role: 'ADMIN',
+                        tenantId: tenant.id,
+                        branchId: branch.id,
+                    },
+                });
+                return { tenant, branch, user };
+            });
+            this.emailService.sendWelcomeEmail(dto.email, dto.userName, {
+                email: dto.email,
+                password: dto.password,
+                companyName: dto.companyName,
+            }).catch(err => {
+                console.error('Failed to send welcome email:', err);
+            });
+            const token = await this.login(result.user);
+            return {
+                ...token,
+                tenant: {
+                    id: result.tenant.id,
+                    name: result.tenant.name,
+                    slug: result.tenant.slug,
+                },
+                branch: {
+                    id: result.branch.id,
+                    name: result.branch.name,
+                },
+            };
+        }
+        catch (error) {
+            console.error('Error registering tenant:', error);
+            throw new common_1.BadRequestException('Error al crear la cuenta. Por favor intenta nuevamente.');
+        }
+    }
+    generateSlug(companyName) {
+        return companyName
+            .toLowerCase()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/[^a-z0-9\s-]/g, '')
+            .trim()
+            .replace(/\s+/g, '-')
+            .replace(/-+/g, '-');
+    }
+    async ensureUniqueSlug(baseSlug) {
+        let slug = baseSlug;
+        let suffix = 1;
+        while (true) {
+            const existing = await this.prisma.tenant.findUnique({
+                where: { slug },
+            });
+            if (!existing) {
+                return slug;
+            }
+            slug = `${baseSlug}-${suffix}`;
+            suffix++;
+        }
+    }
 };
 exports.AuthService = AuthService;
 exports.AuthService = AuthService = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [jwt_1.JwtService,
-        prisma_service_1.PrismaService])
+        prisma_service_1.PrismaService,
+        email_service_1.EmailService])
 ], AuthService);
 //# sourceMappingURL=auth.service.js.map

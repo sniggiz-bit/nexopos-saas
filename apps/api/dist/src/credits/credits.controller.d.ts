@@ -24,11 +24,11 @@ export declare class CreditsController {
             tenantId: string;
             createdAt: Date;
             updatedAt: Date;
+            phone: string | null;
             rut: string;
             giro: string | null;
             address: string | null;
             comuna: string | null;
-            phone: string | null;
         };
         sale: {
             id: string;
@@ -68,11 +68,11 @@ export declare class CreditsController {
             tenantId: string;
             createdAt: Date;
             updatedAt: Date;
+            phone: string | null;
             rut: string;
             giro: string | null;
             address: string | null;
             comuna: string | null;
-            phone: string | null;
         };
         payments: {
             id: string;

@@ -33,6 +33,10 @@ export declare class SalesService {
             id: string;
             name: string;
             tenantId: string;
+            createdAt: Date;
+            updatedAt: Date;
+            address: string | null;
+            isMain: boolean;
         };
         customer: {
             id: string;
@@ -41,11 +45,11 @@ export declare class SalesService {
             tenantId: string;
             createdAt: Date;
             updatedAt: Date;
+            phone: string | null;
             rut: string;
             giro: string | null;
             address: string | null;
             comuna: string | null;
-            phone: string | null;
         } | null;
         credit: {
             id: string;
@@ -75,6 +79,7 @@ export declare class SalesService {
                 image: string | null;
                 isActive: boolean;
                 minStock: number;
+                stock: number | null;
                 unitType: import("@prisma/client").$Enums.UnitType;
             };
         } & {
@@ -111,11 +116,11 @@ export declare class SalesService {
             tenantId: string;
             createdAt: Date;
             updatedAt: Date;
+            phone: string | null;
             rut: string;
             giro: string | null;
             address: string | null;
             comuna: string | null;
-            phone: string | null;
         } | null;
         credit: {
             id: string;

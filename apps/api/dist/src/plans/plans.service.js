@@ -32,6 +32,12 @@ let PlansService = class PlansService {
     async remove(id) {
         return this.prisma.plan.delete({ where: { id } });
     }
+    async findPublic() {
+        return this.prisma.plan.findMany({
+            where: { isVisible: true },
+            orderBy: { price: 'asc' }
+        });
+    }
 };
 exports.PlansService = PlansService;
 exports.PlansService = PlansService = __decorate([

@@ -25,4 +25,11 @@ export class PlansService {
     async remove(id: string): Promise<Plan> {
         return this.prisma.plan.delete({ where: { id } });
     }
+
+    async findPublic(): Promise<Plan[]> {
+        return this.prisma.plan.findMany({
+            where: { isVisible: true },
+            orderBy: { price: 'asc' }
+        });
+    }
 }

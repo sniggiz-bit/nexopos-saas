@@ -13,11 +13,11 @@ export declare class QuotesController {
             tenantId: string;
             createdAt: Date;
             updatedAt: Date;
+            phone: string | null;
             rut: string;
             giro: string | null;
             address: string | null;
             comuna: string | null;
-            phone: string | null;
         } | null;
         items: ({
             product: {
@@ -35,6 +35,7 @@ export declare class QuotesController {
                 image: string | null;
                 isActive: boolean;
                 minStock: number;
+                stock: number | null;
                 unitType: import("@prisma/client").$Enums.UnitType;
             };
         } & {
@@ -62,11 +63,11 @@ export declare class QuotesController {
             tenantId: string;
             createdAt: Date;
             updatedAt: Date;
+            phone: string | null;
             rut: string;
             giro: string | null;
             address: string | null;
             comuna: string | null;
-            phone: string | null;
         } | null;
         items: {
             id: string;
@@ -93,11 +94,11 @@ export declare class QuotesController {
             tenantId: string;
             createdAt: Date;
             updatedAt: Date;
+            phone: string | null;
             rut: string;
             giro: string | null;
             address: string | null;
             comuna: string | null;
-            phone: string | null;
         } | null;
         items: ({
             product: {
@@ -115,6 +116,7 @@ export declare class QuotesController {
                 image: string | null;
                 isActive: boolean;
                 minStock: number;
+                stock: number | null;
                 unitType: import("@prisma/client").$Enums.UnitType;
             };
         } & {

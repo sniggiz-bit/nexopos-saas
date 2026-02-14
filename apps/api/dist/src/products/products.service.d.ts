@@ -6,8 +6,8 @@ import { Prisma } from '@prisma/client';
 export declare class ProductsService {
     private prisma;
     constructor(prisma: PrismaService);
-    findAll(tenantId: string, branchId?: string): Promise<ProductResponseDto[]>;
-    findOne(id: string, tenantId: string, branchId?: string): Promise<ProductResponseDto>;
+    findAll(tenantId: string): Promise<ProductResponseDto[]>;
+    findOne(id: string, tenantId: string): Promise<ProductResponseDto>;
     create(createProductDto: CreateProductDto): Promise<ProductResponseDto>;
     update(id: string, updateProductDto: UpdateProductDto): Promise<ProductResponseDto>;
     remove(id: string): Promise<void>;
@@ -17,6 +17,7 @@ export declare class ProductsService {
             id: string;
             branchId: string;
             updatedAt: Date;
+            minStock: number;
             productId: string;
             quantity: Prisma.Decimal;
         }[];

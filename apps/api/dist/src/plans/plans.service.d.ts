@@ -8,4 +8,5 @@ export declare class PlansService {
     findOne(id: string): Promise<Plan | null>;
     update(id: string, data: any): Promise<Plan>;
     remove(id: string): Promise<Plan>;
+    findPublic(): Promise<Plan[]>;
 }

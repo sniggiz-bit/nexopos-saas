@@ -25,6 +25,26 @@ export declare class AuthController {
         isValid: boolean;
         user: any;
     }>;
+    registerTenant(dto: any): Promise<{
+        tenant: {
+            id: any;
+            name: any;
+            slug: any;
+        };
+        branch: {
+            id: any;
+            name: any;
+        };
+        access_token: string;
+        user: {
+            id: any;
+            email: any;
+            name: any;
+            role: any;
+            tenantId: any;
+            branchId: any;
+        };
+    }>;
     impersonate(userId: string): Promise<{
         access_token: string;
         user: {

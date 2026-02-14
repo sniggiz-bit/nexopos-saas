@@ -12,7 +12,8 @@ import {
     CreditCard,
     AlertTriangle,
     BarChart3,
-    History
+    History,
+    Store // Add Store icon
 } from 'lucide-react';
 
 interface DashboardLayoutProps {
@@ -24,6 +25,7 @@ const navigation = [
     { name: 'Ventas', href: '/dashboard/sales', icon: History },
     { name: 'Productos', href: '/dashboard/products', icon: Package },
     { name: 'Inventario', href: '/dashboard/inventory', icon: Warehouse },
+    { name: 'Sucursales', href: '/dashboard/branches', icon: Store }, // Add Sucursales link
     { name: 'Categorías', href: '/dashboard/categories', icon: FolderTree },
     { name: 'Marcas', href: '/dashboard/brands', icon: Tag },
     { name: 'Clientes', href: '/dashboard/clients', icon: Users },

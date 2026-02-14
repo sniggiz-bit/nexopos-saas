@@ -28,6 +28,8 @@ export declare class AdminController {
             name: string;
             createdAt: Date;
             updatedAt: Date;
+            slug: string;
+            phone: string | null;
             rut: string | null;
             giro: string | null;
             address: string | null;

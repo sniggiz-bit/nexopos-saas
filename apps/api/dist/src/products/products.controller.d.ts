@@ -11,6 +11,7 @@ export declare class ProductsController {
             id: string;
             branchId: string;
             updatedAt: Date;
+            minStock: number;
             productId: string;
             quantity: import("@prisma/client-runtime-utils").Decimal;
         }[];

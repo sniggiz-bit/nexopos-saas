@@ -21,7 +21,7 @@ let InventoryService = InventoryService_1 = class InventoryService {
     }
     async logMovement(data, tx) {
         const prisma = tx || this.prisma;
-        const currentInventory = await prisma.inventoryLevel.findUnique({
+        const currentInventory = await prisma.inventory.findUnique({
             where: {
                 productId_branchId: {
                     productId: data.productId,
@@ -42,7 +42,7 @@ let InventoryService = InventoryService_1 = class InventoryService {
                 userId: data.userId,
             },
         });
-        await prisma.inventoryLevel.upsert({
+        await prisma.inventory.upsert({
             where: {
                 productId_branchId: {
                     productId: data.productId,

@@ -20,6 +20,7 @@ async function main() {
         create: {
             id: 'tenant-1',
             name: 'Minimarket Don Pepe',
+            slug: 'minimarket-don-pepe',
         },
     });
 
@@ -202,7 +203,7 @@ async function main() {
         console.log(`✅ Producto procesado: ${product.name}`);
 
         // B. Asegurar nivel de inventario
-        const inventory = await prisma.inventoryLevel.upsert({
+        const inventory = await prisma.inventory.upsert({
             where: {
                 productId_branchId: {
                     productId: product.id,

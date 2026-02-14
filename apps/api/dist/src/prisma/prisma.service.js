@@ -37,8 +37,8 @@ let PrismaService = class PrismaService {
     get product() {
         return this.prisma.product;
     }
-    get inventoryLevel() {
-        return this.prisma.inventoryLevel;
+    get inventory() {
+        return this.prisma.inventory;
     }
     get sale() {
         return this.prisma.sale;

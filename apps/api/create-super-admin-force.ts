@@ -23,6 +23,7 @@ async function createSuperAdmin() {
         create: {
             id: 'tenant-1',
             name: 'Comercial Chile SpA',
+            slug: 'comercial-chile-spa',
         },
     });
 

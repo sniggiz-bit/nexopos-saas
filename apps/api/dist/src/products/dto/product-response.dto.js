@@ -15,6 +15,7 @@ class ProductResponseDto {
     stock;
     category;
     brand;
+    inventoryLevels;
 }
 exports.ProductResponseDto = ProductResponseDto;
 //# sourceMappingURL=product-response.dto.js.map
