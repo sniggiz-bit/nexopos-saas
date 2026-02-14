@@ -3,7 +3,7 @@ import { Tenant } from '@prisma/client';
 export declare class TenantsService {
     private prisma;
     constructor(prisma: PrismaService);
-    findAll(): Promise<Tenant[]>;
+    findAll(search?: string): Promise<Tenant[]>;
     findOne(id: string): Promise<Tenant | null>;
     updateLimits(id: string, limits: {
         maxUsers?: number;

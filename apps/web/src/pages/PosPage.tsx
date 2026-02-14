@@ -1,26 +1,32 @@
-import { useState } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Product } from '@/api/products';
 import { useProducts } from '@/hooks/useProducts';
+import { useCategories } from '@/hooks/useCategories';
 import { useSale } from '@/hooks/useSale';
 import { ProductGrid } from '@/components/pos/ProductGrid';
+import { CategoryFilter } from '@/components/pos/CategoryFilter';
 import { Cart } from '@/components/pos/Cart';
 import { PaymentModal } from '@/components/pos/PaymentModal';
-import { type CartItemData } from '@/components/pos/CartItem';
 import { CreateSaleRequest, PaymentMethod } from '@/api/sales';
 import { useToast } from '@/hooks/use-toast';
 import { useCurrentShift } from '@/hooks/useShifts';
 import { OpenShiftModal } from '@/components/pos/OpenShiftModal';
 import { CloseShiftModal } from '@/components/pos/CloseShiftModal';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/context/AuthContext';
-
+import { useCart } from '@/context/CartContext';
+import { useBarcodeScanner } from '@/hooks/useBarcodeScanner';
+import { Scan, Search, X, LogOut, Package } from 'lucide-react';
 
 export function PosPage() {
-    const [cartItems, setCartItems] = useState<CartItemData[]>([]);
+    const { items: cartItems, addItem, totals, clearCart } = useCart();
     const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
     const [saleResult, setSaleResult] = useState<any>(null);
     const [isCloseShiftModalOpen, setIsCloseShiftModalOpen] = useState(false);
+    const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
     const { toast } = useToast();
     const queryClient = useQueryClient();
 
@@ -29,11 +35,11 @@ export function PosPage() {
     const { data: currentShift, isLoading: isLoadingShift } = useCurrentShift(branchId);
 
     const { data: products = [], isLoading } = useProducts();
+    const { data: categories = [] } = useCategories(user?.tenantId);
 
     const { mutate: createSale, isPending, isSuccess, isError, reset } = useSale({
         onSuccess: (data) => {
             setSaleResult(data);
-            // Show success toast with DTE folio if available
             toast({
                 variant: 'success',
                 title: '¡Venta Exitosa!',
@@ -42,11 +48,9 @@ export function PosPage() {
                     : `Venta ID: ${data.id}`,
             });
 
-            // Clear cart and invalidate products query to update stock
-            setCartItems([]);
+            clearCart();
             queryClient.invalidateQueries({ queryKey: ['products'] });
 
-            // Close modal after delay - increased to 10s if there is any document (DTE or Internal)
             const hasDocument = data.dtePdfUrl || data.internalReceiptUrl;
             setTimeout(() => {
                 setIsPaymentModalOpen(false);
@@ -55,7 +59,6 @@ export function PosPage() {
             }, hasDocument ? 10000 : 2000);
         },
         onError: (error) => {
-            // Show error toast
             toast({
                 variant: 'destructive',
                 title: 'Error en la Venta',
@@ -65,97 +68,201 @@ export function PosPage() {
     });
 
     const handleAddToCart = (product: Product) => {
-        setCartItems((prev) => {
-            const existingItem = prev.find((item) => item.productId === product.id);
-
-            if (existingItem) {
-                // Increment quantity if item already in cart
-                return prev.map((item) =>
-                    item.productId === product.id
-                        ? { ...item, quantity: item.quantity + 1 }
-                        : item
-                );
-            } else {
-                // Add new item to cart
-                return [
-                    ...prev,
-                    {
-                        productId: product.id,
-                        name: product.name,
-                        price: product.price,
-                        quantity: 1,
-                        unitType: product.unitType,
-                    },
-                ];
-            }
-        });
+        addItem(product);
     };
 
-    const handleUpdateQuantity = (productId: string, quantity: number) => {
-        if (quantity <= 0) return;
-
-        setCartItems((prev) =>
-            prev.map((item) =>
-                item.productId === productId ? { ...item, quantity } : item
-            )
-        );
+    const addToCartByBarcode = (barcode: string) => {
+        const product = products.find(p => p.barcode === barcode || p.sku === barcode);
+        if (product) {
+            addItem(product);
+            toast({
+                title: 'Producto Agregado',
+                description: `${product.name} agregado al carrito`,
+                duration: 1500,
+            });
+        } else {
+            toast({
+                variant: 'destructive',
+                title: 'Producto No Encontrado',
+                description: `No hay producto con el código: ${barcode}`,
+            });
+        }
     };
 
-    const handleRemoveItem = (productId: string) => {
-        setCartItems((prev) => prev.filter((item) => item.productId !== productId));
-    };
+    useBarcodeScanner({
+        onScan: addToCartByBarcode,
+        enabled: !isPaymentModalOpen && !isCloseShiftModalOpen,
+    });
 
     const handleCheckout = () => {
         setIsPaymentModalOpen(true);
     };
 
     const handleConfirmPayment = () => {
-        // Construct payload matching backend requirements
         const saleData: CreateSaleRequest = {
-            tenantId: 'tenant-1', // TODO: Get from auth context
-            branchId: 'branch-1', // Hardcoded for now as per instructions
+            tenantId: user?.tenantId || 'tenant-1',
+            branchId: user?.branchId || 'branch-1',
             items: cartItems.map((item) => ({
                 productId: item.productId,
                 quantity: item.quantity,
             })),
             payments: [{
                 paymentMethod: PaymentMethod.CASH,
-                amount: total
+                amount: totals.total
             }],
         };
 
         createSale(saleData);
     };
 
-    const total = cartItems.reduce(
-        (sum, item) => sum + item.price * item.quantity,
-        0
-    );
-    const tax = total - (total / 1.19);
-    const subtotal = total - tax;
+    const [searchQuery, setSearchQuery] = useState('');
+    const inputRef = useRef<HTMLInputElement>(null);
+
+    // Search Logic
+    const filteredProducts = useMemo(() => {
+        let result = products;
+
+        if (selectedCategoryId) {
+            result = result.filter(p => p.category?.id === selectedCategoryId);
+        }
+
+        if (searchQuery) {
+            const query = searchQuery.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+            result = result.filter((product) => {
+                const name = product.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                const barcode = product.barcode?.toLowerCase() || '';
+                const sku = product.sku?.toLowerCase() || '';
+                const brand = product.brand?.name?.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "") || '';
+
+                return name.includes(query) ||
+                    barcode.includes(query) ||
+                    sku.includes(query) ||
+                    brand.includes(query);
+            });
+        }
+
+        return result;
+    }, [products, searchQuery, selectedCategoryId]);
+
+    // Keyboard Shortcuts
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'F3' || (e.ctrlKey && e.key === 'b')) {
+                e.preventDefault();
+                inputRef.current?.focus();
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, []);
+
+    const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'Enter') {
+            if (filteredProducts.length === 1) {
+                handleAddToCart(filteredProducts[0]);
+                setSearchQuery('');
+            }
+        }
+    };
+
+    const { total, tax, subtotal } = totals;
 
     return (
-        <div className="h-screen flex">
-            {/* Left side - Product Grid */}
-            <div className="flex-1 overflow-y-auto bg-background">
-                <div className="p-6">
-                    <div className="flex justify-between items-center mb-6">
-                        <h1 className="text-3xl font-bold">Punto de Venta</h1>
+        <div className="h-screen w-full flex bg-slate-100 dark:bg-slate-950 overflow-hidden">
+            {/* Left side - Product Grid (70%) */}
+            <div className="w-[70%] flex flex-col h-full border-r border-slate-200 dark:border-slate-800">
+                {/* Header Section */}
+                <div className="px-6 py-4 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 shadow-sm z-10">
+                    <div className="flex justify-between items-center mb-4 gap-4">
+                        <div className="flex items-center gap-3">
+                            <div className="bg-indigo-600 p-2 rounded-lg shadow-lg shadow-indigo-200 dark:shadow-none">
+                                <Package className="w-5 h-5 text-white" />
+                            </div>
+                            <div>
+                                <h1 className="text-xl font-bold text-slate-900 dark:text-white leading-tight">Punto de Venta</h1>
+                                <div className="flex items-center gap-2">
+                                    <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-emerald-200 text-emerald-700 bg-emerald-50 dark:bg-emerald-900/20 dark:border-emerald-800 dark:text-emerald-400">
+                                        <Scan className="w-3 h-3 mr-1" />
+                                        Scanner Ready
+                                    </Badge>
+                                    <span className="text-xs text-slate-400 dark:text-slate-500">|</span>
+                                    <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                                        {currentShift ? `Turno #${currentShift.id}` : 'Caja Cerrada'}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Search Bar */}
+                        <div className="flex-1 max-w-lg mx-auto relative group">
+                            <div className="absolute -inset-0.5 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-xl opacity-20 group-focus-within:opacity-100 transition duration-300 blur-sm"></div>
+                            <div className="relative flex items-center bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+                                <Search className="ml-3 text-slate-400 w-5 h-5" />
+                                <Input
+                                    ref={inputRef}
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    onKeyDown={handleSearchKeyDown}
+                                    placeholder="Buscar por nombre, código o SKU (F3)"
+                                    className="border-none focus-visible:ring-0 focus-visible:ring-offset-0 bg-transparent h-11 text-base placeholder:text-slate-400"
+                                />
+                                {searchQuery && (
+                                    <button
+                                        onClick={() => {
+                                            setSearchQuery('');
+                                            inputRef.current?.focus();
+                                        }}
+                                        className="mr-2 p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700"
+                                    >
+                                        <X className="w-4 h-4" />
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+
                         {currentShift && (
-                            <Button variant="outline" onClick={() => setIsCloseShiftModalOpen(true)}>
-                                Cerrar Caja
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setIsCloseShiftModalOpen(true)}
+                                className="text-slate-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                            >
+                                <LogOut className="w-4 h-4 mr-2" />
+                                Salir
                             </Button>
                         )}
                     </div>
 
+                    {/* Category Pills */}
+                    <div className="">
+                        <CategoryFilter
+                            categories={categories}
+                            selectedCategoryId={selectedCategoryId}
+                            onSelectCategory={setSelectedCategoryId}
+                        />
+                    </div>
+                </div>
+
+                {/* Scrollable Product Grid */}
+                <div className="flex-1 overflow-y-auto p-6 bg-slate-50 dark:bg-slate-950 custom-scrollbar">
                     <ProductGrid
-                        products={products}
+                        products={filteredProducts}
                         isLoading={isLoading}
                         onAddToCart={handleAddToCart}
                     />
                 </div>
             </div>
 
+            {/* Right side - Cart (30%) */}
+            <div className="w-[30%] h-full z-20">
+                <Cart
+                    onCheckout={handleCheckout}
+                    isProcessing={isPending}
+                />
+            </div>
+
+            {/* Modals */}
             <OpenShiftModal isOpen={!isLoadingShift && !currentShift} />
 
             {currentShift && (
@@ -166,18 +273,6 @@ export function PosPage() {
                 />
             )}
 
-            {/* Right side - Cart */}
-            <div className="w-96 border-l bg-muted/30 p-4">
-                <Cart
-                    items={cartItems}
-                    onUpdateQuantity={handleUpdateQuantity}
-                    onRemove={handleRemoveItem}
-                    onCheckout={handleCheckout}
-                    isProcessing={isPending}
-                />
-            </div>
-
-            {/* Payment Modal */}
             <PaymentModal
                 isOpen={isPaymentModalOpen}
                 onClose={() => {

@@ -25,6 +25,7 @@ import { CriticalStockPage } from './pages/dashboard/CriticalStockPage';
 import { SsoLoginPage } from './pages/SsoLoginPage';
 import { LoginPage } from './pages/LoginPage';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { CartProvider } from './context/CartContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 
 // Create a client for TanStack Query
@@ -89,7 +90,11 @@ function App() {
 
               {/* Protected Routes */}
               <Route element={<ProtectedRoute allowedRoles={['ADMIN', 'CASHIER']} />}>
-                <Route path="/pos" element={<PosPage />} />
+                <Route path="/pos" element={
+                  <CartProvider>
+                    <PosPage />
+                  </CartProvider>
+                } />
               </Route>
 
               <Route element={<ProtectedRoute allowedRoles={['ADMIN']} />}>

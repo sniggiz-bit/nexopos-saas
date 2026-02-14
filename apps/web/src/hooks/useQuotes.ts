@@ -1,26 +1,30 @@
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getQuotes, createQuote, generateQuotePdf } from '../api/quotes';
-
-export function useQuotes(tenantId: string = 'tenant-1') {
-    return useQuery({
-        queryKey: ['quotes', tenantId],
-        queryFn: () => getQuotes(tenantId),
-    });
-}
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { createQuote, CreateQuoteData, generateQuotePdf } from '../api/quotes';
+import { toast } from 'react-hot-toast';
 
 export function useCreateQuote() {
     const queryClient = useQueryClient();
+
     return useMutation({
-        mutationFn: createQuote,
+        mutationFn: (data: CreateQuoteData) => createQuote(data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['quotes'] });
+            toast.success('Preventa guardada exitosamente');
         },
+        onError: (error: any) => {
+            console.error('Error creating quote:', error);
+            toast.error(error.response?.data?.message || 'Error al guardar preventa');
+        }
     });
 }
 
 export function useQuotePdf() {
     return useMutation({
-        mutationFn: generateQuotePdf,
+        mutationFn: (id: string) => generateQuotePdf(id),
+        onError: (error: any) => {
+            console.error('Error generating PDF:', error);
+            toast.error('Error al generar PDF');
+        }
     });
 }

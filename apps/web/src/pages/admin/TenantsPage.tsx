@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
-import axios from 'axios';
 import { Search, MoreVertical, LogIn, Ban, CheckCircle } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import api from '../../lib/api';
 
 interface Tenant {
     id: string;
@@ -32,19 +32,17 @@ export default function TenantsPage() {
 
     const fetchTenants = async () => {
         try {
-            const response = await axios.get(`${import.meta.env.VITE_API_URL}/tenants`, {
-                params: { search: searchTerm },
-                headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+            const response = await api.get('/tenants', {
+                params: { search: searchTerm }
             });
             // Backend returns array directly now
             const rawTenants = response.data;
 
-            // Map backend structure to frontend interface if needed, or update interface
-            // The backend now returns { ..., users: [ { name, email, ... } ], _count: { ... } }
-            // We need to map 'users[0]' to 'owner'
+            // Map backend structure to frontend interface
+            // Backend returns: users: [ { id, name, email } ] if they are ADMINs
             const mappedTenants = rawTenants.map((t: any) => ({
                 ...t,
-                owner: t.users?.[0] || { name: 'Sin Dueño', email: 'N/A' }
+                owner: t.users?.[0] || { id: null, name: 'Sin Dueño', email: 'N/A' }
             }));
 
             setTenants(mappedTenants);
@@ -81,9 +79,7 @@ export default function TenantsPage() {
                 return;
             }
 
-            const response = await axios.post(`${import.meta.env.VITE_API_URL}/auth/impersonate/${(tenant.owner as any).id}`, {}, {
-                headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-            });
+            const response = await api.post(`/auth/impersonate/${(tenant.owner as any).id}`);
 
             if (response.data.access_token) {
                 // Store the token

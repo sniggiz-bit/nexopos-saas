@@ -1,6 +1,7 @@
 
 import { DashboardLayout } from '../../components/dashboard/DashboardLayout';
-import { useQuotes, useQuotePdf } from '../../hooks/useQuotes';
+import { useQuotes } from '../../hooks/useQuotesQuery';
+import { useQuotePdf } from '../../hooks/useQuotes';
 import { Eye, Plus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';

@@ -28,12 +28,10 @@ export const api = axios.create({
  */
 api.interceptors.request.use(
     (config) => {
-        // TODO: Add authentication token when auth is implemented
-        // const token = localStorage.getItem('authToken');
-        // if (token) {
-        //   config.headers.Authorization = `Bearer ${token}`;
-        // }
-
+        const token = localStorage.getItem('token');
+        if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
+        }
         return config;
     },
     (error) => {
@@ -55,8 +53,9 @@ api.interceptors.response.use(
 
             switch (status) {
                 case 401:
-                    console.error('Unauthorized - Please login');
-                    // TODO: Redirect to login page
+                    console.error('Unauthorized - Redirecting to login');
+                    localStorage.removeItem('token');
+                    window.location.href = '/login';
                     break;
                 case 403:
                     console.error('Forbidden - Insufficient permissions');

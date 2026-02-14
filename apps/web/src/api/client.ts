@@ -15,10 +15,10 @@ export const api = apiClient;
 apiClient.interceptors.request.use(
     (config) => {
         // Add auth token here if needed
-        // const token = localStorage.getItem('token');
-        // if (token) {
-        //   config.headers.Authorization = `Bearer ${token}`;
-        // }
+        const token = localStorage.getItem('token');
+        if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
+        }
         return config;
     },
     (error) => {

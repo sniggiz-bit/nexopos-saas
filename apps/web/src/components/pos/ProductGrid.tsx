@@ -26,7 +26,7 @@ export function ProductGrid({ products, isLoading, onAddToCart }: ProductGridPro
     }
 
     return (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4">
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(180px,1fr))] gap-4">
             {products.map((product) => (
                 <ProductCard
                     key={product.id}

@@ -6,8 +6,11 @@ import { Tenant } from '@prisma/client';
 export class TenantsService {
     constructor(private prisma: PrismaService) { }
 
-    async findAll(): Promise<Tenant[]> {
+    async findAll(search?: string): Promise<Tenant[]> {
         return this.prisma.tenant.findMany({
+            where: search ? {
+                name: { contains: search, mode: 'insensitive' }
+            } : {},
             include: {
                 plan: true,
                 users: {

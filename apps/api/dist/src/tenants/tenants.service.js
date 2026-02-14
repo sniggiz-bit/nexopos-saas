@@ -17,8 +17,11 @@ let TenantsService = class TenantsService {
     constructor(prisma) {
         this.prisma = prisma;
     }
-    async findAll() {
+    async findAll(search) {
         return this.prisma.tenant.findMany({
+            where: search ? {
+                name: { contains: search, mode: 'insensitive' }
+            } : {},
             include: {
                 plan: true,
                 users: {

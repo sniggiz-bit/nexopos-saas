@@ -22,8 +22,8 @@ let TenantsController = class TenantsController {
     constructor(tenantsService) {
         this.tenantsService = tenantsService;
     }
-    findAll() {
-        return this.tenantsService.findAll();
+    findAll(search) {
+        return this.tenantsService.findAll(search);
     }
     findOne(id) {
         return this.tenantsService.findOne(id);
@@ -41,8 +41,9 @@ let TenantsController = class TenantsController {
 exports.TenantsController = TenantsController;
 __decorate([
     (0, common_1.Get)(),
+    __param(0, (0, common_1.Query)('search')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
+    __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
 ], TenantsController.prototype, "findAll", null);
 __decorate([
