@@ -95,5 +95,12 @@ export class ProductsController {
     async remove(@Param('id') id: string): Promise<void> {
         return this.productsService.remove(id);
     }
+    @Patch('bulk-public')
+    async bulkUpdatePublic(
+        @Body() body: { ids: string[]; isPublic: boolean },
+        @Query('tenantId') tenantId: string = 'tenant-1',
+    ) {
+        return this.productsService.bulkUpdatePublicStatus(tenantId, body.ids, body.isPublic);
+    }
 }
 

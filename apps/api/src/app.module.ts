@@ -27,6 +27,7 @@ import { AnnouncementsModule } from './announcements/announcements.module';
 import { SystemLogsModule } from './system-logs/system-logs.module';
 import { BranchesModule } from './branches/branches.module';
 import { TransfersModule } from './transfers/transfers.module';
+import { StoreModule } from './store/store.module';
 
 @Module({
   imports: [
@@ -55,8 +56,8 @@ import { TransfersModule } from './transfers/transfers.module';
     TenantsModule,
     AnnouncementsModule,
     SystemLogsModule,
-    BranchesModule,
     TransfersModule,
+    StoreModule, // Import StoreModule instead of individual components
   ],
   controllers: [AppController, DebugController],
   providers: [AppService],

@@ -47,8 +47,11 @@ export declare class ProductsService {
         categoryId: string | null;
         costPrice: number;
         image: string | null;
+        description: string | null;
+        isPublic: boolean;
         isActive: boolean;
         minStock: number;
         unitType: import("@prisma/client").$Enums.UnitType;
     }[]>;
+    bulkUpdatePublicStatus(tenantId: string, ids: string[], isPublic: boolean): Promise<Prisma.BatchPayload>;
 }

@@ -25,10 +25,12 @@ import { TreasuryPage } from './pages/dashboard/TreasuryPage';
 import { CriticalStockPage } from './pages/dashboard/CriticalStockPage';
 import BranchesPage from './pages/admin/BranchesPage';
 import NewTransferPage from './pages/admin/transfers/NewTransferPage';
+import { EcommercePage } from './pages/dashboard/EcommercePage';
 import { SsoLoginPage } from './pages/SsoLoginPage';
 import { LoginPage } from './pages/LoginPage';
 import { LandingPage } from './pages/LandingPage';
 import { RegisterPage } from './pages/RegisterPage';
+import { PublicStorePage } from './pages/store/PublicStorePage';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
@@ -87,6 +89,7 @@ function App() {
               <Route path="/register" element={<RegisterPage />} />
               <Route path="/auth/sso" element={<SsoLoginPage />} />
               <Route path="/login" element={<LoginPage />} />
+              <Route path="/store/:slug" element={<PublicStorePage />} />
 
               {/* Super Admin Routes */}
               <Route element={<ProtectedRoute allowedRoles={['SUPER_ADMIN']} />}>
@@ -132,6 +135,8 @@ function App() {
                 <Route path="/admin/branches" element={<BranchesPage />} /> {/* Alias for convenience if accessed via admin URL directly */}
                 <Route path="/dashboard/transfers/new" element={<NewTransferPage />} />
                 <Route path="/admin/transfers/new" element={<NewTransferPage />} /> {/* Alias */}
+                <Route path="/dashboard/ecommerce" element={<EcommercePage />} />
+                <Route path="/admin/ecommerce" element={<EcommercePage />} />
               </Route>
 
               {/* Default Redirect */}

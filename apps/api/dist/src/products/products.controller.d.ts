@@ -41,6 +41,8 @@ export declare class ProductsController {
         categoryId: string | null;
         costPrice: number;
         image: string | null;
+        description: string | null;
+        isPublic: boolean;
         isActive: boolean;
         minStock: number;
         unitType: import("@prisma/client").$Enums.UnitType;
@@ -50,4 +52,8 @@ export declare class ProductsController {
     create(createProductDto: CreateProductDto): Promise<ProductResponseDto>;
     update(id: string, updateProductDto: UpdateProductDto): Promise<ProductResponseDto>;
     remove(id: string): Promise<void>;
+    bulkUpdatePublic(body: {
+        ids: string[];
+        isPublic: boolean;
+    }, tenantId?: string): Promise<import("@prisma/client").Prisma.BatchPayload>;
 }

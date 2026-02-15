@@ -34,6 +34,8 @@ model Tenant {
   nextPayment DateTime?
   maxUsers   Int?
   maxProducts Int?
+  storeSlug     String?    @unique
+  storeSettings Json?
   systemLogs SystemLog[]
 }
 
@@ -120,6 +122,8 @@ model Product {
   categoryId String?
   costPrice  Int              @default(0)
   image      String?
+  description String?
+  isPublic   Boolean          @default(false)
   isActive   Boolean          @default(true)
   minStock   Int              @default(0) // Global minStock, deprecated in favor of Inventory.minStock
   stock      Int?             // @deprecated - Used for migration only

@@ -13,7 +13,7 @@ import {
     AlertTriangle,
     BarChart3,
     History,
-    Store // Add Store icon
+    ShoppingBag // Changed Store to ShoppingBag just in case
 } from 'lucide-react';
 import { Logo } from '../ui/Logo';
 
@@ -26,7 +26,7 @@ const navigation = [
     { name: 'Ventas', href: '/dashboard/sales', icon: History },
     { name: 'Productos', href: '/dashboard/products', icon: Package },
     { name: 'Inventario', href: '/dashboard/inventory', icon: Warehouse },
-    { name: 'Sucursales', href: '/dashboard/branches', icon: Store }, // Add Sucursales link
+    { name: 'Sucursales', href: '/dashboard/branches', icon: ShoppingBag }, // Changed from Store
     { name: 'Categorías', href: '/dashboard/categories', icon: FolderTree },
     { name: 'Marcas', href: '/dashboard/brands', icon: Tag },
     { name: 'Clientes', href: '/dashboard/clients', icon: Users },
@@ -34,6 +34,7 @@ const navigation = [
     { name: 'Créditos', href: '/dashboard/credits', icon: CreditCard },
     { name: 'Tesorería', href: '/dashboard/treasury', icon: BarChart3 },
     { name: 'Stock Crítico', href: '/dashboard/reports/critical-stock', icon: AlertTriangle },
+    { name: 'Tienda Online', href: '/dashboard/ecommerce', icon: ShoppingBag },
     { name: 'Configuración', href: '/dashboard/settings', icon: Settings },
 ];
 

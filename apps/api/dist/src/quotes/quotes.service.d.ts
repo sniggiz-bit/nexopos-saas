@@ -36,6 +36,8 @@ export declare class QuotesService {
                 categoryId: string | null;
                 costPrice: number;
                 image: string | null;
+                description: string | null;
+                isPublic: boolean;
                 isActive: boolean;
                 minStock: number;
                 stock: number | null;
@@ -157,6 +159,8 @@ export declare class QuotesService {
                 categoryId: string | null;
                 costPrice: number;
                 image: string | null;
+                description: string | null;
+                isPublic: boolean;
                 isActive: boolean;
                 minStock: number;
                 stock: number | null;

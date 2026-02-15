@@ -8,9 +8,9 @@ export declare class PlansController {
         createdAt: Date;
         updatedAt: Date;
         price: number;
+        description: string | null;
         maxUsers: number;
         maxProducts: number;
-        description: string | null;
         features: import("@prisma/client/runtime/client").JsonValue | null;
         maxStorage: number;
         isRecommended: boolean;
@@ -22,9 +22,9 @@ export declare class PlansController {
         createdAt: Date;
         updatedAt: Date;
         price: number;
+        description: string | null;
         maxUsers: number;
         maxProducts: number;
-        description: string | null;
         features: import("@prisma/client/runtime/client").JsonValue | null;
         maxStorage: number;
         isRecommended: boolean;
@@ -36,9 +36,9 @@ export declare class PlansController {
         createdAt: Date;
         updatedAt: Date;
         price: number;
+        description: string | null;
         maxUsers: number;
         maxProducts: number;
-        description: string | null;
         features: import("@prisma/client/runtime/client").JsonValue | null;
         maxStorage: number;
         isRecommended: boolean;
@@ -50,9 +50,9 @@ export declare class PlansController {
         createdAt: Date;
         updatedAt: Date;
         price: number;
+        description: string | null;
         maxUsers: number;
         maxProducts: number;
-        description: string | null;
         features: import("@prisma/client/runtime/client").JsonValue | null;
         maxStorage: number;
         isRecommended: boolean;
@@ -64,9 +64,9 @@ export declare class PlansController {
         createdAt: Date;
         updatedAt: Date;
         price: number;
+        description: string | null;
         maxUsers: number;
         maxProducts: number;
-        description: string | null;
         features: import("@prisma/client/runtime/client").JsonValue | null;
         maxStorage: number;
         isRecommended: boolean;
@@ -78,9 +78,9 @@ export declare class PlansController {
         createdAt: Date;
         updatedAt: Date;
         price: number;
+        description: string | null;
         maxUsers: number;
         maxProducts: number;
-        description: string | null;
         features: import("@prisma/client/runtime/client").JsonValue | null;
         maxStorage: number;
         isRecommended: boolean;

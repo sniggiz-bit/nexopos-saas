@@ -276,6 +276,17 @@ let ProductsService = class ProductsService {
         })
             .filter((product) => product.stock <= product.minStock);
     }
+    async bulkUpdatePublicStatus(tenantId, ids, isPublic) {
+        return this.prisma.product.updateMany({
+            where: {
+                tenantId,
+                id: { in: ids },
+            },
+            data: {
+                isPublic,
+            },
+        });
+    }
 };
 exports.ProductsService = ProductsService;
 exports.ProductsService = ProductsService = __decorate([

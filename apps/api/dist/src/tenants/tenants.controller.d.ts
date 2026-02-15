@@ -17,6 +17,8 @@ export declare class TenantsController {
         nextPayment: Date | null;
         maxUsers: number | null;
         maxProducts: number | null;
+        storeSlug: string | null;
+        storeSettings: import("@prisma/client/runtime/client").JsonValue | null;
     }[]>;
     findOne(id: string): Promise<{
         id: string;
@@ -33,6 +35,8 @@ export declare class TenantsController {
         nextPayment: Date | null;
         maxUsers: number | null;
         maxProducts: number | null;
+        storeSlug: string | null;
+        storeSettings: import("@prisma/client/runtime/client").JsonValue | null;
     } | null>;
     updateLimits(id: string, body: {
         maxUsers?: number;
@@ -52,6 +56,8 @@ export declare class TenantsController {
         nextPayment: Date | null;
         maxUsers: number | null;
         maxProducts: number | null;
+        storeSlug: string | null;
+        storeSettings: import("@prisma/client/runtime/client").JsonValue | null;
     }>;
     suspend(id: string): Promise<{
         id: string;
@@ -68,6 +74,8 @@ export declare class TenantsController {
         nextPayment: Date | null;
         maxUsers: number | null;
         maxProducts: number | null;
+        storeSlug: string | null;
+        storeSettings: import("@prisma/client/runtime/client").JsonValue | null;
     }>;
     activate(id: string): Promise<{
         id: string;
@@ -84,5 +92,7 @@ export declare class TenantsController {
         nextPayment: Date | null;
         maxUsers: number | null;
         maxProducts: number | null;
+        storeSlug: string | null;
+        storeSettings: import("@prisma/client/runtime/client").JsonValue | null;
     }>;
 }

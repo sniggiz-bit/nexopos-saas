@@ -49,12 +49,12 @@ async function main() {
             }
             else {
                 console.log(`Skipping ${p.name} (Already exists)`);
-                const inv = await prisma.inventoryLevel.findUnique({
+                const inv = await prisma.inventory.findUnique({
                     where: { productId_branchId: { productId: existing.id, branchId: branch.id } }
                 });
                 if (!inv) {
                     console.log(`-> Adding missing inventory for ${p.name}`);
-                    await prisma.inventoryLevel.create({
+                    await prisma.inventory.create({
                         data: {
                             productId: existing.id,
                             branchId: branch.id,

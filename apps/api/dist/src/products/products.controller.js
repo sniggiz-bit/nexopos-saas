@@ -40,6 +40,9 @@ let ProductsController = class ProductsController {
     async remove(id) {
         return this.productsService.remove(id);
     }
+    async bulkUpdatePublic(body, tenantId = 'tenant-1') {
+        return this.productsService.bulkUpdatePublicStatus(tenantId, body.ids, body.isPublic);
+    }
 };
 exports.ProductsController = ProductsController;
 __decorate([
@@ -89,6 +92,14 @@ __decorate([
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
 ], ProductsController.prototype, "remove", null);
+__decorate([
+    (0, common_1.Patch)('bulk-public'),
+    __param(0, (0, common_1.Body)()),
+    __param(1, (0, common_1.Query)('tenantId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", Promise)
+], ProductsController.prototype, "bulkUpdatePublic", null);
 exports.ProductsController = ProductsController = __decorate([
     (0, common_1.Controller)('products'),
     __metadata("design:paramtypes", [products_service_1.ProductsService])

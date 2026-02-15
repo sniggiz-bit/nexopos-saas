@@ -57,6 +57,15 @@ async function main() {
             return;
         }
         console.log(`✅ User found. Role: ${user.role}, Tenant: ${user.tenantId}`);
+        if (user.tenantId) {
+            const tenant = await prisma.tenant.findUnique({ where: { id: user.tenantId } });
+            if (tenant) {
+                console.log(`✅ Tenant found: ${tenant.name} settings:`, tenant.storeSettings);
+            }
+            else {
+                console.log(`❌ Tenant NOT found for ID: ${user.tenantId}`);
+            }
+        }
         console.log(`Stored password snippet: ${user.password?.substring(0, 10)}...`);
         if (!user.password) {
             console.log('❌ User has no password set.');

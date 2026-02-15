@@ -26,7 +26,7 @@ async function main() {
         products.forEach(p => {
             console.log(`- ${p.name} (Inv: ${p.inventory.length})`);
         });
-        const inventoryCount = await prisma.inventoryLevel.count();
+        const inventoryCount = await prisma.inventory.count();
         console.log(`\n✅ Total InventoryLevel records: ${inventoryCount}`);
     }
     catch (error) {
