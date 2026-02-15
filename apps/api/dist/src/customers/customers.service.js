@@ -18,9 +18,28 @@ let CustomersService = class CustomersService {
         this.prisma = prisma;
     }
     async create(createCustomerDto) {
-        return this.prisma.customer.create({
-            data: createCustomerDto,
-        });
+        try {
+            return await this.prisma.customer.create({
+                data: createCustomerDto,
+            });
+        }
+        catch (error) {
+            if (error.code === 'P2002') {
+                const target = error.meta?.target;
+                if (Array.isArray(target) && target.includes('rut')) {
+                    throw new common_1.ConflictException('Ya existe un cliente con este RUT en el sistema.');
+                }
+                throw new common_1.ConflictException('Ya existe un cliente con estos datos únicos.');
+            }
+            if (error.code === 'P2003') {
+                throw new common_1.BadRequestException('Error de referencia: El tenant o algún dato relacionado no existe.');
+            }
+            console.error('❌ CUSTOMER CREATION ERROR:', error);
+            if (error instanceof Error) {
+                console.error('Stack:', error.stack);
+            }
+            throw new common_1.InternalServerErrorException('Error al crear el cliente. Por favor intente nuevamente.');
+        }
     }
     async findAll(tenantId) {
         return this.prisma.customer.findMany({

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
 import { Loader2 } from 'lucide-react';
+import { Logo } from '../components/ui/Logo';
 
 interface RegisterFormData {
     companyName: string;
@@ -74,6 +75,9 @@ export function RegisterPage() {
         <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
             <div className="max-w-md w-full">
                 <div className="bg-white rounded-2xl shadow-xl p-8">
+                    <div className="flex flex-col items-center mb-6">
+                        <Logo variant="full" className="h-10" />
+                    </div>
                     <div className="text-center mb-8">
                         <h2 className="text-3xl font-bold text-gray-900 mb-2">
                             Crea tu cuenta

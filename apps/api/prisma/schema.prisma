@@ -73,6 +73,7 @@ model User {
   shiftsClosed CashShift[] @relation("ClosedShifts")
   requestedTransfers Transfer[] @relation("RequestedBy")
   processedTransfers Transfer[] @relation("ProcessedBy")
+  quotes    Quote[]
 }
 
 enum UserRole {
@@ -298,29 +299,48 @@ model Customer {
   @@unique([rut, tenantId])
 }
 
+enum QuoteStatus {
+  DRAFT
+  SENT
+  ACCEPTED
+  REJECTED
+}
+
 model Quote {
   id         String      @id @default(uuid())
+  number     String?     // e.g. QT-0001
   tenantId   String
   customerId String?
-  total      Float
-  status     String      @default("DRAFT") // DRAFT, ISSUED, CONVERTED
+  userId     String?
+  subtotal   Float       @default(0)
+  tax        Float       @default(0)
+  total      Float       @default(0)
+  status     QuoteStatus @default(DRAFT)
+  issueDate  DateTime    @default(now())
+  validUntil DateTime?
+  notes      String?     @db.Text
   createdAt  DateTime    @default(now())
   updatedAt  DateTime    @updatedAt
-  expiryDate DateTime?
+  
   items      QuoteItem[]
   tenant     Tenant      @relation(fields: [tenantId], references: [id])
   customer   Customer?   @relation(fields: [customerId], references: [id])
+  user       User?       @relation(fields: [userId], references: [id])
   sales      Sale[]
 }
 
 model QuoteItem {
-  id        String  @id @default(uuid())
-  quoteId   String
-  productId String
-  quantity  Decimal @db.Decimal(10, 3)
-  price     Float
-  quote     Quote   @relation(fields: [quoteId], references: [id])
-  product   Product @relation(fields: [productId], references: [id])
+  id          String  @id @default(uuid())
+  quoteId     String
+  productId   String
+  productName String? // Keep name for history
+  quantity    Decimal @db.Decimal(10, 3)
+  price       Float
+  discount    Float   @default(0)
+  total       Float
+  
+  quote       Quote   @relation(fields: [quoteId], references: [id])
+  product     Product @relation(fields: [productId], references: [id])
 }
 
 model Credit {

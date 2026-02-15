@@ -58,7 +58,7 @@ export interface QuoteItem {
 export interface Quote {
     id: string;
     total: number;
-    status: 'DRAFT' | 'ISSUED' | 'CONVERTED';
+    status: 'DRAFT' | 'SENT' | 'ACCEPTED' | 'REJECTED';
     createdAt: string;
     expiryDate?: string;
     customer?: Customer;

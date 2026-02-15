@@ -1,26 +1,70 @@
-
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateQuoteDto } from './dto/create-quote.dto';
 import { UpdateQuoteDto } from './dto/update-quote.dto';
+import { SalesService } from '../sales/sales.service';
+import { QuoteStatus } from '@prisma/client';
 import PDFDocument from 'pdfkit';
 
 @Injectable()
 export class QuotesService {
-    constructor(private readonly prisma: PrismaService) { }
+    constructor(
+        private readonly prisma: PrismaService,
+        private readonly salesService: SalesService,
+    ) { }
+
+    private calculateTotals(items: any[]) {
+        const subtotal = items.reduce((sum, item) => {
+            const itemTotal = (item.price * item.quantity) - (item.discount || 0);
+            return sum + itemTotal;
+        }, 0);
+        const tax = subtotal * 0.19; // 19% IVA
+        const total = subtotal + tax;
+        return { subtotal, tax, total };
+    }
+
+    private async generateQuoteNumber(tenantId: string) {
+        const date = new Date();
+        const year = date.getFullYear().toString().slice(-2);
+        const month = (date.getMonth() + 1).toString().padStart(2, '0');
+
+        const lastQuote = await this.prisma.quote.findFirst({
+            where: { tenantId },
+            orderBy: { createdAt: 'desc' },
+        });
+
+        let nextNumber = 1;
+        if (lastQuote && lastQuote.number) {
+            const match = lastQuote.number.match(/QT-(\d+)$/);
+            if (match) {
+                nextNumber = parseInt(match[1]) + 1;
+            }
+        }
+
+        return `QT-${nextNumber.toString().padStart(4, '0')}`;
+    }
 
     async create(createQuoteDto: CreateQuoteDto) {
         const { items, ...quoteData } = createQuoteDto;
-
-        // Calculate total
-        const total = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+        const { subtotal, tax, total } = this.calculateTotals(items);
+        const number = await this.generateQuoteNumber(createQuoteDto.tenantId);
 
         return this.prisma.quote.create({
             data: {
                 ...quoteData,
+                number,
+                subtotal,
+                tax,
                 total,
                 items: {
-                    create: items,
+                    create: items.map(item => ({
+                        productId: item.productId,
+                        productName: item.productName,
+                        quantity: item.quantity,
+                        price: item.price,
+                        discount: item.discount || 0,
+                        total: (item.price * item.quantity) - (item.discount || 0),
+                    })),
                 },
             },
             include: {
@@ -40,6 +84,7 @@ export class QuotesService {
             include: {
                 customer: true,
                 items: true,
+                user: true,
             },
             orderBy: { createdAt: 'desc' },
         });
@@ -50,6 +95,7 @@ export class QuotesService {
             where: { id },
             include: {
                 customer: true,
+                user: true,
                 items: {
                     include: {
                         product: true,
@@ -68,26 +114,96 @@ export class QuotesService {
     async update(id: string, updateQuoteDto: UpdateQuoteDto) {
         const { items, ...quoteData } = updateQuoteDto;
 
-        // If items are being updated, we might need to recalculate total
-        // For simplicity validation, if items are present, we replace them.
-        // Real implementation might be more complex.
+        const updateData: any = { ...quoteData };
+
+        if (items) {
+            const { subtotal, tax, total } = this.calculateTotals(items);
+            updateData.subtotal = subtotal;
+            updateData.tax = tax;
+            updateData.total = total;
+
+            // Delete old items and create new ones
+            await this.prisma.quoteItem.deleteMany({ where: { quoteId: id } });
+            updateData.items = {
+                create: items.map(item => ({
+                    productId: item.productId,
+                    productName: item.productName,
+                    quantity: item.quantity,
+                    price: item.price,
+                    discount: item.discount || 0,
+                    total: (item.price * item.quantity) - (item.discount || 0),
+                })),
+            };
+        }
 
         return this.prisma.quote.update({
             where: { id },
-            data: {
-                ...quoteData,
-            },
+            data: updateData,
+            include: {
+                items: true,
+                customer: true,
+            }
         });
     }
 
     async remove(id: string) {
+        await this.prisma.quoteItem.deleteMany({ where: { quoteId: id } });
         return this.prisma.quote.delete({
             where: { id },
         });
     }
 
-    async generatePdf(id: string): Promise<Buffer> {
+    async convertToSale(id: string) {
         const quote = await this.findOne(id);
+
+        if (quote.status === QuoteStatus.ACCEPTED) {
+            throw new BadRequestException('This quote has already been accepted and converted to a sale.');
+        }
+
+        // Get tenant and branch info. 
+        // Quotes don't have branchId in the schema user provided, but Sales do.
+        // I'll check the user's branchId or use a default one/tenant's main branch.
+        const user = await this.prisma.user.findUnique({
+            where: { id: quote.userId || '' },
+        });
+
+        let branchId = user?.branchId;
+
+        if (!branchId) {
+            // Find main branch for tenant
+            const branch = await this.prisma.branch.findFirst({
+                where: { tenantId: quote.tenantId, isMain: true },
+            });
+            if (!branch) throw new BadRequestException('No branch found to associate the sale.');
+            branchId = branch.id;
+        }
+
+        // Create the sale
+        const sale = await this.salesService.createSale({
+            tenantId: quote.tenantId,
+            branchId: branchId,
+            userId: user?.id,
+            customerId: quote.customerId ?? undefined,
+            quoteId: quote.id,
+            status: 'PRE_SALE',
+            items: quote.items.map(item => ({
+                productId: item.productId,
+                quantity: Number(item.quantity),
+            })),
+            payments: [], // Empty for pre-sale
+        });
+
+        // Update quote status
+        await this.prisma.quote.update({
+            where: { id },
+            data: { status: QuoteStatus.ACCEPTED },
+        });
+
+        return sale;
+    }
+
+    async generatePdf(id: string): Promise<Buffer> {
+        const quote = await this.findOne(id) as any;
 
         return new Promise((resolve) => {
             const doc = new PDFDocument({ margin: 50 });
@@ -102,8 +218,8 @@ export class QuotesService {
             // Header
             doc.fontSize(20).text('COTIZACIÓN', { align: 'center' });
             doc.moveDown();
-            doc.fontSize(12).text(`Fecha: ${quote.createdAt.toLocaleDateString()}`, { align: 'right' });
-            doc.text(`Cotización #: ${quote.id.split('-')[0]}`, { align: 'right' }); // Short ID
+            doc.fontSize(12).text(`Fecha: ${quote.issueDate.toLocaleDateString()}`, { align: 'right' });
+            doc.text(`Cotización #: ${quote.number}`, { align: 'right' });
 
             // Customer Info
             doc.moveDown();
@@ -129,18 +245,27 @@ export class QuotesService {
 
             let y = tableTop + 25;
             quote.items.forEach(item => {
-                const total = Number(item.quantity) * item.price;
-                doc.text(item.product.name.substring(0, 35), 50, y);
+                doc.text((item.productName || item.product.name).substring(0, 35), 50, y);
                 doc.text(item.quantity.toString(), 280, y);
-                doc.text(`$${item.price}`, 350, y);
-                doc.text(`$${total}`, 450, y);
+                doc.text(`$${item.price.toLocaleString()}`, 350, y);
+                doc.text(`$${item.total.toLocaleString()}`, 450, y);
                 y += 20;
             });
 
-            // Total
-            doc.moveDown();
-            doc.moveDown();
-            doc.font('Helvetica-Bold').fontSize(14).text(`TOTAL: $${quote.total}`, { align: 'right' });
+            // Totals
+            y += 20;
+            doc.fontSize(10);
+            doc.text(`Subtotal: $${quote.subtotal.toLocaleString()}`, 350, y);
+            y += 15;
+            doc.text(`IVA (19%): $${quote.tax.toLocaleString()}`, 350, y);
+            y += 20;
+            doc.font('Helvetica-Bold').fontSize(14).text(`TOTAL: $${quote.total.toLocaleString()}`, 350, y);
+
+            if (quote.notes) {
+                doc.moveDown();
+                doc.fontSize(10).font('Helvetica-Bold').text('Notas:');
+                doc.font('Helvetica').text(quote.notes);
+            }
 
             doc.moveDown();
             doc.fontSize(10).font('Helvetica').text('Nota: Este documento es una cotización y no representa una boleta o factura fiscal.', { align: 'center' });

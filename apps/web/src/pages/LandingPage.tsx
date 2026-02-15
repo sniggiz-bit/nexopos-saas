@@ -1,6 +1,8 @@
 import { Link } from 'react-router-dom';
-import { CheckCircle, TrendingUp, Package, CreditCard, Building2, FileText, Loader2 } from 'lucide-react';
+import { CheckCircle, TrendingUp, Package, CreditCard, Building2, FileText, Loader2, Menu } from 'lucide-react';
 import { usePublicPlans } from '../hooks/usePublicPlans';
+import { Logo } from '../components/ui/Logo';
+import { useState } from 'react';
 
 const formatPrice = (price: number) => {
     return new Intl.NumberFormat('es-CL', {
@@ -34,11 +36,58 @@ function PricingSkeleton() {
 
 export function LandingPage() {
     const { data: plans, isLoading, isError } = usePublicPlans();
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
 
     return (
         <div className="min-h-screen bg-white">
+            {/* Navigation */}
+            <nav className="fixed w-full bg-white/80 backdrop-blur-md z-50 border-b border-gray-100">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="flex justify-between h-16 items-center">
+                        <div className="flex items-center">
+                            <Link to="/">
+                                <Logo variant="full" />
+                            </Link>
+                        </div>
+                        <div className="hidden md:flex items-center space-x-8">
+                            <a href="#features" className="text-gray-600 hover:text-indigo-600 font-medium">Características</a>
+                            <a href="#pricing" className="text-gray-600 hover:text-indigo-600 font-medium">Precios</a>
+                            <Link
+                                to="/login"
+                                className="text-gray-600 hover:text-indigo-600 font-medium"
+                            >
+                                Iniciar Sesión
+                            </Link>
+                            <Link
+                                to="/register"
+                                className="bg-indigo-600 text-white px-5 py-2 rounded-lg font-semibold hover:bg-indigo-700 transition-colors"
+                            >
+                                Comenzar ahora
+                            </Link>
+                        </div>
+                        <div className="md:hidden flex items-center">
+                            <button
+                                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                                className="text-gray-600 p-2"
+                            >
+                                <Menu className="w-6 h-6" />
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                {/* Mobile Menu */}
+                {isMenuOpen && (
+                    <div className="md:hidden bg-white border-b border-gray-100 px-4 pt-2 pb-6 space-y-4">
+                        <a href="#features" className="block text-gray-600 font-medium">Características</a>
+                        <a href="#pricing" className="block text-gray-600 font-medium">Precios</a>
+                        <Link to="/login" className="block text-gray-600 font-medium">Iniciar Sesión</Link>
+                        <Link to="/register" className="block text-indigo-600 font-bold">Comenzar ahora</Link>
+                    </div>
+                )}
+            </nav>
+
             {/* Hero Section */}
-            <section className="relative overflow-hidden bg-gradient-to-br from-indigo-50 via-white to-purple-50">
+            <section className="relative overflow-hidden bg-gradient-to-br from-indigo-50 via-white to-purple-50 pt-32">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 sm:py-32">
                     <div className="text-center">
                         <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-gray-900 mb-6">
@@ -70,7 +119,7 @@ export function LandingPage() {
             </section>
 
             {/* Features Grid */}
-            <section className="py-24 bg-white">
+            <section id="features" className="py-24 bg-white">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="text-center mb-16">
                         <h2 className="text-4xl font-bold text-gray-900 mb-4">
@@ -223,7 +272,7 @@ export function LandingPage() {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
                         <div>
-                            <h3 className="text-white text-lg font-semibold mb-4">NexoPOS</h3>
+                            <Logo variant="full" mode="dark" className="mb-4 opacity-80 hover:opacity-100 transition-opacity" />
                             <p className="text-sm text-gray-400">
                                 Sistema de gestión empresarial diseñado para el éxito de tu negocio.
                             </p>

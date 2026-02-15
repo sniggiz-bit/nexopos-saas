@@ -15,21 +15,62 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.QuotesService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma/prisma.service");
+const sales_service_1 = require("../sales/sales.service");
+const client_1 = require("@prisma/client");
 const pdfkit_1 = __importDefault(require("pdfkit"));
 let QuotesService = class QuotesService {
     prisma;
-    constructor(prisma) {
+    salesService;
+    constructor(prisma, salesService) {
         this.prisma = prisma;
+        this.salesService = salesService;
+    }
+    calculateTotals(items) {
+        const subtotal = items.reduce((sum, item) => {
+            const itemTotal = (item.price * item.quantity) - (item.discount || 0);
+            return sum + itemTotal;
+        }, 0);
+        const tax = subtotal * 0.19;
+        const total = subtotal + tax;
+        return { subtotal, tax, total };
+    }
+    async generateQuoteNumber(tenantId) {
+        const date = new Date();
+        const year = date.getFullYear().toString().slice(-2);
+        const month = (date.getMonth() + 1).toString().padStart(2, '0');
+        const lastQuote = await this.prisma.quote.findFirst({
+            where: { tenantId },
+            orderBy: { createdAt: 'desc' },
+        });
+        let nextNumber = 1;
+        if (lastQuote && lastQuote.number) {
+            const match = lastQuote.number.match(/QT-(\d+)$/);
+            if (match) {
+                nextNumber = parseInt(match[1]) + 1;
+            }
+        }
+        return `QT-${nextNumber.toString().padStart(4, '0')}`;
     }
     async create(createQuoteDto) {
         const { items, ...quoteData } = createQuoteDto;
-        const total = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+        const { subtotal, tax, total } = this.calculateTotals(items);
+        const number = await this.generateQuoteNumber(createQuoteDto.tenantId);
         return this.prisma.quote.create({
             data: {
                 ...quoteData,
+                number,
+                subtotal,
+                tax,
                 total,
                 items: {
-                    create: items,
+                    create: items.map(item => ({
+                        productId: item.productId,
+                        productName: item.productName,
+                        quantity: item.quantity,
+                        price: item.price,
+                        discount: item.discount || 0,
+                        total: (item.price * item.quantity) - (item.discount || 0),
+                    })),
                 },
             },
             include: {
@@ -48,6 +89,7 @@ let QuotesService = class QuotesService {
             include: {
                 customer: true,
                 items: true,
+                user: true,
             },
             orderBy: { createdAt: 'desc' },
         });
@@ -57,6 +99,7 @@ let QuotesService = class QuotesService {
             where: { id },
             include: {
                 customer: true,
+                user: true,
                 items: {
                     include: {
                         product: true,
@@ -71,17 +114,74 @@ let QuotesService = class QuotesService {
     }
     async update(id, updateQuoteDto) {
         const { items, ...quoteData } = updateQuoteDto;
+        const updateData = { ...quoteData };
+        if (items) {
+            const { subtotal, tax, total } = this.calculateTotals(items);
+            updateData.subtotal = subtotal;
+            updateData.tax = tax;
+            updateData.total = total;
+            await this.prisma.quoteItem.deleteMany({ where: { quoteId: id } });
+            updateData.items = {
+                create: items.map(item => ({
+                    productId: item.productId,
+                    productName: item.productName,
+                    quantity: item.quantity,
+                    price: item.price,
+                    discount: item.discount || 0,
+                    total: (item.price * item.quantity) - (item.discount || 0),
+                })),
+            };
+        }
         return this.prisma.quote.update({
             where: { id },
-            data: {
-                ...quoteData,
-            },
+            data: updateData,
+            include: {
+                items: true,
+                customer: true,
+            }
         });
     }
     async remove(id) {
+        await this.prisma.quoteItem.deleteMany({ where: { quoteId: id } });
         return this.prisma.quote.delete({
             where: { id },
         });
+    }
+    async convertToSale(id) {
+        const quote = await this.findOne(id);
+        if (quote.status === client_1.QuoteStatus.ACCEPTED) {
+            throw new common_1.BadRequestException('This quote has already been accepted and converted to a sale.');
+        }
+        const user = await this.prisma.user.findUnique({
+            where: { id: quote.userId || '' },
+        });
+        let branchId = user?.branchId;
+        if (!branchId) {
+            const branch = await this.prisma.branch.findFirst({
+                where: { tenantId: quote.tenantId, isMain: true },
+            });
+            if (!branch)
+                throw new common_1.BadRequestException('No branch found to associate the sale.');
+            branchId = branch.id;
+        }
+        const sale = await this.salesService.createSale({
+            tenantId: quote.tenantId,
+            branchId: branchId,
+            userId: user?.id,
+            customerId: quote.customerId ?? undefined,
+            quoteId: quote.id,
+            status: 'PRE_SALE',
+            items: quote.items.map(item => ({
+                productId: item.productId,
+                quantity: Number(item.quantity),
+            })),
+            payments: [],
+        });
+        await this.prisma.quote.update({
+            where: { id },
+            data: { status: client_1.QuoteStatus.ACCEPTED },
+        });
+        return sale;
     }
     async generatePdf(id) {
         const quote = await this.findOne(id);
@@ -95,8 +195,8 @@ let QuotesService = class QuotesService {
             });
             doc.fontSize(20).text('COTIZACIÓN', { align: 'center' });
             doc.moveDown();
-            doc.fontSize(12).text(`Fecha: ${quote.createdAt.toLocaleDateString()}`, { align: 'right' });
-            doc.text(`Cotización #: ${quote.id.split('-')[0]}`, { align: 'right' });
+            doc.fontSize(12).text(`Fecha: ${quote.issueDate.toLocaleDateString()}`, { align: 'right' });
+            doc.text(`Cotización #: ${quote.number}`, { align: 'right' });
             doc.moveDown();
             doc.text('Cliente:', { underline: true });
             if (quote.customer) {
@@ -120,16 +220,24 @@ let QuotesService = class QuotesService {
             doc.font('Helvetica');
             let y = tableTop + 25;
             quote.items.forEach(item => {
-                const total = Number(item.quantity) * item.price;
-                doc.text(item.product.name.substring(0, 35), 50, y);
+                doc.text((item.productName || item.product.name).substring(0, 35), 50, y);
                 doc.text(item.quantity.toString(), 280, y);
-                doc.text(`$${item.price}`, 350, y);
-                doc.text(`$${total}`, 450, y);
+                doc.text(`$${item.price.toLocaleString()}`, 350, y);
+                doc.text(`$${item.total.toLocaleString()}`, 450, y);
                 y += 20;
             });
-            doc.moveDown();
-            doc.moveDown();
-            doc.font('Helvetica-Bold').fontSize(14).text(`TOTAL: $${quote.total}`, { align: 'right' });
+            y += 20;
+            doc.fontSize(10);
+            doc.text(`Subtotal: $${quote.subtotal.toLocaleString()}`, 350, y);
+            y += 15;
+            doc.text(`IVA (19%): $${quote.tax.toLocaleString()}`, 350, y);
+            y += 20;
+            doc.font('Helvetica-Bold').fontSize(14).text(`TOTAL: $${quote.total.toLocaleString()}`, 350, y);
+            if (quote.notes) {
+                doc.moveDown();
+                doc.fontSize(10).font('Helvetica-Bold').text('Notas:');
+                doc.font('Helvetica').text(quote.notes);
+            }
             doc.moveDown();
             doc.fontSize(10).font('Helvetica').text('Nota: Este documento es una cotización y no representa una boleta o factura fiscal.', { align: 'center' });
             doc.end();
@@ -139,6 +247,7 @@ let QuotesService = class QuotesService {
 exports.QuotesService = QuotesService;
 exports.QuotesService = QuotesService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService])
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService,
+        sales_service_1.SalesService])
 ], QuotesService);
 //# sourceMappingURL=quotes.service.js.map

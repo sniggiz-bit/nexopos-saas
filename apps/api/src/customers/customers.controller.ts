@@ -10,6 +10,7 @@ export class CustomersController {
 
     @Post()
     create(@Body() createCustomerDto: CreateCustomerDto) {
+        console.log('API POST /customers - Payload:', JSON.stringify(createCustomerDto, null, 2));
         return this.customersService.create(createCustomerDto);
     }
 

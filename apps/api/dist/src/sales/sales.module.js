@@ -23,6 +23,7 @@ exports.SalesModule = SalesModule = __decorate([
         imports: [prisma_module_1.PrismaModule, receipts_module_1.ReceiptsModule, shifts_module_1.ShiftsModule, credits_module_1.CreditsModule, inventory_module_1.InventoryModule],
         controllers: [sales_controller_1.SalesController],
         providers: [sales_service_1.SalesService],
+        exports: [sales_service_1.SalesService],
     })
 ], SalesModule);
 //# sourceMappingURL=sales.module.js.map

@@ -15,6 +15,7 @@ import {
     History,
     Store // Add Store icon
 } from 'lucide-react';
+import { Logo } from '../ui/Logo';
 
 interface DashboardLayoutProps {
     children: ReactNode;
@@ -65,8 +66,8 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                 <div className="flex flex-col h-full">
                     {/* Logo */}
                     <div className="flex items-center h-16 px-6 border-b border-gray-200">
-                        <h1 className="text-xl font-bold text-gray-900">NexoPOS</h1>
-                        <span className="ml-2 px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded">
+                        <Logo variant="full" />
+                        <span className="ml-2 px-2 py-1 text-[10px] font-bold bg-blue-100 text-blue-800 rounded uppercase">
                             Admin
                         </span>
                     </div>

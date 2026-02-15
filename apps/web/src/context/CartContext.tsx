@@ -19,6 +19,7 @@ interface CartContextType {
     updateQuantity: (productId: string, quantity: number) => void;
     removeItem: (productId: string) => void;
     applyDiscount: (productId: string, type: DiscountType | undefined, value?: number) => void;
+    updatePrice: (productId: string, price: number) => void;
     clearCart: () => void;
     totals: {
         total: number;
@@ -59,13 +60,23 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }, []);
 
     const updateQuantity = useCallback((productId: string, quantity: number) => {
-        if (quantity <= 0) {
+        if (quantity < 0) return; // Prevent negative quantity, 0 is allowed (maybe used for removal in UI but explicit remove is better)
+        if (quantity === 0) {
             removeItem(productId);
             return;
         }
         setItems((prev) =>
             prev.map((item) =>
                 item.productId === productId ? { ...item, quantity } : item
+            )
+        );
+    }, []);
+
+    const updatePrice = useCallback((productId: string, price: number) => {
+        if (price < 0) return;
+        setItems((prev) =>
+            prev.map((item) =>
+                item.productId === productId ? { ...item, price } : item
             )
         );
     }, []);
@@ -104,6 +115,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         const tax = totalWithDiscounts - (totalWithDiscounts / 1.19);
         const subtotal = totalWithDiscounts - tax;
 
+        // Original total based on current prices (which might have been edited)
+        // If we want track "List Price" vs "Edited Price" we would need more fields
+        // For now, assuming "totalOriginal" is just Sum(Price * Qty)
         const totalOriginal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
         const totalDiscount = totalOriginal - totalWithDiscounts;
 
@@ -123,6 +137,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
                 updateQuantity,
                 removeItem,
                 applyDiscount,
+                updatePrice,
                 clearCart,
                 totals,
             }}

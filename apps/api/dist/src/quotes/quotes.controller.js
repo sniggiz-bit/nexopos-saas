@@ -46,6 +46,9 @@ let QuotesController = class QuotesController {
     remove(id) {
         return this.quotesService.remove(id);
     }
+    convert(id) {
+        return this.quotesService.convertToSale(id);
+    }
 };
 exports.QuotesController = QuotesController;
 __decorate([
@@ -92,6 +95,13 @@ __decorate([
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
 ], QuotesController.prototype, "remove", null);
+__decorate([
+    (0, common_1.Post)(':id/convert'),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], QuotesController.prototype, "convert", null);
 exports.QuotesController = QuotesController = __decorate([
     (0, common_1.Controller)('quotes'),
     __metadata("design:paramtypes", [quotes_service_1.QuotesService])

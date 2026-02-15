@@ -1,41 +1,42 @@
-
 import { DashboardLayout } from '../../components/dashboard/DashboardLayout';
 import { useQuotes } from '../../hooks/useQuotesQuery';
-import { useQuotePdf } from '../../hooks/useQuotes';
-import { Eye, Plus } from 'lucide-react';
+import { useConvertQuote } from '../../hooks/useQuotes';
+import { Eye, Plus, ShoppingCart } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { formatPrice } from '@/utils/formatters';
 
 export function QuotesPage() {
-    const { data: quotes, isLoading } = useQuotes();
-    const generatePdf = useQuotePdf();
+    const { data: quotesData, isLoading, refetch } = useQuotes();
+    const quotes = Array.isArray(quotesData) ? quotesData : [];
+    const convertQuote = useConvertQuote();
     const navigate = useNavigate();
 
     const formatDate = (dateString: string) => {
-        return new Intl.DateTimeFormat('es-CL', {
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit',
-        }).format(new Date(dateString));
-    };
-
-    const formatCurrency = (amount: number) => {
-        return new Intl.NumberFormat('es-CL', {
-            style: 'currency',
-            currency: 'CLP',
-        }).format(amount);
-    };
-
-    const handleViewPdf = async (id: string) => {
+        if (!dateString) return 'N/A';
         try {
-            const blob = await generatePdf.mutateAsync(id);
-            const url = window.URL.createObjectURL(blob);
-            window.open(url, '_blank');
+            return new Intl.DateTimeFormat('es-CL', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+            }).format(new Date(dateString));
         } catch (error) {
-            console.error('Error generating PDF:', error);
-            // toast.error('Error al generar PDF');
+            return 'Fecha inválida';
+        }
+    };
+
+    const handleConvert = async (id: string) => {
+        if (!confirm('¿Está seguro de convertir esta cotización en una venta pre-seleccionada?')) {
+            return;
+        }
+
+        try {
+            await convertQuote.mutateAsync(id);
+            refetch();
+        } catch (error) {
+            console.error('Error converting quote:', error);
         }
     };
 
@@ -71,24 +72,34 @@ export function QuotesPage() {
                                     <tr key={quote.id} className="hover:bg-gray-50">
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{formatDate(quote.createdAt)}</td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{quote.customer?.name || 'Cliente Casual'}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{formatCurrency(quote.total)}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{formatPrice(quote.total)}</td>
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <span className={`px-2 py-1 text-xs font-medium rounded-full ${quote.status === 'DRAFT' ? 'bg-gray-100 text-gray-800' :
-                                                quote.status === 'ISSUED' ? 'bg-blue-100 text-blue-800' :
-                                                    'bg-green-100 text-green-800' // CONVERTED
+                                                quote.status === 'SENT' ? 'bg-blue-100 text-blue-800' :
+                                                    'bg-green-100 text-green-800' // ACCEPTED
                                                 }`}>
-                                                {quote.status === 'DRAFT' ? 'Borrador' : quote.status === 'ISSUED' ? 'Emitida' : 'Vendida'}
+                                                {quote.status === 'DRAFT' ? 'Borrador' : quote.status === 'SENT' ? 'Emitida' : 'Vendida'}
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
                                             <button
-                                                onClick={() => handleViewPdf(quote.id)}
-                                                className="text-blue-600 hover:text-blue-900 inline-flex items-center"
-                                                title="Ver PDF"
+                                                onClick={() => navigate(`/dashboard/quotes/${quote.id}/print`)}
+                                                className="text-blue-600 hover:text-blue-900 inline-flex items-center p-2 rounded-full hover:bg-blue-50"
+                                                title="Ver Detalles"
                                             >
                                                 <Eye className="w-4 h-4" />
                                             </button>
-                                            {/* Future: Add convert to sale button */}
+
+                                            {quote.status !== 'ACCEPTED' && (
+                                                <button
+                                                    onClick={() => handleConvert(quote.id)}
+                                                    className="text-green-600 hover:text-green-900 inline-flex items-center p-2 rounded-full hover:bg-green-50"
+                                                    title="Convertir a Venta"
+                                                    disabled={convertQuote.isPending}
+                                                >
+                                                    <ShoppingCart className="w-4 h-4" />
+                                                </button>
+                                            )}
                                         </td>
                                     </tr>
                                 ))

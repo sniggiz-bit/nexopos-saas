@@ -12,5 +12,6 @@ import { InventoryModule } from '../inventory/inventory.module';
     imports: [PrismaModule, ReceiptsModule, ShiftsModule, CreditsModule, InventoryModule],
     controllers: [SalesController],
     providers: [SalesService],
+    exports: [SalesService],
 })
 export class SalesModule { }

@@ -14,13 +14,20 @@ const class_validator_1 = require("class-validator");
 const class_transformer_1 = require("class-transformer");
 class CreateQuoteItemDto {
     productId;
+    productName;
     quantity;
     price;
+    discount;
 }
 __decorate([
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], CreateQuoteItemDto.prototype, "productId", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CreateQuoteItemDto.prototype, "productName", void 0);
 __decorate([
     (0, class_validator_1.IsNumber)(),
     (0, class_validator_1.Min)(0),
@@ -31,10 +38,18 @@ __decorate([
     (0, class_validator_1.Min)(0),
     __metadata("design:type", Number)
 ], CreateQuoteItemDto.prototype, "price", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsNumber)(),
+    __metadata("design:type", Number)
+], CreateQuoteItemDto.prototype, "discount", void 0);
 class CreateQuoteDto {
     tenantId;
     customerId;
-    expiryDate;
+    userId;
+    issueDate;
+    validUntil;
+    notes;
     items;
 }
 exports.CreateQuoteDto = CreateQuoteDto;
@@ -49,9 +64,24 @@ __decorate([
 ], CreateQuoteDto.prototype, "customerId", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CreateQuoteDto.prototype, "userId", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsDateString)(),
     __metadata("design:type", String)
-], CreateQuoteDto.prototype, "expiryDate", void 0);
+], CreateQuoteDto.prototype, "issueDate", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsDateString)(),
+    __metadata("design:type", String)
+], CreateQuoteDto.prototype, "validUntil", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CreateQuoteDto.prototype, "notes", void 0);
 __decorate([
     (0, class_validator_1.IsArray)(),
     (0, class_validator_1.ValidateNested)({ each: true }),

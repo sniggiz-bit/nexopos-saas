@@ -11,6 +11,7 @@ const common_1 = require("@nestjs/common");
 const config_1 = require("@nestjs/config");
 const app_controller_1 = require("./app.controller");
 const app_service_1 = require("./app.service");
+const debug_controller_1 = require("./debug/debug.controller");
 const sales_module_1 = require("./sales/sales.module");
 const prisma_module_1 = require("./prisma/prisma.module");
 const dte_module_1 = require("./dte/dte.module");
@@ -68,7 +69,7 @@ exports.AppModule = AppModule = __decorate([
             branches_module_1.BranchesModule,
             transfers_module_1.TransfersModule,
         ],
-        controllers: [app_controller_1.AppController],
+        controllers: [app_controller_1.AppController, debug_controller_1.DebugController],
         providers: [app_service_1.AppService],
     })
 ], AppModule);

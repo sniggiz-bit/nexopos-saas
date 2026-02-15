@@ -6,6 +6,10 @@ class CreateQuoteItemDto {
     @IsString()
     productId: string;
 
+    @IsOptional()
+    @IsString()
+    productName?: string;
+
     @IsNumber()
     @Min(0)
     quantity: number;
@@ -13,6 +17,10 @@ class CreateQuoteItemDto {
     @IsNumber()
     @Min(0)
     price: number;
+
+    @IsOptional()
+    @IsNumber()
+    discount?: number;
 }
 
 export class CreateQuoteDto {
@@ -24,8 +32,20 @@ export class CreateQuoteDto {
     customerId?: string;
 
     @IsOptional()
+    @IsString()
+    userId?: string;
+
+    @IsOptional()
     @IsDateString()
-    expiryDate?: string;
+    issueDate?: string;
+
+    @IsOptional()
+    @IsDateString()
+    validUntil?: string;
+
+    @IsOptional()
+    @IsString()
+    notes?: string;
 
     @IsArray()
     @ValidateNested({ each: true })

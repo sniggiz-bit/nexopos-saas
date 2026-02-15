@@ -23,6 +23,7 @@ let CustomersController = class CustomersController {
         this.customersService = customersService;
     }
     create(createCustomerDto) {
+        console.log('API POST /customers - Payload:', JSON.stringify(createCustomerDto, null, 2));
         return this.customersService.create(createCustomerDto);
     }
     findAll(tenantId = 'tenant-1') {

@@ -12,6 +12,7 @@ import {
     Activity,
     Megaphone
 } from 'lucide-react';
+import { Logo } from '../components/ui/Logo';
 
 export default function SuperAdminLayout() {
     const { user, logout } = useAuth();
@@ -48,14 +49,12 @@ export default function SuperAdminLayout() {
                 <div className="p-4 flex items-center justify-between border-b border-neutral-800 h-16">
                     {isSidebarOpen ? (
                         <div className="flex items-center gap-2">
-                            <div className="w-8 h-8 rounded bg-gradient-to-br from-purple-600 to-indigo-600 flex items-center justify-center font-bold text-lg">
-                                A
-                            </div>
-                            <span className="font-bold text-xl tracking-tight">NexoPOS <span className="text-purple-500 text-xs align-top">ADMIN</span></span>
+                            <Logo variant="full" mode="dark" />
+                            <span className="text-purple-500 text-[10px] font-bold align-top mt-1 uppercase">Admin</span>
                         </div>
                     ) : (
-                        <div className="w-8 h-8 rounded bg-gradient-to-br from-purple-600 to-indigo-600 flex items-center justify-center font-bold text-lg mx-auto">
-                            A
+                        <div className="mx-auto">
+                            <Logo variant="icon" mode="dark" />
                         </div>
                     )}
                     <button
