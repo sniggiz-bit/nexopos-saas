@@ -1,0 +1,11 @@
+node_modules
+dist
+.git
+.env
+pgdata
+coverage
+.turbo
+apps/*/dist
+apps/*/node_modules
+apps/*/coverage
+apps/*/.turbo

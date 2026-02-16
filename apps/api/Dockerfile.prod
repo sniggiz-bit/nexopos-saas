@@ -1,0 +1,46 @@
+# Build stage
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+# Copy root workspace files
+COPY package.json package-lock.json ./
+# Copy api package.json
+COPY apps/api/package.json ./apps/api/
+
+# Install dependencies (using npm ci for faster/reproducible builds)
+RUN npm ci
+
+# Copy the rest of the application
+COPY apps/api ./apps/api
+COPY tsconfig.json ./
+
+# Generate Prisma Client
+WORKDIR /app/apps/api
+RUN npx prisma generate
+
+# Build the application
+RUN npm run build
+
+# Production stage
+FROM node:20-alpine AS runner
+
+WORKDIR /app
+
+ENV NODE_ENV=production
+
+# Copy only necessary files from builder
+COPY --from=builder /app/package.json /app/package-lock.json ./
+COPY --from=builder /app/apps/api/package.json ./apps/api/
+COPY --from=builder /app/apps/api/dist ./apps/api/dist
+COPY --from=builder /app/apps/api/node_modules ./apps/api/node_modules
+COPY --from=builder /app/apps/api/prisma ./apps/api/prisma
+
+# Note: We keep node_modules from builder for simplicity in monorepo, 
+# but usually we would prune them. For now, this is robust.
+
+WORKDIR /app/apps/api
+
+EXPOSE 3000
+
+CMD ["node", "dist/main"]
