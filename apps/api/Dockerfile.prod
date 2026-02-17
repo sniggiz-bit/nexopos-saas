@@ -5,6 +5,7 @@ WORKDIR /app
 
 # Copy root workspace files
 COPY package.json package-lock.json ./
+
 # Copy api package.json
 COPY apps/api/package.json ./apps/api/
 
@@ -19,8 +20,20 @@ COPY tsconfig.json ./
 WORKDIR /app/apps/api
 RUN npx prisma generate
 
-# Build the application
-RUN npm run build
+# Build the application with explicit verification
+# The key here is to ensure nest-cli.json has the right config
+RUN npm run build && \
+    echo "=== Checking if dist was created ===" && \
+    ls -la && \
+    if [ ! -d "dist" ]; then \
+    echo "ERROR: dist directory was not created!" && \
+    echo "Attempting manual tsc build..." && \
+    npx tsc -p tsconfig.build.json && \
+    ls -la; \
+    fi && \
+    echo "=== Contents of dist directory ===" && \
+    ls -la dist/ && \
+    echo "=== Build verification complete ==="
 
 # Production stage
 FROM node:20-alpine AS runner
@@ -36,8 +49,10 @@ COPY --from=builder /app/apps/api/dist ./apps/api/dist
 COPY --from=builder /app/apps/api/node_modules ./apps/api/node_modules
 COPY --from=builder /app/apps/api/prisma ./apps/api/prisma
 
-# Note: We keep node_modules from builder for simplicity in monorepo, 
-# but usually we would prune them. For now, this is robust.
+# Verify dist was copied
+RUN echo "=== Verifying dist in runner stage ===" && \
+    ls -la /app/apps/api/ && \
+    ls -la /app/apps/api/dist/
 
 WORKDIR /app/apps/api
 

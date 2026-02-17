@@ -1,0 +1,45 @@
+# Alternative Dockerfile - Single Stage (más simple, más fácil de debuggear)
+# Usar este si el multi-stage sigue fallando
+
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Install dependencies
+COPY package.json package-lock.json ./
+COPY apps/api/package.json ./apps/api/
+RUN npm ci
+
+# Copy application code
+COPY apps/api ./apps/api
+COPY tsconfig.json ./
+
+# Change to API directory
+WORKDIR /app/apps/api
+
+# Generate Prisma Client
+RUN npx prisma generate
+
+# Build with verbose logging
+RUN echo "=== Starting NestJS build ===" && \
+    npm run build -- --verbose && \
+    echo "=== Build command completed ===" && \
+    echo "=== Listing current directory ===" && \
+    ls -la && \
+    echo "=== Checking for dist directory ===" && \
+    if [ -d "dist" ]; then \
+    echo "✅ dist directory found!" && \
+    ls -la dist/; \
+    else \
+    echo "❌ dist directory NOT found, attempting manual build..." && \
+    npx tsc -p tsconfig.build.json --listFiles && \
+    ls -la; \
+    fi
+
+# Set production environment
+ENV NODE_ENV=production
+
+EXPOSE 3000
+
+# Start the application
+CMD ["node", "dist/main"]
