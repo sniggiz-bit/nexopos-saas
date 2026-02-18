@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { CheckCircle, TrendingUp, Package, CreditCard, Building2, FileText, Loader2, Menu } from 'lucide-react';
+import { CheckCircle, TrendingUp, Package, CreditCard, Building2, FileText, Menu } from 'lucide-react';
 import { usePublicPlans } from '../hooks/usePublicPlans';
 import { Logo } from '../components/ui/Logo';
 import { useState } from 'react';

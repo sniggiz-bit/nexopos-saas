@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { Search, MoreVertical, LogIn, Ban, CheckCircle } from 'lucide-react';
-import { useAuth } from '../../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { Search, LogIn, Ban } from 'lucide-react';
+// import { useAuth } from '../../context/AuthContext';
+// import { useNavigate } from 'react-router-dom';
 import api from '../../lib/api';
 
 interface Tenant {
@@ -23,8 +23,8 @@ export default function TenantsPage() {
     const [tenants, setTenants] = useState<Tenant[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
-    const { login } = useAuth(); // We might need a raw login function or use the token directly
-    const navigate = useNavigate();
+    // const { login } = useAuth();
+    // const navigate = useNavigate();
 
     useEffect(() => {
         fetchTenants();

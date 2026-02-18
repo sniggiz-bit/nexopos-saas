@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Store, CheckCircle, Home } from 'lucide-react';
+import { Plus, Store, Home } from 'lucide-react';
 import { useBranches } from '../../hooks/useBranches';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';

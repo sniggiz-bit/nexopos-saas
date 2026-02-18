@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Activity, AlertTriangle, CheckCircle, Info } from 'lucide-react';
+import { Activity, AlertTriangle, Info } from 'lucide-react';
 
 interface Log {
     id: string;

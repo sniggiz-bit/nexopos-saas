@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Plus, Edit, Trash, Search } from 'lucide-react';
-import { useAuth } from '../../context/AuthContext';
+import { Plus, Edit, Trash } from 'lucide-react';
+// import { useAuth } from '../../context/AuthContext';
 
 interface Plan {
     id: string;

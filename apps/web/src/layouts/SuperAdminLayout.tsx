@@ -8,7 +8,6 @@ import {
     Menu,
     X,
     CreditCard,
-    Settings,
     Activity,
     Megaphone
 } from 'lucide-react';

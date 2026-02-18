@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, ArrowRight, Check, Search, Package } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Search, Package } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useBranches } from '../../../hooks/useBranches';
 import { useTransfers, TransferItem } from '../../../hooks/useTransfers';
