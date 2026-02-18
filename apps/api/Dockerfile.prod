@@ -44,6 +44,8 @@ ENV NODE_ENV=production
 
 # Copy only necessary files from builder
 COPY --from=builder /app/package.json /app/package-lock.json ./
+# Copy root node_modules (where hoisted dependencies live)
+COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/apps/api/package.json ./apps/api/
 COPY --from=builder /app/apps/api/dist ./apps/api/dist
 COPY --from=builder /app/apps/api/node_modules ./apps/api/node_modules
@@ -56,6 +58,14 @@ RUN echo "=== Verifying dist in runner stage ===" && \
 
 WORKDIR /app/apps/api
 
+# Install wget for healthcheck (usually included in alpine, but to be sure)
+# Actually, alpine has wget by default.
+
 EXPOSE 3000
 
-CMD ["node", "dist/src/main.js"]
+# Healthcheck using wget
+HEALTHCHECK --interval=30s --timeout=10s --retries=3 --start-period=40s \
+    CMD wget --no-verbose --tries=1 --spider http://localhost:3000 || exit 1
+
+# Run migrations and then start the app
+CMD ["sh", "-c", "npx prisma migrate deploy && node dist/src/main.js"]
