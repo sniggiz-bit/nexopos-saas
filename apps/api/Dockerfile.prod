@@ -14,7 +14,7 @@ RUN npm ci
 
 # Copy the rest of the application
 COPY apps/api ./apps/api
-COPY tsconfig.json ./
+# COPY tsconfig.json ./
 
 # Generate Prisma Client
 WORKDIR /app/apps/api

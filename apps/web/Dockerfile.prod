@@ -13,7 +13,7 @@ RUN npm ci
 
 # Copy the rest of the application
 COPY apps/web ./apps/web
-COPY tsconfig.json ./
+# COPY tsconfig.json ./
 
 # Build the application
 WORKDIR /app/apps/web
