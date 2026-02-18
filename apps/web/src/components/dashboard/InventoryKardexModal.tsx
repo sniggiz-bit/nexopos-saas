@@ -1,6 +1,6 @@
 
 import { X, ArrowDown, ArrowUp, ArrowRight, RotateCcw, Truck } from 'lucide-react';
-import type { Product, StockMovement, MovementType } from '../../api/types';
+import type { Product, MovementType } from '../../api/types';
 import { useQuery } from '@tanstack/react-query';
 import { getKardex } from '../../api/inventory';
 
