@@ -67,6 +67,5 @@ EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=10s --retries=3 --start-period=40s \
     CMD wget --no-verbose --tries=1 --spider http://localhost:3000 || exit 1
 
-# Run migrations and then start the app
-# DATABASE_URL is injected at runtime by docker-compose
-CMD ["sh", "-c", "npx prisma migrate deploy --schema=./prisma/schema.prisma && node dist/src/main.js"]
+# Start the application directly (run migrations manually if needed)
+CMD ["node", "dist/src/main.js"]
