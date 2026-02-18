@@ -9,7 +9,7 @@ import { Input } from '../../../components/ui/input';
 import { Label } from '../../../components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../components/ui/select';
 import { Card, CardContent } from '../../../components/ui/card';
-import { useInventory } from '../../../hooks/useInventory'; // Assuming this provides stock levels properly or I fetch it separately
+// import { useInventory } from '../../../hooks/useInventory'; // Not used and doesn't exist
 
 // Step components could be separate, but for simplicity I'll keep them here
 
@@ -24,7 +24,7 @@ export default function NewTransferPage() {
 
     // I'll use a mocked list or fetch real products. 
     // Use `useProducts` from `hooks/useProducts`.
-    const { products, fetchProducts } = useProducts(); // Assuming signature
+    const { data: products = [], refetch: fetchProducts } = useProducts();
     // Wait, useProducts in `apps/web/src/hooks/useProducts.ts`
 
     // Let's implement dynamic product fetching in the component if needed.

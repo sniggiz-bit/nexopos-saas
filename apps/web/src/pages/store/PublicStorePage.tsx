@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { ShoppingCart, Plus, Minus, MessageCircle, Search } from 'lucide-react';
 import { toast } from 'react-hot-toast';

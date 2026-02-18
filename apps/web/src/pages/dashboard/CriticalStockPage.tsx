@@ -1,7 +1,7 @@
 import { DashboardLayout } from '../../components/dashboard/DashboardLayout';
 import { LoadingSpinner } from '../../components/ui/loading-spinner';
 import { useCriticalStock } from '../../hooks/useCriticalStock';
-import { AlertTriangle, Package, History, ArrowRight } from 'lucide-react';
+import { AlertTriangle, Package, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export function CriticalStockPage() {

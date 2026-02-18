@@ -12,7 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { ProductSearchCombobox } from '@/components/quotes/ProductSearchCombobox';
 import { QuoteItemsTable } from '@/components/quotes/QuoteItemsTable';
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardFooter } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 
 export function CreateQuotePage() {
@@ -34,7 +34,7 @@ export function CreateQuotePage() {
         clearCart();
     }, [clearCart]);
 
-    const handleCreateQuote = async (generatePdf: boolean = false) => {
+    const handleCreateQuote = async () => {
         if (!customerId) {
             toast({ variant: 'destructive', title: 'Error', description: 'Debe seleccionar un cliente' });
             return;
@@ -77,11 +77,11 @@ export function CreateQuotePage() {
                         </div>
                     </div>
                     <div className="flex gap-2">
-                        <Button variant="outline" onClick={() => handleCreateQuote(false)} disabled={createQuote.isPending}>
+                        <Button variant="outline" onClick={() => handleCreateQuote()} disabled={createQuote.isPending}>
                             <Save className="w-4 h-4 mr-2" />
                             Guardar Borrador
                         </Button>
-                        <Button onClick={() => handleCreateQuote(true)} disabled={createQuote.isPending}>
+                        <Button onClick={() => handleCreateQuote()} disabled={createQuote.isPending}>
                             <Printer className="w-4 h-4 mr-2" />
                             Guardar y PDF
                         </Button>

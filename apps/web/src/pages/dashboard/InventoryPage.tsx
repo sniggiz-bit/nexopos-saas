@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { DashboardLayout } from '../../components/dashboard/DashboardLayout';
 import { useProducts } from '../../hooks/useProducts';
 import { InventoryKardexModal } from '../../components/dashboard/InventoryKardexModal';
-import { Search, History, Loader2, Warehouse, ArrowUpDown, AlertCircle } from 'lucide-react';
+import { Search, History, Loader2, Warehouse, AlertCircle } from 'lucide-react';
 import type { Product } from '../../api/types';
 
 export function InventoryPage() {
