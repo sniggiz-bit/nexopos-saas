@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { formatPrice } from '@/utils/formatters';
 import { CheckCircle2, XCircle } from 'lucide-react';
-import { type CartItemData } from './CartItem';
+import { type CartItemData } from '@/context/CartContext';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import {
@@ -216,7 +216,7 @@ export function PaymentModal({
                             <Switch
                                 id="auto-print"
                                 checked={autoPrint}
-                                onCheckedChange={setAutoPrint}
+                                onChange={(e: any) => setAutoPrint(e.target.checked)}
                             />
                         </div>
 
@@ -224,7 +224,7 @@ export function PaymentModal({
                             <Label htmlFor="print-format">Formato de impresión</Label>
                             <Select
                                 value={defaultFormat}
-                                onValueChange={(value) => setDefaultFormat(value as PrintFormat)}
+                                onValueChange={(value: string) => setDefaultFormat(value as PrintFormat)}
                             >
                                 <SelectTrigger id="print-format" className="h-8">
                                     <SelectValue placeholder="Seleccionar formato" />

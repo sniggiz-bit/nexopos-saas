@@ -22,7 +22,7 @@ export function useBranches() {
             setLoading(true);
             const response = await api.get('/branches');
             setBranches(response.data);
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error fetching branches:', error);
             const message = error.response?.data?.message || 'No se pudieron cargar las sucursales.';
             toast({
@@ -44,7 +44,7 @@ export function useBranches() {
             });
             fetchBranches(); // Refresh list
             return response.data;
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error creating branch:', error);
             const message = error.response?.data?.message || 'No se pudo crear la sucursal.';
             toast({

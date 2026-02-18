@@ -14,7 +14,7 @@ interface Plan {
 
 export default function PlansPage() {
     const [plans, setPlans] = useState<Plan[]>([]);
-    const [loading, setLoading] = useState(true);
+    // const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [formData, setFormData] = useState<Partial<Plan>>({});
 
@@ -30,8 +30,6 @@ export default function PlansPage() {
             setPlans(response.data);
         } catch (error) {
             console.error('Error fetching plans:', error);
-        } finally {
-            setLoading(false);
         }
     };
 

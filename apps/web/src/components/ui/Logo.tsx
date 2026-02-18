@@ -4,7 +4,7 @@ interface LogoProps {
     mode?: 'light' | 'dark' | 'auto';
 }
 
-export function Logo({ variant = 'full', className = '', mode = 'light' }: LogoProps) {
+export function Logo({ variant = 'full', className = '', mode: _mode = 'light' }: LogoProps) {
     const defaultHeight = variant === 'icon' ? 'h-11' : 'h-11';
     const heightClass = className.includes('h-') ? '' : defaultHeight;
 

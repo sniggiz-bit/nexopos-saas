@@ -9,8 +9,6 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ product, onAddToCart }: ProductCardProps) {
-    const hasStock = product.stock > 0 || product.stock === null;
-
     // Determine stock status color
     let stockBadgeColor = "bg-emerald-100 text-emerald-700 border-emerald-200";
     if (product.stock !== null) {
