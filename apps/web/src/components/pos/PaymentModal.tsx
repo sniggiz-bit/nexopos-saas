@@ -105,7 +105,8 @@ export function PaymentModal({
                                 className="w-full"
                                 variant="outline"
                                 onClick={() => {
-                                    const fullUrl = `http://localhost:3000${saleResult.internalReceiptUrl}`;
+                                    const apiUrl = import.meta.env.VITE_API_URL || '';
+                                    const fullUrl = `${apiUrl}${saleResult.internalReceiptUrl}`;
                                     window.open(fullUrl, '_blank');
                                 }}
                             >

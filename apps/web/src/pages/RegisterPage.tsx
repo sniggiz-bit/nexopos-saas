@@ -37,7 +37,8 @@ export function RegisterPage() {
         setIsLoading(true);
 
         try {
-            const response = await fetch('http://localhost:3000/auth/register-tenant', {
+            const apiUrl = import.meta.env.VITE_API_URL || '';
+            const response = await fetch(`${apiUrl}/auth/register-tenant`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

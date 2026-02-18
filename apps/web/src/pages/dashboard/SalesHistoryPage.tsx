@@ -69,8 +69,9 @@ export function SalesHistoryPage() {
             return;
         }
         // For internal receipts, prepend API base URL
+        const apiUrl = import.meta.env.VITE_API_URL || '';
         const fullUrl = pdfUrl.startsWith('/api/')
-            ? `http://localhost:3000${pdfUrl}`
+            ? `${apiUrl}${pdfUrl}`
             : pdfUrl;
         window.open(fullUrl, '_blank');
     };
