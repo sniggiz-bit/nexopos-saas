@@ -68,4 +68,5 @@ HEALTHCHECK --interval=30s --timeout=10s --retries=3 --start-period=40s \
     CMD wget --no-verbose --tries=1 --spider http://localhost:3000 || exit 1
 
 # Run migrations and then start the app
-CMD ["sh", "-c", "npx prisma migrate deploy && node dist/src/main.js"]
+# DATABASE_URL is injected at runtime by docker-compose
+CMD ["sh", "-c", "npx prisma migrate deploy --schema=./prisma/schema.prisma && node dist/src/main.js"]
