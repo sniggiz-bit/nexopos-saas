@@ -1,13 +1,13 @@
-require('dotenv').config();
 const { PrismaClient } = require('@prisma/client');
 const bcrypt = require('bcrypt');
 
-// Set the database URL in the environment before initializing Prisma
-process.env.DATABASE_URL = process.env.DATABASE_URL || "postgresql://postgres:postgres@postgres:5432/nexopos_db";
+// Inyectar URL directamente para evitar problemas de validación en Prisma 7
+process.env.DATABASE_URL = "postgresql://postgres:postgres@postgres:5432/nexopos_db";
 
 const prisma = new PrismaClient();
 
 async function main() {
+    console.log('🌱 Iniciando actualización de usuarios oficiales...');
     const hashedPassword = await bcrypt.hash('nexopos2026', 10);
 
     const tenant = await prisma.tenant.upsert({
@@ -73,9 +73,14 @@ async function main() {
     });
     console.log('✅ ventas@nexopos.cl listo');
 
-    console.log('🚀 ¡Proceso completado!');
+    console.log('🚀 ¡Proceso completado exitosamente!');
 }
 
 main()
-    .catch((e) => { console.error(e); process.exit(1); })
-    .finally(async () => { await prisma.$disconnect(); });
+    .catch((e) => {
+        console.error('❌ Error fatal:', e.message);
+        process.exit(1);
+    })
+    .finally(async () => {
+        await prisma.$disconnect();
+    });
