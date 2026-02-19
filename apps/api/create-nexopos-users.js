@@ -2,7 +2,13 @@ require('dotenv').config();
 const { PrismaClient } = require('@prisma/client');
 const bcrypt = require('bcrypt');
 
-const prisma = new PrismaClient();
+const prisma = new PrismaClient({
+    datasources: {
+        db: {
+            url: process.env.DATABASE_URL || "postgresql://postgres:postgres@postgres:5432/nexopos_db"
+        }
+    }
+});
 
 async function main() {
     const hashedPassword = await bcrypt.hash('nexopos2026', 10);
