@@ -16,7 +16,7 @@ export function useBarcodeScanner({
     onScan,
     enabled = true,
     minChars = 2,
-    timeout = 300, // slightly more forgiving for manual testing
+    timeout = 50, // Reduced for faster hardware scanners
     suffix = 'Enter',
 }: UseBarcodeScannerOptions) {
     const bufferRef = useRef<string>('');
@@ -40,7 +40,12 @@ export function useBarcodeScanner({
             const diff = currentTime - lastKeyTimeRef.current;
             lastKeyTimeRef.current = currentTime;
 
-            // If suffix is pressed, trigger scan if buffer is valid
+            // If typing is too slow, it's likely manual typing, reset buffer
+            if (diff > timeout && bufferRef.current.length > 0) {
+                bufferRef.current = '';
+            }
+
+            // If suffix is pressed, trigger scan if buffer meets requirements
             if (event.key === suffix) {
                 if (bufferRef.current.length >= minChars) {
                     onScan(bufferRef.current);
@@ -49,13 +54,7 @@ export function useBarcodeScanner({
                 return;
             }
 
-            // If typing is slow, it's likely manual typing, reset buffer
-            // unless it's the first character
-            if (diff > timeout && bufferRef.current.length > 0) {
-                bufferRef.current = '';
-            }
-
-            // Only add alphanumeric characters to buffer
+            // Add alphanumeric characters to buffer
             if (event.key.length === 1) {
                 bufferRef.current += event.key;
             }

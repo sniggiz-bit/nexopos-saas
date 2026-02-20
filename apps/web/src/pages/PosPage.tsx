@@ -147,15 +147,43 @@ export function PosPage() {
     // Keyboard Shortcuts
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
+            // Prevent shortcuts if modal is open
+            if (isPaymentModalOpen || isCloseShiftModalOpen) return;
+
+            // F3 or Ctrl+B - Focus Search
             if (e.key === 'F3' || (e.ctrlKey && e.key === 'b')) {
                 e.preventDefault();
                 inputRef.current?.focus();
+            }
+
+            // F12 - Checkout
+            if (e.key === 'F12') {
+                e.preventDefault();
+                if (cartItems.length > 0) {
+                    handleCheckout();
+                } else {
+                    toast({
+                        title: 'Carrito Vacío',
+                        description: 'Agrega productos antes de cobrar',
+                        variant: 'default'
+                    });
+                }
+            }
+
+            // Esc - Clear Cart (only if search is NOT focused)
+            if (e.key === 'Escape' && document.activeElement !== inputRef.current) {
+                if (cartItems.length > 0) {
+                    if (confirm('¿Deseas vaciar el carrito actual?')) {
+                        clearCart();
+                        toast({ description: 'Carrito vaciado' });
+                    }
+                }
             }
         };
 
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, []);
+    }, [cartItems, isPaymentModalOpen, isCloseShiftModalOpen, clearCart, toast]);
 
     const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === 'Enter') {
@@ -182,9 +210,9 @@ export function PosPage() {
                             <div>
                                 <h1 className="text-xl font-bold text-slate-900 dark:text-white leading-tight">Punto de Venta</h1>
                                 <div className="flex items-center gap-2">
-                                    <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-emerald-200 text-emerald-700 bg-emerald-50 dark:bg-emerald-900/20 dark:border-emerald-800 dark:text-emerald-400">
+                                    <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-emerald-200 text-emerald-700 bg-emerald-50 dark:bg-emerald-900/20 dark:border-emerald-800 dark:text-emerald-400 animate-pulse">
                                         <Scan className="w-3 h-3 mr-1" />
-                                        Scanner Ready
+                                        Captura Activa
                                     </Badge>
                                     <span className="text-xs text-slate-400 dark:text-slate-500">|</span>
                                     <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">

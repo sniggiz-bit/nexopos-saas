@@ -140,43 +140,61 @@ export function Cart({ onCheckout, isProcessing, checkoutLabel = 'PAGAR' }: Cart
 
             {/* Footer Actions - Only visible on Cart Tab */}
             {activeTab === 'cart' && (
-                <div className="absolute bottom-0 w-full bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 p-4 z-20 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
-                    <div className="space-y-3 mb-4">
-                        <div className="flex justify-between items-end">
-                            <span className="text-sm font-medium text-slate-500 dark:text-slate-400">Total a Pagar</span>
-                            <span className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">
-                                {formatPrice(total)}
-                            </span>
+                <div className="absolute bottom-0 w-full bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 p-5 z-20 shadow-[0_-10px_20px_-10px_rgba(0,0,0,0.1)]">
+                    <div className="space-y-4 mb-5">
+                        <div className="flex justify-between items-center">
+                            <div className="flex flex-col">
+                                <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">SUBTOTAL</span>
+                                <span className="text-lg font-semibold text-slate-600 dark:text-slate-400">
+                                    {formatPrice(totals.subtotal)}
+                                </span>
+                            </div>
+                            <div className="flex flex-col items-end">
+                                <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">TOTAL A PAGAR</span>
+                                <span className="text-4xl font-extrabold text-slate-900 dark:text-white tracking-tighter drop-shadow-sm">
+                                    {formatPrice(total)}
+                                </span>
+                            </div>
                         </div>
-                        <div className="flex justify-between text-xs text-slate-400">
-                            <span>Items: {items.length}</span>
-                            <span>IVA incluido</span>
+                        <div className="flex justify-between items-center py-2 px-3 bg-slate-50 dark:bg-slate-950 rounded-lg border border-dashed border-slate-200 dark:border-slate-800">
+                            <span className="text-[10px] font-medium text-slate-500">Items en carrito: {items.length}</span>
+                            <span className="text-[10px] font-medium text-emerald-600 dark:text-emerald-400 font-mono">IVA (19%) INCLUIDO</span>
                         </div>
                     </div>
 
-                    <div className="flex gap-3">
+                    <div className="flex gap-4">
                         <Button
                             variant="outline"
-                            className="flex-1 h-14 border-slate-200 hover:bg-slate-50 text-slate-600 flex flex-col items-center justify-center gap-1"
-                            onClick={handleSavePresale}
-                            disabled={isEmpty || isSavingQuote}
+                            className="flex-1 h-16 border-slate-200 dark:border-slate-800 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20 transition-all duration-300 flex flex-col items-center justify-center gap-1 group"
+                            onClick={() => {
+                                if (confirm('¿Vaciar carrito?')) clearCart();
+                            }}
+                            disabled={isEmpty}
+                            title="Vaciar Carrito (Esc)"
                         >
-                            <PauseCircle className="w-5 h-5" />
-                            <span className="text-xs font-semibold">Guardar</span>
+                            <X className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                            <span className="text-[10px] font-bold uppercase tracking-tighter">Limpiar</span>
                         </Button>
 
                         <Button
-                            className="flex-[3] h-14 bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-200/50 flex flex-col items-center justify-center gap-1 text-lg rounded-xl"
+                            className="flex-[3] h-16 bg-emerald-600 hover:bg-emerald-500 active:scale-[0.98] text-white shadow-xl shadow-emerald-500/20 flex flex-col items-center justify-center gap-0.5 text-xl rounded-2xl transition-all duration-300 group"
                             onClick={onCheckout}
                             disabled={isEmpty || isProcessing}
                         >
                             {isProcessing ? (
-                                <div className="flex items-center gap-2">
-                                    <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                    <span>Procesando</span>
+                                <div className="flex items-center gap-3">
+                                    <span className="w-6 h-6 border-3 border-white/30 border-t-white rounded-full animate-spin" />
+                                    <span className="font-bold">PROCESANDO</span>
                                 </div>
                             ) : (
-                                <span className="font-bold tracking-wide">{checkoutLabel}</span>
+                                <>
+                                    <span className="font-black tracking-widest text-lg group-hover:tracking-[0.15em] transition-all uppercase">
+                                        {checkoutLabel}
+                                    </span>
+                                    <span className="text-[9px] font-black opacity-60 tracking-widest uppercase mt-[-2px]">
+                                        Presiona F12
+                                    </span>
+                                </>
                             )}
                         </Button>
                     </div>
