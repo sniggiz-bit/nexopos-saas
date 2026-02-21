@@ -98,7 +98,7 @@ export function PosPage() {
         setIsPaymentModalOpen(true);
     };
 
-    const handleConfirmPayment = () => {
+    const handleConfirmPayment = (payments: PaymentRequest[]) => {
         const saleData: CreateSaleRequest = {
             tenantId: user?.tenantId || 'tenant-1',
             branchId: user?.branchId || 'branch-1',
@@ -106,10 +106,7 @@ export function PosPage() {
                 productId: item.productId,
                 quantity: item.quantity,
             })),
-            payments: [{
-                paymentMethod: PaymentMethod.CASH,
-                amount: totals.total
-            }],
+            payments,
         };
 
         createSale(saleData);
