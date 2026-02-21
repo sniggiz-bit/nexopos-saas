@@ -1,12 +1,21 @@
 import { Controller, Get, Post, Patch, Delete, Body, Param, Query } from '@nestjs/common';
 import { CategoriesService } from './categories.service';
+import { IsString, IsNotEmpty, IsOptional } from 'class-validator';
 
 export class CreateCategoryDto {
+    @IsString()
+    @IsNotEmpty()
     name: string;
+
+    @IsString()
+    @IsNotEmpty()
     tenantId: string;
 }
 
 export class UpdateCategoryDto {
+    @IsString()
+    @IsNotEmpty()
+    @IsOptional()
     name?: string;
 }
 

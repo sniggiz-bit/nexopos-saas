@@ -16,5 +16,9 @@
   "type": "commonjs",
   "devDependencies": {
     "@nestjs/cli": "^11.0.16"
+  },
+  "lint-staged": {
+    "apps/api/**/*.{ts,js}": "eslint --config eslint.config.mjs --fix",
+    "apps/web/**/*.{ts,tsx,js,jsx}": "eslint --config eslint.config.mjs --fix"
   }
 }

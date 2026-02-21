@@ -1,10 +1,10 @@
 import { apiClient } from './client';
 
 export const PaymentMethod = {
-    CASH: 'CASH',
-    CARD: 'CARD',
-    TRANSFER: 'TRANSFER',
-    DEBIT: 'DEBIT',
+    CASH: 'EFECTIVO',
+    CARD: 'CREDITO',
+    TRANSFER: 'TRANSFERENCIA',
+    DEBIT: 'DEBITO',
 } as const;
 
 export type PaymentMethod = typeof PaymentMethod[keyof typeof PaymentMethod];
