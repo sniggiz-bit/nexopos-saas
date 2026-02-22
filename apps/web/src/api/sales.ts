@@ -16,7 +16,7 @@ export interface SaleItem {
     quantity: number;
 }
 
-export interface PaymentRequest {
+export interface PaymentRequestData {
     paymentMethod: string;
     amount: number;
 }
@@ -26,7 +26,7 @@ export interface CreateSaleRequest {
     branchId: string;
     userId?: string;
     items: SaleItem[];
-    payments: PaymentRequest[];
+    payments: PaymentRequestData[];
     status?: 'COMPLETED' | 'PRE_SALE';
     customerId?: string;
     quoteId?: string;
@@ -95,7 +95,7 @@ export async function createSale(saleData: CreateSaleRequest): Promise<Sale> {
 /**
  * Complete a pre-sale
  */
-export async function completeSale(id: string, payments: PaymentRequest[]): Promise<Sale> {
+export async function completeSale(id: string, payments: PaymentRequestData[]): Promise<Sale> {
     const response = await apiClient.post<Sale>(`/sales/${id}/complete`, payments);
     return response.data;
 }

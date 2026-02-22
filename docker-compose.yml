@@ -47,7 +47,7 @@ services:
     container_name: nexopos-web
     restart: unless-stopped
     ports:
-      - "3001:3001"
+      - "3001:80"
     environment:
       VITE_API_URL: "http://localhost:3000"
       NODE_ENV: "production"

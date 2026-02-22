@@ -1,10 +1,14 @@
 const { PrismaClient } = require('@prisma/client');
+const { PrismaPg } = require('@prisma/adapter-pg');
+const { Pool } = require('pg');
 const bcrypt = require('bcrypt');
 
-// Inyectar URL directamente para evitar problemas de validación en Prisma 7
-process.env.DATABASE_URL = "postgresql://postgres:postgres@postgres:5432/nexopos_db";
+// Inyectar URL directamente usando el nombre de base de datos correcto 'nexopos'
+process.env.DATABASE_URL = "postgresql://postgres:postgres@postgres:5432/nexopos?schema=public";
 
-const prisma = new PrismaClient();
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+const adapter = new PrismaPg(pool);
+const prisma = new PrismaClient({ adapter });
 
 async function main() {
     console.log('🌱 Iniciando actualización de usuarios oficiales...');
@@ -83,4 +87,5 @@ main()
     })
     .finally(async () => {
         await prisma.$disconnect();
+        await pool.end();
     });

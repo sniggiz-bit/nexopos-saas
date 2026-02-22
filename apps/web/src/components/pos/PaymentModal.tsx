@@ -24,13 +24,13 @@ import {
 import { usePrintSettings, type PrintFormat } from '@/hooks/usePrintSettings';
 import { printSaleAction } from './receipts/ReceiptRenderer';
 import { useEffect, useState, useMemo } from 'react';
-import { PaymentMethod, type PaymentRequest } from '@/api/sales';
+import { PaymentMethod, type PaymentRequestData } from '@/api/sales';
 import { Badge } from '@/components/ui/badge';
 
 interface PaymentModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onConfirm: (payments: PaymentRequest[]) => void;
+    onConfirm: (payments: PaymentRequestData[]) => void;
     items: CartItemData[];
     subtotal: number;
     tax: number;
@@ -322,7 +322,7 @@ export function PaymentModal({
                                     ))}
                                 </div>
 
-                                {singleMethod === PaymentMethod.EFECTIVO && (
+                                {singleMethod === 'EFECTIVO' && (
                                     <div className="space-y-2 pt-2 animate-in zoom-in-95 duration-200">
                                         <Label className="text-xs font-bold uppercase text-slate-400">Monto Recibido</Label>
                                         <div className="relative">
@@ -382,14 +382,14 @@ export function PaymentModal({
                         <Switch
                             id="auto-print"
                             checked={autoPrint}
-                            onCheckedChange={setAutoPrint}
+                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAutoPrint(e.target.checked)}
                         />
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-1.5">
                             <Label className="text-[10px] uppercase font-bold text-slate-400">Formato</Label>
-                            <Select value={defaultFormat} onValueChange={(v) => setDefaultFormat(v as PrintFormat)}>
+                            <Select value={defaultFormat} onValueChange={(v: string) => setDefaultFormat(v as PrintFormat)}>
                                 <SelectTrigger className="h-9 bg-slate-50 dark:bg-slate-900 border-none">
                                     <SelectValue />
                                 </SelectTrigger>

@@ -2,14 +2,12 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useCart } from '@/context/CartContext';
-import { ShoppingCart, PauseCircle, Clock, X } from 'lucide-react';
+import { ShoppingCart, Clock, X } from 'lucide-react';
 import { formatPrice } from '@/utils/formatters';
 import { CartItem } from './CartItem';
 import { Badge } from '@/components/ui/badge';
 import { PresalesList } from './PresalesList';
 import { useQuotes } from '@/hooks/useQuotesQuery';
-import { useCreateQuote } from '@/hooks/useQuotes';
-import { useAuth } from '@/context/AuthContext';
 import { Quote } from '@/api/types';
 import { useToast } from '@/hooks/use-toast';
 
@@ -25,33 +23,13 @@ export function Cart({ onCheckout, isProcessing, checkoutLabel = 'PAGAR' }: Cart
     const { items, totals, clearCart, addItem, updateQuantity } = useCart();
     const { total } = totals;
     const [activeTab, setActiveTab] = useState<Tab>('cart');
-    const { user } = useAuth();
     const { toast } = useToast();
 
-    const { data: quotesData, isLoading: isLoadingQuotes, refetch: refetchQuotes } = useQuotes();
+    const { data: quotesData, isLoading: isLoadingQuotes } = useQuotes();
     const quotes = Array.isArray(quotesData) ? quotesData : [];
-    const { mutate: saveQuote, isPending: isSavingQuote } = useCreateQuote();
 
     const isEmpty = items.length === 0;
 
-    const handleSavePresale = () => {
-        if (isEmpty) return;
-
-        saveQuote({
-            tenantId: user?.tenantId || 'tenant-1',
-            items: items.map(item => ({
-                productId: item.productId,
-                quantity: item.quantity,
-                price: item.price
-            }))
-        }, {
-            onSuccess: () => {
-                clearCart();
-                setActiveTab('presales');
-                refetchQuotes();
-            }
-        });
-    };
 
     const handleRestorePresale = (quote: Quote) => {
         if (items.length > 0) {

@@ -8,7 +8,7 @@ import { ProductGrid } from '@/components/pos/ProductGrid';
 import { CategoryFilter } from '@/components/pos/CategoryFilter';
 import { Cart } from '@/components/pos/Cart';
 import { PaymentModal } from '@/components/pos/PaymentModal';
-import { CreateSaleRequest, PaymentMethod } from '@/api/sales';
+import { CreateSaleRequest, PaymentRequestData } from '@/api/sales';
 import { useToast } from '@/hooks/use-toast';
 import { useCurrentShift } from '@/hooks/useShifts';
 import { OpenShiftModal } from '@/components/pos/OpenShiftModal';
@@ -98,7 +98,7 @@ export function PosPage() {
         setIsPaymentModalOpen(true);
     };
 
-    const handleConfirmPayment = (payments: PaymentRequest[]) => {
+    const handleConfirmPayment = (payments: PaymentRequestData[]) => {
         const saleData: CreateSaleRequest = {
             tenantId: user?.tenantId || 'tenant-1',
             branchId: user?.branchId || 'branch-1',
