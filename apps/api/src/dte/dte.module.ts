@@ -4,7 +4,7 @@ import { LiorenService } from './lioren.service';
 
 @Global()
 @Module({
-    providers: [DteService, LiorenService],
-    exports: [DteService, LiorenService],
+  providers: [DteService, LiorenService],
+  exports: [DteService, LiorenService],
 })
-export class DteModule { }
+export class DteModule {}

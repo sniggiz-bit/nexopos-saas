@@ -4,9 +4,9 @@ import { InternalReceiptService } from '../dte/internal-receipt.service';
 import { PrismaModule } from '../prisma/prisma.module';
 
 @Module({
-    imports: [PrismaModule],
-    controllers: [ReceiptsController],
-    providers: [InternalReceiptService],
-    exports: [InternalReceiptService],
+  imports: [PrismaModule],
+  controllers: [ReceiptsController],
+  providers: [InternalReceiptService],
+  exports: [InternalReceiptService],
 })
-export class ReceiptsModule { }
+export class ReceiptsModule {}

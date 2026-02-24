@@ -4,9 +4,9 @@ import { DteConfigService } from './dte-config.service';
 import { PrismaModule } from '../prisma/prisma.module';
 
 @Module({
-    imports: [PrismaModule],
-    controllers: [DteConfigController],
-    providers: [DteConfigService],
-    exports: [DteConfigService],
+  imports: [PrismaModule],
+  controllers: [DteConfigController],
+  providers: [DteConfigService],
+  exports: [DteConfigService],
 })
-export class DteConfigModule { }
+export class DteConfigModule {}

@@ -13,7 +13,12 @@ export function Logo({ variant = 'full', className = '', mode: _mode = 'light' }
             <img
                 src="/logo.png"
                 alt="NexoPOS"
-                className="max-h-full w-auto object-contain"
+                className={`max-w-full max-h-full object-contain ${variant === 'icon' ? 'w-auto h-full' : 'w-auto h-full'}`}
+                style={{
+                    maxHeight: variant === 'icon' ? '44px' : '44px',
+                    width: 'auto',
+                    display: 'block'
+                }}
             />
         </div>
     );

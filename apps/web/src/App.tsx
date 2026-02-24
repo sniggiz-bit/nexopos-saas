@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import SuperAdminLayout from './layouts/SuperAdminLayout';
 import AdminDashboardPage from './pages/admin/AdminDashboardPage';
 import TenantsPage from './pages/admin/TenantsPage';
+import TenantDetailPage from './pages/admin/TenantDetailPage';
 import PlansPage from './pages/admin/PlansPage';
 import SystemHealthPage from './pages/admin/SystemHealthPage';
 import AnnouncementsPage from './pages/admin/AnnouncementsPage';
@@ -24,6 +25,7 @@ import { CreditsPage } from './pages/dashboard/CreditsPage';
 import { TreasuryPage } from './pages/dashboard/TreasuryPage';
 import { CriticalStockPage } from './pages/dashboard/CriticalStockPage';
 import BranchesPage from './pages/admin/BranchesPage';
+import SuperAdminBranchesPage from './pages/admin/SuperAdminBranchesPage';
 import NewTransferPage from './pages/admin/transfers/NewTransferPage';
 import { EcommercePage } from './pages/dashboard/EcommercePage';
 import { SsoLoginPage } from './pages/SsoLoginPage';
@@ -97,7 +99,9 @@ function App() {
                   <Route index element={<Navigate to="/admin/dashboard" replace />} />
                   <Route path="dashboard" element={<AdminDashboardPage />} />
                   <Route path="tenants" element={<TenantsPage />} />
+                  <Route path="tenants/:id" element={<TenantDetailPage />} />
                   <Route path="plans" element={<PlansPage />} />
+                  <Route path="branches" element={<SuperAdminBranchesPage />} />
                   <Route path="system-health" element={<SystemHealthPage />} />
                   <Route path="announcements" element={<AnnouncementsPage />} />
                 </Route>
@@ -132,7 +136,6 @@ function App() {
                 <Route path="/dashboard/treasury" element={<TreasuryPage />} />
                 <Route path="/dashboard/reports/critical-stock" element={<CriticalStockPage />} />
                 <Route path="/dashboard/branches" element={<BranchesPage />} />
-                <Route path="/admin/branches" element={<BranchesPage />} /> {/* Alias for convenience if accessed via admin URL directly */}
                 <Route path="/dashboard/transfers/new" element={<NewTransferPage />} />
                 <Route path="/admin/transfers/new" element={<NewTransferPage />} /> {/* Alias */}
                 <Route path="/dashboard/ecommerce" element={<EcommercePage />} />

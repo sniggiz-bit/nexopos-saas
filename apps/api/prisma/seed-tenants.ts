@@ -73,7 +73,16 @@ async function main() {
             },
         });
 
-        // 3. Create Admin User for Tenant
+        // 3. Create default Branch (Casa Matriz)
+        const branch = await prisma.branch.create({
+            data: {
+                name: 'Casa Matriz',
+                isMain: true,
+                tenantId: tenant.id,
+            },
+        });
+
+        // 4. Create Admin User for Tenant
         const emailDomain = t.name.toLowerCase().replace(/\s+/g, '').replace(/ñ/g, 'n').replace(/á/g, 'a').replace(/é/g, 'e').replace(/í/g, 'i').replace(/ó/g, 'o').replace(/ú/g, 'u') + '.cl';
         const email = `contacto@${emailDomain}`;
         // Assuming '123456' hashed
@@ -86,6 +95,7 @@ async function main() {
                 password: hashedPassword,
                 role: UserRole.ADMIN, // Assuming ADMIN is the tenant admin
                 tenantId: tenant.id,
+                branchId: branch.id,
             },
         });
 

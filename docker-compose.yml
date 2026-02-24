@@ -6,7 +6,7 @@ services:
     container_name: nexopos-postgres
     restart: unless-stopped
     ports:
-      - "51214:5432"
+      - "5432:5432"
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
@@ -15,9 +15,10 @@ services:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U postgres" ]
-      interval: 5s
-      timeout: 5s
-      retries: 5
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 60s
 
   api:
     build:
@@ -49,7 +50,7 @@ services:
     ports:
       - "3001:80"
     environment:
-      VITE_API_URL: "http://localhost:3000"
+      VITE_API_URL: "http://localhost:3000/api"
       NODE_ENV: "production"
     depends_on:
       - api

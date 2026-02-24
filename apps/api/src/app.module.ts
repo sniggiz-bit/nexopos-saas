@@ -20,7 +20,6 @@ import { InventoryModule } from './inventory/inventory.module';
 import { UsersModule } from './users/users.module';
 import { TreasuryModule } from './treasury/treasury.module';
 import { DashboardModule } from './dashboard/dashboard.module';
-import { AdminModule } from './admin/admin.module';
 import { PlansModule } from './plans/plans.module';
 import { TenantsModule } from './tenants/tenants.module';
 import { AnnouncementsModule } from './announcements/announcements.module';
@@ -56,6 +55,7 @@ import { StoreModule } from './store/store.module';
     TenantsModule,
     AnnouncementsModule,
     SystemLogsModule,
+    BranchesModule,
     TransfersModule,
     StoreModule, // Import StoreModule instead of individual components
   ],

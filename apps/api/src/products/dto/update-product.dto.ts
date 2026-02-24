@@ -7,8 +7,8 @@ import { CreateProductDto } from './create-product.dto';
  * All fields are optional
  */
 export class UpdateProductDto extends PartialType(CreateProductDto) {
-    @IsOptional()
-    @IsInt()
-    @Min(0)
-    stock?: number;
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  stock?: number;
 }

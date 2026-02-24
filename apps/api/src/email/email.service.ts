@@ -2,63 +2,65 @@ import { Injectable, Logger } from '@nestjs/common';
 
 @Injectable()
 export class EmailService {
-    private readonly logger = new Logger(EmailService.name);
-    private readonly resendApiKey = process.env.RESEND_API_KEY;
-    private readonly fromEmail = process.env.FROM_EMAIL || 'noreply@nexopos.cl';
+  private readonly logger = new Logger(EmailService.name);
+  private readonly resendApiKey = process.env.RESEND_API_KEY;
+  private readonly fromEmail = process.env.FROM_EMAIL || 'noreply@nexopos.cl';
 
-    async sendWelcomeEmail(
-        email: string,
-        name: string,
-        credentials: { email: string; password: string; companyName: string }
-    ): Promise<void> {
-        const emailContent = this.generateWelcomeEmailHtml(name, credentials);
+  async sendWelcomeEmail(
+    email: string,
+    name: string,
+    credentials: { email: string; password: string; companyName: string },
+  ): Promise<void> {
+    const emailContent = this.generateWelcomeEmailHtml(name, credentials);
 
-        try {
-            if (!this.resendApiKey) {
-                // Fallback: Log to console if no API key configured
-                this.logger.warn('RESEND_API_KEY not configured. Email will be logged to console.');
-                this.logger.log('='.repeat(80));
-                this.logger.log('📧 WELCOME EMAIL');
-                this.logger.log(`To: ${email}`);
-                this.logger.log(`Subject: ¡Bienvenido a NexoPOS!`);
-                this.logger.log('-'.repeat(80));
-                this.logger.log(emailContent);
-                this.logger.log('='.repeat(80));
-                return;
-            }
+    try {
+      if (!this.resendApiKey) {
+        // Fallback: Log to console if no API key configured
+        this.logger.warn(
+          'RESEND_API_KEY not configured. Email will be logged to console.',
+        );
+        this.logger.log('='.repeat(80));
+        this.logger.log('📧 WELCOME EMAIL');
+        this.logger.log(`To: ${email}`);
+        this.logger.log(`Subject: ¡Bienvenido a NexoPOS!`);
+        this.logger.log('-'.repeat(80));
+        this.logger.log(emailContent);
+        this.logger.log('='.repeat(80));
+        return;
+      }
 
-            // Send email via Resend API
-            const response = await fetch('https://api.resend.com/emails', {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${this.resendApiKey}`,
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    from: this.fromEmail,
-                    to: email,
-                    subject: '¡Bienvenido a NexoPOS!',
-                    html: emailContent,
-                }),
-            });
+      // Send email via Resend API
+      const response = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${this.resendApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          from: this.fromEmail,
+          to: email,
+          subject: '¡Bienvenido a NexoPOS!',
+          html: emailContent,
+        }),
+      });
 
-            if (!response.ok) {
-                const error = await response.text();
-                throw new Error(`Resend API error: ${error}`);
-            }
+      if (!response.ok) {
+        const error = await response.text();
+        throw new Error(`Resend API error: ${error}`);
+      }
 
-            this.logger.log(`Welcome email sent successfully to ${email}`);
-        } catch (error) {
-            // Don't throw - we don't want email failures to block registration
-            this.logger.error(`Failed to send welcome email to ${email}:`, error);
-        }
+      this.logger.log(`Welcome email sent successfully to ${email}`);
+    } catch (error) {
+      // Don't throw - we don't want email failures to block registration
+      this.logger.error(`Failed to send welcome email to ${email}:`, error);
     }
+  }
 
-    private generateWelcomeEmailHtml(
-        name: string,
-        credentials: { email: string; password: string; companyName: string }
-    ): string {
-        return `
+  private generateWelcomeEmailHtml(
+    name: string,
+    credentials: { email: string; password: string; companyName: string },
+  ): string {
+    return `
 <!DOCTYPE html>
 <html>
 <head>
@@ -148,5 +150,5 @@ export class EmailService {
 </body>
 </html>
     `.trim();
-    }
+  }
 }

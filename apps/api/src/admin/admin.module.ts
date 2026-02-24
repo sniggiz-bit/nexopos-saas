@@ -7,8 +7,8 @@ import { AuthModule } from '../auth/auth.module';
 import { ConfigModule } from '@nestjs/config';
 
 @Module({
-    imports: [AuthModule, ConfigModule],
-    controllers: [AdminController],
-    providers: [AdminService, PrismaService],
+  imports: [AuthModule, ConfigModule],
+  controllers: [AdminController],
+  providers: [AdminService, PrismaService],
 })
-export class AdminModule { }
+export class AdminModule {}

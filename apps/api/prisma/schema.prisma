@@ -9,34 +9,33 @@ datasource db {
 }
 
 model Tenant {
-  id         String     @id @default(uuid())
-  name       String
-  slug       String     @unique
-  phone      String?
-  rut        String?
-  giro       String?
-  address    String?
-  createdAt  DateTime   @default(now())
-  updatedAt  DateTime   @updatedAt
-  branches   Branch[]
-  brands     Brand[]
-  categories Category[]
-  dteConfig  DteConfig?
-  products   Product[]
-  sales      Sale[]
-  users      User[]
-  customers  Customer[]
-  quotes     Quote[]
-  credits    Credit[]
-  planId     String?
-  plan       Plan?      @relation(fields: [planId], references: [id])
-  status     String     @default("ACTIVE") // ACTIVE, SUSPENDED
-  nextPayment DateTime?
-  maxUsers   Int?
-  maxProducts Int?
-  storeSlug     String?    @unique
+  id            String          @id @default(uuid())
+  name          String
+  slug          String          @unique
+  phone         String?
+  rut           String?
+  giro          String?
+  address       String?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  branches      Branch[]
+  brands        Brand[]
+  categories    Category[]
+  dteConfig     DteConfig?
+  products      Product[]
+  sales         Sale[]
+  users         User[]
+  customers     Customer[]
+  quotes        Quote[]
+  credits       Credit[]
+  planId        String?
+  plan          Plan?           @relation(fields: [planId], references: [id])
+  status        String          @default("ACTIVE") // ACTIVE, SUSPENDED
+  nextPayment   DateTime?
+  storeSlug     String?         @unique
   storeSettings Json?
-  systemLogs SystemLog[]
+  systemLogs    SystemLog[]
+  settings      TenantSettings?
 }
 
 model Branch {
@@ -44,6 +43,7 @@ model Branch {
   name           String
   address        String?
   isMain         Boolean          @default(false)
+  isActive       Boolean          @default(false)
   tenantId       String
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt @default(now())
@@ -433,6 +433,29 @@ model Announcement {
   content   String
   type      String   // INFO, WARNING
   isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model TenantSettings {
+  id       String @id @default(uuid())
+  tenantId String @unique
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+  // --- Módulos DTE (SII chileno) ---
+  enableBoletaDte       Boolean @default(false)
+  enableFacturaDte      Boolean @default(false)
+  enableGuiaDespachoDte Boolean @default(false)
+  enableNotaCreditoDte  Boolean @default(false)
+
+  // --- Límites de Recursos ---
+  maxBranches  Int @default(1)
+  maxRegisters Int @default(1)
+  maxUsers     Int @default(3)
+
+  // --- Permisos Especiales ---
+  canHardDelete Boolean @default(false)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }

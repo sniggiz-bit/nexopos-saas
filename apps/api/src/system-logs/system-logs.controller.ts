@@ -6,10 +6,10 @@ import { SuperAdminGuard } from '../auth/super-admin.guard';
 @Controller('system-logs')
 @UseGuards(JwtAuthGuard, SuperAdminGuard)
 export class SystemLogsController {
-    constructor(private readonly systemLogsService: SystemLogsService) { }
+  constructor(private readonly systemLogsService: SystemLogsService) {}
 
-    @Get()
-    findAll(@Query() query: any) {
-        return this.systemLogsService.findAll(query);
-    }
+  @Get()
+  findAll(@Query() query: any) {
+    return this.systemLogsService.findAll(query);
+  }
 }

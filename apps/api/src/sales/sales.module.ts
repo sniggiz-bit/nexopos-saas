@@ -9,9 +9,15 @@ import { ShiftsModule } from '../shifts/shifts.module';
 import { InventoryModule } from '../inventory/inventory.module';
 
 @Module({
-    imports: [PrismaModule, ReceiptsModule, ShiftsModule, CreditsModule, InventoryModule],
-    controllers: [SalesController],
-    providers: [SalesService],
-    exports: [SalesService],
+  imports: [
+    PrismaModule,
+    ReceiptsModule,
+    ShiftsModule,
+    CreditsModule,
+    InventoryModule,
+  ],
+  controllers: [SalesController],
+  providers: [SalesService],
+  exports: [SalesService],
 })
-export class SalesModule { }
+export class SalesModule {}
