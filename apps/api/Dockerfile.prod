@@ -67,7 +67,7 @@ EXPOSE 3000
 
 # Healthcheck using wget
 HEALTHCHECK --interval=30s --timeout=10s --retries=3 --start-period=40s \
-    CMD wget --no-verbose --tries=1 --spider http://localhost:3000 || exit 1
+    CMD wget --no-verbose --tries=1 --spider http://localhost:3000/api || exit 1
 
 # Start the application directly (run migrations manually if needed)
 CMD ["node", "dist/main.js"]
