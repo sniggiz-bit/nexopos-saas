@@ -22,7 +22,7 @@ interface CategoryResponseDto {
 
 @Injectable()
 export class CategoriesService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   async findAll(tenantId: string): Promise<CategoryResponseDto[]> {
     const categories = await this.prisma.category.findMany({
@@ -72,10 +72,11 @@ export class CategoriesService {
 
   async update(
     id: string,
+    tenantId: string,
     updateCategoryDto: UpdateCategoryDto,
   ): Promise<CategoryResponseDto> {
     const category = await this.prisma.category.update({
-      where: { id },
+      where: { id, tenantId },
       data: updateCategoryDto,
       include: {
         _count: {
@@ -91,10 +92,10 @@ export class CategoriesService {
     };
   }
 
-  async remove(id: string): Promise<void> {
+  async remove(id: string, tenantId: string): Promise<void> {
     // Check if category has products
     const category = await this.prisma.category.findUnique({
-      where: { id },
+      where: { id, tenantId },
       include: {
         _count: {
           select: { products: true },
@@ -113,7 +114,7 @@ export class CategoriesService {
     }
 
     await this.prisma.category.delete({
-      where: { id },
+      where: { id, tenantId },
     });
   }
 }

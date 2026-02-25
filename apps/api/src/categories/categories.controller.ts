@@ -39,7 +39,7 @@ export class CategoryResponseDto {
 @Controller('categories')
 @UseGuards(JwtAuthGuard)
 export class CategoriesController {
-  constructor(private readonly categoriesService: CategoriesService) {}
+  constructor(private readonly categoriesService: CategoriesService) { }
 
   @Get()
   async findAll(@CurrentUser() user: any): Promise<CategoryResponseDto[]> {
@@ -59,12 +59,16 @@ export class CategoriesController {
   async update(
     @Param('id') id: string,
     @Body() updateCategoryDto: UpdateCategoryDto,
+    @CurrentUser() user: any,
   ): Promise<CategoryResponseDto> {
-    return this.categoriesService.update(id, updateCategoryDto);
+    return this.categoriesService.update(id, user.tenantId, updateCategoryDto);
   }
 
   @Delete(':id')
-  async remove(@Param('id') id: string): Promise<void> {
-    return this.categoriesService.remove(id);
+  async remove(
+    @Param('id') id: string,
+    @CurrentUser() user: any,
+  ): Promise<void> {
+    return this.categoriesService.remove(id, user.tenantId);
   }
 }

@@ -58,12 +58,16 @@ export class BrandsController {
   async update(
     @Param('id') id: string,
     @Body() updateBrandDto: UpdateBrandDto,
+    @CurrentUser() user: any,
   ): Promise<BrandResponseDto> {
-    return this.brandsService.update(id, updateBrandDto);
+    return this.brandsService.update(id, user.tenantId, updateBrandDto);
   }
 
   @Delete(':id')
-  async remove(@Param('id') id: string): Promise<void> {
-    return this.brandsService.remove(id);
+  async remove(
+    @Param('id') id: string,
+    @CurrentUser() user: any,
+  ): Promise<void> {
+    return this.brandsService.remove(id, user.tenantId);
   }
 }

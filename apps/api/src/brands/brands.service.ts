@@ -22,7 +22,7 @@ interface BrandResponseDto {
 
 @Injectable()
 export class BrandsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   async findAll(tenantId: string): Promise<BrandResponseDto[]> {
     const brands = await this.prisma.brand.findMany({
@@ -70,10 +70,11 @@ export class BrandsService {
 
   async update(
     id: string,
+    tenantId: string,
     updateBrandDto: UpdateBrandDto,
   ): Promise<BrandResponseDto> {
     const brand = await this.prisma.brand.update({
-      where: { id },
+      where: { id, tenantId },
       data: updateBrandDto,
       include: {
         _count: {
@@ -89,10 +90,10 @@ export class BrandsService {
     };
   }
 
-  async remove(id: string): Promise<void> {
+  async remove(id: string, tenantId: string): Promise<void> {
     // Check if brand has products
     const brand = await this.prisma.brand.findUnique({
-      where: { id },
+      where: { id, tenantId },
       include: {
         _count: {
           select: { products: true },
@@ -111,7 +112,7 @@ export class BrandsService {
     }
 
     await this.prisma.brand.delete({
-      where: { id },
+      where: { id, tenantId },
     });
   }
 }
