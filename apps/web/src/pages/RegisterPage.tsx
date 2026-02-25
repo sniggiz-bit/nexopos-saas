@@ -62,6 +62,7 @@ export function RegisterPage() {
             if (data.user.role === 'SUPER_ADMIN') {
                 navigate('/admin/dashboard');
             } else {
+                // Redirect to client admin dashboard
                 navigate('/dashboard');
             }
         } catch (error: any) {
