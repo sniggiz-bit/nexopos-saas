@@ -61,7 +61,7 @@ function RoleBasedRedirect() {
     return <Navigate to="/admin/dashboard" replace />;
   }
 
-  return <Navigate to="/pos" replace />;
+  return <Navigate to="/dashboard" replace />;
 }
 
 function LoadingScreen() {

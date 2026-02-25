@@ -62,7 +62,7 @@ export function RegisterPage() {
             if (data.user.role === 'SUPER_ADMIN') {
                 navigate('/admin/dashboard');
             } else {
-                navigate('/pos');
+                navigate('/dashboard');
             }
         } catch (error: any) {
             console.error('Registration error:', error);
