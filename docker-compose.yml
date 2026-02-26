@@ -21,9 +21,10 @@ services:
       start_period: 60s
 
   api:
-    build:
-      context: .
-      dockerfile: apps/api/Dockerfile.prod
+    #    build:
+    #      context: .
+    #      dockerfile: apps/api/Dockerfile.prod
+    image: nexopos-api:rescue
     container_name: nexopos-api
     restart: unless-stopped
     ports:
@@ -42,9 +43,10 @@ services:
         condition: service_healthy
 
   web:
-    build:
-      context: .
-      dockerfile: apps/web/Dockerfile.prod
+    #    build:
+    #      context: .
+    #      dockerfile: apps/web/Dockerfile.prod
+    image: nexopos-web:rescue
     container_name: nexopos-web
     restart: unless-stopped
     ports:
