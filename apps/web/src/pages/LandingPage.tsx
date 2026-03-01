@@ -1,41 +1,9 @@
 import { Link } from 'react-router-dom';
 import { CheckCircle, TrendingUp, Package, CreditCard, Building2, FileText, Menu } from 'lucide-react';
-import { usePublicPlans } from '../hooks/usePublicPlans';
 import { Logo } from '../components/ui/Logo';
 import { useState } from 'react';
 
-const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('es-CL', {
-        style: 'currency',
-        currency: 'CLP',
-        maximumFractionDigits: 0
-    }).format(price);
-};
-
-function PricingSkeleton() {
-    return (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            {[1, 2, 3].map((i) => (
-                <div key={i} className="bg-white rounded-2xl shadow-lg p-8 border-2 border-gray-100 animate-pulse">
-                    <div className="h-8 w-24 bg-gray-200 rounded mb-4"></div>
-                    <div className="h-12 w-48 bg-gray-200 rounded mb-6"></div>
-                    <div className="space-y-4 mb-8">
-                        {[1, 2, 3, 4].map((j) => (
-                            <div key={j} className="flex items-center">
-                                <div className="w-5 h-5 bg-gray-200 rounded-full mr-3"></div>
-                                <div className="h-4 w-full bg-gray-100 rounded"></div>
-                            </div>
-                        ))}
-                    </div>
-                    <div className="h-12 w-full bg-gray-200 rounded-lg"></div>
-                </div>
-            ))}
-        </div>
-    );
-}
-
 export function LandingPage() {
-    const { data: plans, isLoading, isError } = usePublicPlans();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
 
     return (
@@ -114,6 +82,15 @@ export function LandingPage() {
                                 Ver Planes
                             </a>
                         </div>
+                    </div>
+                    {/* Hero Image Dashboard */}
+                    <div className="mt-16 sm:mt-24 flex justify-center relative z-10">
+                        <img
+                            src="/dashboard-hero-nexopos.png"
+                            alt="Dashboard NexoPOS"
+                            className="w-full max-w-5xl rounded-xl sm:rounded-2xl shadow-2xl border border-gray-200/50 object-cover object-center"
+                            loading="eager"
+                        />
                     </div>
                 </div>
             </section>
@@ -201,69 +178,119 @@ export function LandingPage() {
             </section>
 
             {/* Pricing Section */}
-            <section id="pricing" className="py-24 bg-gradient-to-br from-gray-50 to-indigo-50">
+            <section id="pricing" className="py-24 bg-slate-900">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="text-center mb-16">
-                        <h2 className="text-4xl font-bold text-gray-900 mb-4">
+                        <h2 className="text-4xl font-bold text-white mb-4">
                             Planes diseñados para tu negocio
                         </h2>
-                        <p className="text-xl text-gray-600">
+                        <p className="text-xl text-slate-400">
                             Elige el plan que mejor se adapte a tus necesidades
                         </p>
                     </div>
 
-                    {isLoading ? (
-                        <PricingSkeleton />
-                    ) : isError ? (
-                        <div className="text-center py-12">
-                            <p className="text-red-600 font-medium">Error al cargar los planes. Por favor intenta más tarde.</p>
-                        </div>
-                    ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-                            {plans?.map((plan) => (
-                                <div
-                                    key={plan.id}
-                                    className={`bg-white rounded-2xl shadow-lg p-8 border-2 transition-all duration-300 relative ${plan.isRecommended
-                                        ? 'border-indigo-500 transform scale-105 z-10 shadow-2xl'
-                                        : 'border-gray-200 hover:border-indigo-300'
-                                        }`}
-                                >
-                                    {plan.isRecommended && (
-                                        <div className="absolute top-0 right-0 bg-indigo-500 text-white px-4 py-1 rounded-bl-lg rounded-tr-xl text-sm font-semibold">
-                                            Recomendado
-                                        </div>
-                                    )}
-                                    <div className="mb-8">
-                                        <h3 className="text-2xl font-bold text-gray-900 mb-2">{plan.name}</h3>
-                                        <div className="flex items-baseline mb-4">
-                                            <span className={`text-5xl font-bold ${plan.isRecommended ? 'text-indigo-600' : 'text-gray-900'}`}>
-                                                {formatPrice(plan.price)}
-                                            </span>
-                                            <span className="text-gray-600 ml-2">/mes</span>
-                                        </div>
-                                        <p className="text-gray-600 text-sm">{plan.description}</p>
-                                    </div>
-                                    <ul className="space-y-4 mb-8">
-                                        {plan.features?.map((feature, idx) => (
-                                            <li key={idx} className="flex items-start">
-                                                <CheckCircle className="w-5 h-5 text-green-500 mr-3 mt-0.5 flex-shrink-0" />
-                                                <span className="text-gray-700 text-sm">{feature}</span>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                    <Link
-                                        to="/register"
-                                        className={`block w-full text-center px-6 py-3 font-semibold rounded-lg transition-all ${plan.isRecommended
-                                            ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:from-indigo-700 hover:to-purple-700 transform hover:scale-105 shadow-lg'
-                                            : 'bg-gray-100 text-gray-900 hover:bg-gray-200'
-                                            }`}
-                                    >
-                                        Comenzar
-                                    </Link>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto items-center">
+                        {/* Plan Light */}
+                        <div className="bg-slate-800 rounded-2xl shadow-lg p-8 border border-slate-700 hover:border-slate-600 transition-all duration-300 relative text-white">
+                            <div className="mb-8">
+                                <h3 className="text-2xl font-bold mb-2">Plan Light</h3>
+                                <p className="text-slate-400 text-sm mb-4">Básico</p>
+                                <div className="flex items-baseline mb-4">
+                                    <span className="text-5xl font-bold">$X.XXX</span>
+                                    <span className="text-slate-400 ml-2">/mes</span>
                                 </div>
-                            ))}
+                                <p className="text-slate-400 text-sm">Ideal para emprendedores y pequeños negocios que recién comienzan.</p>
+                            </div>
+                            <ul className="space-y-4 mb-8">
+                                {[
+                                    'Punto de Venta básico',
+                                    'Control de Inventario',
+                                    '1 Usuario',
+                                    'Soporte por email'
+                                ].map((feature, idx) => (
+                                    <li key={idx} className="flex items-start">
+                                        <CheckCircle className="w-5 h-5 text-indigo-400 mr-3 mt-0.5 flex-shrink-0" />
+                                        <span className="text-slate-300 text-sm">{feature}</span>
+                                    </li>
+                                ))}
+                            </ul>
+                            <Link
+                                to="/register"
+                                className="block w-full text-center px-6 py-3 font-semibold rounded-lg transition-all bg-slate-700 text-white hover:bg-slate-600"
+                            >
+                                Comenzar
+                            </Link>
                         </div>
-                    )}
+
+                        {/* Plan Elevate (Destacado) */}
+                        <div className="bg-slate-800 rounded-2xl shadow-2xl p-8 border-2 border-green-500 transform lg:scale-105 z-10 relative text-white shadow-green-500/20">
+                            <div className="absolute top-0 right-0 bg-green-500 text-slate-900 px-4 py-1 rounded-bl-lg rounded-tr-xl text-sm font-bold">
+                                Más Popular
+                            </div>
+                            <div className="mb-8">
+                                <h3 className="text-2xl font-bold mb-2">Plan Elevate</h3>
+                                <p className="text-green-400 text-sm mb-4">Destacado / Profesional</p>
+                                <div className="flex items-baseline mb-4">
+                                    <span className="text-5xl font-bold text-white">$X.XXX</span>
+                                    <span className="text-slate-400 ml-2">/mes</span>
+                                </div>
+                                <p className="text-slate-400 text-sm">Perfecto para negocios en crecimiento que necesitan herramientas avanzadas.</p>
+                            </div>
+                            <ul className="space-y-4 mb-8">
+                                {[
+                                    'Facturación Electrónica (DTE)',
+                                    'Múltiples sucursales',
+                                    'Reportes avanzados',
+                                    '5 Usuarios',
+                                    'Soporte prioritario 24/7'
+                                ].map((feature, idx) => (
+                                    <li key={idx} className="flex items-start">
+                                        <CheckCircle className="w-5 h-5 text-green-500 mr-3 mt-0.5 flex-shrink-0" />
+                                        <span className="text-slate-300 text-sm">{feature}</span>
+                                    </li>
+                                ))}
+                            </ul>
+                            <Link
+                                to="/register"
+                                className="block w-full text-center px-6 py-3 font-semibold rounded-lg transition-all bg-green-500 text-slate-900 hover:bg-green-400 hover:shadow-lg hover:shadow-green-500/30 transform hover:-translate-y-1"
+                            >
+                                Comenzar Ahora
+                            </Link>
+                        </div>
+
+                        {/* Plan Vanguard */}
+                        <div className="bg-slate-800 rounded-2xl shadow-lg p-8 border border-slate-700 hover:border-slate-600 transition-all duration-300 relative text-white">
+                            <div className="mb-8">
+                                <h3 className="text-2xl font-bold mb-2">Plan Vanguard</h3>
+                                <p className="text-slate-400 text-sm mb-4">Avanzado / Premium</p>
+                                <div className="flex items-baseline mb-4">
+                                    <span className="text-5xl font-bold">$X.XXX</span>
+                                    <span className="text-slate-400 ml-2">/mes</span>
+                                </div>
+                                <p className="text-slate-400 text-sm">Para grandes empresas que requieren soluciones a medida y máxima capacidad.</p>
+                            </div>
+                            <ul className="space-y-4 mb-8">
+                                {[
+                                    'Todas las funciones Elevate',
+                                    'Usuarios ilimitados',
+                                    'API de integración',
+                                    'Desarrollo personalizado',
+                                    'Ejecutivo de cuenta dedicado'
+                                ].map((feature, idx) => (
+                                    <li key={idx} className="flex items-start">
+                                        <CheckCircle className="w-5 h-5 text-indigo-400 mr-3 mt-0.5 flex-shrink-0" />
+                                        <span className="text-slate-300 text-sm">{feature}</span>
+                                    </li>
+                                ))}
+                            </ul>
+                            <Link
+                                to="/register"
+                                className="block w-full text-center px-6 py-3 font-semibold rounded-lg transition-all bg-slate-700 text-white hover:bg-slate-600"
+                            >
+                                Comenzar
+                            </Link>
+                        </div>
+                    </div>
                 </div>
             </section>
 
