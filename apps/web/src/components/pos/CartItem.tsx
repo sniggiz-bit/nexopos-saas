@@ -16,15 +16,18 @@ export function CartItem({ item }: CartItemProps) {
     const [localQuantity, setLocalQuantity] = useState(item.quantity.toString());
     const [isDiscountModalOpen, setIsDiscountModalOpen] = useState(false);
 
-    const baseSubtotal = item.price * item.quantity;
+    const basePrice = Number(item.price) || 0;
+    const baseQuantity = Number(item.quantity) || 0;
+    const baseSubtotal = basePrice * baseQuantity;
     let finalSubtotal = baseSubtotal;
     let discountAmount = 0;
 
     if (item.discountValue && item.discountType) {
+        const dVal = Number(item.discountValue) || 0;
         if (item.discountType === 'PERCENTAGE') {
-            discountAmount = (baseSubtotal * item.discountValue) / 100;
+            discountAmount = (baseSubtotal * dVal) / 100;
         } else {
-            discountAmount = item.discountValue;
+            discountAmount = dVal;
         }
         finalSubtotal = Math.max(0, baseSubtotal - discountAmount);
     }
@@ -48,11 +51,11 @@ export function CartItem({ item }: CartItemProps) {
                     <h4 className="font-semibold text-slate-800 text-sm leading-tight mb-1">{item.name}</h4>
                     <div className="flex items-center gap-2">
                         <span className="text-xs text-slate-500 font-medium">
-                            {formatPrice(item.price)}
+                            {formatPrice(basePrice)}
                         </span>
                         {discountAmount > 0 && (
                             <Badge variant="outline" className="text-[10px] h-4 px-1 text-green-600 border-green-200 bg-green-50">
-                                -{item.discountType === 'PERCENTAGE' ? `${item.discountValue}%` : formatPrice(item.discountValue!)}
+                                -{item.discountType === 'PERCENTAGE' ? `${item.discountValue}%` : formatPrice(Number(item.discountValue) || 0)}
                             </Badge>
                         )}
                     </div>
@@ -78,21 +81,21 @@ export function CartItem({ item }: CartItemProps) {
                                 variant="ghost"
                                 size="icon"
                                 className="h-6 w-6 rounded-full hover:bg-slate-100 text-slate-600"
-                                onClick={() => updateQuantity(item.productId, item.quantity - 1)}
-                                disabled={item.quantity <= 1}
+                                onClick={() => updateQuantity(item.productId, baseQuantity - 1)}
+                                disabled={baseQuantity <= 1}
                             >
                                 <Minus className="h-3 w-3" />
                             </Button>
 
                             <span className="w-8 text-center text-sm font-semibold text-slate-700">
-                                {item.quantity}
+                                {baseQuantity}
                             </span>
 
                             <Button
                                 variant="ghost"
                                 size="icon"
                                 className="h-6 w-6 rounded-full hover:bg-slate-100 text-slate-600"
-                                onClick={() => updateQuantity(item.productId, item.quantity + 1)}
+                                onClick={() => updateQuantity(item.productId, baseQuantity + 1)}
                             >
                                 <Plus className="h-3 w-3" />
                             </Button>
@@ -148,9 +151,9 @@ export function CartItem({ item }: CartItemProps) {
                 isOpen={isDiscountModalOpen}
                 onClose={() => setIsDiscountModalOpen(false)}
                 itemName={item.name}
-                itemPrice={item.price * item.quantity}
+                itemPrice={(Number(item.price) || 0) * (Number(item.quantity) || 0)}
                 currentDiscountType={item.discountType}
-                currentDiscountValue={item.discountValue}
+                currentDiscountValue={item.discountValue === "" ? undefined : Number(item.discountValue)}
                 onApply={(type, value) => applyDiscount(item.productId, type, value)}
             />
         </div>

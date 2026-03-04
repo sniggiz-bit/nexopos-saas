@@ -94,8 +94,8 @@ export function PaymentModal({
         }
     }, [isOpen]);
 
-    const totalMixed = useMemo(() => {
-        return Object.values(mixedPayments).reduce((sum, val) => sum + (Number(val) || 0), 0);
+    const totalMixed: number = useMemo(() => {
+        return Object.values(mixedPayments).reduce((sum: number, val) => sum + (Number(val) || 0), 0);
     }, [mixedPayments]);
 
     const remaining = total - totalMixed;
@@ -228,7 +228,7 @@ export function PaymentModal({
                                         <span className="text-slate-600 dark:text-slate-400 truncate max-w-[140px]">
                                             {item.name} <span className="text-[10px] opacity-70">x{item.quantity}</span>
                                         </span>
-                                        <span>{formatPrice(item.price * item.quantity)}</span>
+                                        <span>{formatPrice((Number(item.price) || 0) * (Number(item.quantity) || 0))}</span>
                                     </div>
                                 ))}
                             </div>
