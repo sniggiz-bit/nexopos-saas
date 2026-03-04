@@ -23,8 +23,12 @@ let TransfersService = class TransfersService {
             throw new common_1.BadRequestException('Origin and destination branches must be different');
         }
         return this.prisma.$transaction(async (tx) => {
-            const originBranch = await tx.branch.findUnique({ where: { id: originBranchId } });
-            const destBranch = await tx.branch.findUnique({ where: { id: destBranchId } });
+            const originBranch = await tx.branch.findUnique({
+                where: { id: originBranchId },
+            });
+            const destBranch = await tx.branch.findUnique({
+                where: { id: destBranchId },
+            });
             if (!originBranch || !destBranch) {
                 throw new common_1.BadRequestException('One or both branches do not exist');
             }
@@ -95,20 +99,42 @@ let TransfersService = class TransfersService {
                         productId_branchId: {
                             productId: item.productId,
                             branchId: destBranchId,
-                        }
+                        },
                     },
                     update: {
-                        quantity: { increment: item.quantity }
+                        quantity: { increment: item.quantity },
                     },
                     create: {
                         productId: item.productId,
                         branchId: destBranchId,
                         quantity: item.quantity,
-                        minStock: 0
-                    }
+                        minStock: 0,
+                    },
                 });
             }
             return transfer;
+        });
+    }
+    async findAll(tenantId) {
+        return this.prisma.transfer.findMany({
+            where: {
+                originBranch: {
+                    tenantId,
+                },
+            },
+            include: {
+                originBranch: true,
+                destinationBranch: true,
+                requestedBy: true,
+                items: {
+                    include: {
+                        product: true,
+                    },
+                },
+            },
+            orderBy: {
+                createdAt: 'desc',
+            },
         });
     }
 };

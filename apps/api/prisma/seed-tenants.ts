@@ -68,8 +68,8 @@ async function main() {
                 nextPayment: t.expired
                     ? new Date(new Date().setDate(new Date().getDate() - 5)) // 5 days ago
                     : new Date(new Date().setDate(new Date().getDate() + 30)), // 30 days from now
-                maxUsers: t.plan.maxUsers,
-                maxProducts: t.plan.maxProducts,
+                // maxUsers: t.plan.maxUsers,
+                // maxProducts: t.plan.maxProducts,
             },
         });
 
@@ -93,7 +93,7 @@ async function main() {
                 email: email,
                 name: `Admin ${t.name}`,
                 password: hashedPassword,
-                role: UserRole.ADMIN, // Assuming ADMIN is the tenant admin
+                role: UserRole.TENANT_ADMIN, // Assuming ADMIN is the tenant admin
                 tenantId: tenant.id,
                 branchId: branch.id,
             },

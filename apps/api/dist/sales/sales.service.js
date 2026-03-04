@@ -57,7 +57,14 @@ let SalesService = SalesService_1 = class SalesService {
         });
     }
     async createSale(createSaleDto) {
-        const { tenantId, branchId, userId, items, payments, status = 'COMPLETED', customerId, quoteId } = createSaleDto;
+        this.logger.log(`Starting createSale with DTO: ${JSON.stringify(createSaleDto, null, 2)}`);
+        const { tenantId, branchId, userId, items, payments, status = 'COMPLETED', customerId, quoteId, } = createSaleDto;
+        if (!tenantId) {
+            throw new common_1.BadRequestException('tenantId is required');
+        }
+        if (!branchId) {
+            throw new common_1.BadRequestException('branchId is required. Ensure your user is assigned to a branch.');
+        }
         if (!items || items.length === 0) {
             throw new common_1.BadRequestException('Sale must contain at least one item');
         }
@@ -66,12 +73,12 @@ let SalesService = SalesService_1 = class SalesService {
                 throw new common_1.BadRequestException('Sale must contain at least one payment method');
             }
         }
-        const hasCreditPayment = payments?.some(p => p.paymentMethod === 'CREDITO');
+        const hasCreditPayment = payments?.some((p) => p.paymentMethod === 'CREDITO');
         if (hasCreditPayment && !customerId) {
             throw new common_1.BadRequestException('Customer is required for CREDIT payments');
         }
         const sale = await this.prisma.$transaction(async (prisma) => {
-            const productIds = items.map(item => item.productId);
+            const productIds = items.map((item) => item.productId);
             const products = await prisma.product.findMany({
                 where: { id: { in: productIds }, tenantId },
             });
@@ -84,10 +91,12 @@ let SalesService = SalesService_1 = class SalesService {
             if (!currentShift) {
                 throw new common_1.BadRequestException('No open shift found. Please open a shift first.');
             }
-            const productPriceMap = new Map(products.map(p => [p.id, p.price]));
+            const productPriceMap = new Map(products.map((p) => [p.id, p.price]));
             for (const item of items) {
-                const inventory = await prisma.inventoryLevel.findUnique({
-                    where: { productId_branchId: { productId: item.productId, branchId } },
+                const inventory = await prisma.inventory.findUnique({
+                    where: {
+                        productId_branchId: { productId: item.productId, branchId },
+                    },
                 });
                 if (!inventory || inventory.quantity.lessThan(item.quantity)) {
                     throw new common_1.BadRequestException(`Insufficient stock for product ${item.productId}`);
@@ -103,7 +112,7 @@ let SalesService = SalesService_1 = class SalesService {
             }
             const total = items.reduce((acc, item) => {
                 const price = Number(productPriceMap.get(item.productId) || 0);
-                return acc + (price * Number(item.quantity));
+                return acc + price * Number(item.quantity);
             }, 0);
             if (status === 'COMPLETED') {
                 const totalPaid = payments.reduce((acc, p) => acc + p.amount, 0);
@@ -122,24 +131,28 @@ let SalesService = SalesService_1 = class SalesService {
                     customerId,
                     quoteId,
                     items: {
-                        create: items.map(item => ({
+                        create: items.map((item) => ({
                             productId: item.productId,
                             quantity: item.quantity,
                             price: Number(productPriceMap.get(item.productId) || 0),
                         })),
                     },
                     payments: {
-                        create: payments?.map(p => ({
+                        create: payments?.map((p) => ({
                             paymentMethod: p.paymentMethod,
                             amount: p.amount,
                         })),
                     },
                 },
-                include: { items: { include: { product: true } }, payments: true, customer: true },
+                include: {
+                    items: { include: { product: true } },
+                    payments: true,
+                    customer: true,
+                },
             });
             if (status === 'COMPLETED' && hasCreditPayment) {
                 const creditAmount = payments
-                    .filter(p => p.paymentMethod === 'CREDITO')
+                    .filter((p) => p.paymentMethod === 'CREDITO')
                     .reduce((acc, p) => acc + p.amount, 0);
                 await prisma.credit.create({
                     data: {
@@ -149,17 +162,17 @@ let SalesService = SalesService_1 = class SalesService {
                         totalAmount: creditAmount,
                         balance: creditAmount,
                         status: 'OPEN',
-                    }
+                    },
                 });
             }
             await prisma.stockMovement.updateMany({
                 where: {
                     reference: 'Venta',
-                    productId: { in: items.map(i => i.productId) },
+                    productId: { in: items.map((i) => i.productId) },
                     branchId,
-                    createdAt: { gte: new Date(Date.now() - 5000) }
+                    createdAt: { gte: new Date(Date.now() - 5000) },
                 },
-                data: { reference: `SALE-${createdSale.id}` }
+                data: { reference: `SALE-${createdSale.id}` },
             });
             return createdSale;
         });
@@ -181,13 +194,13 @@ let SalesService = SalesService_1 = class SalesService {
         if (Math.abs(totalPaid - sale.total) > 0.01) {
             throw new common_1.BadRequestException(`Paid amount ($${totalPaid}) does not match total ($${sale.total})`);
         }
-        const hasCreditPayment = payments.some(p => p.paymentMethod === 'CREDITO');
+        const hasCreditPayment = payments.some((p) => p.paymentMethod === 'CREDITO');
         if (hasCreditPayment && !sale.customerId) {
             throw new common_1.BadRequestException('Customer is required for CREDIT payments');
         }
         await this.prisma.$transaction(async (prisma) => {
             await prisma.payment.createMany({
-                data: payments.map(p => ({
+                data: payments.map((p) => ({
                     saleId: id,
                     amount: p.amount,
                     paymentMethod: p.paymentMethod,
@@ -199,7 +212,7 @@ let SalesService = SalesService_1 = class SalesService {
             });
             if (hasCreditPayment) {
                 const creditAmount = payments
-                    .filter(p => p.paymentMethod === 'CREDITO')
+                    .filter((p) => p.paymentMethod === 'CREDITO')
                     .reduce((acc, p) => acc + p.amount, 0);
                 await prisma.credit.create({
                     data: {
@@ -209,7 +222,7 @@ let SalesService = SalesService_1 = class SalesService {
                         totalAmount: creditAmount,
                         balance: creditAmount,
                         status: 'OPEN',
-                    }
+                    },
                 });
             }
         });

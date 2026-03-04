@@ -8,10 +8,12 @@ export function Logo({ variant = 'full', className = '', mode: _mode = 'light' }
     const defaultHeight = variant === 'icon' ? 'h-11' : 'h-11';
     const heightClass = className.includes('h-') ? '' : defaultHeight;
 
+    const logoSrc = variant === 'icon' ? '/isotipo.svg' : '/logo.svg';
+
     return (
         <div className={`flex items-center flex-shrink-0 ${heightClass} ${className}`}>
             <img
-                src="/logo.png"
+                src={logoSrc}
                 alt="NexoPOS"
                 className={`max-w-full max-h-full object-contain ${variant === 'icon' ? 'w-auto h-full' : 'w-auto h-full'}`}
                 style={{

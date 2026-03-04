@@ -16,6 +16,8 @@ exports.CategoriesController = exports.CategoryResponseDto = exports.UpdateCateg
 const common_1 = require("@nestjs/common");
 const categories_service_1 = require("./categories.service");
 const class_validator_1 = require("class-validator");
+const jwt_auth_guard_1 = require("../auth/jwt-auth.guard");
+const user_decorator_1 = require("../auth/user.decorator");
 class CreateCategoryDto {
     name;
     tenantId;
@@ -28,7 +30,7 @@ __decorate([
 ], CreateCategoryDto.prototype, "name", void 0);
 __decorate([
     (0, class_validator_1.IsString)(),
-    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsOptional)(),
     __metadata("design:type", String)
 ], CreateCategoryDto.prototype, "tenantId", void 0);
 class UpdateCategoryDto {
@@ -52,51 +54,56 @@ let CategoriesController = class CategoriesController {
     constructor(categoriesService) {
         this.categoriesService = categoriesService;
     }
-    async findAll(tenantId = 'tenant-1') {
-        return this.categoriesService.findAll(tenantId);
+    async findAll(user) {
+        return this.categoriesService.findAll(user.tenantId);
     }
-    async create(createCategoryDto) {
+    async create(createCategoryDto, user) {
+        createCategoryDto.tenantId = user.tenantId;
         return this.categoriesService.create(createCategoryDto);
     }
-    async update(id, updateCategoryDto) {
-        return this.categoriesService.update(id, updateCategoryDto);
+    async update(id, updateCategoryDto, user) {
+        return this.categoriesService.update(id, user.tenantId, updateCategoryDto);
     }
-    async remove(id) {
-        return this.categoriesService.remove(id);
+    async remove(id, user) {
+        return this.categoriesService.remove(id, user.tenantId);
     }
 };
 exports.CategoriesController = CategoriesController;
 __decorate([
     (0, common_1.Get)(),
-    __param(0, (0, common_1.Query)('tenantId')),
+    __param(0, (0, user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], CategoriesController.prototype, "findAll", null);
 __decorate([
     (0, common_1.Post)(),
     __param(0, (0, common_1.Body)()),
+    __param(1, (0, user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [CreateCategoryDto]),
+    __metadata("design:paramtypes", [CreateCategoryDto, Object]),
     __metadata("design:returntype", Promise)
 ], CategoriesController.prototype, "create", null);
 __decorate([
     (0, common_1.Patch)(':id'),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Body)()),
+    __param(2, (0, user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, UpdateCategoryDto]),
+    __metadata("design:paramtypes", [String, UpdateCategoryDto, Object]),
     __metadata("design:returntype", Promise)
 ], CategoriesController.prototype, "update", null);
 __decorate([
     (0, common_1.Delete)(':id'),
     __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", Promise)
 ], CategoriesController.prototype, "remove", null);
 exports.CategoriesController = CategoriesController = __decorate([
     (0, common_1.Controller)('categories'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     __metadata("design:paramtypes", [categories_service_1.CategoriesService])
 ], CategoriesController);
 //# sourceMappingURL=categories.controller.js.map

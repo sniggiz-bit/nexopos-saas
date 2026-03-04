@@ -30,7 +30,7 @@ let EmailService = EmailService_1 = class EmailService {
             const response = await fetch('https://api.resend.com/emails', {
                 method: 'POST',
                 headers: {
-                    'Authorization': `Bearer ${this.resendApiKey}`,
+                    Authorization: `Bearer ${this.resendApiKey}`,
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({

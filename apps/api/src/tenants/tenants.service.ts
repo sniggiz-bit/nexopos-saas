@@ -6,7 +6,7 @@ import { UpdateTenantSettingsDto } from './dto/update-tenant-settings.dto';
 
 @Injectable()
 export class TenantsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   /**
    * Creates a new tenant along with its default branch, admin user,
@@ -67,14 +67,14 @@ export class TenantsService {
     return this.prisma.tenant.findMany({
       where: search
         ? {
-            name: { contains: search, mode: 'insensitive' },
-          }
+          name: { contains: search, mode: 'insensitive' },
+        }
         : {},
       include: {
         plan: true,
         settings: true,
         users: {
-          where: { role: 'ADMIN' },
+          where: { role: 'TENANT_ADMIN' },
           take: 1,
           select: {
             id: true,

@@ -35,8 +35,6 @@ export declare class StoreService {
         planId: string | null;
         status: string;
         nextPayment: Date | null;
-        maxUsers: number | null;
-        maxProducts: number | null;
         storeSlug: string | null;
         storeSettings: import("@prisma/client/runtime/client").JsonValue | null;
     }>;

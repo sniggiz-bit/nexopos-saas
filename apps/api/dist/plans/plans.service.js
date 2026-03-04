@@ -35,7 +35,7 @@ let PlansService = class PlansService {
     async findPublic() {
         return this.prisma.plan.findMany({
             where: { isVisible: true },
-            orderBy: { price: 'asc' }
+            orderBy: { price: 'asc' },
         });
     }
 };

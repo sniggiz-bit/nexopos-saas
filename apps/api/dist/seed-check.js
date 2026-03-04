@@ -49,7 +49,7 @@ async function main() {
             select: {
                 email: true,
                 role: true,
-            }
+            },
         });
         console.log('--- USERS IN DATABASE ---');
         console.log(JSON.stringify(users, null, 2));

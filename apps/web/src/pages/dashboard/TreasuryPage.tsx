@@ -1,3 +1,4 @@
+import { DashboardLayout } from '../../components/dashboard/DashboardLayout';
 import { LoadingSpinner } from '../../components/ui/loading-spinner';
 import { useTreasuryReceivables, useTreasuryCashFlow, useTreasuryMaturities } from '../../hooks/useTreasury';
 import { CreditCard, Calendar, TrendingUp } from 'lucide-react';
@@ -10,96 +11,102 @@ export function TreasuryPage() {
     const { data: maturities, isLoading: loadingMaturities } = useTreasuryMaturities(tenantId);
 
     if (loadingReceivables || loadingCashFlow || loadingMaturities) {
-        return <LoadingSpinner />;
+        return (
+            <DashboardLayout>
+                <LoadingSpinner />
+            </DashboardLayout>
+        );
     }
 
     const totalCashFlow = cashFlow?.reduce((sum, item) => sum + item.amount, 0) || 0;
 
     return (
-        <div className="space-y-6">
-            <h1 className="text-2xl font-bold text-gray-900">Dashboard de Tesorería</h1>
+        <DashboardLayout>
+            <div className="space-y-6">
+                <h1 className="text-2xl font-bold text-gray-900">Dashboard de Tesorería</h1>
 
-            {/* KPI Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <KpiCard
-                    title="Cuentas por Cobrar"
-                    value={formatCurrency(receivables?.total || 0)}
-                    subtitle={`${receivables?.count || 0} créditos pendientes`}
-                    icon={CreditCard}
-                    color="blue"
-                />
-                <KpiCard
-                    title="Flujo de Caja (Hoy)"
-                    value={formatCurrency(totalCashFlow)}
-                    subtitle="Ingresos del día"
-                    icon={TrendingUp}
-                    color="green"
-                />
-                <KpiCard
-                    title="Próximos Vencimientos"
-                    value={maturities?.length.toString() || "0"}
-                    subtitle="En los próximos 7 días"
-                    icon={Calendar}
-                    color="yellow"
-                />
-            </div>
-
-            {/* Cash Flow Detail */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="bg-white rounded-lg shadow p-6">
-                    <h2 className="text-lg font-semibold text-gray-900 mb-4">Detalle Flujo de Caja (Hoy)</h2>
-                    <div className="space-y-4">
-                        {cashFlow?.length === 0 ? (
-                            <p className="text-gray-500 text-sm">No hay movimientos hoy.</p>
-                        ) : (
-                            cashFlow?.map((item) => (
-                                <div key={item.method} className="flex justify-between items-center border-b pb-2 last:border-0">
-                                    <span className="text-gray-700 font-medium">{item.method}</span>
-                                    <span className="text-gray-900 font-bold">{formatCurrency(item.amount)}</span>
-                                </div>
-                            ))
-                        )}
-                    </div>
+                {/* KPI Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <KpiCard
+                        title="Cuentas por Cobrar"
+                        value={formatCurrency(receivables?.total || 0)}
+                        subtitle={`${receivables?.count || 0} créditos pendientes`}
+                        icon={CreditCard}
+                        color="blue"
+                    />
+                    <KpiCard
+                        title="Flujo de Caja (Hoy)"
+                        value={formatCurrency(totalCashFlow)}
+                        subtitle="Ingresos del día"
+                        icon={TrendingUp}
+                        color="green"
+                    />
+                    <KpiCard
+                        title="Próximos Vencimientos"
+                        value={maturities?.length.toString() || "0"}
+                        subtitle="En los próximos 7 días"
+                        icon={Calendar}
+                        color="yellow"
+                    />
                 </div>
 
-                {/* Maturities Detail */}
-                <div className="bg-white rounded-lg shadow p-6">
-                    <h2 className="text-lg font-semibold text-gray-900 mb-4">Próximos Vencimientos (7 días)</h2>
-                    <div className="overflow-x-auto">
-                        <table className="min-w-full divide-y divide-gray-200">
-                            <thead>
-                                <tr>
-                                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cliente</th>
-                                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vence</th>
-                                    <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Monto</th>
-                                </tr>
-                            </thead>
-                            <tbody className="bg-white divide-y divide-gray-200">
-                                {maturities?.length === 0 ? (
+                {/* Cash Flow Detail */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div className="bg-white rounded-lg shadow p-6">
+                        <h2 className="text-lg font-semibold text-gray-900 mb-4">Detalle Flujo de Caja (Hoy)</h2>
+                        <div className="space-y-4">
+                            {cashFlow?.length === 0 ? (
+                                <p className="text-gray-500 text-sm">No hay movimientos hoy.</p>
+                            ) : (
+                                cashFlow?.map((item) => (
+                                    <div key={item.method} className="flex justify-between items-center border-b pb-2 last:border-0">
+                                        <span className="text-gray-700 font-medium">{item.method}</span>
+                                        <span className="text-gray-900 font-bold">{formatCurrency(item.amount)}</span>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Maturities Detail */}
+                    <div className="bg-white rounded-lg shadow p-6">
+                        <h2 className="text-lg font-semibold text-gray-900 mb-4">Próximos Vencimientos (7 días)</h2>
+                        <div className="overflow-x-auto">
+                            <table className="min-w-full divide-y divide-gray-200">
+                                <thead>
                                     <tr>
-                                        <td colSpan={3} className="px-3 py-4 text-center text-sm text-gray-500">
-                                            No hay vencimientos próximos.
-                                        </td>
+                                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cliente</th>
+                                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vence</th>
+                                        <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Monto</th>
                                     </tr>
-                                ) : (
-                                    maturities?.map((credit) => (
-                                        <tr key={credit.id}>
-                                            <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">{credit.customer.name}</td>
-                                            <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-500">
-                                                {credit.dueDate ? formatDate(credit.dueDate) : '-'}
-                                            </td>
-                                            <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900 text-right font-medium">
-                                                {formatCurrency(credit.balance)}
+                                </thead>
+                                <tbody className="bg-white divide-y divide-gray-200">
+                                    {maturities?.length === 0 ? (
+                                        <tr>
+                                            <td colSpan={3} className="px-3 py-4 text-center text-sm text-gray-500">
+                                                No hay vencimientos próximos.
                                             </td>
                                         </tr>
-                                    ))
-                                )}
-                            </tbody>
-                        </table>
+                                    ) : (
+                                        maturities?.map((credit) => (
+                                            <tr key={credit.id}>
+                                                <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">{credit.customer.name}</td>
+                                                <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-500">
+                                                    {credit.dueDate ? formatDate(credit.dueDate) : '-'}
+                                                </td>
+                                                <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900 text-right font-medium">
+                                                    {formatCurrency(credit.balance)}
+                                                </td>
+                                            </tr>
+                                        ))
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
+        </DashboardLayout>
     );
 }
 

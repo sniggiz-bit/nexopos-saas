@@ -27,7 +27,7 @@ let QuotesService = class QuotesService {
     }
     calculateTotals(items) {
         const subtotal = items.reduce((sum, item) => {
-            const itemTotal = (item.price * item.quantity) - (item.discount || 0);
+            const itemTotal = item.price * item.quantity - (item.discount || 0);
             return sum + itemTotal;
         }, 0);
         const tax = subtotal * 0.19;
@@ -35,9 +35,6 @@ let QuotesService = class QuotesService {
         return { subtotal, tax, total };
     }
     async generateQuoteNumber(tenantId) {
-        const date = new Date();
-        const year = date.getFullYear().toString().slice(-2);
-        const month = (date.getMonth() + 1).toString().padStart(2, '0');
         const lastQuote = await this.prisma.quote.findFirst({
             where: { tenantId },
             orderBy: { createdAt: 'desc' },
@@ -63,13 +60,13 @@ let QuotesService = class QuotesService {
                 tax,
                 total,
                 items: {
-                    create: items.map(item => ({
+                    create: items.map((item) => ({
                         productId: item.productId,
                         productName: item.productName,
                         quantity: item.quantity,
                         price: item.price,
                         discount: item.discount || 0,
-                        total: (item.price * item.quantity) - (item.discount || 0),
+                        total: item.price * item.quantity - (item.discount || 0),
                     })),
                 },
             },
@@ -77,7 +74,7 @@ let QuotesService = class QuotesService {
                 items: {
                     include: {
                         product: true,
-                    }
+                    },
                 },
                 customer: true,
             },
@@ -122,13 +119,13 @@ let QuotesService = class QuotesService {
             updateData.total = total;
             await this.prisma.quoteItem.deleteMany({ where: { quoteId: id } });
             updateData.items = {
-                create: items.map(item => ({
+                create: items.map((item) => ({
                     productId: item.productId,
                     productName: item.productName,
                     quantity: item.quantity,
                     price: item.price,
                     discount: item.discount || 0,
-                    total: (item.price * item.quantity) - (item.discount || 0),
+                    total: item.price * item.quantity - (item.discount || 0),
                 })),
             };
         }
@@ -138,7 +135,7 @@ let QuotesService = class QuotesService {
             include: {
                 items: true,
                 customer: true,
-            }
+            },
         });
     }
     async remove(id) {
@@ -171,7 +168,7 @@ let QuotesService = class QuotesService {
             customerId: quote.customerId ?? undefined,
             quoteId: quote.id,
             status: 'PRE_SALE',
-            items: quote.items.map(item => ({
+            items: quote.items.map((item) => ({
                 productId: item.productId,
                 quantity: Number(item.quantity),
             })),
@@ -184,7 +181,7 @@ let QuotesService = class QuotesService {
         return sale;
     }
     async generatePdf(id) {
-        const quote = await this.findOne(id);
+        const quote = (await this.findOne(id));
         return new Promise((resolve) => {
             const doc = new pdfkit_1.default({ margin: 50 });
             const buffers = [];
@@ -195,7 +192,9 @@ let QuotesService = class QuotesService {
             });
             doc.fontSize(20).text('COTIZACIÓN', { align: 'center' });
             doc.moveDown();
-            doc.fontSize(12).text(`Fecha: ${quote.issueDate.toLocaleDateString()}`, { align: 'right' });
+            doc.fontSize(12).text(`Fecha: ${quote.issueDate.toLocaleDateString()}`, {
+                align: 'right',
+            });
             doc.text(`Cotización #: ${quote.number}`, { align: 'right' });
             doc.moveDown();
             doc.text('Cliente:', { underline: true });
@@ -219,7 +218,7 @@ let QuotesService = class QuotesService {
             doc.text('Total', 450, tableTop);
             doc.font('Helvetica');
             let y = tableTop + 25;
-            quote.items.forEach(item => {
+            quote.items.forEach((item) => {
                 doc.text((item.productName || item.product.name).substring(0, 35), 50, y);
                 doc.text(item.quantity.toString(), 280, y);
                 doc.text(`$${item.price.toLocaleString()}`, 350, y);
@@ -232,14 +231,20 @@ let QuotesService = class QuotesService {
             y += 15;
             doc.text(`IVA (19%): $${quote.tax.toLocaleString()}`, 350, y);
             y += 20;
-            doc.font('Helvetica-Bold').fontSize(14).text(`TOTAL: $${quote.total.toLocaleString()}`, 350, y);
+            doc
+                .font('Helvetica-Bold')
+                .fontSize(14)
+                .text(`TOTAL: $${quote.total.toLocaleString()}`, 350, y);
             if (quote.notes) {
                 doc.moveDown();
                 doc.fontSize(10).font('Helvetica-Bold').text('Notas:');
                 doc.font('Helvetica').text(quote.notes);
             }
             doc.moveDown();
-            doc.fontSize(10).font('Helvetica').text('Nota: Este documento es una cotización y no representa una boleta o factura fiscal.', { align: 'center' });
+            doc
+                .fontSize(10)
+                .font('Helvetica')
+                .text('Nota: Este documento es una cotización y no representa una boleta o factura fiscal.', { align: 'center' });
             doc.end();
         });
     }

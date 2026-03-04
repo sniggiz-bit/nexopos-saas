@@ -21,10 +21,15 @@ let AnnouncementsService = class AnnouncementsService {
         return this.prisma.announcement.create({ data });
     }
     async findAll() {
-        return this.prisma.announcement.findMany({ orderBy: { createdAt: 'desc' } });
+        return this.prisma.announcement.findMany({
+            orderBy: { createdAt: 'desc' },
+        });
     }
     async findActive() {
-        return this.prisma.announcement.findMany({ where: { isActive: true }, orderBy: { createdAt: 'desc' } });
+        return this.prisma.announcement.findMany({
+            where: { isActive: true },
+            orderBy: { createdAt: 'desc' },
+        });
     }
     async update(id, data) {
         return this.prisma.announcement.update({ where: { id }, data });

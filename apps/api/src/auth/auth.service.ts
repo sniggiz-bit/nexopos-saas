@@ -179,7 +179,7 @@ export class AuthService {
           email: dto.email,
           name: dto.userName,
           password: hashedPassword,
-          role: 'ADMIN',
+          role: 'TENANT_ADMIN',
         },
       });
 

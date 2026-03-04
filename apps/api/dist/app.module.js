@@ -33,8 +33,11 @@ const plans_module_1 = require("./plans/plans.module");
 const tenants_module_1 = require("./tenants/tenants.module");
 const announcements_module_1 = require("./announcements/announcements.module");
 const system_logs_module_1 = require("./system-logs/system-logs.module");
+const branches_module_1 = require("./branches/branches.module");
 const transfers_module_1 = require("./transfers/transfers.module");
 const store_module_1 = require("./store/store.module");
+const suppliers_module_1 = require("./suppliers/suppliers.module");
+const purchases_module_1 = require("./purchases/purchases.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -66,8 +69,11 @@ exports.AppModule = AppModule = __decorate([
             tenants_module_1.TenantsModule,
             announcements_module_1.AnnouncementsModule,
             system_logs_module_1.SystemLogsModule,
+            branches_module_1.BranchesModule,
             transfers_module_1.TransfersModule,
             store_module_1.StoreModule,
+            suppliers_module_1.SuppliersModule,
+            purchases_module_1.PurchasesModule,
         ],
         controllers: [app_controller_1.AppController, debug_controller_1.DebugController],
         providers: [app_service_1.AppService],

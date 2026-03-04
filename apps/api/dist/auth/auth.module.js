@@ -14,6 +14,9 @@ const jwt_1 = require("@nestjs/jwt");
 const config_1 = require("@nestjs/config");
 const email_module_1 = require("../email/email.module");
 const prisma_module_1 = require("../prisma/prisma.module");
+const tenants_module_1 = require("../tenants/tenants.module");
+const feature_guard_1 = require("./feature.guard");
+const resource_limit_guard_1 = require("./resource-limit.guard");
 let AuthModule = class AuthModule {
 };
 exports.AuthModule = AuthModule;
@@ -22,6 +25,7 @@ exports.AuthModule = AuthModule = __decorate([
         imports: [
             prisma_module_1.PrismaModule,
             email_module_1.EmailModule,
+            (0, common_1.forwardRef)(() => tenants_module_1.TenantsModule),
             jwt_1.JwtModule.registerAsync({
                 imports: [config_1.ConfigModule],
                 useFactory: async (configService) => ({
@@ -32,8 +36,8 @@ exports.AuthModule = AuthModule = __decorate([
             }),
         ],
         controllers: [auth_controller_1.AuthController],
-        providers: [auth_service_1.AuthService],
-        exports: [auth_service_1.AuthService, jwt_1.JwtModule],
+        providers: [auth_service_1.AuthService, feature_guard_1.FeatureGuard, resource_limit_guard_1.ResourceLimitGuard],
+        exports: [auth_service_1.AuthService, jwt_1.JwtModule, feature_guard_1.FeatureGuard, resource_limit_guard_1.ResourceLimitGuard],
     })
 ], AuthModule);
 //# sourceMappingURL=auth.module.js.map

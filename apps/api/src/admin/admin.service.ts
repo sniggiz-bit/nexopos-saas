@@ -3,7 +3,7 @@ import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class AdminService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   async getDashboardMetrics() {
     const totalTenants = await this.prisma.tenant.count();
@@ -42,11 +42,11 @@ export class AdminService {
 
     const whereClause = search
       ? {
-          OR: [
-            { name: { contains: search, mode: 'insensitive' as const } },
-            { rut: { contains: search, mode: 'insensitive' as const } },
-          ],
-        }
+        OR: [
+          { name: { contains: search, mode: 'insensitive' as const } },
+          { rut: { contains: search, mode: 'insensitive' as const } },
+        ],
+      }
       : {};
 
     const [tenants, total] = await Promise.all([
@@ -57,7 +57,7 @@ export class AdminService {
         include: {
           users: {
             where: {
-              role: 'ADMIN',
+              role: 'TENANT_ADMIN',
             },
             take: 1,
             select: {

@@ -13,6 +13,7 @@ export declare class BranchesController {
         createdAt: Date;
         updatedAt: Date;
         isMain: boolean;
+        isActive: boolean;
         tenantId: string;
     }>;
     findAll(req: any): never[] | Promise<{
@@ -22,6 +23,34 @@ export declare class BranchesController {
         createdAt: Date;
         updatedAt: Date;
         isMain: boolean;
+        isActive: boolean;
         tenantId: string;
     }[]>;
+    findAllSystemWide(): Promise<({
+        tenant: {
+            name: string;
+            id: string;
+        };
+    } & {
+        name: string;
+        id: string;
+        address: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+        isMain: boolean;
+        isActive: boolean;
+        tenantId: string;
+    })[]>;
+    updateStatus(id: string, statusDto: {
+        isActive: boolean;
+    }): Promise<{
+        name: string;
+        id: string;
+        address: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+        isMain: boolean;
+        isActive: boolean;
+        tenantId: string;
+    }>;
 }

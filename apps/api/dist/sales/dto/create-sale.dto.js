@@ -60,10 +60,12 @@ class CreateSaleDto {
 exports.CreateSaleDto = CreateSaleDto;
 __decorate([
     (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
     __metadata("design:type", String)
 ], CreateSaleDto.prototype, "tenantId", void 0);
 __decorate([
     (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
     __metadata("design:type", String)
 ], CreateSaleDto.prototype, "branchId", void 0);
 __decorate([

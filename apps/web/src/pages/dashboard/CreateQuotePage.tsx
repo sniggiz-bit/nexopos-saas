@@ -50,8 +50,8 @@ export function CreateQuotePage() {
                 customerId,
                 items: items.map(item => ({
                     productId: item.productId,
-                    quantity: item.quantity,
-                    price: item.price
+                    quantity: Number(item.quantity) || 0,
+                    price: Number(item.price) || 0
                 }))
             });
             clearCart();

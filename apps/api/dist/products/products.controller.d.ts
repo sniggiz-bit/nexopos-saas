@@ -33,6 +33,7 @@ export declare class ProductsController {
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        isActive: boolean;
         tenantId: string;
         sku: string | null;
         price: number;
@@ -43,12 +44,11 @@ export declare class ProductsController {
         image: string | null;
         description: string | null;
         isPublic: boolean;
-        isActive: boolean;
         minStock: number;
         unitType: import("@prisma/client").$Enums.UnitType;
     }[]>;
-    findAll(tenantId?: string, branchId?: string): Promise<ProductResponseDto[]>;
-    findOne(id: string, tenantId?: string, branchId?: string): Promise<ProductResponseDto>;
+    findAll(tenantId?: string): Promise<ProductResponseDto[]>;
+    findOne(id: string, tenantId?: string): Promise<ProductResponseDto>;
     create(createProductDto: CreateProductDto): Promise<ProductResponseDto>;
     update(id: string, updateProductDto: UpdateProductDto): Promise<ProductResponseDto>;
     remove(id: string): Promise<void>;

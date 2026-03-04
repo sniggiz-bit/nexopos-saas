@@ -6,20 +6,20 @@ export type DiscountType = 'PERCENTAGE' | 'FIXED';
 export interface CartItemData {
     productId: string;
     name: string;
-    price: number;
-    quantity: number;
+    price: number | '';
+    quantity: number | '';
     unitType: 'UNIT' | 'WEIGHT';
     discountType?: DiscountType;
-    discountValue?: number;
+    discountValue?: number | '';
 }
 
 interface CartContextType {
     items: CartItemData[];
     addItem: (product: Product, quantity?: number) => void;
-    updateQuantity: (productId: string, quantity: number) => void;
+    updateQuantity: (productId: string, quantity: number | '') => void;
     removeItem: (productId: string) => void;
-    applyDiscount: (productId: string, type: DiscountType | undefined, value?: number) => void;
-    updatePrice: (productId: string, price: number) => void;
+    applyDiscount: (productId: string, type: DiscountType | undefined, value?: number | '') => void;
+    updatePrice: (productId: string, price: number | '') => void;
     clearCart: () => void;
     totals: {
         total: number;
@@ -41,7 +41,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
             if (existingItem) {
                 return prev.map((item) =>
                     item.productId === product.id
-                        ? { ...item, quantity: item.quantity + quantity }
+                        ? { ...item, quantity: (Number(item.quantity) || 0) + (Number(quantity) || 0) }
                         : item
                 );
             } else {
@@ -59,8 +59,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         });
     }, []);
 
-    const updateQuantity = useCallback((productId: string, quantity: number) => {
-        if (quantity < 0) return; // Prevent negative quantity, 0 is allowed (maybe used for removal in UI but explicit remove is better)
+    const updateQuantity = useCallback((productId: string, quantity: number | '') => {
+        if (typeof quantity === 'number' && quantity < 0) return; // Prevent negative quantity
         if (quantity === 0) {
             removeItem(productId);
             return;
@@ -72,8 +72,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         );
     }, []);
 
-    const updatePrice = useCallback((productId: string, price: number) => {
-        if (price < 0) return;
+    const updatePrice = useCallback((productId: string, price: number | '') => {
+        if (typeof price === 'number' && price < 0) return;
         setItems((prev) =>
             prev.map((item) =>
                 item.productId === productId ? { ...item, price } : item
@@ -85,7 +85,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         setItems((prev) => prev.filter((item) => item.productId !== productId));
     }, []);
 
-    const applyDiscount = useCallback((productId: string, type: DiscountType | undefined, value?: number) => {
+    const applyDiscount = useCallback((productId: string, type: DiscountType | undefined, value?: number | '') => {
         setItems((prev) =>
             prev.map((item) =>
                 item.productId === productId
@@ -101,12 +101,13 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
     const totals = useMemo(() => {
         const totalWithDiscounts = items.reduce((sum, item) => {
-            let itemTotal = item.price * item.quantity;
-            if (item.discountValue && item.discountType) {
+            let itemTotal = (Number(item.price) || 0) * (Number(item.quantity) || 0);
+            const dVal = Number(item.discountValue) || 0;
+            if (dVal && item.discountType) {
                 if (item.discountType === 'PERCENTAGE') {
-                    itemTotal -= (itemTotal * item.discountValue) / 100;
+                    itemTotal -= (itemTotal * dVal) / 100;
                 } else {
-                    itemTotal -= item.discountValue;
+                    itemTotal -= dVal;
                 }
             }
             return sum + Math.max(0, itemTotal);
@@ -118,7 +119,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         // Original total based on current prices (which might have been edited)
         // If we want track "List Price" vs "Edited Price" we would need more fields
         // For now, assuming "totalOriginal" is just Sum(Price * Qty)
-        const totalOriginal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+        const totalOriginal = items.reduce((sum, item) => sum + ((Number(item.price) || 0) * (Number(item.quantity) || 0)), 0);
         const totalDiscount = totalOriginal - totalWithDiscounts;
 
         return {

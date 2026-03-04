@@ -27,7 +27,7 @@ let CategoriesService = class CategoriesService {
             },
             orderBy: { name: 'asc' },
         });
-        return categories.map(cat => ({
+        return categories.map((cat) => ({
             id: cat.id,
             name: cat.name,
             productCount: cat._count.products,
@@ -52,9 +52,9 @@ let CategoriesService = class CategoriesService {
             productCount: 0,
         };
     }
-    async update(id, updateCategoryDto) {
+    async update(id, tenantId, updateCategoryDto) {
         const category = await this.prisma.category.update({
-            where: { id },
+            where: { id, tenantId },
             data: updateCategoryDto,
             include: {
                 _count: {
@@ -68,9 +68,9 @@ let CategoriesService = class CategoriesService {
             productCount: category._count.products,
         };
     }
-    async remove(id) {
+    async remove(id, tenantId) {
         const category = await this.prisma.category.findUnique({
-            where: { id },
+            where: { id, tenantId },
             include: {
                 _count: {
                     select: { products: true },
@@ -84,7 +84,7 @@ let CategoriesService = class CategoriesService {
             throw new common_1.ConflictException(`Cannot delete category with ${category._count.products} associated products`);
         }
         await this.prisma.category.delete({
-            where: { id },
+            where: { id, tenantId },
         });
     }
 };

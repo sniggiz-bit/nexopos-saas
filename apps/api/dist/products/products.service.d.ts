@@ -39,6 +39,7 @@ export declare class ProductsService {
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        isActive: boolean;
         tenantId: string;
         sku: string | null;
         price: number;
@@ -49,7 +50,6 @@ export declare class ProductsService {
         image: string | null;
         description: string | null;
         isPublic: boolean;
-        isActive: boolean;
         minStock: number;
         unitType: import("@prisma/client").$Enums.UnitType;
     }[]>;

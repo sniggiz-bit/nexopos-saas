@@ -11,6 +11,7 @@ export declare class SalesController {
             createdAt: Date;
             updatedAt: Date;
             isMain: boolean;
+            isActive: boolean;
             tenantId: string;
         };
         user: {
@@ -55,6 +56,7 @@ export declare class SalesController {
                 id: string;
                 createdAt: Date;
                 updatedAt: Date;
+                isActive: boolean;
                 tenantId: string;
                 sku: string | null;
                 price: number;
@@ -65,7 +67,6 @@ export declare class SalesController {
                 image: string | null;
                 description: string | null;
                 isPublic: boolean;
-                isActive: boolean;
                 minStock: number;
                 stock: number | null;
                 unitType: import("@prisma/client").$Enums.UnitType;
@@ -95,7 +96,7 @@ export declare class SalesController {
         dtePdfUrl: string | null;
         internalReceiptUrl: string | null;
     })[]>;
-    create(createSaleDto: CreateSaleDto): Promise<any>;
+    create(createSaleDto: CreateSaleDto, user: any): Promise<any>;
     complete(id: string, payments: CreatePaymentDto[]): Promise<({
         customer: {
             name: string;

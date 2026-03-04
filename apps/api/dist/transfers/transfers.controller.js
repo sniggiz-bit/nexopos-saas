@@ -24,8 +24,11 @@ let TransfersController = class TransfersController {
     create(createTransferDto, req) {
         return this.transfersService.create({
             ...createTransferDto,
-            userId: req.user.id
+            userId: req.user.sub,
         });
+    }
+    findAll(req) {
+        return this.transfersService.findAll(req.user.tenantId);
     }
 };
 exports.TransfersController = TransfersController;
@@ -37,6 +40,13 @@ __decorate([
     __metadata("design:paramtypes", [Object, Object]),
     __metadata("design:returntype", void 0)
 ], TransfersController.prototype, "create", null);
+__decorate([
+    (0, common_1.Get)(),
+    __param(0, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], TransfersController.prototype, "findAll", null);
 exports.TransfersController = TransfersController = __decorate([
     (0, common_1.Controller)('transfers'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),

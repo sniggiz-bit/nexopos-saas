@@ -66,12 +66,28 @@ let DashboardService = class DashboardService {
                 },
             },
         });
-        const lowStockCount = products.filter(product => {
+        const lowStockCount = products.filter((product) => {
             const stock = product.inventory.reduce((total, inv) => total + Number(inv.quantity), 0);
             return stock <= product.minStock;
         }).length;
+        const totalSuppliers = await this.prisma.supplier.count({
+            where: { tenantId },
+        });
+        const totalBranches = await this.prisma.branch.count({
+            where: { tenantId, isActive: true },
+        });
+        const totalCustomers = await this.prisma.customer.count({
+            where: { tenantId },
+        });
+        const totalQuotes = await this.prisma.quote.count({
+            where: { tenantId },
+        });
         return {
             totalProducts,
+            totalSuppliers,
+            totalBranches,
+            totalCustomers,
+            totalQuotes,
             salesToday,
             monthRevenue,
             lowStockCount,

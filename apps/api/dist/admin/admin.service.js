@@ -20,7 +20,7 @@ let AdminService = class AdminService {
     async getDashboardMetrics() {
         const totalTenants = await this.prisma.tenant.count();
         const activeTenants = await this.prisma.tenant.count({
-            where: {}
+            where: {},
         });
         const mrr = activeTenants * 25000;
         const startOfDay = new Date();
@@ -28,24 +28,26 @@ let AdminService = class AdminService {
         const activeUsers = await this.prisma.user.count({
             where: {
                 updatedAt: {
-                    gte: startOfDay
-                }
-            }
+                    gte: startOfDay,
+                },
+            },
         });
         return {
             totalTenants,
             mrr,
-            activeUsers
+            activeUsers,
         };
     }
     async getTenants(page = 1, limit = 10, search) {
         const skip = (page - 1) * limit;
-        const whereClause = search ? {
-            OR: [
-                { name: { contains: search, mode: 'insensitive' } },
-                { rut: { contains: search, mode: 'insensitive' } }
-            ]
-        } : {};
+        const whereClause = search
+            ? {
+                OR: [
+                    { name: { contains: search, mode: 'insensitive' } },
+                    { rut: { contains: search, mode: 'insensitive' } },
+                ],
+            }
+            : {};
         const [tenants, total] = await Promise.all([
             this.prisma.tenant.findMany({
                 skip,
@@ -54,37 +56,40 @@ let AdminService = class AdminService {
                 include: {
                     users: {
                         where: {
-                            role: 'ADMIN'
+                            role: 'TENANT_ADMIN',
                         },
                         take: 1,
                         select: {
                             id: true,
                             name: true,
-                            email: true
-                        }
+                            email: true,
+                        },
                     },
                     _count: {
-                        select: { branches: true, users: true }
-                    }
+                        select: { branches: true, users: true },
+                    },
                 },
-                orderBy: { createdAt: 'desc' }
+                orderBy: { createdAt: 'desc' },
             }),
-            this.prisma.tenant.count({ where: whereClause })
+            this.prisma.tenant.count({ where: whereClause }),
         ]);
         return {
-            data: tenants.map(t => ({
+            data: tenants.map((t) => ({
                 ...t,
                 owner: t.users[0] || { name: 'N/A', email: 'N/A' },
-                status: 'ACTIVE'
+                status: 'ACTIVE',
             })),
             total,
             page,
-            lastPage: Math.ceil(total / limit)
+            lastPage: Math.ceil(total / limit),
         };
     }
     async toggleTenantStatus(id, status) {
         await this.prisma.tenant.findUniqueOrThrow({ where: { id } });
-        return { success: true, message: `Tenant ${id} status changed to ${status}` };
+        return {
+            success: true,
+            message: `Tenant ${id} status changed to ${status}`,
+        };
     }
 };
 exports.AdminService = AdminService;

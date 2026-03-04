@@ -56,21 +56,22 @@ export function QuoteItemsTable() {
 
 interface QuoteItemRowProps {
     item: CartItemData
-    updateQuantity: (id: string, qty: number) => void
-    updatePrice: (id: string, price: number) => void
-    applyDiscount: (id: string, type: DiscountType | undefined, val?: number) => void
+    updateQuantity: (id: string, qty: number | '') => void
+    updatePrice: (id: string, price: number | '') => void
+    applyDiscount: (id: string, type: DiscountType | undefined, val?: number | '') => void
     removeItem: (id: string) => void
 }
 
 function QuoteItemRow({ item, updateQuantity, updatePrice, applyDiscount, removeItem }: QuoteItemRowProps) {
 
     const calculateLineTotal = () => {
-        let total = item.price * item.quantity;
-        if (item.discountValue && item.discountType) {
+        let total = (Number(item.price) || 0) * (Number(item.quantity) || 0);
+        const dVal = Number(item.discountValue) || 0;
+        if (dVal && item.discountType) {
             if (item.discountType === 'PERCENTAGE') {
-                total -= (total * item.discountValue) / 100;
+                total -= (total * dVal) / 100;
             } else {
-                total -= item.discountValue;
+                total -= dVal;
             }
         }
         return Math.max(0, total);
@@ -91,7 +92,7 @@ function QuoteItemRow({ item, updateQuantity, updatePrice, applyDiscount, remove
                     min="1"
                     className="text-center h-8"
                     value={item.quantity}
-                    onChange={(e) => updateQuantity(item.productId, parseInt(e.target.value) || 0)}
+                    onChange={(e) => updateQuantity(item.productId, e.target.value === '' ? '' : parseInt(e.target.value) || 0)}
                 />
             </TableCell>
             <TableCell>
@@ -102,7 +103,7 @@ function QuoteItemRow({ item, updateQuantity, updatePrice, applyDiscount, remove
                         min="0"
                         className="text-right pl-5 h-8"
                         value={item.price}
-                        onChange={(e) => updatePrice(item.productId, parseFloat(e.target.value) || 0)}
+                        onChange={(e) => updatePrice(item.productId, e.target.value === '' ? '' : parseFloat(e.target.value) || 0)}
                     />
                 </div>
             </TableCell>
@@ -116,8 +117,8 @@ function QuoteItemRow({ item, updateQuantity, updatePrice, applyDiscount, remove
                             placeholder="0"
                             value={item.discountValue ?? ''}
                             onChange={(e) => {
-                                const val = parseFloat(e.target.value);
-                                applyDiscount(item.productId, item.discountType || 'PERCENTAGE', isNaN(val) ? undefined : val)
+                                const val = e.target.value === '' ? '' : parseFloat(e.target.value);
+                                applyDiscount(item.productId, item.discountType || 'PERCENTAGE', Number.isNaN(val as number) && val !== '' ? undefined : val)
                             }}
                         />
                     </div>

@@ -4,7 +4,7 @@ interface User {
     id: string;
     email: string;
     name: string | null;
-    role: 'ADMIN' | 'CASHIER' | 'USER' | 'SUPER_ADMIN';
+    role: 'TENANT_ADMIN' | 'CASHIER' | 'MANAGER' | 'SUPER_ADMIN';
     tenantId: string;
     branchId: string | null;
 }
@@ -31,7 +31,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         if (storedToken && storedUser) {
             try {
-                setUser(JSON.parse(storedUser));
+                const parsedUser = JSON.parse(storedUser);
+
+                // Migrate legacy cached roles to prevent infinite redirect loops
+                if (parsedUser.role === 'ADMIN') parsedUser.role = 'TENANT_ADMIN';
+                if (parsedUser.role === 'USER') parsedUser.role = 'MANAGER';
+
+                setUser(parsedUser);
                 setToken(storedToken);
             } catch (error) {
                 console.error("Failed to parse user data:", error);

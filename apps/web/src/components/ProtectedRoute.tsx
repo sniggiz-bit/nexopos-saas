@@ -2,7 +2,7 @@ import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 interface ProtectedRouteProps {
-    allowedRoles?: ('ADMIN' | 'CASHIER' | 'USER' | 'SUPER_ADMIN')[];
+    allowedRoles?: ('TENANT_ADMIN' | 'CASHIER' | 'MANAGER' | 'SUPER_ADMIN')[];
 }
 
 export function ProtectedRoute({ allowedRoles }: ProtectedRouteProps) {
@@ -23,7 +23,7 @@ export function ProtectedRoute({ allowedRoles }: ProtectedRouteProps) {
             if (user.role === 'CASHIER') {
                 return <Navigate to="/pos" replace />;
             }
-            if (user.role === 'ADMIN') {
+            if (user.role === 'TENANT_ADMIN') {
                 return <Navigate to="/dashboard" replace />;
             }
             return <Navigate to="/" replace />;

@@ -49,6 +49,25 @@ let BranchesService = class BranchesService {
             where: { id },
         });
     }
+    async findAllSystemWide() {
+        return this.prisma.branch.findMany({
+            include: {
+                tenant: {
+                    select: {
+                        name: true,
+                        id: true,
+                    },
+                },
+            },
+            orderBy: { createdAt: 'desc' },
+        });
+    }
+    async updateStatus(id, isActive) {
+        return this.prisma.branch.update({
+            where: { id },
+            data: { isActive },
+        });
+    }
 };
 exports.BranchesService = BranchesService;
 exports.BranchesService = BranchesService = __decorate([
