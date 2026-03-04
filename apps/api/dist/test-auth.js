@@ -58,7 +58,9 @@ async function main() {
         }
         console.log(`✅ User found. Role: ${user.role}, Tenant: ${user.tenantId}`);
         if (user.tenantId) {
-            const tenant = await prisma.tenant.findUnique({ where: { id: user.tenantId } });
+            const tenant = await prisma.tenant.findUnique({
+                where: { id: user.tenantId },
+            });
             if (tenant) {
                 console.log(`✅ Tenant found: ${tenant.name} settings:`, tenant.storeSettings);
             }

@@ -16,7 +16,7 @@ export declare class CategoriesService {
     constructor(prisma: PrismaService);
     findAll(tenantId: string): Promise<CategoryResponseDto[]>;
     create(createCategoryDto: CreateCategoryDto): Promise<CategoryResponseDto>;
-    update(id: string, updateCategoryDto: UpdateCategoryDto): Promise<CategoryResponseDto>;
-    remove(id: string): Promise<void>;
+    update(id: string, tenantId: string, updateCategoryDto: UpdateCategoryDto): Promise<CategoryResponseDto>;
+    remove(id: string, tenantId: string): Promise<void>;
 }
 export {};

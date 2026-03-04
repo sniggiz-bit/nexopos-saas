@@ -13,7 +13,12 @@ import {
     AlertTriangle,
     BarChart3,
     History,
-    ShoppingBag // Changed Store to ShoppingBag just in case
+    ShoppingBag,
+    Truck,
+    ShoppingCart,
+    UserCog,
+    ArrowRightLeft,
+    Store,
 } from 'lucide-react';
 import { Logo } from '../ui/Logo';
 
@@ -21,22 +26,54 @@ interface DashboardLayoutProps {
     children: ReactNode;
 }
 
-const navigation = [
-    { name: 'Resumen', href: '/dashboard', icon: LayoutDashboard },
-    { name: 'Ventas', href: '/dashboard/sales', icon: History },
-    { name: 'Productos', href: '/dashboard/products', icon: Package },
-    { name: 'Inventario', href: '/dashboard/inventory', icon: Warehouse },
-    { name: 'Sucursales', href: '/dashboard/branches', icon: ShoppingBag }, // Changed from Store
-    { name: 'Categorías', href: '/dashboard/categories', icon: FolderTree },
-    { name: 'Marcas', href: '/dashboard/brands', icon: Tag },
-    { name: 'Clientes', href: '/dashboard/clients', icon: Users },
-    { name: 'Cotizaciones', href: '/dashboard/quotes', icon: FileText },
-    { name: 'Créditos', href: '/dashboard/credits', icon: CreditCard },
-    { name: 'Tesorería', href: '/dashboard/treasury', icon: BarChart3 },
-    { name: 'Stock Crítico', href: '/dashboard/reports/critical-stock', icon: AlertTriangle },
-    { name: 'Tienda Online', href: '/dashboard/ecommerce', icon: ShoppingBag },
-    { name: 'Configuración', href: '/dashboard/settings', icon: Settings },
+const navigationGroups = [
+    {
+        title: 'Principal',
+        items: [
+            { name: 'Resumen', href: '/dashboard', icon: LayoutDashboard },
+        ]
+    },
+    {
+        title: 'Ventas',
+        items: [
+            { name: 'Punto de Venta', href: '/pos', icon: ShoppingCart },
+            { name: 'Ventas', href: '/dashboard/sales', icon: History },
+            { name: 'Cotizaciones', href: '/dashboard/quotes', icon: FileText },
+            { name: 'Clientes', href: '/dashboard/clients', icon: Users },
+        ]
+    },
+    {
+        title: 'Catálogo e Inventario',
+        items: [
+            { name: 'Productos', href: '/dashboard/products', icon: Package },
+            { name: 'Categorías', href: '/dashboard/categories', icon: FolderTree },
+            { name: 'Marcas', href: '/dashboard/brands', icon: Tag },
+            { name: 'Inventario', href: '/dashboard/inventory', icon: Warehouse },
+            { name: 'Traspasos', href: '/dashboard/transfers', icon: ArrowRightLeft },
+            { name: 'Stock Crítico', href: '/dashboard/reports/critical-stock', icon: AlertTriangle },
+            { name: 'Tienda Online', href: '/dashboard/ecommerce', icon: ShoppingBag },
+        ]
+    },
+    {
+        title: 'Compras',
+        items: [
+            { name: 'Compras', href: '/dashboard/purchases', icon: ShoppingBag },
+            { name: 'Proveedores', href: '/dashboard/suppliers', icon: Truck },
+        ]
+    },
+    {
+        title: 'Administración',
+        items: [
+            { name: 'Sucursales', href: '/dashboard/branches', icon: Store },
+            { name: 'Personal', href: '/dashboard/users', icon: UserCog },
+            { name: 'Créditos', href: '/dashboard/credits', icon: CreditCard },
+            { name: 'Tesorería', href: '/dashboard/treasury', icon: BarChart3 },
+            { name: 'Configuración', href: '/dashboard/settings', icon: Settings },
+        ]
+    }
 ];
+
+const flattenedNavigation = navigationGroups.flatMap(group => group.items);
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
     const location = useLocation();
@@ -48,6 +85,8 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         localStorage.removeItem('impersonating');
         window.location.href = '/login';
     };
+
+    const isCollapsed = false; // Add state hook if sidebar collapsing is implemented
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -74,28 +113,36 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                     </div>
 
                     {/* Navigation */}
-                    <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
-                        {navigation.map((item) => {
-                            const isActive = location.pathname === item.href;
-                            const Icon = item.icon;
+                    <nav className="flex-1 px-4 py-6 overflow-y-auto custom-scrollbar">
+                        {navigationGroups.map((group, groupIndex) => (
+                            <div key={group.title} className={groupIndex !== 0 ? "mt-6" : ""}>
+                                {!isCollapsed && (
+                                    <h3 className="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                                        {group.title}
+                                    </h3>
+                                )}
+                                <div className="space-y-1">
+                                    {group.items.map((item) => {
+                                        const isActive = location.pathname === item.href;
+                                        const Icon = item.icon;
 
-                            return (
-                                <Link
-                                    key={item.name}
-                                    to={item.href}
-                                    className={`
-                    flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors
-                    ${isActive
-                                            ? 'bg-blue-50 text-blue-700'
-                                            : 'text-gray-700 hover:bg-gray-100'
-                                        }
-                  `}
-                                >
-                                    <Icon className="w-5 h-5 mr-3" />
-                                    {item.name}
-                                </Link>
-                            );
-                        })}
+                                        return (
+                                            <Link
+                                                key={item.name}
+                                                to={item.href}
+                                                className={`flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors ${isActive
+                                                    ? 'bg-blue-50 text-blue-700'
+                                                    : 'text-gray-700 hover:bg-gray-100'
+                                                    }`}
+                                            >
+                                                <Icon className="w-5 h-5 mr-3" />
+                                                {!isCollapsed && item.name}
+                                            </Link>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        ))}
                     </nav>
 
                     {/* User Info */}
@@ -121,7 +168,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                 <header className="bg-white border-b border-gray-200">
                     <div className="px-8 py-4">
                         <h2 className="text-2xl font-semibold text-gray-900">
-                            {navigation.find(item => item.href === location.pathname)?.name || 'Dashboard'}
+                            {flattenedNavigation.find(item => item.href === location.pathname)?.name || 'Dashboard'}
                         </h2>
                     </div>
                 </header>

@@ -63,7 +63,7 @@ export function PaymentModal({
     const [paymentType, setPaymentType] = useState<PaymentType>('SINGLE');
     const [singleMethod, setSingleMethod] = useState<string>(PaymentMethod.CASH);
     const [cashReceived, setCashReceived] = useState<string>('');
-    const [mixedPayments, setMixedPayments] = useState<Record<string, number>>({
+    const [mixedPayments, setMixedPayments] = useState<Record<string, number | ''>>({
         [PaymentMethod.CASH]: 0,
         [PaymentMethod.DEBIT]: 0,
         [PaymentMethod.CARD]: 0,
@@ -95,7 +95,7 @@ export function PaymentModal({
     }, [isOpen]);
 
     const totalMixed = useMemo(() => {
-        return Object.values(mixedPayments).reduce((sum, val) => sum + val, 0);
+        return Object.values(mixedPayments).reduce((sum, val) => sum + (Number(val) || 0), 0);
     }, [mixedPayments]);
 
     const remaining = total - totalMixed;
@@ -114,8 +114,8 @@ export function PaymentModal({
             onConfirm([{ paymentMethod: singleMethod, amount: total }]);
         } else {
             const payments = Object.entries(mixedPayments)
-                .filter(([_, amount]) => amount > 0)
-                .map(([method, amount]) => ({ paymentMethod: method, amount }));
+                .filter(([_, amount]) => (Number(amount) || 0) > 0)
+                .map(([method, amount]) => ({ paymentMethod: method, amount: Number(amount) || 0 }));
             onConfirm(payments);
         }
     };
@@ -356,10 +356,10 @@ export function PaymentModal({
                                         </div>
                                         <Input
                                             type="number"
-                                            value={mixedPayments[m.id] || ''}
+                                            value={mixedPayments[m.id] ?? ''}
                                             onChange={(e) => setMixedPayments({
                                                 ...mixedPayments,
-                                                [m.id]: parseFloat(e.target.value) || 0
+                                                [m.id]: e.target.value === '' ? '' : parseFloat(e.target.value) || 0
                                             })}
                                             className="pl-24 h-10 font-bold border-slate-200 dark:border-slate-800 focus-visible:ring-indigo-500 text-right"
                                             placeholder="0"

@@ -14,8 +14,8 @@ export declare class BrandResponseDto {
 export declare class BrandsController {
     private readonly brandsService;
     constructor(brandsService: BrandsService);
-    findAll(tenantId?: string): Promise<BrandResponseDto[]>;
-    create(createBrandDto: CreateBrandDto): Promise<BrandResponseDto>;
-    update(id: string, updateBrandDto: UpdateBrandDto): Promise<BrandResponseDto>;
-    remove(id: string): Promise<void>;
+    findAll(user: any): Promise<BrandResponseDto[]>;
+    create(createBrandDto: CreateBrandDto, user: any): Promise<BrandResponseDto>;
+    update(id: string, updateBrandDto: UpdateBrandDto, user: any): Promise<BrandResponseDto>;
+    remove(id: string, user: any): Promise<void>;
 }

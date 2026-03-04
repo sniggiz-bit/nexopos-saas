@@ -1,12 +1,14 @@
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
 import { EmailService } from '../email/email.service';
+import { TenantsService } from '../tenants/tenants.service';
 import { RegisterTenantDto } from './dto/register-tenant.dto';
 export declare class AuthService {
     private jwtService;
     private prisma;
     private emailService;
-    constructor(jwtService: JwtService, prisma: PrismaService, emailService: EmailService);
+    private tenantsService;
+    constructor(jwtService: JwtService, prisma: PrismaService, emailService: EmailService, tenantsService: TenantsService);
     validateUser(email: string, pass: string): Promise<any>;
     login(user: any): Promise<{
         access_token: string;

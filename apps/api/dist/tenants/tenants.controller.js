@@ -17,6 +17,7 @@ const common_1 = require("@nestjs/common");
 const tenants_service_1 = require("./tenants.service");
 const jwt_auth_guard_1 = require("../auth/jwt-auth.guard");
 const super_admin_guard_1 = require("../auth/super-admin.guard");
+const update_tenant_settings_dto_1 = require("./dto/update-tenant-settings.dto");
 let TenantsController = class TenantsController {
     tenantsService;
     constructor(tenantsService) {
@@ -28,8 +29,8 @@ let TenantsController = class TenantsController {
     findOne(id) {
         return this.tenantsService.findOne(id);
     }
-    updateLimits(id, body) {
-        return this.tenantsService.updateLimits(id, body);
+    updateSettings(id, dto) {
+        return this.tenantsService.updateSettings(id, dto);
     }
     suspend(id) {
         return this.tenantsService.suspend(id);
@@ -54,13 +55,13 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], TenantsController.prototype, "findOne", null);
 __decorate([
-    (0, common_1.Patch)(':id/limits'),
+    (0, common_1.Patch)(':id/settings'),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:paramtypes", [String, update_tenant_settings_dto_1.UpdateTenantSettingsDto]),
     __metadata("design:returntype", void 0)
-], TenantsController.prototype, "updateLimits", null);
+], TenantsController.prototype, "updateSettings", null);
 __decorate([
     (0, common_1.Patch)(':id/suspend'),
     __param(0, (0, common_1.Param)('id')),

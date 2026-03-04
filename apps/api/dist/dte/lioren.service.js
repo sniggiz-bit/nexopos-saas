@@ -62,7 +62,9 @@ let LiorenService = LiorenService_1 = class LiorenService {
                 const quantity = Number(item.quantity);
                 return {
                     nombre: item.product.name,
-                    cantidad: item.product.unitType === 'WEIGHT' ? quantity : Math.floor(quantity),
+                    cantidad: item.product.unitType === 'WEIGHT'
+                        ? quantity
+                        : Math.floor(quantity),
                     precio: Math.round(item.price),
                 };
             });
@@ -77,8 +79,8 @@ let LiorenService = LiorenService_1 = class LiorenService {
                     pago: {
                         formapago: liorenPayment.formapago,
                         mediopago: liorenPayment.mediopago,
-                        montopago: Math.round(sale.total)
-                    }
+                        montopago: Math.round(sale.total),
+                    },
                 },
             };
             this.logger.log(`[Lioren] Payload: ${JSON.stringify(payload)}`);
@@ -114,10 +116,12 @@ let LiorenService = LiorenService_1 = class LiorenService {
         }
         catch (error) {
             this.logger.error(`[Lioren] ❌ Error emitiendo DTE para venta ${saleId}: ${error.message}`);
-            await this.prisma.sale.update({
+            await this.prisma.sale
+                .update({
                 where: { id: saleId },
                 data: { dteStatus: 'ERROR' },
-            }).catch(e => this.logger.error(`Error actualizando dteStatus: ${e.message}`));
+            })
+                .catch((e) => this.logger.error(`Error actualizando dteStatus: ${e.message}`));
             return { success: false, error: error.message };
         }
     }

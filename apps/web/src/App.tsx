@@ -29,6 +29,10 @@ import SuperAdminBranchesPage from './pages/admin/SuperAdminBranchesPage';
 import NewTransferPage from './pages/admin/transfers/NewTransferPage';
 import { EcommercePage } from './pages/dashboard/EcommercePage';
 import { SsoLoginPage } from './pages/SsoLoginPage';
+import { SuppliersPage } from './pages/dashboard/SuppliersPage';
+import { PurchasesPage } from './pages/dashboard/PurchasesPage';
+import { TransfersPage } from './pages/dashboard/transfers/TransfersPage';
+import { UsersPage } from './pages/dashboard/users/UsersPage';
 import { LoginPage } from './pages/LoginPage';
 import { LandingPage } from './pages/LandingPage';
 import { RegisterPage } from './pages/RegisterPage';
@@ -108,7 +112,7 @@ function App() {
               </Route>
 
               {/* Protected Routes */}
-              <Route element={<ProtectedRoute allowedRoles={['ADMIN', 'CASHIER']} />}>
+              <Route element={<ProtectedRoute allowedRoles={['TENANT_ADMIN', 'CASHIER', 'MANAGER']} />}>
                 <Route path="/pos" element={
                   <CartProvider>
                     <PosPage />
@@ -116,7 +120,7 @@ function App() {
                 } />
               </Route>
 
-              <Route element={<ProtectedRoute allowedRoles={['ADMIN']} />}>
+              <Route element={<ProtectedRoute allowedRoles={['TENANT_ADMIN', 'MANAGER']} />}>
                 <Route path="/dashboard" element={<DashboardOverviewPage />} />
                 <Route path="/dashboard/products" element={<ProductsPage />} />
                 <Route path="/dashboard/inventory" element={<InventoryPage />} />
@@ -136,10 +140,14 @@ function App() {
                 <Route path="/dashboard/treasury" element={<TreasuryPage />} />
                 <Route path="/dashboard/reports/critical-stock" element={<CriticalStockPage />} />
                 <Route path="/dashboard/branches" element={<BranchesPage />} />
+                <Route path="/dashboard/users" element={<UsersPage />} />
                 <Route path="/dashboard/transfers/new" element={<NewTransferPage />} />
                 <Route path="/admin/transfers/new" element={<NewTransferPage />} /> {/* Alias */}
                 <Route path="/dashboard/ecommerce" element={<EcommercePage />} />
                 <Route path="/admin/ecommerce" element={<EcommercePage />} />
+                <Route path="/dashboard/suppliers" element={<SuppliersPage />} />
+                <Route path="/dashboard/purchases" element={<PurchasesPage />} />
+                <Route path="/dashboard/transfers" element={<TransfersPage />} />
               </Route>
 
               {/* Default Redirect */}

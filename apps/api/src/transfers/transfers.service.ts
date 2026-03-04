@@ -16,7 +16,7 @@ interface CreateTransferDto {
 
 @Injectable()
 export class TransfersService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   async create(data: CreateTransferDto) {
     const { originBranchId, destBranchId, items, note, userId } = data;
@@ -141,6 +141,29 @@ export class TransfersService {
       }
 
       return transfer;
+    });
+  }
+
+  async findAll(tenantId: string) {
+    return this.prisma.transfer.findMany({
+      where: {
+        originBranch: {
+          tenantId,
+        },
+      },
+      include: {
+        originBranch: true,
+        destinationBranch: true,
+        requestedBy: true,
+        items: {
+          include: {
+            product: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
     });
   }
 }

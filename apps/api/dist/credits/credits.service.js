@@ -68,7 +68,7 @@ let CreditsService = class CreditsService {
                     amount,
                     paymentMethod,
                     cashShiftId,
-                }
+                },
             });
             return prisma.credit.update({
                 where: { id },
@@ -78,7 +78,7 @@ let CreditsService = class CreditsService {
                 },
                 include: {
                     payments: true,
-                }
+                },
             });
         });
     }

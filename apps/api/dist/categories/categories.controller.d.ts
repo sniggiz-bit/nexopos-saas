@@ -14,8 +14,8 @@ export declare class CategoryResponseDto {
 export declare class CategoriesController {
     private readonly categoriesService;
     constructor(categoriesService: CategoriesService);
-    findAll(tenantId?: string): Promise<CategoryResponseDto[]>;
-    create(createCategoryDto: CreateCategoryDto): Promise<CategoryResponseDto>;
-    update(id: string, updateCategoryDto: UpdateCategoryDto): Promise<CategoryResponseDto>;
-    remove(id: string): Promise<void>;
+    findAll(user: any): Promise<CategoryResponseDto[]>;
+    create(createCategoryDto: CreateCategoryDto, user: any): Promise<CategoryResponseDto>;
+    update(id: string, updateCategoryDto: UpdateCategoryDto, user: any): Promise<CategoryResponseDto>;
+    remove(id: string, user: any): Promise<void>;
 }

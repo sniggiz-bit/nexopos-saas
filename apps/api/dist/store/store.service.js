@@ -28,8 +28,8 @@ let StoreService = class StoreService {
                 branches: {
                     where: { isMain: true },
                     take: 1,
-                    select: { id: true }
-                }
+                    select: { id: true },
+                },
             },
         });
         if (!tenant) {
@@ -41,7 +41,7 @@ let StoreService = class StoreService {
         }
         return {
             ...tenant,
-            mainBranchId: tenant.branches[0]?.id
+            mainBranchId: tenant.branches[0]?.id,
         };
     }
     async findProductsBySlug(slug, search) {
@@ -51,10 +51,12 @@ let StoreService = class StoreService {
                 tenantId: tenant.id,
                 isPublic: true,
                 isActive: true,
-                OR: search ? [
-                    { name: { contains: search, mode: 'insensitive' } },
-                    { description: { contains: search, mode: 'insensitive' } },
-                ] : undefined,
+                OR: search
+                    ? [
+                        { name: { contains: search, mode: 'insensitive' } },
+                        { description: { contains: search, mode: 'insensitive' } },
+                    ]
+                    : undefined,
             },
             select: {
                 id: true,

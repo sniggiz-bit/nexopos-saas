@@ -20,17 +20,17 @@ let DebugController = class DebugController {
     async getProducts() {
         const products = await this.prisma.product.findMany({
             include: { inventory: true, tenant: true },
-            take: 20
+            take: 20,
         });
         return {
             count: products.length,
-            items: products.map(p => ({
+            items: products.map((p) => ({
                 id: p.id,
                 name: p.name,
                 tenantId: p.tenantId,
                 tenantName: p.tenant?.name,
-                inventory: p.inventory
-            }))
+                inventory: p.inventory,
+            })),
         };
     }
 };

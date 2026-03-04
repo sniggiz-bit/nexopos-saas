@@ -27,7 +27,7 @@ let BrandsService = class BrandsService {
             },
             orderBy: { name: 'asc' },
         });
-        return brands.map(brand => ({
+        return brands.map((brand) => ({
             id: brand.id,
             name: brand.name,
             productCount: brand._count.products,
@@ -52,9 +52,9 @@ let BrandsService = class BrandsService {
             productCount: 0,
         };
     }
-    async update(id, updateBrandDto) {
+    async update(id, tenantId, updateBrandDto) {
         const brand = await this.prisma.brand.update({
-            where: { id },
+            where: { id, tenantId },
             data: updateBrandDto,
             include: {
                 _count: {
@@ -68,9 +68,9 @@ let BrandsService = class BrandsService {
             productCount: brand._count.products,
         };
     }
-    async remove(id) {
+    async remove(id, tenantId) {
         const brand = await this.prisma.brand.findUnique({
-            where: { id },
+            where: { id, tenantId },
             include: {
                 _count: {
                     select: { products: true },
@@ -84,7 +84,7 @@ let BrandsService = class BrandsService {
             throw new common_1.ConflictException(`Cannot delete brand with ${brand._count.products} associated products`);
         }
         await this.prisma.brand.delete({
-            where: { id },
+            where: { id, tenantId },
         });
     }
 };

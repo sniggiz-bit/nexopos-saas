@@ -28,6 +28,7 @@ export declare class QuotesService {
                 id: string;
                 createdAt: Date;
                 updatedAt: Date;
+                isActive: boolean;
                 tenantId: string;
                 sku: string | null;
                 price: number;
@@ -38,7 +39,6 @@ export declare class QuotesService {
                 image: string | null;
                 description: string | null;
                 isPublic: boolean;
-                isActive: boolean;
                 minStock: number;
                 stock: number | null;
                 unitType: import("@prisma/client").$Enums.UnitType;
@@ -151,6 +151,7 @@ export declare class QuotesService {
                 id: string;
                 createdAt: Date;
                 updatedAt: Date;
+                isActive: boolean;
                 tenantId: string;
                 sku: string | null;
                 price: number;
@@ -161,7 +162,6 @@ export declare class QuotesService {
                 image: string | null;
                 description: string | null;
                 isPublic: boolean;
-                isActive: boolean;
                 minStock: number;
                 stock: number | null;
                 unitType: import("@prisma/client").$Enums.UnitType;

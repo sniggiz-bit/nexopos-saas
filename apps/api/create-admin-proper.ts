@@ -28,13 +28,13 @@ async function main() {
         where: { email: 'admin@nexopos.cl' },
         update: {
             password: '1234', // Plain text, system will auto-hash on login
-            role: 'ADMIN',
+            role: 'TENANT_ADMIN',
         },
         create: {
             email: 'admin@nexopos.cl',
             name: 'Admin Principal',
             password: '1234',
-            role: 'ADMIN',
+            role: 'TENANT_ADMIN',
             tenantId: tenant.id,
             branchId: branch.id,
         },

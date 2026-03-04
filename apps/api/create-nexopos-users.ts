@@ -47,12 +47,12 @@ async function main() {
     // B. Admin de Local
     await prisma.user.upsert({
         where: { email: 'gestion@nexopos.cl' },
-        update: { password: hashedPassword, role: UserRole.ADMIN },
+        update: { password: hashedPassword, role: UserRole.TENANT_ADMIN },
         create: {
             email: 'gestion@nexopos.cl',
             name: 'Administrador Nexo',
             password: hashedPassword,
-            role: UserRole.ADMIN,
+            role: UserRole.TENANT_ADMIN,
             tenantId: tenant.id,
             branchId: branch.id,
         },

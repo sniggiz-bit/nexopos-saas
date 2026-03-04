@@ -26,12 +26,15 @@ let JwtAuthGuard = class JwtAuthGuard {
             throw new common_1.UnauthorizedException();
         }
         try {
+            console.log(`[JwtAuthGuard] Header token: ${token ? 'found' : 'missing'}`);
             const payload = await this.jwtService.verifyAsync(token, {
                 secret: process.env.JWT_SECRET || 'secretKey',
             });
+            console.log(`[JwtAuthGuard] Payload:`, payload);
             request.user = payload;
         }
-        catch {
+        catch (error) {
+            console.error(`[JwtAuthGuard] Verification failed:`, error.message);
             throw new common_1.UnauthorizedException();
         }
         return true;

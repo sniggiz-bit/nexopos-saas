@@ -40,16 +40,16 @@ let TreasuryService = class TreasuryService {
                     lte: end,
                 },
                 sale: {
-                    tenantId: tenantId
-                }
+                    tenantId: tenantId,
+                },
             },
             _sum: {
                 amount: true,
             },
         });
-        return payments.map(p => ({
+        return payments.map((p) => ({
             method: p.paymentMethod,
-            amount: p._sum.amount || 0
+            amount: p._sum.amount || 0,
         }));
     }
     async getMaturities(tenantId) {
@@ -62,7 +62,7 @@ let TreasuryService = class TreasuryService {
                 dueDate: {
                     not: null,
                     lte: nextWeek,
-                    gte: (0, date_fns_1.startOfDay)(today)
+                    gte: (0, date_fns_1.startOfDay)(today),
                 },
             },
             include: {
@@ -70,7 +70,7 @@ let TreasuryService = class TreasuryService {
             },
             orderBy: {
                 dueDate: 'asc',
-            }
+            },
         });
     }
 };

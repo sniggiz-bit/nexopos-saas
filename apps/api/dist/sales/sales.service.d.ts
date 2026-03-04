@@ -25,6 +25,7 @@ export declare class SalesService {
             createdAt: Date;
             updatedAt: Date;
             isMain: boolean;
+            isActive: boolean;
             tenantId: string;
         };
         user: {
@@ -69,6 +70,7 @@ export declare class SalesService {
                 id: string;
                 createdAt: Date;
                 updatedAt: Date;
+                isActive: boolean;
                 tenantId: string;
                 sku: string | null;
                 price: number;
@@ -79,7 +81,6 @@ export declare class SalesService {
                 image: string | null;
                 description: string | null;
                 isPublic: boolean;
-                isActive: boolean;
                 minStock: number;
                 stock: number | null;
                 unitType: import("@prisma/client").$Enums.UnitType;

@@ -59,4 +59,5 @@ services:
 
 volumes:
   postgres_data:
-    driver: local
+    external: true
+    name: nexoposcl_postgres_data

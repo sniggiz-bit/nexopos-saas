@@ -5,7 +5,7 @@ const prisma = new PrismaClient();
 
 async function main() {
     const admins = await prisma.user.findMany({
-        where: { role: 'ADMIN' },
+        where: { role: 'TENANT_ADMIN' },
     });
 
     console.log('Admins found:', admins);

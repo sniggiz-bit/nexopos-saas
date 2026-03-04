@@ -97,6 +97,21 @@ let PrismaService = class PrismaService {
     get announcement() {
         return this.prisma.announcement;
     }
+    get supplier() {
+        return this.prisma.supplier;
+    }
+    get purchase() {
+        return this.prisma.purchase;
+    }
+    get purchaseItem() {
+        return this.prisma.purchaseItem;
+    }
+    get transfer() {
+        return this.prisma.transfer;
+    }
+    get transferItem() {
+        return this.prisma.transferItem;
+    }
 };
 exports.PrismaService = PrismaService;
 exports.PrismaService = PrismaService = __decorate([

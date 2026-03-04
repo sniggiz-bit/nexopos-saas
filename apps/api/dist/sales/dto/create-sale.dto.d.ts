@@ -13,8 +13,8 @@ export declare class CreateSaleItemDto {
     quantity: number;
 }
 export declare class CreateSaleDto {
-    tenantId: string;
-    branchId: string;
+    tenantId?: string;
+    branchId?: string;
     userId?: string;
     payments: CreatePaymentDto[];
     items: CreateSaleItemDto[];

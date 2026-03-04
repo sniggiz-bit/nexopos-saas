@@ -41,21 +41,27 @@ var __importStar = (this && this.__importStar) || (function () {
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthService = void 0;
 const common_1 = require("@nestjs/common");
 const jwt_1 = require("@nestjs/jwt");
 const prisma_service_1 = require("../prisma/prisma.service");
 const email_service_1 = require("../email/email.service");
+const tenants_service_1 = require("../tenants/tenants.service");
 const bcrypt = __importStar(require("bcrypt"));
 let AuthService = class AuthService {
     jwtService;
     prisma;
     emailService;
-    constructor(jwtService, prisma, emailService) {
+    tenantsService;
+    constructor(jwtService, prisma, emailService, tenantsService) {
         this.jwtService = jwtService;
         this.prisma = prisma;
         this.emailService = emailService;
+        this.tenantsService = tenantsService;
     }
     async validateUser(email, pass) {
         try {
@@ -71,7 +77,7 @@ let AuthService = class AuthService {
                     const isMatch = await bcrypt.compare(pass, user.password);
                     console.log(`[AuthService] Password match: ${isMatch}`);
                     if (isMatch) {
-                        const { password, ...result } = user;
+                        const { password: _password, ...result } = user;
                         return result;
                     }
                 }
@@ -84,7 +90,7 @@ let AuthService = class AuthService {
                             where: { id: user.id },
                             data: { password: hashedPassword },
                         });
-                        const { password, ...result } = user;
+                        const { password: _password, ...result } = user;
                         return result;
                     }
                 }
@@ -102,7 +108,7 @@ let AuthService = class AuthService {
             const payload = {
                 sub: user.id,
                 email: user.email,
-                role: user.role
+                role: user.role,
             };
             if (user.tenantId) {
                 payload.tenantId = user.tenantId;
@@ -120,8 +126,8 @@ let AuthService = class AuthService {
                     name: user.name,
                     role: user.role,
                     tenantId: user.tenantId || null,
-                    branchId: user.branchId || null
-                }
+                    branchId: user.branchId || null,
+                },
             };
         }
         catch (error) {
@@ -146,7 +152,7 @@ let AuthService = class AuthService {
     }
     async impersonate(userId) {
         const user = await this.prisma.user.findUnique({
-            where: { id: userId }
+            where: { id: userId },
         });
         if (!user) {
             throw new common_1.UnauthorizedException('User not found');
@@ -155,7 +161,7 @@ let AuthService = class AuthService {
     }
     async registerTenant(dto) {
         const existingUser = await this.prisma.user.findUnique({
-            where: { email: dto.email }
+            where: { email: dto.email },
         });
         if (existingUser) {
             throw new common_1.ConflictException('El email ya está registrado');
@@ -164,42 +170,30 @@ let AuthService = class AuthService {
         const slug = await this.ensureUniqueSlug(baseSlug);
         const hashedPassword = await bcrypt.hash(dto.password, 10);
         try {
-            const result = await this.prisma.$transaction(async (tx) => {
-                const tenant = await tx.tenant.create({
-                    data: {
-                        name: dto.companyName,
-                        slug,
-                        phone: dto.phone,
-                        rut: dto.rut,
-                        giro: dto.giro,
-                        address: dto.address,
-                        status: 'ACTIVE',
-                    },
-                });
-                const branch = await tx.branch.create({
-                    data: {
-                        name: 'Casa Matriz',
-                        isMain: true,
-                        tenantId: tenant.id,
-                    },
-                });
-                const user = await tx.user.create({
-                    data: {
-                        email: dto.email,
-                        name: dto.userName,
-                        password: hashedPassword,
-                        role: 'ADMIN',
-                        tenantId: tenant.id,
-                        branchId: branch.id,
-                    },
-                });
-                return { tenant, branch, user };
+            const result = await this.tenantsService.createWithDefaults({
+                tenant: {
+                    name: dto.companyName,
+                    slug,
+                    phone: dto.phone,
+                    rut: dto.rut,
+                    giro: dto.giro,
+                    address: dto.address,
+                    status: 'ACTIVE',
+                },
+                admin: {
+                    email: dto.email,
+                    name: dto.userName,
+                    password: hashedPassword,
+                    role: 'TENANT_ADMIN',
+                },
             });
-            this.emailService.sendWelcomeEmail(dto.email, dto.userName, {
+            this.emailService
+                .sendWelcomeEmail(dto.email, dto.userName, {
                 email: dto.email,
                 password: dto.password,
                 companyName: dto.companyName,
-            }).catch(err => {
+            })
+                .catch((err) => {
                 console.error('Failed to send welcome email:', err);
             });
             const token = await this.login(result.user);
@@ -217,7 +211,11 @@ let AuthService = class AuthService {
             };
         }
         catch (error) {
-            console.error('Error registering tenant:', error);
+            console.error('[AuthService] Error registering tenant DETAILS:', error);
+            if (error instanceof common_1.ConflictException ||
+                error instanceof common_1.BadRequestException) {
+                throw error;
+            }
             throw new common_1.BadRequestException('Error al crear la cuenta. Por favor intenta nuevamente.');
         }
     }
@@ -249,8 +247,10 @@ let AuthService = class AuthService {
 exports.AuthService = AuthService;
 exports.AuthService = AuthService = __decorate([
     (0, common_1.Injectable)(),
+    __param(3, (0, common_1.Inject)((0, common_1.forwardRef)(() => tenants_service_1.TenantsService))),
     __metadata("design:paramtypes", [jwt_1.JwtService,
         prisma_service_1.PrismaService,
-        email_service_1.EmailService])
+        email_service_1.EmailService,
+        tenants_service_1.TenantsService])
 ], AuthService);
 //# sourceMappingURL=auth.service.js.map

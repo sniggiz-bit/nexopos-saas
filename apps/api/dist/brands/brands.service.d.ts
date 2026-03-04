@@ -16,7 +16,7 @@ export declare class BrandsService {
     constructor(prisma: PrismaService);
     findAll(tenantId: string): Promise<BrandResponseDto[]>;
     create(createBrandDto: CreateBrandDto): Promise<BrandResponseDto>;
-    update(id: string, updateBrandDto: UpdateBrandDto): Promise<BrandResponseDto>;
-    remove(id: string): Promise<void>;
+    update(id: string, tenantId: string, updateBrandDto: UpdateBrandDto): Promise<BrandResponseDto>;
+    remove(id: string, tenantId: string): Promise<void>;
 }
 export {};

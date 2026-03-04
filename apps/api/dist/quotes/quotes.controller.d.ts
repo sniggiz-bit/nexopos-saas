@@ -25,6 +25,7 @@ export declare class QuotesController {
                 id: string;
                 createdAt: Date;
                 updatedAt: Date;
+                isActive: boolean;
                 tenantId: string;
                 sku: string | null;
                 price: number;
@@ -35,7 +36,6 @@ export declare class QuotesController {
                 image: string | null;
                 description: string | null;
                 isPublic: boolean;
-                isActive: boolean;
                 minStock: number;
                 stock: number | null;
                 unitType: import("@prisma/client").$Enums.UnitType;
@@ -148,6 +148,7 @@ export declare class QuotesController {
                 id: string;
                 createdAt: Date;
                 updatedAt: Date;
+                isActive: boolean;
                 tenantId: string;
                 sku: string | null;
                 price: number;
@@ -158,7 +159,6 @@ export declare class QuotesController {
                 image: string | null;
                 description: string | null;
                 isPublic: boolean;
-                isActive: boolean;
                 minStock: number;
                 stock: number | null;
                 unitType: import("@prisma/client").$Enums.UnitType;

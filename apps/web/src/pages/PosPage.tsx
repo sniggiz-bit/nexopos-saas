@@ -104,7 +104,7 @@ export function PosPage() {
             branchId: user?.branchId || 'branch-1',
             items: cartItems.map((item) => ({
                 productId: item.productId,
-                quantity: item.quantity,
+                quantity: Number(item.quantity) || 0,
             })),
             payments,
         };

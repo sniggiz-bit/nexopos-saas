@@ -17,9 +17,10 @@ let TenantsModule = class TenantsModule {
 exports.TenantsModule = TenantsModule;
 exports.TenantsModule = TenantsModule = __decorate([
     (0, common_1.Module)({
-        imports: [auth_module_1.AuthModule],
+        imports: [(0, common_1.forwardRef)(() => auth_module_1.AuthModule)],
         controllers: [tenants_controller_1.TenantsController],
         providers: [tenants_service_1.TenantsService, prisma_service_1.PrismaService],
+        exports: [tenants_service_1.TenantsService],
     })
 ], TenantsModule);
 //# sourceMappingURL=tenants.module.js.map

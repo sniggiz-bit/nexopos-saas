@@ -29,4 +29,9 @@ export declare class PrismaService implements OnModuleInit, OnModuleDestroy {
     get plan(): import("@prisma/client").Prisma.PlanDelegate<import("@prisma/client/runtime/client").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;
     get systemLog(): import("@prisma/client").Prisma.SystemLogDelegate<import("@prisma/client/runtime/client").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;
     get announcement(): import("@prisma/client").Prisma.AnnouncementDelegate<import("@prisma/client/runtime/client").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;
+    get supplier(): import("@prisma/client").Prisma.SupplierDelegate<import("@prisma/client/runtime/client").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;
+    get purchase(): import("@prisma/client").Prisma.PurchaseDelegate<import("@prisma/client/runtime/client").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;
+    get purchaseItem(): import("@prisma/client").Prisma.PurchaseItemDelegate<import("@prisma/client/runtime/client").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;
+    get transfer(): import("@prisma/client").Prisma.TransferDelegate<import("@prisma/client/runtime/client").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;
+    get transferItem(): import("@prisma/client").Prisma.TransferItemDelegate<import("@prisma/client/runtime/client").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;
 }

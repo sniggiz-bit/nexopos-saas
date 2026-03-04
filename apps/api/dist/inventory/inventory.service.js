@@ -65,8 +65,8 @@ let InventoryService = InventoryService_1 = class InventoryService {
             where: { productId, branchId },
             orderBy: { createdAt: 'desc' },
             include: {
-                user: { select: { name: true } }
-            }
+                user: { select: { name: true } },
+            },
         });
     }
 };

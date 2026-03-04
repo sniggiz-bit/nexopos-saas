@@ -46,19 +46,23 @@ let ProductsService = class ProductsService {
             image: product.image || undefined,
             isActive: product.isActive,
             stock: product.inventory.reduce((total, inv) => total + Number(inv.quantity), 0),
-            inventoryLevels: product.inventory.map(inv => ({
+            inventoryLevels: product.inventory.map((inv) => ({
                 branchId: inv.branchId,
                 branchName: inv.branch?.name || 'Desconocida',
                 quantity: Number(inv.quantity),
             })),
-            category: product.category ? {
-                id: product.category.id,
-                name: product.category.name,
-            } : undefined,
-            brand: product.brand ? {
-                id: product.brand.id,
-                name: product.brand.name,
-            } : undefined,
+            category: product.category
+                ? {
+                    id: product.category.id,
+                    name: product.category.name,
+                }
+                : undefined,
+            brand: product.brand
+                ? {
+                    id: product.brand.id,
+                    name: product.brand.name,
+                }
+                : undefined,
         }));
     }
     async findOne(id, tenantId) {
@@ -92,23 +96,28 @@ let ProductsService = class ProductsService {
             image: product.image || undefined,
             isActive: product.isActive,
             stock: product.inventory.reduce((total, inv) => total + Number(inv.quantity), 0),
-            inventoryLevels: product.inventory.map(inv => ({
+            inventoryLevels: product.inventory.map((inv) => ({
                 branchId: inv.branchId,
                 branchName: inv.branch?.name || 'Desconocida',
                 quantity: Number(inv.quantity),
             })),
-            category: product.category ? {
-                id: product.category.id,
-                name: product.category.name,
-            } : undefined,
-            brand: product.brand ? {
-                id: product.brand.id,
-                name: product.brand.name,
-            } : undefined,
+            category: product.category
+                ? {
+                    id: product.category.id,
+                    name: product.category.name,
+                }
+                : undefined,
+            brand: product.brand
+                ? {
+                    id: product.brand.id,
+                    name: product.brand.name,
+                }
+                : undefined,
         };
     }
     async create(createProductDto) {
-        const { tenantId, barcode, ...productData } = createProductDto;
+        console.log('[ProductsService] Service starting with DTO:', JSON.stringify(createProductDto, null, 2));
+        const { tenantId, barcode, initialStock, ...productData } = createProductDto;
         if (barcode) {
             const existingProduct = await this.prisma.product.findFirst({
                 where: {
@@ -130,23 +139,27 @@ let ProductsService = class ProductsService {
                 unitType: productData.unitType ?? 'UNIT',
                 isActive: productData.isActive ?? true,
                 inventory: {
-                    create: createProductDto.initialStock ? [
-                        {
-                            branchId: 'branch-1',
-                            quantity: new client_1.Prisma.Decimal(createProductDto.initialStock),
-                        }
-                    ] : [],
+                    create: initialStock
+                        ? [
+                            {
+                                branchId: 'branch-1',
+                                quantity: new client_1.Prisma.Decimal(initialStock),
+                            },
+                        ]
+                        : [],
                 },
                 stockMovements: {
-                    create: createProductDto.initialStock ? [
-                        {
-                            branchId: 'branch-1',
-                            quantity: new client_1.Prisma.Decimal(createProductDto.initialStock),
-                            type: 'INITIAL',
-                            balance: new client_1.Prisma.Decimal(createProductDto.initialStock),
-                            reference: 'Inventario Inicial',
-                        }
-                    ] : [],
+                    create: initialStock
+                        ? [
+                            {
+                                branchId: 'branch-1',
+                                quantity: new client_1.Prisma.Decimal(initialStock),
+                                type: 'INITIAL',
+                                balance: new client_1.Prisma.Decimal(initialStock),
+                                reference: 'Inventario Inicial',
+                            },
+                        ]
+                        : [],
                 },
             },
             include: {
@@ -168,14 +181,18 @@ let ProductsService = class ProductsService {
             image: product.image || undefined,
             isActive: product.isActive,
             stock,
-            category: product.category ? {
-                id: product.category.id,
-                name: product.category.name,
-            } : undefined,
-            brand: product.brand ? {
-                id: product.brand.id,
-                name: product.brand.name,
-            } : undefined,
+            category: product.category
+                ? {
+                    id: product.category.id,
+                    name: product.category.name,
+                }
+                : undefined,
+            brand: product.brand
+                ? {
+                    id: product.brand.id,
+                    name: product.brand.name,
+                }
+                : undefined,
         };
     }
     async update(id, updateProductDto) {
@@ -218,16 +235,18 @@ let ProductsService = class ProductsService {
             const newStock = new client_1.Prisma.Decimal(updateProductDto.stock);
             const branchId = 'branch-1';
             const currentInv = await this.prisma.inventory.findUnique({
-                where: { productId_branchId: { productId: id, branchId } }
+                where: { productId_branchId: { productId: id, branchId } },
             });
-            const currentQty = currentInv ? currentInv.quantity : new client_1.Prisma.Decimal(0);
+            const currentQty = currentInv
+                ? currentInv.quantity
+                : new client_1.Prisma.Decimal(0);
             const diff = newStock.minus(currentQty);
             if (!diff.equals(0)) {
                 await this.prisma.$transaction([
                     this.prisma.inventory.upsert({
                         where: { productId_branchId: { productId: id, branchId } },
                         create: { productId: id, branchId, quantity: newStock },
-                        update: { quantity: newStock }
+                        update: { quantity: newStock },
                     }),
                     this.prisma.stockMovement.create({
                         data: {
@@ -237,8 +256,8 @@ let ProductsService = class ProductsService {
                             type: 'ADJUSTMENT',
                             balance: newStock,
                             reference: 'Ajuste Manual',
-                        }
-                    })
+                        },
+                    }),
                 ]);
             }
         }

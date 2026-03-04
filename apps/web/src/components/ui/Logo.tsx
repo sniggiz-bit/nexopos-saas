@@ -8,7 +8,11 @@ export function Logo({ variant = 'full', className = '', mode: _mode = 'light' }
     const defaultHeight = variant === 'icon' ? 'h-11' : 'h-11';
     const heightClass = className.includes('h-') ? '' : defaultHeight;
 
+<<<<<<< rediseño-landing
+    const logoSrc = variant === 'icon' ? '/isotipo.svg' : '/logo.svg';
+=======
     const logoSrc = variant === 'icon' ? '/isotipo.png' : '/logo.png';
+>>>>>>> main
 
     return (
         <div className={`flex items-center flex-shrink-0 ${heightClass} ${className}`}>

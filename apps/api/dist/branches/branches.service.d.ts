@@ -14,6 +14,7 @@ export declare class BranchesService {
         createdAt: Date;
         updatedAt: Date;
         isMain: boolean;
+        isActive: boolean;
         tenantId: string;
     }>;
     findAll(tenantId: string): Promise<{
@@ -23,6 +24,7 @@ export declare class BranchesService {
         createdAt: Date;
         updatedAt: Date;
         isMain: boolean;
+        isActive: boolean;
         tenantId: string;
     }[]>;
     findOne(id: string): Promise<{
@@ -32,6 +34,32 @@ export declare class BranchesService {
         createdAt: Date;
         updatedAt: Date;
         isMain: boolean;
+        isActive: boolean;
         tenantId: string;
     } | null>;
+    findAllSystemWide(): Promise<({
+        tenant: {
+            name: string;
+            id: string;
+        };
+    } & {
+        name: string;
+        id: string;
+        address: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+        isMain: boolean;
+        isActive: boolean;
+        tenantId: string;
+    })[]>;
+    updateStatus(id: string, isActive: boolean): Promise<{
+        name: string;
+        id: string;
+        address: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+        isMain: boolean;
+        isActive: boolean;
+        tenantId: string;
+    }>;
 }

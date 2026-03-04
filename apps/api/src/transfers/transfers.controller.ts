@@ -1,11 +1,11 @@
-import { Controller, Post, Body, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Post, Body, UseGuards, Request } from '@nestjs/common';
 import { TransfersService } from './transfers.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 @Controller('transfers')
 @UseGuards(JwtAuthGuard)
 export class TransfersController {
-  constructor(private readonly transfersService: TransfersService) {}
+  constructor(private readonly transfersService: TransfersService) { }
 
   @Post()
   create(
@@ -20,7 +20,12 @@ export class TransfersController {
   ) {
     return this.transfersService.create({
       ...createTransferDto,
-      userId: req.user.id,
+      userId: req.user.sub,
     });
+  }
+
+  @Get()
+  findAll(@Request() req) {
+    return this.transfersService.findAll(req.user.tenantId);
   }
 }

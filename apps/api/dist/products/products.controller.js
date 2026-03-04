@@ -25,10 +25,10 @@ let ProductsController = class ProductsController {
     async findCritical(tenantId = 'tenant-1', branchId) {
         return this.productsService.findCritical(tenantId, branchId);
     }
-    async findAll(tenantId = 'tenant-1', branchId) {
+    async findAll(tenantId = 'tenant-1') {
         return this.productsService.findAll(tenantId);
     }
-    async findOne(id, tenantId = 'tenant-1', branchId) {
+    async findOne(id, tenantId = 'tenant-1') {
         return this.productsService.findOne(id, tenantId);
     }
     async create(createProductDto) {
@@ -56,18 +56,16 @@ __decorate([
 __decorate([
     (0, common_1.Get)(),
     __param(0, (0, common_1.Query)('tenantId')),
-    __param(1, (0, common_1.Query)('branchId')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
 ], ProductsController.prototype, "findAll", null);
 __decorate([
     (0, common_1.Get)(':id'),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Query)('tenantId')),
-    __param(2, (0, common_1.Query)('branchId')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, String, String]),
+    __metadata("design:paramtypes", [String, String]),
     __metadata("design:returntype", Promise)
 ], ProductsController.prototype, "findOne", null);
 __decorate([

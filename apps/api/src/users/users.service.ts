@@ -3,6 +3,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserRole } from '@prisma/client';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UsersService {
@@ -19,22 +20,30 @@ export class UsersService {
       throw new ConflictException('Email already in use');
     }
 
-    // In a real app, hash the password if provided. For now/MVP/Local POS, storing plain text or simple hash?
-    // User requested "act as Senior", so I should probably mention hashing, but might skip complex auth flow for now to fit the request "Kardex functional".
-    // I will store it as is for now given the context of "Local POS" and speed, relying on Auth module to handle hashing if it does.
-    // Actually, looking at Auth service, it generates SSO tokens. It doesn't seem to do password auth yet?
-    // The requirement says "Cashier must have their own credentials".
-    // I will store the password as is for this iteration, assuming a simple comparison login for now.
+    // Hashing password for secure local Auth usage
+    const saltRounds = 10;
+    const hashedPassword = password ? await bcrypt.hash(password, saltRounds) : null;
 
     return this.prisma.user.create({
       data: {
         email,
         name,
-        password, // TODO: Hash this
-        role: (role as UserRole) || 'USER',
+        password: hashedPassword,
+        role: (role as UserRole) || 'MANAGER',
         branchId,
         tenantId,
       },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        branchId: true,
+        tenantId: true,
+        createdAt: true,
+        updatedAt: true,
+        // password is deliberately excluded from response
+      }
     });
   }
 
@@ -44,8 +53,17 @@ export class UsersService {
         tenantId,
         role,
       },
-      include: {
-        branch: true,
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        createdAt: true,
+        tenantId: true,
+        branchId: true,
+        branch: {
+          select: { id: true, name: true }
+        }
       },
     });
   }
@@ -53,8 +71,17 @@ export class UsersService {
   findOne(id: string) {
     return this.prisma.user.findUnique({
       where: { id },
-      include: {
-        branch: true,
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        createdAt: true,
+        tenantId: true,
+        branchId: true,
+        branch: {
+          select: { id: true, name: true }
+        },
         shiftsOpened: {
           where: { status: 'OPEN' },
         },
@@ -62,10 +89,18 @@ export class UsersService {
     });
   }
 
-  update(id: string, updateUserDto: UpdateUserDto) {
+  async update(id: string, updateUserDto: UpdateUserDto) {
+    const data = { ...updateUserDto };
+
+    // Hash new password if provided
+    if (data.password) {
+      const saltRounds = 10;
+      data.password = await bcrypt.hash(data.password, saltRounds);
+    }
+
     return this.prisma.user.update({
       where: { id },
-      data: updateUserDto,
+      data,
     });
   }
 

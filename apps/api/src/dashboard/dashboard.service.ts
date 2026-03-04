@@ -4,7 +4,7 @@ import { startOfDay, startOfMonth } from 'date-fns';
 
 @Injectable()
 export class DashboardService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   async getStats(tenantId: string, branchId: string = 'branch-1') {
     const today = startOfDay(new Date());
@@ -73,8 +73,32 @@ export class DashboardService {
       return stock <= product.minStock;
     }).length;
 
+    // 5. Total Suppliers
+    const totalSuppliers = await this.prisma.supplier.count({
+      where: { tenantId },
+    });
+
+    // 6. Total Branches
+    const totalBranches = await this.prisma.branch.count({
+      where: { tenantId, isActive: true },
+    });
+
+    // 7. Total Customers
+    const totalCustomers = await this.prisma.customer.count({
+      where: { tenantId },
+    });
+
+    // 8. Total Quotes
+    const totalQuotes = await this.prisma.quote.count({
+      where: { tenantId },
+    });
+
     return {
       totalProducts,
+      totalSuppliers,
+      totalBranches,
+      totalCustomers,
+      totalQuotes,
       salesToday,
       monthRevenue,
       lowStockCount,

@@ -11,13 +11,13 @@ async function main() {
         where: { email: 'admin@nexopos.cl' },
         update: {
             password: hashedPassword,
-            role: 'ADMIN',
+            role: 'TENANT_ADMIN',
         },
         create: {
             email: 'admin@nexopos.cl',
             name: 'Admin Principal',
             password: hashedPassword,
-            role: 'ADMIN',
+            role: 'TENANT_ADMIN',
             tenantId: 'tenant-1', // Assuming tenant-1 exists from seed
             branchId: 'branch-1', // Assuming branch-1 exists from seed
         },

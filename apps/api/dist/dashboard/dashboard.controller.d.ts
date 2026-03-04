@@ -4,6 +4,10 @@ export declare class DashboardController {
     constructor(dashboardService: DashboardService);
     getStats(tenantId: string, branchId?: string): Promise<{
         totalProducts: number;
+        totalSuppliers: number;
+        totalBranches: number;
+        totalCustomers: number;
+        totalQuotes: number;
         salesToday: number;
         monthRevenue: number;
         lowStockCount: number;

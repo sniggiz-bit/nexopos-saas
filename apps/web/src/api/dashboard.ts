@@ -2,6 +2,10 @@ import { apiClient } from './client';
 
 export interface DashboardStats {
     totalProducts: number;
+    totalSuppliers: number;
+    totalBranches: number;
+    totalCustomers: number;
+    totalQuotes: number;
     salesToday: number;
     monthRevenue: number;
     lowStockCount: number;

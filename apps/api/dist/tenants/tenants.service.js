@@ -17,51 +17,101 @@ let TenantsService = class TenantsService {
     constructor(prisma) {
         this.prisma = prisma;
     }
+    async createWithDefaults(data) {
+        return this.prisma.$transaction(async (tx) => {
+            const tenant = await tx.tenant.create({
+                data: data.tenant,
+            });
+            const branch = await tx.branch.create({
+                data: {
+                    name: 'Casa Matriz',
+                    isMain: true,
+                    isActive: true,
+                    tenantId: tenant.id,
+                },
+            });
+            const user = await tx.user.create({
+                data: {
+                    ...data.admin,
+                    tenantId: tenant.id,
+                    branchId: branch.id,
+                },
+            });
+            const settings = await tx.tenantSettings.create({
+                data: {
+                    tenantId: tenant.id,
+                    enableBoletaDte: false,
+                    enableFacturaDte: false,
+                    enableGuiaDespachoDte: false,
+                    enableNotaCreditoDte: false,
+                    maxBranches: 1,
+                    maxRegisters: 1,
+                    maxUsers: 3,
+                    canHardDelete: false,
+                },
+            });
+            return { tenant, branch, user, settings };
+        });
+    }
     async findAll(search) {
         return this.prisma.tenant.findMany({
-            where: search ? {
-                name: { contains: search, mode: 'insensitive' }
-            } : {},
+            where: search
+                ? {
+                    name: { contains: search, mode: 'insensitive' },
+                }
+                : {},
             include: {
                 plan: true,
+                settings: true,
                 users: {
-                    where: { role: 'ADMIN' },
+                    where: { role: 'TENANT_ADMIN' },
                     take: 1,
                     select: {
                         id: true,
                         name: true,
-                        email: true
-                    }
+                        email: true,
+                    },
                 },
                 _count: {
-                    select: { users: true, branches: true }
-                }
+                    select: { users: true, branches: true },
+                },
             },
-            orderBy: { createdAt: 'desc' }
+            orderBy: { createdAt: 'desc' },
         });
     }
     async findOne(id) {
         return this.prisma.tenant.findUnique({
             where: { id },
-            include: { plan: true, branches: true, users: true }
+            include: {
+                plan: true,
+                branches: true,
+                users: true,
+                settings: true,
+            },
         });
     }
-    async updateLimits(id, limits) {
-        return this.prisma.tenant.update({
-            where: { id },
-            data: limits
+    async updateSettings(tenantId, dto) {
+        const tenant = await this.prisma.tenant.findUnique({
+            where: { id: tenantId },
+        });
+        if (!tenant)
+            throw new common_1.NotFoundException(`Tenant ${tenantId} not found`);
+        return this.prisma.tenantSettings.upsert({
+            where: { tenantId },
+            create: { tenantId, ...dto },
+            update: { ...dto },
         });
     }
     async suspend(id) {
         return this.prisma.tenant.update({
             where: { id },
-            data: { status: 'SUSPENDED' }
+            data: { status: 'SUSPENDED' },
         });
     }
     async activate(id) {
         return this.prisma.tenant.update({
             where: { id },
-            data: { status: 'ACTIVE' }
+            data: { status: 'ACTIVE' },
         });
     }
 };

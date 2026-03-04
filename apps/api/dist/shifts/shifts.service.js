@@ -68,16 +68,16 @@ let ShiftsService = class ShiftsService {
         let totalSales = 0;
         let dteCount = 0;
         let ticketCount = 0;
-        shift.sales.forEach(sale => {
+        shift.sales.forEach((sale) => {
             if (sale.dteFolio) {
                 dteCount++;
             }
             else {
                 ticketCount++;
             }
-            sale.payments.forEach(payment => {
+            sale.payments.forEach((payment) => {
                 const method = payment.paymentMethod;
-                if (totalsByMethod.hasOwnProperty(method)) {
+                if (method in totalsByMethod) {
                     totalsByMethod[method] += payment.amount;
                 }
                 totalSales += payment.amount;

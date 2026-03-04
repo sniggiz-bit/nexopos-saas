@@ -54,7 +54,7 @@ let ReceiptsController = class ReceiptsController {
     constructor(receiptService) {
         this.receiptService = receiptService;
     }
-    async getReceipt(saleId, res) {
+    getReceipt(saleId, res) {
         const filepath = this.receiptService.getReceiptPath(saleId);
         if (!filepath || !fs.existsSync(filepath)) {
             throw new common_1.NotFoundException(`Receipt not found for sale ${saleId}`);
@@ -72,7 +72,7 @@ __decorate([
     __param(1, (0, common_1.Res)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, Object]),
-    __metadata("design:returntype", Promise)
+    __metadata("design:returntype", void 0)
 ], ReceiptsController.prototype, "getReceipt", null);
 exports.ReceiptsController = ReceiptsController = __decorate([
     (0, common_1.Controller)('receipts'),

@@ -10,7 +10,10 @@ exports.ShiftReportService = void 0;
 const common_1 = require("@nestjs/common");
 let ShiftReportService = class ShiftReportService {
     formatCurrency(amount) {
-        return new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' }).format(amount);
+        return new Intl.NumberFormat('es-CL', {
+            style: 'currency',
+            currency: 'CLP',
+        }).format(amount);
     }
     formatDate(date) {
         return new Intl.DateTimeFormat('es-CL', {
