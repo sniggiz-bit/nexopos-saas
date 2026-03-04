@@ -204,7 +204,7 @@ export function LandingPage() {
             </section>
 
             {/* Pricing Section */}
-<<<<<<< rediseño-landing
+            {/* Pricing Section */}
             <section id="pricing" className="py-24 bg-slate-900 relative border-t border-slate-800">
                 {/* Background decoration */}
                 <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-slate-700 to-transparent"></div>
@@ -269,121 +269,10 @@ export function LandingPage() {
                                     >
                                         {plan.isRecommended ? 'Comenzar Prueba Gratis' : 'Seleccionar Plan'}
                                     </Link>
-=======
-            <section id="pricing" className="py-24 bg-slate-900">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="text-center mb-16">
-                        <h2 className="text-4xl font-bold text-white mb-4">
-                            Planes diseñados para tu negocio
-                        </h2>
-                        <p className="text-xl text-slate-400">
-                            Elige el plan que mejor se adapte a tus necesidades
-                        </p>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto items-center">
-                        {/* Plan Light */}
-                        <div className="bg-slate-800 rounded-2xl shadow-lg p-8 border border-slate-700 hover:border-slate-600 transition-all duration-300 relative text-white">
-                            <div className="mb-8">
-                                <h3 className="text-2xl font-bold mb-2">Plan Light</h3>
-                                <p className="text-slate-400 text-sm mb-4">Básico</p>
-                                <div className="flex items-baseline mb-4">
-                                    <span className="text-5xl font-bold">$X.XXX</span>
-                                    <span className="text-slate-400 ml-2">/mes</span>
                                 </div>
-                                <p className="text-slate-400 text-sm">Ideal para emprendedores y pequeños negocios que recién comienzan.</p>
-                            </div>
-                            <ul className="space-y-4 mb-8">
-                                {[
-                                    'Punto de Venta básico',
-                                    'Control de Inventario',
-                                    '1 Usuario',
-                                    'Soporte por email'
-                                ].map((feature, idx) => (
-                                    <li key={idx} className="flex items-start">
-                                        <CheckCircle className="w-5 h-5 text-indigo-400 mr-3 mt-0.5 flex-shrink-0" />
-                                        <span className="text-slate-300 text-sm">{feature}</span>
-                                    </li>
-                                ))}
-                            </ul>
-                            <Link
-                                to="/register"
-                                className="block w-full text-center px-6 py-3 font-semibold rounded-lg transition-all bg-slate-700 text-white hover:bg-slate-600"
-                            >
-                                Comenzar
-                            </Link>
+                            ))}
                         </div>
-
-                        {/* Plan Elevate (Destacado) */}
-                        <div className="bg-slate-800 rounded-2xl shadow-2xl p-8 border-2 border-green-500 transform lg:scale-105 z-10 relative text-white shadow-green-500/20">
-                            <div className="absolute top-0 right-0 bg-green-500 text-slate-900 px-4 py-1 rounded-bl-lg rounded-tr-xl text-sm font-bold">
-                                Más Popular
-                            </div>
-                            <div className="mb-8">
-                                <h3 className="text-2xl font-bold mb-2">Plan Elevate</h3>
-                                <p className="text-green-400 text-sm mb-4">Destacado / Profesional</p>
-                                <div className="flex items-baseline mb-4">
-                                    <span className="text-5xl font-bold text-white">$X.XXX</span>
-                                    <span className="text-slate-400 ml-2">/mes</span>
-                                </div>
-                                <p className="text-slate-400 text-sm">Perfecto para negocios en crecimiento que necesitan herramientas avanzadas.</p>
-                            </div>
-                            <ul className="space-y-4 mb-8">
-                                {[
-                                    'Facturación Electrónica (DTE)',
-                                    'Múltiples sucursales',
-                                    'Reportes avanzados',
-                                    '5 Usuarios',
-                                    'Soporte prioritario 24/7'
-                                ].map((feature, idx) => (
-                                    <li key={idx} className="flex items-start">
-                                        <CheckCircle className="w-5 h-5 text-green-500 mr-3 mt-0.5 flex-shrink-0" />
-                                        <span className="text-slate-300 text-sm">{feature}</span>
-                                    </li>
-                                ))}
-                            </ul>
-                            <Link
-                                to="/register"
-                                className="block w-full text-center px-6 py-3 font-semibold rounded-lg transition-all bg-green-500 text-slate-900 hover:bg-green-400 hover:shadow-lg hover:shadow-green-500/30 transform hover:-translate-y-1"
-                            >
-                                Comenzar Ahora
-                            </Link>
-                        </div>
-
-                        {/* Plan Vanguard */}
-                        <div className="bg-slate-800 rounded-2xl shadow-lg p-8 border border-slate-700 hover:border-slate-600 transition-all duration-300 relative text-white">
-                            <div className="mb-8">
-                                <h3 className="text-2xl font-bold mb-2">Plan Vanguard</h3>
-                                <p className="text-slate-400 text-sm mb-4">Avanzado / Premium</p>
-                                <div className="flex items-baseline mb-4">
-                                    <span className="text-5xl font-bold">$X.XXX</span>
-                                    <span className="text-slate-400 ml-2">/mes</span>
->>>>>>> main
-                                </div>
-                                <p className="text-slate-400 text-sm">Para grandes empresas que requieren soluciones a medida y máxima capacidad.</p>
-                            </div>
-                            <ul className="space-y-4 mb-8">
-                                {[
-                                    'Todas las funciones Elevate',
-                                    'Usuarios ilimitados',
-                                    'API de integración',
-                                    'Desarrollo personalizado',
-                                    'Ejecutivo de cuenta dedicado'
-                                ].map((feature, idx) => (
-                                    <li key={idx} className="flex items-start">
-                                        <CheckCircle className="w-5 h-5 text-indigo-400 mr-3 mt-0.5 flex-shrink-0" />
-                                        <span className="text-slate-300 text-sm">{feature}</span>
-                                    </li>
-                                ))}
-                            </ul>
-                            <Link
-                                to="/register"
-                                className="block w-full text-center px-6 py-3 font-semibold rounded-lg transition-all bg-slate-700 text-white hover:bg-slate-600"
-                            >
-                                Comenzar
-                            </Link>
-                        </div>
-                    </div>
+                    )}
                 </div>
             </section>
 
