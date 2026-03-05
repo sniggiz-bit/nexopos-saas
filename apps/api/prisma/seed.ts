@@ -2,7 +2,15 @@ import 'dotenv/config';
 import { PrismaClient } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 
-const prisma = new PrismaClient();
+const fallbackDbUrl = process.env.DATABASE_URL || "postgresql://postgres:postgres@nexopos_postgres:5432/nexopos_db";
+
+const prisma = new PrismaClient({
+    datasources: {
+        db: {
+            url: fallbackDbUrl,
+        },
+    },
+});
 
 async function main() {
     console.log('🌱 Iniciando seed de la base de datos (Datos Chilenos)...');
