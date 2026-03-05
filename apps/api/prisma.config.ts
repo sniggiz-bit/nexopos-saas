@@ -7,6 +7,6 @@ export default defineConfig({
         seed: 'npx tsx prisma/seed.ts',
     },
     datasource: {
-        url: "postgresql://postgres:postgres@postgres:5432/nexopos_db",
+        url: "postgresql://postgres:postgres@nexopos_postgres:5432/nexopos_db",
     }
 });
