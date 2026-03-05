@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // In production (Docker), VITE_API_URL should be set to '/api' to use the Nginx proxy
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+const API_BASE_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? '/api' : 'http://localhost:3000');
 
 export const apiClient = axios.create({
     baseURL: API_BASE_URL,
