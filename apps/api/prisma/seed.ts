@@ -1,10 +1,14 @@
 import 'dotenv/config';
 import { PrismaClient } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
+import { Pool } from 'pg';
+import { PrismaPg } from '@prisma/adapter-pg';
 
-const prisma = new PrismaClient({
-    datasourceUrl: process.env.DATABASE_URL || "postgresql://postgres:postgres@nexopos_postgres:5432/nexopos_db",
-});
+const connectionString = process.env.DATABASE_URL || "postgresql://postgres:postgres@localhost:5434/nexopos?schema=public";
+const pool = new Pool({ connectionString });
+const adapter = new PrismaPg(pool);
+
+const prisma = new PrismaClient({ adapter });
 
 async function main() {
     console.log('🌱 Iniciando seed de la base de datos (Datos Chilenos)...');
