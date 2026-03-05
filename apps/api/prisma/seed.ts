@@ -2,12 +2,10 @@ import 'dotenv/config';
 import { PrismaClient } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 
-const fallbackDbUrl = process.env.DATABASE_URL || "postgresql://postgres:postgres@nexopos_postgres:5432/nexopos_db";
-
 const prisma = new PrismaClient({
     datasources: {
         db: {
-            url: fallbackDbUrl,
+            url: process.env.DATABASE_URL || "postgresql://postgres:postgres@nexopos_postgres:5432/nexopos_db",
         },
     },
 });
