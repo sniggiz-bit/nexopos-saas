@@ -12,6 +12,7 @@ interface RegisterFormData {
     phone: string;
     password: string;
 }
+import { api } from '../api/client';
 
 export function RegisterPage() {
     const navigate = useNavigate();
@@ -37,21 +38,8 @@ export function RegisterPage() {
         setIsLoading(true);
 
         try {
-            const apiUrl = import.meta.env.VITE_API_URL || '';
-            const response = await fetch(`${apiUrl}/auth/register-tenant`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(formData),
-            });
-
-            if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.message || 'Error al crear la cuenta');
-            }
-
-            const data = await response.json();
+            const response = await api.post('/auth/register-tenant', formData);
+            const data = response.data;
 
             // Auto-login with returned token
             login(data.access_token, data.user);
@@ -67,7 +55,8 @@ export function RegisterPage() {
             }
         } catch (error: any) {
             console.error('Registration error:', error);
-            toast.error(error.message || 'Error al crear la cuenta. Por favor intenta nuevamente.');
+            const errorMessage = error.response?.data?.message || error.message || 'Error al crear la cuenta. Por favor intenta nuevamente.';
+            toast.error(Array.isArray(errorMessage) ? errorMessage.join(', ') : errorMessage);
         } finally {
             setIsLoading(false);
         }
