@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import { apiClient } from '../../api/client';
 import { Activity, AlertTriangle, Info } from 'lucide-react';
 
 interface Log {
@@ -24,10 +24,7 @@ export default function SystemHealthPage() {
 
     const fetchLogs = async () => {
         try {
-            const response = await axios.get(`${import.meta.env.VITE_API_URL}/system-logs`, {
-                params: { level: filterLevel },
-                headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-            });
+            const response = await apiClient.get('/system-logs', { params: { level: filterLevel } });
             setLogs(response.data);
         } catch (error) {
             console.error('Error fetching logs:', error);

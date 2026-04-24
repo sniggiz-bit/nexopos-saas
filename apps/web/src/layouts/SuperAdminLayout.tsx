@@ -9,7 +9,8 @@ import {
     X,
     CreditCard,
     Activity,
-    Megaphone
+    Megaphone,
+    GitBranch
 } from 'lucide-react';
 import { Logo } from '../components/ui/Logo';
 
@@ -28,9 +29,10 @@ export default function SuperAdminLayout() {
     const menuItems = [
         { icon: LayoutDashboard, label: 'Dashboard', path: '/admin/dashboard' },
         { icon: Users, label: 'Tenants', path: '/admin/tenants' },
-        { icon: CreditCard, label: 'Subscription Plans', path: '/admin/plans' },
+        { icon: CreditCard, label: 'Planes', path: '/admin/plans' },
+        { icon: GitBranch, label: 'Sucursales', path: '/admin/branches' },
         { icon: Activity, label: 'System Health', path: '/admin/system-health' },
-        { icon: Megaphone, label: 'Announcements', path: '/admin/announcements' },
+        { icon: Megaphone, label: 'Comunicados', path: '/admin/announcements' },
     ];
 
     const handleLogout = () => {
