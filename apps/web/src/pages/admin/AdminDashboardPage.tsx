@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import axios from 'axios';
+import { apiClient } from '../../api/client';
 import { Users, DollarSign, Activity, TrendingUp } from 'lucide-react';
 import {
     Chart as ChartJS,
@@ -58,9 +58,7 @@ export default function AdminDashboardPage() {
     useEffect(() => {
         const fetchMetrics = async () => {
             try {
-                const response = await axios.get(`${import.meta.env.VITE_API_URL}/admin/dashboard`, {
-                    headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-                });
+                const response = await apiClient.get('/admin/dashboard');
                 setMetrics(response.data);
             } catch (error) {
                 console.error('Error fetching metrics:', error);

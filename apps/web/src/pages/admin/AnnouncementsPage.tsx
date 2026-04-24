@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import { apiClient } from '../../api/client';
 import { Megaphone, Trash, Plus, CheckCircle, AlertTriangle } from 'lucide-react';
 
 interface Announcement {
@@ -23,9 +23,7 @@ export default function AnnouncementsPage() {
 
     const fetchAnnouncements = async () => {
         try {
-            const response = await axios.get(`${import.meta.env.VITE_API_URL}/announcements`, {
-                headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-            });
+            const response = await apiClient.get('/announcements');
             setAnnouncements(response.data);
         } catch (error) {
             console.error('Error fetching announcements:', error);
@@ -37,9 +35,7 @@ export default function AnnouncementsPage() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            await axios.post(`${import.meta.env.VITE_API_URL}/announcements`, formData, {
-                headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-            });
+            await apiClient.post('/announcements', formData);
             fetchAnnouncements();
             setIsModalOpen(false);
             setFormData({ title: '', content: '', type: 'INFO', isActive: true });
@@ -51,9 +47,7 @@ export default function AnnouncementsPage() {
     const handleDelete = async (id: string) => {
         if (!confirm('¿Eliminar comunicado?')) return;
         try {
-            await axios.delete(`${import.meta.env.VITE_API_URL}/announcements/${id}`, {
-                headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-            });
+            await apiClient.delete(`/announcements/${id}`);
             fetchAnnouncements();
         } catch (error) {
             console.error('Error deleting announcement:', error);
@@ -62,10 +56,7 @@ export default function AnnouncementsPage() {
 
     const toggleStatus = async (announcement: Announcement) => {
         try {
-            await axios.patch(`${import.meta.env.VITE_API_URL}/announcements/${announcement.id}`,
-                { isActive: !announcement.isActive },
-                { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
-            );
+            await apiClient.patch(`/announcements/${announcement.id}`, { isActive: !announcement.isActive });
             fetchAnnouncements();
         } catch (error) {
             console.error('Error updating status:', error);

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import { apiClient } from '../../api/client';
 import { Plus, Edit, Trash, Check, X } from 'lucide-react';
 // import { useAuth } from '../../context/AuthContext';
 
@@ -28,9 +28,7 @@ export default function PlansPage() {
 
     const fetchPlans = async () => {
         try {
-            const response = await axios.get(`${import.meta.env.VITE_API_URL}/plans`, {
-                headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-            });
+            const response = await apiClient.get('/plans');
             setPlans(response.data);
         } catch (error) {
             console.error('Error fetching plans:', error);
@@ -40,11 +38,10 @@ export default function PlansPage() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            const headers = { Authorization: `Bearer ${localStorage.getItem('token')}` };
             if (formData.id) {
-                await axios.patch(`${import.meta.env.VITE_API_URL}/plans/${formData.id}`, formData, { headers });
+                await apiClient.patch(`/plans/${formData.id}`, formData);
             } else {
-                await axios.post(`${import.meta.env.VITE_API_URL}/plans`, formData, { headers });
+                await apiClient.post('/plans', formData);
             }
             fetchPlans();
             setIsModalOpen(false);
@@ -58,9 +55,7 @@ export default function PlansPage() {
     const handleDelete = async (id: string) => {
         if (!confirm('¿Estás seguro de eliminar este plan?')) return;
         try {
-            await axios.delete(`${import.meta.env.VITE_API_URL}/plans/${id}`, {
-                headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-            });
+            await apiClient.delete(`/plans/${id}`);
             fetchPlans();
         } catch (error) {
             console.error('Error deleting plan:', error);
