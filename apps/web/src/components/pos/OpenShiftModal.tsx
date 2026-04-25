@@ -11,7 +11,7 @@ import { useOpenShift } from '@/hooks/useShifts';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
 import { Wallet, LogIn, Store, AlertCircle, Coins, Building2 } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/api/client';
 
 interface OpenShiftModalProps {
@@ -25,6 +25,7 @@ export function OpenShiftModal({ isOpen }: OpenShiftModalProps) {
     const { mutate: openShift, isPending } = useOpenShift();
     const { toast } = useToast();
     const { user } = useAuth();
+    const queryClient = useQueryClient();
 
     const { data: branches = [] } = useQuery<{ id: string; name: string }[]>({
         queryKey: ['branches', user?.tenantId],
@@ -76,9 +77,11 @@ export function OpenShiftModal({ isOpen }: OpenShiftModalProps) {
                 onError: (error: any) => {
                     const message = error.response?.data?.message || '';
                     if (message.includes('already an open shift')) {
+                        // There's already an open shift — force refetch to detect it and close modal
+                        queryClient.refetchQueries({ queryKey: ['current-shift'] });
                         toast({
                             title: 'Turno Ya Abierto',
-                            description: 'Ya existe un turno abierto para esta sucursal.',
+                            description: 'Ya existe un turno abierto. Sincronizando...',
                         });
                     } else {
                         toast({
