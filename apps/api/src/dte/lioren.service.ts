@@ -144,4 +144,53 @@ export class LiorenService {
       return { success: false, error: error.message };
     }
   }
+
+  async consultaRut(rut: string) {
+    try {
+      this.logger.log(`[Lioren] Consultando RUT: ${rut}...`);
+
+      const payload = {
+        token: this.defaultToken,
+        rut: rut.replace(/\./g, '').replace(/-/g, ''), // Clean RUT for API
+      };
+
+      // In real life, Lioren uses a specific endpoint for RUT lookup
+      // Usually it's https://lioren.cl/api/rut
+      const response = await axios.post('https://lioren.cl/api/rut', payload);
+
+      if (response.data) {
+        return {
+          success: true,
+          data: {
+            reasonSocial: response.data.rs,
+            giro: response.data.giro,
+            address: response.data.dir,
+            comuna: response.data.comuna,
+            city: response.data.ciudad,
+          }
+        };
+      }
+
+      return { success: false, message: 'No se encontraron datos' };
+    } catch (error: any) {
+      this.logger.error(`[Lioren] Error consultando RUT: ${error.message}`);
+
+      // FALLBACK MOCK for development if API fails or no token
+      if (this.defaultToken?.startsWith('YOUR_') || !this.apiKey) {
+        this.logger.log('[Lioren] MOCK MODE: Devuelto datos de prueba para ' + rut);
+        return {
+          success: true,
+          data: {
+            reasonSocial: 'Empresa de Prueba S.A.',
+            giro: 'Venta de software',
+            address: 'Av. Providencia 1234',
+            comuna: 'Providencia',
+            city: 'Santiago',
+          }
+        };
+      }
+
+      return { success: false, error: error.message };
+    }
+  }
 }

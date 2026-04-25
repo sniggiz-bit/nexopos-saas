@@ -18,6 +18,22 @@ let ProductsService = class ProductsService {
     constructor(prisma) {
         this.prisma = prisma;
     }
+    validatePriceTiers(basePrice, priceTiers) {
+        if (!priceTiers || priceTiers.length === 0)
+            return;
+        for (const tier of priceTiers) {
+            if (tier.unitPrice >= basePrice) {
+                throw new common_1.ConflictException(`El precio mayorista ($${tier.unitPrice}) debe ser menor al precio base ($${basePrice}).`);
+            }
+        }
+        const quantities = new Set();
+        for (const tier of priceTiers) {
+            if (quantities.has(tier.minQuantity)) {
+                throw new common_1.ConflictException(`La cantidad mínima ${tier.minQuantity} está duplicada en los tramos de precio.`);
+            }
+            quantities.add(tier.minQuantity);
+        }
+    }
     async findAll(tenantId) {
         const products = await this.prisma.product.findMany({
             where: {
@@ -32,6 +48,9 @@ let ProductsService = class ProductsService {
                 },
                 category: true,
                 brand: true,
+                priceTiers: {
+                    orderBy: { minQuantity: 'asc' },
+                },
             },
         });
         return products.map((product) => ({
@@ -63,6 +82,7 @@ let ProductsService = class ProductsService {
                     name: product.brand.name,
                 }
                 : undefined,
+            priceTiers: product.priceTiers || [],
         }));
     }
     async findOne(id, tenantId) {
@@ -79,6 +99,9 @@ let ProductsService = class ProductsService {
                 },
                 category: true,
                 brand: true,
+                priceTiers: {
+                    orderBy: { minQuantity: 'asc' },
+                },
             },
         });
         if (!product) {
@@ -113,11 +136,12 @@ let ProductsService = class ProductsService {
                     name: product.brand.name,
                 }
                 : undefined,
+            priceTiers: product.priceTiers || [],
         };
     }
     async create(createProductDto) {
         console.log('[ProductsService] Service starting with DTO:', JSON.stringify(createProductDto, null, 2));
-        const { tenantId, barcode, initialStock, ...productData } = createProductDto;
+        const { tenantId, barcode, initialStock, priceTiers, ...productData } = createProductDto;
         if (barcode) {
             const existingProduct = await this.prisma.product.findFirst({
                 where: {
@@ -129,6 +153,7 @@ let ProductsService = class ProductsService {
                 throw new common_1.ConflictException(`El código de barras ${barcode} ya existe para este tenant`);
             }
         }
+        this.validatePriceTiers(productData.price, createProductDto.priceTiers);
         const product = await this.prisma.product.create({
             data: {
                 ...productData,
@@ -161,11 +186,20 @@ let ProductsService = class ProductsService {
                         ]
                         : [],
                 },
+                priceTiers: priceTiers
+                    ? {
+                        create: priceTiers.map((tier) => ({
+                            minQuantity: tier.minQuantity,
+                            unitPrice: tier.unitPrice,
+                        })),
+                    }
+                    : undefined,
             },
             include: {
                 category: true,
                 brand: true,
                 inventory: true,
+                priceTiers: true,
             },
         });
         const stock = product.inventory.reduce((total, inv) => total + inv.quantity.toNumber(), 0);
@@ -193,9 +227,29 @@ let ProductsService = class ProductsService {
                     name: product.brand.name,
                 }
                 : undefined,
+            priceTiers: product.priceTiers || [],
         };
     }
     async update(id, updateProductDto) {
+        const existingProductForValidation = await this.prisma.product.findUnique({
+            where: { id },
+        });
+        if (!existingProductForValidation) {
+            throw new common_1.NotFoundException(`Product with ID ${id} not found`);
+        }
+        const newPrice = updateProductDto.price !== undefined ? updateProductDto.price : existingProductForValidation.price;
+        if (updateProductDto.priceTiers || updateProductDto.price !== undefined) {
+            if (updateProductDto.priceTiers) {
+                this.validatePriceTiers(newPrice, updateProductDto.priceTiers);
+            }
+            else {
+                const productWithTiers = await this.prisma.product.findUnique({ where: { id }, include: { priceTiers: true } });
+                const currentTiers = productWithTiers?.priceTiers || [];
+                if (currentTiers.length > 0) {
+                    this.validatePriceTiers(newPrice, currentTiers.map(t => ({ minQuantity: t.minQuantity, unitPrice: t.unitPrice })));
+                }
+            }
+        }
         if (updateProductDto.barcode && updateProductDto.tenantId) {
             const existingProduct = await this.prisma.product.findFirst({
                 where: {
@@ -224,6 +278,15 @@ let ProductsService = class ProductsService {
                 isActive: updateProductDto.isActive,
                 categoryId: updateProductDto.categoryId,
                 brandId: updateProductDto.brandId,
+                priceTiers: updateProductDto.priceTiers
+                    ? {
+                        deleteMany: {},
+                        create: updateProductDto.priceTiers.map((tier) => ({
+                            minQuantity: tier.minQuantity,
+                            unitPrice: tier.unitPrice,
+                        })),
+                    }
+                    : undefined,
             },
             include: {
                 category: true,

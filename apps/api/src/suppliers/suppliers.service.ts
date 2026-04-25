@@ -4,6 +4,7 @@ import {
     ForbiddenException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { formatRut } from '@nexopos/shared';
 
 interface CreateSupplierDto {
     name: string;
@@ -64,6 +65,7 @@ export class SuppliersService {
         return this.prisma.supplier.create({
             data: {
                 ...data,
+                rut: data.rut ? formatRut(data.rut) : undefined,
                 tenantId,
             },
         });
@@ -72,9 +74,12 @@ export class SuppliersService {
     async update(id: string, data: UpdateSupplierDto, tenantId: string) {
         await this.findOne(id, tenantId); // validates ownership
 
+        const updateData = { ...data };
+        if (updateData.rut) updateData.rut = formatRut(updateData.rut);
+
         return this.prisma.supplier.update({
             where: { id },
-            data,
+            data: updateData,
         });
     }
 

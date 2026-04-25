@@ -91,7 +91,7 @@ let SalesService = SalesService_1 = class SalesService {
             if (!currentShift) {
                 throw new common_1.BadRequestException('No open shift found. Please open a shift first.');
             }
-            const productPriceMap = new Map(products.map((p) => [p.id, p.price]));
+            const productMap = new Map(products.map((p) => [p.id, p]));
             for (const item of items) {
                 const inventory = await prisma.inventory.findUnique({
                     where: {
@@ -111,8 +111,10 @@ let SalesService = SalesService_1 = class SalesService {
                 }, prisma);
             }
             const total = items.reduce((acc, item) => {
-                const price = Number(productPriceMap.get(item.productId) || 0);
-                return acc + price * Number(item.quantity);
+                const product = productMap.get(item.productId);
+                const linePrice = item.price ?? Number(product?.price || 0);
+                const discount = item.discountAmount ?? 0;
+                return acc + (linePrice * Number(item.quantity)) - discount;
             }, 0);
             if (status === 'COMPLETED') {
                 const totalPaid = payments.reduce((acc, p) => acc + p.amount, 0);
@@ -131,11 +133,15 @@ let SalesService = SalesService_1 = class SalesService {
                     customerId,
                     quoteId,
                     items: {
-                        create: items.map((item) => ({
-                            productId: item.productId,
-                            quantity: item.quantity,
-                            price: Number(productPriceMap.get(item.productId) || 0),
-                        })),
+                        create: items.map((item) => {
+                            const product = productMap.get(item.productId);
+                            const linePrice = item.price ?? Number(product?.price || 0);
+                            return {
+                                productId: item.productId,
+                                quantity: item.quantity,
+                                price: linePrice,
+                            };
+                        }),
                     },
                     payments: {
                         create: payments?.map((p) => ({

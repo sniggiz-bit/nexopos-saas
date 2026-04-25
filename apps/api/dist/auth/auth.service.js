@@ -52,6 +52,7 @@ const prisma_service_1 = require("../prisma/prisma.service");
 const email_service_1 = require("../email/email.service");
 const tenants_service_1 = require("../tenants/tenants.service");
 const bcrypt = __importStar(require("bcrypt"));
+const shared_1 = require("@nexopos/shared");
 let AuthService = class AuthService {
     jwtService;
     prisma;
@@ -175,7 +176,7 @@ let AuthService = class AuthService {
                     name: dto.companyName,
                     slug,
                     phone: dto.phone,
-                    rut: dto.rut,
+                    rut: dto.rut ? (0, shared_1.formatRut)(dto.rut) : undefined,
                     giro: dto.giro,
                     address: dto.address,
                     status: 'ACTIVE',

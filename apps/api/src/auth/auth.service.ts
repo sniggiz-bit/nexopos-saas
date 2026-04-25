@@ -12,6 +12,7 @@ import { EmailService } from '../email/email.service';
 import { TenantsService } from '../tenants/tenants.service';
 import * as bcrypt from 'bcrypt';
 import { RegisterTenantDto } from './dto/register-tenant.dto';
+import { formatRut } from '@nexopos/shared';
 
 @Injectable()
 export class AuthService {
@@ -170,7 +171,7 @@ export class AuthService {
           name: dto.companyName,
           slug,
           phone: dto.phone,
-          rut: dto.rut,
+          rut: dto.rut ? formatRut(dto.rut) : undefined,
           giro: dto.giro,
           address: dto.address,
           status: 'ACTIVE',

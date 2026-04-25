@@ -1,3 +1,4 @@
+import { PriceTierDto } from './price-tier.dto';
 export declare class ProductResponseDto {
     id: string;
     name: string;
@@ -23,4 +24,5 @@ export declare class ProductResponseDto {
         branchName: string;
         quantity: number;
     }[];
+    priceTiers?: PriceTierDto[];
 }

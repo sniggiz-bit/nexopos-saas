@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.CustomersService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma/prisma.service");
+const shared_1 = require("@nexopos/shared");
 let CustomersService = class CustomersService {
     prisma;
     constructor(prisma) {
@@ -20,7 +21,10 @@ let CustomersService = class CustomersService {
     async create(createCustomerDto) {
         try {
             return await this.prisma.customer.create({
-                data: createCustomerDto,
+                data: {
+                    ...createCustomerDto,
+                    rut: (0, shared_1.formatRut)(createCustomerDto.rut),
+                },
             });
         }
         catch (error) {
@@ -58,9 +62,12 @@ let CustomersService = class CustomersService {
         });
     }
     async update(id, updateCustomerDto) {
+        const data = { ...updateCustomerDto };
+        if (data.rut)
+            data.rut = (0, shared_1.formatRut)(data.rut);
         return this.prisma.customer.update({
             where: { id },
-            data: updateCustomerDto,
+            data,
         });
     }
     async remove(id) {

@@ -9,43 +9,12 @@ export declare class TransfersController {
         note?: string;
     }, req: any): Promise<any>;
     findAll(req: any): Promise<({
-        originBranch: {
-            id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            name: string;
-            address: string | null;
-            isMain: boolean;
-            isActive: boolean;
-            tenantId: string;
-        };
-        destinationBranch: {
-            id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            name: string;
-            address: string | null;
-            isMain: boolean;
-            isActive: boolean;
-            tenantId: string;
-        };
-        requestedBy: {
-            id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            name: string | null;
-            tenantId: string;
-            email: string;
-            password: string | null;
-            role: import("@prisma/client").$Enums.UserRole;
-            branchId: string | null;
-        };
         items: ({
             product: {
+                name: string;
                 id: string;
                 createdAt: Date;
                 updatedAt: Date;
-                name: string;
                 isActive: boolean;
                 tenantId: string;
                 sku: string | null;
@@ -63,19 +32,50 @@ export declare class TransfersController {
             };
         } & {
             id: string;
-            transferId: string;
             productId: string;
             quantity: import("@prisma/client-runtime-utils").Decimal;
+            transferId: string;
         })[];
+        originBranch: {
+            name: string;
+            id: string;
+            address: string | null;
+            createdAt: Date;
+            updatedAt: Date;
+            isMain: boolean;
+            isActive: boolean;
+            tenantId: string;
+        };
+        destinationBranch: {
+            name: string;
+            id: string;
+            address: string | null;
+            createdAt: Date;
+            updatedAt: Date;
+            isMain: boolean;
+            isActive: boolean;
+            tenantId: string;
+        };
+        requestedBy: {
+            name: string | null;
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            tenantId: string;
+            branchId: string | null;
+            email: string;
+            password: string | null;
+            role: import("@prisma/client").$Enums.UserRole;
+        };
     } & {
         id: string;
-        originBranchId: string;
-        destBranchId: string;
-        status: import("@prisma/client").$Enums.TransferStatus;
-        requestedById: string;
-        processedById: string | null;
         createdAt: Date;
         updatedAt: Date;
+        status: import("@prisma/client").$Enums.TransferStatus;
+        originBranchId: string;
+        destBranchId: string;
+        requestedById: string;
+        processedById: string | null;
         note: string | null;
     })[]>;
 }

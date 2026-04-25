@@ -7,11 +7,34 @@ import { PrismaService } from '../prisma/prisma.service';
 import { ProductResponseDto } from './dto/product-response.dto';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
+import { PriceTierDto } from './dto/price-tier.dto';
 import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class ProductsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
+
+  private validatePriceTiers(basePrice: number, priceTiers?: PriceTierDto[]) {
+    if (!priceTiers || priceTiers.length === 0) return;
+
+    // Verificar que el unitPrice sea menor al basePrice
+    for (const tier of priceTiers) {
+      if (tier.unitPrice >= basePrice) {
+        throw new ConflictException(
+          `El precio mayorista ($${tier.unitPrice}) debe ser menor al precio base ($${basePrice}).`
+        );
+      }
+    }
+
+    // Verificar minQuantity unicos
+    const quantities = new Set<number>();
+    for (const tier of priceTiers) {
+      if (quantities.has(tier.minQuantity)) {
+        throw new ConflictException(`La cantidad mínima ${tier.minQuantity} está duplicada en los tramos de precio.`);
+      }
+      quantities.add(tier.minQuantity);
+    }
+  }
 
   /**
    * Get all products with calculated stock from InventoryLevel
@@ -34,7 +57,11 @@ export class ProductsService {
         },
         category: true,
         brand: true,
+        priceTiers: {
+          orderBy: { minQuantity: 'asc' },
+        },
       },
+
     });
 
     // Transform to response DTO with calculated stock
@@ -60,16 +87,17 @@ export class ProductsService {
       })),
       category: product.category
         ? {
-            id: product.category.id,
-            name: product.category.name,
-          }
+          id: product.category.id,
+          name: product.category.name,
+        }
         : undefined,
       brand: product.brand
         ? {
-            id: product.brand.id,
-            name: product.brand.name,
-          }
+          id: product.brand.id,
+          name: product.brand.name,
+        }
         : undefined,
+      priceTiers: product.priceTiers || [],
     }));
   }
 
@@ -94,6 +122,9 @@ export class ProductsService {
         },
         category: true,
         brand: true,
+        priceTiers: {
+          orderBy: { minQuantity: 'asc' },
+        },
       },
     });
 
@@ -123,16 +154,17 @@ export class ProductsService {
       })),
       category: product.category
         ? {
-            id: product.category.id,
-            name: product.category.name,
-          }
+          id: product.category.id,
+          name: product.category.name,
+        }
         : undefined,
       brand: product.brand
         ? {
-            id: product.brand.id,
-            name: product.brand.name,
-          }
+          id: product.brand.id,
+          name: product.brand.name,
+        }
         : undefined,
+      priceTiers: product.priceTiers || [],
     };
   }
 
@@ -148,7 +180,7 @@ export class ProductsService {
       '[ProductsService] Service starting with DTO:',
       JSON.stringify(createProductDto, null, 2),
     );
-    const { tenantId, barcode, initialStock, ...productData } =
+    const { tenantId, barcode, initialStock, priceTiers, ...productData } =
       createProductDto;
 
     // Validate barcode uniqueness per tenant if provided
@@ -167,6 +199,9 @@ export class ProductsService {
       }
     }
 
+    // Validar tramos de precio
+    this.validatePriceTiers(productData.price, createProductDto.priceTiers);
+
     // Create product with default values for optional fields
     const product = await this.prisma.product.create({
       data: {
@@ -181,31 +216,40 @@ export class ProductsService {
         inventory: {
           create: initialStock
             ? [
-                {
-                  branchId: 'branch-1', // Default branch
-                  quantity: new Prisma.Decimal(initialStock),
-                },
-              ]
+              {
+                branchId: 'branch-1', // Default branch
+                quantity: new Prisma.Decimal(initialStock),
+              },
+            ]
             : [],
         },
         stockMovements: {
           create: initialStock
             ? [
-                {
-                  branchId: 'branch-1',
-                  quantity: new Prisma.Decimal(initialStock),
-                  type: 'INITIAL',
-                  balance: new Prisma.Decimal(initialStock),
-                  reference: 'Inventario Inicial',
-                },
-              ]
+              {
+                branchId: 'branch-1',
+                quantity: new Prisma.Decimal(initialStock),
+                type: 'INITIAL',
+                balance: new Prisma.Decimal(initialStock),
+                reference: 'Inventario Inicial',
+              },
+            ]
             : [],
         },
+        priceTiers: priceTiers
+          ? {
+            create: priceTiers.map((tier) => ({
+              minQuantity: tier.minQuantity,
+              unitPrice: tier.unitPrice,
+            })),
+          }
+          : undefined,
       },
       include: {
         category: true,
         brand: true,
         inventory: true,
+        priceTiers: true,
       },
     });
 
@@ -229,16 +273,17 @@ export class ProductsService {
       stock,
       category: product.category
         ? {
-            id: product.category.id,
-            name: product.category.name,
-          }
+          id: product.category.id,
+          name: product.category.name,
+        }
         : undefined,
       brand: product.brand
         ? {
-            id: product.brand.id,
-            name: product.brand.name,
-          }
+          id: product.brand.id,
+          name: product.brand.name,
+        }
         : undefined,
+      priceTiers: product.priceTiers || [],
     };
   }
 
@@ -252,6 +297,29 @@ export class ProductsService {
     id: string,
     updateProductDto: UpdateProductDto,
   ): Promise<ProductResponseDto> {
+    const existingProductForValidation = await this.prisma.product.findUnique({
+      where: { id },
+    });
+
+    if (!existingProductForValidation) {
+      throw new NotFoundException(`Product with ID ${id} not found`);
+    }
+
+    // Validar tramos de precio si existen
+    const newPrice = updateProductDto.price !== undefined ? updateProductDto.price : existingProductForValidation.price;
+    if (updateProductDto.priceTiers || updateProductDto.price !== undefined) {
+      if (updateProductDto.priceTiers) {
+        this.validatePriceTiers(newPrice, updateProductDto.priceTiers);
+      } else {
+        // Obtenmos tiers actuales solo si cambiamos el precio y no actualizamos tiers para asegurar regla negocio
+        const productWithTiers = await this.prisma.product.findUnique({ where: { id }, include: { priceTiers: true } });
+        const currentTiers = productWithTiers?.priceTiers || [];
+        if (currentTiers.length > 0) {
+          this.validatePriceTiers(newPrice, currentTiers.map(t => ({ minQuantity: t.minQuantity, unitPrice: t.unitPrice })));
+        }
+      }
+    }
+
     // Validate barcode uniqueness if barcode is being updated
     if (updateProductDto.barcode && updateProductDto.tenantId) {
       const existingProduct = await this.prisma.product.findFirst({
@@ -285,6 +353,15 @@ export class ProductsService {
         isActive: updateProductDto.isActive,
         categoryId: updateProductDto.categoryId,
         brandId: updateProductDto.brandId,
+        priceTiers: updateProductDto.priceTiers
+          ? {
+            deleteMany: {}, // Delete old tiers
+            create: updateProductDto.priceTiers.map((tier) => ({
+              minQuantity: tier.minQuantity,
+              unitPrice: tier.unitPrice,
+            })),
+          }
+          : undefined,
       },
       include: {
         category: true,

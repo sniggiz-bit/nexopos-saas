@@ -36,6 +36,8 @@ __decorate([
 class CreateSaleItemDto {
     productId;
     quantity;
+    price;
+    discountAmount;
 }
 exports.CreateSaleItemDto = CreateSaleItemDto;
 __decorate([
@@ -47,6 +49,18 @@ __decorate([
     (0, class_validator_1.Min)(0.001),
     __metadata("design:type", Number)
 ], CreateSaleItemDto.prototype, "quantity", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.Min)(0),
+    __metadata("design:type", Number)
+], CreateSaleItemDto.prototype, "price", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.Min)(0),
+    __metadata("design:type", Number)
+], CreateSaleItemDto.prototype, "discountAmount", void 0);
 class CreateSaleDto {
     tenantId;
     branchId;
