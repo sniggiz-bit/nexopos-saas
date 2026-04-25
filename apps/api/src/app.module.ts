@@ -29,6 +29,8 @@ import { TransfersModule } from './transfers/transfers.module';
 import { StoreModule } from './store/store.module';
 import { SuppliersModule } from './suppliers/suppliers.module';
 import { PurchasesModule } from './purchases/purchases.module';
+import { CommonModule } from './common/common.module';
+import { AdminModule } from './admin/admin.module';
 
 @Module({
   imports: [
@@ -62,6 +64,8 @@ import { PurchasesModule } from './purchases/purchases.module';
     StoreModule,
     SuppliersModule,
     PurchasesModule,
+    CommonModule,
+    AdminModule,
   ],
   controllers: [AppController, DebugController],
   providers: [AppService],

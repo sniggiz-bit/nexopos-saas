@@ -5,15 +5,16 @@ WORKDIR /app
 
 # Copy root workspace files
 COPY package.json package-lock.json ./
-# Copy web package.json
+# Copy web and shared package.json
 COPY apps/web/package.json ./apps/web/
+COPY packages/shared/package.json ./packages/shared/
 
 # Install dependencies
 RUN npm install
 
 # Copy the rest of the application
 COPY apps/web ./apps/web
-# COPY tsconfig.json ./
+COPY packages/shared ./packages/shared
 
 # Build the application
 WORKDIR /app/apps/web
@@ -35,6 +36,9 @@ RUN echo 'server { \
     gzip_types text/plain text/css application/json application/javascript text/xml application/xml application/xml+rss text/javascript; \
     location / { \
     try_files $uri $uri/ /index.html; \
+    } \
+    location = /index.html { \
+    add_header Cache-Control "no-store, no-cache, must-revalidate"; \
     } \
     location /api { \
     proxy_pass http://api:3000; \
