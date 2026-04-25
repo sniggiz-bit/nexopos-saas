@@ -6,7 +6,11 @@ import {
   IsBoolean,
   Min,
   IsNotEmpty,
+  ValidateNested,
 } from 'class-validator';
+import { Type } from 'class-transformer';
+import { PriceTierDto } from './price-tier.dto';
+
 
 export enum UnitType {
   UNIT = 'UNIT',
@@ -67,6 +71,12 @@ export class CreateProductDto {
   @IsInt()
   @Min(0)
   initialStock?: number;
+
+  @IsOptional()
+  @ValidateNested({ each: true })
+  @Type(() => PriceTierDto)
+  priceTiers?: PriceTierDto[];
+
 
   @IsOptional()
   @IsString()

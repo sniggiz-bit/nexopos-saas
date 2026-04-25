@@ -1,39 +1,25 @@
-# Build stage
+# Build stage — install deps and generate Prisma client
 FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Copy root workspace files
+# Copy workspace manifests
 COPY package.json package-lock.json ./
-
-# Copy api package.json
 COPY apps/api/package.json ./apps/api/
+COPY packages/shared/package.json ./packages/shared/
 
-# Install dependencies
+# Install dependencies (workspace hoisting)
 RUN npm install
 
-# Copy the rest of the application
-COPY apps/api ./apps/api
-# COPY tsconfig.json ./
+# Copy pre-compiled dist and source needed at runtime
+COPY apps/api/dist ./apps/api/dist
+COPY apps/api/prisma ./apps/api/prisma
+COPY apps/api/prisma.config.ts ./apps/api/
+COPY packages/shared ./packages/shared
 
 # Generate Prisma Client
 WORKDIR /app/apps/api
 RUN npx prisma generate
-
-# Build the application with explicit verification
-# The key here is to ensure nest-cli.json has the right config
-RUN npm run build && \
-    echo "=== Checking if dist was created ===" && \
-    ls -la && \
-    if [ ! -d "dist" ]; then \
-    echo "ERROR: dist directory was not created!" && \
-    echo "Attempting manual tsc build..." && \
-    npx tsc -p tsconfig.build.json && \
-    ls -la; \
-    fi && \
-    echo "=== Contents of dist directory ===" && \
-    ls -la dist/ && \
-    echo "=== Build verification complete ==="
 
 # Production stage
 FROM node:20-alpine AS runner
@@ -42,32 +28,20 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 
-# Copy only necessary files from builder
 COPY --from=builder /app/package.json /app/package-lock.json ./
-# Copy root node_modules (where hoisted dependencies live)
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/apps/api/package.json ./apps/api/
 COPY --from=builder /app/apps/api/dist ./apps/api/dist
+COPY --from=builder /app/packages/shared ./packages/shared
 COPY --from=builder /app/apps/api/node_modules ./apps/api/node_modules
 COPY --from=builder /app/apps/api/prisma ./apps/api/prisma
 COPY --from=builder /app/apps/api/prisma.config.ts ./apps/api/
-COPY --from=builder /app/apps/api/create-nexopos-users.js ./apps/api/create-nexopos-users.js
-
-# Verify dist was copied
-RUN echo "=== Verifying dist in runner stage ===" && \
-    ls -la /app/apps/api/ && \
-    ls -la /app/apps/api/dist/
 
 WORKDIR /app/apps/api
 
-# Install wget for healthcheck (usually included in alpine, but to be sure)
-# Actually, alpine has wget by default.
-
 EXPOSE 3000
 
-# Healthcheck using wget
 HEALTHCHECK --interval=30s --timeout=10s --retries=3 --start-period=40s \
     CMD wget --no-verbose --tries=1 --spider http://localhost:3000/api || exit 1
 
-# Start the application directly (run migrations manually if needed)
 CMD ["node", "dist/main.js"]

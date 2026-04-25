@@ -33,7 +33,15 @@ export class CreateSaleItemDto {
   @Min(0.001)
   quantity: number;
 
-  // Price is NO LONGER sent by client - fetched from DB for security
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  price?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  discountAmount?: number;
 }
 
 export class CreateSaleDto {

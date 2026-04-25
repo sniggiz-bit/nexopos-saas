@@ -108,12 +108,20 @@ export class SalesService {
     const sale = await this.prisma.$transaction(async (prisma) => {
       // 1. Validate products
       const productIds = items.map((item) => item.productId);
+      console.log(`[SalesService] Creating sale for tenant: ${tenantId}, branch: ${branchId}`);
+      console.log(`[SalesService] Requested product IDs:`, productIds);
+
       const products = await prisma.product.findMany({
         where: { id: { in: productIds }, tenantId },
       });
 
+      console.log(`[SalesService] Found products in DB:`, products.map(p => ({ id: p.id, tenantId: p.tenantId })));
+
       if (products.length !== productIds.length) {
-        throw new BadRequestException('Some products were not found');
+        const foundIds = products.map(p => p.id);
+        const missingIds = productIds.filter(id => !foundIds.includes(id));
+        console.error(`[SalesService] Products mismatch! Missing:`, missingIds);
+        throw new BadRequestException(`Some products were not found: ${missingIds.join(', ')}`);
       }
 
       // 1.5. Validate Open Shift
@@ -127,7 +135,7 @@ export class SalesService {
         );
       }
 
-      const productPriceMap = new Map(products.map((p) => [p.id, p.price]));
+      const productMap = new Map<string, any>(products.map((p) => [p.id, p]));
 
       // 2. Validate and Update Stock
       for (const item of items) {
@@ -158,10 +166,14 @@ export class SalesService {
         // InventoryLevel update is handled by logMovement
       }
 
-      // 3. Calculate Total
+      // 3. Calculate Total and Total Discount
+      let totalDiscount = 0;
       const total = items.reduce((acc, item) => {
-        const price = Number(productPriceMap.get(item.productId) || 0);
-        return acc + price * Number(item.quantity);
+        const product = productMap.get(item.productId);
+        const linePrice = item.price ?? Number(product?.price || 0);
+        const discount = item.discountAmount ?? 0;
+        totalDiscount += discount;
+        return acc + (linePrice * Number(item.quantity)) - discount;
       }, 0);
 
       // 4. Validate Payments (only for COMPLETED)
@@ -182,15 +194,21 @@ export class SalesService {
           userId,
           cashShiftId: currentShift.id,
           total,
+          discountAmount: totalDiscount,
           status,
           customerId,
           quoteId,
           items: {
-            create: items.map((item) => ({
-              productId: item.productId,
-              quantity: item.quantity,
-              price: Number(productPriceMap.get(item.productId) || 0),
-            })),
+            create: items.map((item) => {
+              const product = productMap.get(item.productId);
+              const linePrice = item.price ?? Number(product?.price || 0);
+              return {
+                productId: item.productId,
+                quantity: item.quantity,
+                price: linePrice,
+                discountAmount: item.discountAmount ?? 0,
+              };
+            }),
           },
           payments: {
             create: payments?.map((p) => ({

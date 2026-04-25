@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.SuppliersService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma/prisma.service");
+const shared_1 = require("@nexopos/shared");
 let SuppliersService = class SuppliersService {
     prisma;
     constructor(prisma) {
@@ -51,15 +52,19 @@ let SuppliersService = class SuppliersService {
         return this.prisma.supplier.create({
             data: {
                 ...data,
+                rut: data.rut ? (0, shared_1.formatRut)(data.rut) : undefined,
                 tenantId,
             },
         });
     }
     async update(id, data, tenantId) {
         await this.findOne(id, tenantId);
+        const updateData = { ...data };
+        if (updateData.rut)
+            updateData.rut = (0, shared_1.formatRut)(updateData.rut);
         return this.prisma.supplier.update({
             where: { id },
-            data,
+            data: updateData,
         });
     }
     async remove(id, tenantId) {

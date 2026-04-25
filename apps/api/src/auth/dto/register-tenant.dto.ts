@@ -5,6 +5,7 @@ import {
   MinLength,
   IsOptional,
 } from 'class-validator';
+import { IsRut } from '../../common/decorators/is-rut.decorator';
 
 export class RegisterTenantDto {
   @IsNotEmpty({ message: 'El nombre de la empresa es requerido' })
@@ -29,6 +30,7 @@ export class RegisterTenantDto {
   password: string;
 
   @IsOptional()
+  @IsRut({ message: 'RUT inválido' })
   @IsString()
   rut?: string;
 

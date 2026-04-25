@@ -105,9 +105,10 @@ export class InternalReceiptService {
             doc.fontSize(10)
                 .font('Helvetica-Bold')
                 .text('Cant.', 50, doc.y, { width: 50, continued: true })
-                .text('Producto', 100, doc.y, { width: 250, continued: true })
-                .text('P. Unit.', 350, doc.y, { width: 80, align: 'right', continued: true })
-                .text('Subtotal', 430, doc.y, { width: 120, align: 'right' });
+                .text('Producto', 100, doc.y, { width: 220, continued: true })
+                .text('P. Unit.', 320, doc.y, { width: 70, align: 'right', continued: true })
+                .text('Dcto.', 390, doc.y, { width: 70, align: 'right', continued: true })
+                .text('Subtotal', 460, doc.y, { width: 90, align: 'right' });
 
             doc.moveTo(50, doc.y + 2).lineTo(550, doc.y + 2).stroke();
             doc.moveDown(0.5);
@@ -116,13 +117,15 @@ export class InternalReceiptService {
             doc.font('Helvetica').fontSize(9);
             for (const item of sale.items) {
                 const quantity = Number(item.quantity);
-                const price = item.price;
-                const subtotal = quantity * price;
+                const price = Number(item.price);
+                const discount = Number(item.discountAmount || 0);
+                const subtotal = (quantity * price) - discount;
 
                 doc.text(quantity.toString(), 50, doc.y, { width: 50, continued: true })
-                    .text(item.product.name, 100, doc.y, { width: 250, continued: true })
-                    .text(this.formatCurrency(price), 350, doc.y, { width: 80, align: 'right', continued: true })
-                    .text(this.formatCurrency(subtotal), 430, doc.y, { width: 120, align: 'right' });
+                    .text(item.product.name, 100, doc.y, { width: 220, continued: true })
+                    .text(this.formatCurrency(price), 320, doc.y, { width: 70, align: 'right', continued: true })
+                    .text(discount > 0 ? `-${this.formatCurrency(discount)}` : '-', 390, doc.y, { width: 70, align: 'right', continued: true })
+                    .text(this.formatCurrency(subtotal), 460, doc.y, { width: 90, align: 'right' });
 
                 doc.moveDown(0.3);
             }
@@ -135,6 +138,17 @@ export class InternalReceiptService {
             const factorIVA = 1.19;
             const neto = Math.round(total / factorIVA);
             const iva = total - neto;
+
+            if (sale.discountAmount && sale.discountAmount > 0) {
+                doc.fontSize(10)
+                    .font('Helvetica-Bold')
+                    .fillColor('#e11d48')
+                    .text('Total Descuento:', 350, doc.y, { width: 80, align: 'right', continued: true })
+                    .text(`-${this.formatCurrency(sale.discountAmount)}`, 430, doc.y, { width: 120, align: 'right' })
+                    .fillColor('#000000')
+                    .font('Helvetica')
+                    .moveDown(0.2);
+            }
 
             doc.fontSize(10)
                 .text('Neto:', 350, doc.y, { width: 80, align: 'right', continued: true })

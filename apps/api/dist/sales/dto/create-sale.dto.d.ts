@@ -11,6 +11,8 @@ export declare class CreatePaymentDto {
 export declare class CreateSaleItemDto {
     productId: string;
     quantity: number;
+    price?: number;
+    discountAmount?: number;
 }
 export declare class CreateSaleDto {
     tenantId?: string;

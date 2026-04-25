@@ -11,6 +11,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.RegisterTenantDto = void 0;
 const class_validator_1 = require("class-validator");
+const is_rut_decorator_1 = require("../../common/decorators/is-rut.decorator");
 class RegisterTenantDto {
     companyName;
     userName;
@@ -50,6 +51,7 @@ __decorate([
 ], RegisterTenantDto.prototype, "password", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
+    (0, is_rut_decorator_1.IsRut)({ message: 'RUT inválido' }),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], RegisterTenantDto.prototype, "rut", void 0);

@@ -6,7 +6,7 @@ dist
 pgdata
 coverage
 .turbo
-apps/*/dist
+apps/web/dist
 apps/*/node_modules
 apps/*/coverage
 apps/*/.turbo

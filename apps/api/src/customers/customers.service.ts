@@ -7,15 +7,19 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateCustomerDto } from './dto/create-customer.dto';
 import { UpdateCustomerDto } from './dto/update-customer.dto';
+import { formatRut } from '@nexopos/shared';
 
 @Injectable()
 export class CustomersService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   async create(createCustomerDto: CreateCustomerDto) {
     try {
       return await this.prisma.customer.create({
-        data: createCustomerDto,
+        data: {
+          ...createCustomerDto,
+          rut: formatRut(createCustomerDto.rut),
+        },
       });
     } catch (error: any) {
       if (error.code === 'P2002') {
@@ -63,9 +67,12 @@ export class CustomersService {
   }
 
   async update(id: string, updateCustomerDto: UpdateCustomerDto) {
+    const data = { ...updateCustomerDto };
+    if (data.rut) data.rut = formatRut(data.rut);
+
     return this.prisma.customer.update({
       where: { id },
-      data: updateCustomerDto,
+      data,
     });
   }
 

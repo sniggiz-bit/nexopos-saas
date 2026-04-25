@@ -6,6 +6,7 @@ import { Prisma } from '@prisma/client';
 export declare class ProductsService {
     private prisma;
     constructor(prisma: PrismaService);
+    private validatePriceTiers;
     findAll(tenantId: string): Promise<ProductResponseDto[]>;
     findOne(id: string, tenantId: string): Promise<ProductResponseDto>;
     create(createProductDto: CreateProductDto): Promise<ProductResponseDto>;

@@ -2,6 +2,11 @@
  * Response DTO for Product endpoints
  * Includes calculated stock from InventoryLevel and all product details
  */
+import { PriceTierDto } from './price-tier.dto';
+
+/**
+ * Includes calculated stock from InventoryLevel and all product details
+ */
 export class ProductResponseDto {
   id: string;
   name: string;
@@ -27,4 +32,6 @@ export class ProductResponseDto {
     branchName: string;
     quantity: number;
   }[];
+  priceTiers?: PriceTierDto[];
 }
+

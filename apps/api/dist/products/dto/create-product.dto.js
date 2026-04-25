@@ -11,6 +11,8 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CreateProductDto = exports.UnitType = void 0;
 const class_validator_1 = require("class-validator");
+const class_transformer_1 = require("class-transformer");
+const price_tier_dto_1 = require("./price-tier.dto");
 var UnitType;
 (function (UnitType) {
     UnitType["UNIT"] = "UNIT";
@@ -29,6 +31,7 @@ class CreateProductDto {
     image;
     isActive;
     initialStock;
+    priceTiers;
     tenantId;
 }
 exports.CreateProductDto = CreateProductDto;
@@ -95,6 +98,12 @@ __decorate([
     (0, class_validator_1.Min)(0),
     __metadata("design:type", Number)
 ], CreateProductDto.prototype, "initialStock", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.ValidateNested)({ each: true }),
+    (0, class_transformer_1.Type)(() => price_tier_dto_1.PriceTierDto),
+    __metadata("design:type", Array)
+], CreateProductDto.prototype, "priceTiers", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
