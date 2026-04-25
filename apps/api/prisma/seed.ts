@@ -53,12 +53,34 @@ async function main() {
     });
     console.log('✅ Sucursal creada:', branch2.name);
 
-    // 3. Crear Usuario Administrador
+    // 3. Crear Usuarios
     const hashedPassword = await bcrypt.hash('admin123', 10);
+
+    // 3.1 Super Admin
+    const superAdminUser = await prisma.user.upsert({
+        where: { email: 'superadmin@nexopos.cl' },
+        update: {
+            password: hashedPassword, // Reset password
+            role: 'SUPER_ADMIN',
+            tenantId: tenant.id, // Assign to demo tenant for testing access
+            branchId: branch1.id,
+        },
+        create: {
+            email: 'superadmin@nexopos.cl',
+            name: 'Super Administrador',
+            password: hashedPassword,
+            role: 'SUPER_ADMIN',
+            tenantId: tenant.id,
+            branchId: branch1.id,
+        },
+    });
+    console.log('✅ Usuario Super Admin creado:', superAdminUser.email);
+
+    // 3.2 Tenant Admin
     const adminUser = await prisma.user.upsert({
         where: { email: 'admin@demo.cl' },
         update: {
-            password: hashedPassword, // Reset password to default if seed is run again
+            password: hashedPassword, // Reset password
             role: 'TENANT_ADMIN',
             branchId: branch1.id,
         },
@@ -72,6 +94,25 @@ async function main() {
         },
     });
     console.log('✅ Usuario Administrador creado:', adminUser.email);
+
+    // 3.3 Cajero
+    const cashierUser = await prisma.user.upsert({
+        where: { email: 'cajero@demo.cl' },
+        update: {
+            password: hashedPassword, // Reset password
+            role: 'CASHIER',
+            branchId: branch1.id,
+        },
+        create: {
+            email: 'cajero@demo.cl',
+            name: 'Cajero Demo',
+            password: hashedPassword,
+            role: 'CASHIER',
+            tenantId: tenant.id,
+            branchId: branch1.id,
+        },
+    });
+    console.log('✅ Usuario Cajero creado:', cashierUser.email);
 
     // 4. Crear Proveedores (Suppliers)
     const supplier1 = await prisma.supplier.upsert({

@@ -14,6 +14,10 @@ export type PaymentMethod = typeof PaymentMethod[keyof typeof PaymentMethod];
 export interface SaleItem {
     productId: string;
     quantity: number;
+    /** Override the catalog price for this line item (e.g. after a manual price edit) */
+    price?: number;
+    /** Total discount in CLP for this line (computed from PERCENTAGE or FIXED discount) */
+    discountAmount?: number;
 }
 
 export interface PaymentRequestData {
@@ -39,6 +43,7 @@ export interface Sale {
     branchId: string;
     userId?: string;
     total: number;
+    discountAmount?: number;
     status: 'COMPLETED' | 'PRE_SALE';
     dteFolio?: number;
     dteStatus?: string;
@@ -50,6 +55,7 @@ export interface Sale {
         id: string;
         quantity: number;
         price: number;
+        discountAmount?: number;
         product: {
             id: string;
             name: string;

@@ -19,6 +19,7 @@ import {
     MapPin,
     Hash,
 } from 'lucide-react';
+import { formatRut } from '@nexopos/shared';
 
 interface SupplierForm {
     name: string;
@@ -78,7 +79,38 @@ export function SuppliersPage() {
     };
 
     const handleChange = (field: keyof SupplierForm, value: string) => {
-        setForm((prev) => ({ ...prev, [field]: value }));
+        if (field === 'rut') {
+            const formatted = formatRut(value);
+            setForm((prev) => ({ ...prev, [field]: formatted }));
+
+            const clean = value.replace(/\./g, '').replace(/-/g, '');
+            if (clean.length >= 8) {
+                handleRutLookup(formatted);
+            }
+        } else {
+            setForm((prev) => ({ ...prev, [field]: value }));
+        }
+    };
+
+    const handleRutLookup = async (rut: string) => {
+        try {
+            const apiUrl = import.meta.env.VITE_API_URL || '';
+            const response = await fetch(`${apiUrl}/common/rut-lookup/${rut}`);
+
+            if (response.ok) {
+                const result = await response.json();
+                if (result.success && result.data) {
+                    const { reasonSocial, address } = result.data;
+                    setForm(prev => ({
+                        ...prev,
+                        name: prev.name || reasonSocial || '',
+                        address: prev.address || address || '',
+                    }));
+                }
+            }
+        } catch (error) {
+            console.error('RUT Lookup error:', error);
+        }
     };
 
     const handleSubmit = async (e: React.FormEvent) => {

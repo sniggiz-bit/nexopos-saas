@@ -33,6 +33,7 @@ interface PaymentModalProps {
     onConfirm: (payments: PaymentRequestData[]) => void;
     items: CartItemData[];
     subtotal: number;
+    totalDiscount: number;
     tax: number;
     total: number;
     isProcessing: boolean;
@@ -49,6 +50,7 @@ export function PaymentModal({
     onConfirm,
     items,
     subtotal,
+    totalDiscount,
     tax,
     total,
     isProcessing,
@@ -171,7 +173,7 @@ export function PaymentModal({
                             variant="secondary"
                             onClick={() => printSaleAction(saleResult, defaultFormat)}
                         >
-                            Imprimir Ticket ({defaultFormat})
+                            Imprimir Ticket ({defaultFormat}) - V2
                         </Button>
                     </div>
 
@@ -223,14 +225,39 @@ export function PaymentModal({
                         <div className="space-y-2">
                             <h4 className="font-bold text-sm uppercase text-slate-400 tracking-wider">Resumen</h4>
                             <div className="space-y-1 max-h-[150px] overflow-y-auto pr-2 custom-scrollbar">
-                                {items.map((item) => (
-                                    <div key={item.productId} className="flex justify-between text-xs font-medium">
-                                        <span className="text-slate-600 dark:text-slate-400 truncate max-w-[140px]">
-                                            {item.name} <span className="text-[10px] opacity-70">x{item.quantity}</span>
-                                        </span>
-                                        <span>{formatPrice((Number(item.price) || 0) * (Number(item.quantity) || 0))}</span>
-                                    </div>
-                                ))}
+                                {items.map((item) => {
+                                    const baseTotal = (Number(item.price) || 0) * (Number(item.quantity) || 0);
+                                    let finalTotal = baseTotal;
+                                    const dVal = Number(item.discountValue) || 0;
+                                    if (dVal && item.discountType) {
+                                        if (item.discountType === 'PERCENTAGE') {
+                                            finalTotal -= (baseTotal * dVal) / 100;
+                                        } else {
+                                            finalTotal -= dVal;
+                                        }
+                                    }
+                                    finalTotal = Math.max(0, finalTotal);
+                                    const isDiscounted = finalTotal < baseTotal || (item.price !== "" && item.price < item.basePrice);
+                                    const originalTotal = Number(item.basePrice || item.price) * Number(item.quantity);
+
+                                    return (
+                                        <div key={item.productId} className="flex justify-between items-start text-xs font-medium">
+                                            <div className="flex flex-col">
+                                                <span className="text-slate-600 dark:text-slate-400 truncate max-w-[140px]">
+                                                    {item.name} <span className="text-[10px] opacity-70 font-bold">x{item.quantity}</span>
+                                                </span>
+                                            </div>
+                                            <div className="flex flex-col items-end">
+                                                <span className="text-slate-900 dark:text-slate-200">{formatPrice(finalTotal)}</span>
+                                                {isDiscounted && (
+                                                    <span className="text-[10px] text-slate-400 line-through">
+                                                        {formatPrice(originalTotal)}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    );
+                                })}
                             </div>
                         </div>
 
@@ -241,11 +268,25 @@ export function PaymentModal({
                                 <span>Subtotal</span>
                                 <span>{formatPrice(subtotal)}</span>
                             </div>
+
+                            {totalDiscount > 0 && (
+                                <div className="flex justify-between text-xs text-rose-500 font-medium">
+                                    <span>Descuento</span>
+                                    <span>-{formatPrice(totalDiscount)}</span>
+                                </div>
+                            )}
+
                             <div className="flex justify-between text-xs text-slate-500">
+                                <span className="opacity-70 italic text-[10px]">Neto</span>
+                                <span className="opacity-70 text-[10px]">{formatPrice(total - tax)}</span>
+                            </div>
+
+                            <div className="flex justify-between text-xs text-slate-500 pt-0.5">
                                 <span>IVA (19%)</span>
                                 <span>{formatPrice(tax)}</span>
                             </div>
-                            <div className="flex justify-between text-xl font-black pt-2">
+
+                            <div className="flex justify-between text-xl font-black pt-3 border-t border-slate-100 mt-2">
                                 <span className="text-slate-400">TOTAL</span>
                                 <span className="text-emerald-600">{formatPrice(total)}</span>
                             </div>

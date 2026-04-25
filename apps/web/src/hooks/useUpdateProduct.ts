@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../api/client';
 import type { Product } from '../api/types';
+import type { PriceTier } from '@nexopos/shared';
 import toast from 'react-hot-toast';
 
 interface UpdateProductData {
@@ -17,6 +18,7 @@ interface UpdateProductData {
     image?: string;
     isActive?: boolean;
     stock?: number;
+    priceTiers?: PriceTier[];
 }
 
 async function updateProduct({ id, ...data }: UpdateProductData): Promise<Product> {

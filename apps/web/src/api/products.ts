@@ -4,8 +4,10 @@ import type { Product } from './types';
 /**
  * Fetch all products from the API
  */
-export async function getProducts(): Promise<Product[]> {
-    const response = await apiClient.get<Product[]>('/products');
+export async function getProducts(tenantId?: string): Promise<Product[]> {
+    const response = await apiClient.get<Product[]>('/products', {
+        params: { tenantId }
+    });
     return response.data;
 }
 

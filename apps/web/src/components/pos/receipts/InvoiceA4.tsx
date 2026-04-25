@@ -85,6 +85,7 @@ export const InvoiceA4: React.FC<InvoiceA4Props> = ({
                         <th>Descripción</th>
                         <th style={{ textAlign: 'center' }}>Cant.</th>
                         <th style={{ textAlign: 'right' }}>Precio Unit.</th>
+                        <th style={{ textAlign: 'right' }}>Dcto.</th>
                         <th style={{ textAlign: 'right' }}>Total</th>
                     </tr>
                 </thead>
@@ -92,9 +93,10 @@ export const InvoiceA4: React.FC<InvoiceA4Props> = ({
                     {sale.items?.map((item, idx) => (
                         <tr key={idx}>
                             <td>{item.product.name}</td>
-                            <td style={{ textAlign: 'center' }}>{item.quantity}</td>
-                            <td style={{ textAlign: 'right' }}>{formatPrice(item.price)}</td>
-                            <td style={{ textAlign: 'right' }}>{formatPrice(item.quantity * item.price)}</td>
+                            <td style={{ textAlign: 'center' }}>{Number(item.quantity)}</td>
+                            <td style={{ textAlign: 'right' }}>{formatPrice(Number(item.price))}</td>
+                            <td style={{ textAlign: 'right' }}>{item.discountAmount ? `-${formatPrice(item.discountAmount)}` : '-'}</td>
+                            <td style={{ textAlign: 'right' }}>{formatPrice((Number(item.quantity) * Number(item.price)) - (Number(item.discountAmount) || 0))}</td>
                         </tr>
                     ))}
                 </tbody>
@@ -102,6 +104,16 @@ export const InvoiceA4: React.FC<InvoiceA4Props> = ({
 
             <div className="totals-section">
                 <div className="totals-box">
+                    <div className="flex-justify">
+                        <span>Suma de Items:</span>
+                        <span>{formatPrice(sale.total + (sale.discountAmount || 0))}</span>
+                    </div>
+                    {sale.discountAmount ? (
+                        <div className="flex-justify" style={{ color: '#e11d48', fontWeight: 'bold' }}>
+                            <span>Total Descuentos:</span>
+                            <span>-{formatPrice(sale.discountAmount)}</span>
+                        </div>
+                    ) : null}
                     <div className="flex-justify">
                         <span>Monto Neto:</span>
                         <span>{formatPrice(sale.total / 1.19)}</span>

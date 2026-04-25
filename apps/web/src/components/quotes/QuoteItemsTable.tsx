@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button"
 import { Trash2 } from "lucide-react"
 import { formatCurrency } from "@/lib/utils" // Assuming this exists or I'll implement inline
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Badge } from "@/components/ui/badge"
 
 export function QuoteItemsTable() {
     const { items, updateQuantity, updatePrice, applyDiscount, removeItem } = useCart()
@@ -83,7 +84,11 @@ function QuoteItemRow({ item, updateQuantity, updatePrice, applyDiscount, remove
                 <div className="flex flex-col">
                     <span className="font-medium">{item.name}</span>
                     <span className="text-xs text-muted-foreground">SKU: {item.productId}</span>
-                    {/* Using productId as SKU for now if barcode isn't in CartItemData context, strictly speaking we should add it */}
+                    {item.price !== '' && item.price < item.basePrice && (
+                        <Badge variant="outline" className="w-fit mt-1 text-[10px] h-4 px-1 text-blue-600 border-blue-200 bg-blue-50" title="Precio rebajado por volumen">
+                            Mayorista
+                        </Badge>
+                    )}
                 </div>
             </TableCell>
             <TableCell>

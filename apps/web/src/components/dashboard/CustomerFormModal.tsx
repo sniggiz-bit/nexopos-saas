@@ -5,6 +5,7 @@ import { useCreateCustomer } from '../../hooks/useCustomers';
 import { useUpdateCustomer } from '../../hooks/useCustomers';
 import toast from 'react-hot-toast';
 import type { Customer } from '../../api/types';
+import { formatRut } from '@nexopos/shared';
 
 interface CustomerFormModalProps {
     isOpen: boolean;
@@ -25,6 +26,32 @@ export function CustomerFormModal({ isOpen, onClose, initialData }: CustomerForm
 
     const createCustomer = useCreateCustomer();
     const updateCustomer = useUpdateCustomer();
+
+    const handleRutLookup = async (rut: string) => {
+        const clean = rut.replace(/\./g, '').replace(/-/g, '');
+        if (clean.length < 8) return;
+
+        try {
+            const apiUrl = import.meta.env.VITE_API_URL || '';
+            const response = await fetch(`${apiUrl}/common/rut-lookup/${rut}`);
+
+            if (response.ok) {
+                const result = await response.json();
+                if (result.success && result.data) {
+                    const { reasonSocial, giro, address, comuna } = result.data;
+                    setFormData(prev => ({
+                        ...prev,
+                        name: prev.name || reasonSocial || '',
+                        giro: prev.giro || giro || '',
+                        address: prev.address || address || '',
+                        comuna: prev.comuna || comuna || '',
+                    }));
+                }
+            }
+        } catch (error) {
+            console.error('RUT Lookup error:', error);
+        }
+    };
 
     useEffect(() => {
         if (initialData && isOpen) {
@@ -124,7 +151,14 @@ export function CustomerFormModal({ isOpen, onClose, initialData }: CustomerForm
                         <input
                             type="text"
                             value={formData.rut}
-                            onChange={(e) => setFormData({ ...formData, rut: e.target.value })}
+                            onChange={(e) => {
+                                const formatted = formatRut(e.target.value);
+                                setFormData({ ...formData, rut: formatted });
+                                const clean = e.target.value.replace(/\./g, '').replace(/-/g, '');
+                                if (clean.length >= 8) {
+                                    handleRutLookup(formatted);
+                                }
+                            }}
                             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                             placeholder="12.345.678-9"
                             required

@@ -120,16 +120,26 @@ export function Cart({ onCheckout, isProcessing, checkoutLabel = 'PAGAR' }: Cart
             {activeTab === 'cart' && (
                 <div className="absolute bottom-0 w-full bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 p-5 z-20 shadow-[0_-10px_20px_-10px_rgba(0,0,0,0.2)]">
                     <div className="space-y-4 mb-5">
-                        <div className="flex justify-between items-start gap-4">
+                        <div className="flex justify-between items-end gap-2">
                             <div className="flex flex-col">
-                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">SUBTOTAL</span>
-                                <span className="text-base font-bold text-slate-500 dark:text-slate-400">
+                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">SUBTOTAL</span>
+                                <span className="text-xl font-bold text-slate-500 dark:text-slate-400 leading-none">
                                     {formatPrice(totals.subtotal)}
                                 </span>
                             </div>
+
+                            {totals.totalDiscount > 0 && (
+                                <div className="flex flex-col items-center flex-1">
+                                    <span className="text-[10px] font-black text-rose-500 uppercase tracking-widest leading-none mb-1 text-center">DESCUENTO</span>
+                                    <span className="text-lg font-bold text-rose-600 leading-none">
+                                        -{formatPrice(totals.totalDiscount)}
+                                    </span>
+                                </div>
+                            )}
+
                             <div className="flex flex-col items-end">
-                                <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-500 uppercase tracking-widest">TOTAL A PAGAR</span>
-                                <span className="text-4xl font-black text-slate-900 dark:text-white tracking-tighter">
+                                <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-500 uppercase tracking-widest leading-none mb-1">TOTAL</span>
+                                <span className="text-4xl font-black text-slate-900 dark:text-white tracking-tighter leading-none">
                                     {formatPrice(total)}
                                 </span>
                             </div>

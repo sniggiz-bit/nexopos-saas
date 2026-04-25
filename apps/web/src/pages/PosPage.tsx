@@ -34,7 +34,7 @@ export function PosPage() {
     const branchId = user?.branchId || '';
     const { data: currentShift, isLoading: isLoadingShift } = useCurrentShift(branchId);
 
-    const { data: products = [], isLoading } = useProducts();
+    const { data: products = [], isLoading } = useProducts(user?.tenantId);
     const { data: categories = [] } = useCategories(user?.tenantId);
 
     const { mutate: createSale, isPending, isSuccess, isError, reset } = useSale({
@@ -99,13 +99,39 @@ export function PosPage() {
     };
 
     const handleConfirmPayment = (payments: PaymentRequestData[]) => {
+        // Guard: ensure we have a valid session with branch/tenant before persisting
+        if (!user?.tenantId || !user?.branchId) {
+            toast({
+                variant: 'destructive',
+                title: 'Error de configuración',
+                description: 'No se pudo determinar la sucursal. Por favor cierra sesión y vuelve a ingresar.',
+            });
+            return;
+        }
+
         const saleData: CreateSaleRequest = {
-            tenantId: user?.tenantId || 'tenant-1',
-            branchId: user?.branchId || 'branch-1',
-            items: cartItems.map((item) => ({
-                productId: item.productId,
-                quantity: Number(item.quantity) || 0,
-            })),
+            tenantId: user.tenantId,
+            branchId: user.branchId,
+            items: cartItems.map((item) => {
+                const qty     = Number(item.quantity)     || 0;
+                const price   = Number(item.price)        || 0;
+                const dVal    = Number(item.discountValue) || 0;
+
+                // Compute total discount CLP for this line
+                const discountAmount =
+                    item.discountType === 'PERCENTAGE'
+                        ? Math.round((price * qty * dVal) / 100)
+                        : item.discountType === 'FIXED'
+                            ? dVal
+                            : 0;
+
+                return {
+                    productId: item.productId,
+                    quantity: qty,
+                    price,            // forward custom / wholesale price
+                    discountAmount,   // forward computed line discount
+                };
+            }),
             payments,
         };
 
@@ -191,7 +217,7 @@ export function PosPage() {
         }
     };
 
-    const { total, tax, subtotal } = totals;
+    const { total, tax, subtotal, totalDiscount } = totals;
 
     return (
         <div className="h-screen w-full flex bg-slate-100 dark:bg-slate-950 overflow-hidden">
@@ -307,6 +333,7 @@ export function PosPage() {
                 onConfirm={handleConfirmPayment}
                 items={cartItems}
                 subtotal={subtotal}
+                totalDiscount={totalDiscount}
                 tax={tax}
                 total={total}
                 isProcessing={isPending}

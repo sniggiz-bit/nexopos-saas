@@ -79,11 +79,17 @@ let SalesService = SalesService_1 = class SalesService {
         }
         const sale = await this.prisma.$transaction(async (prisma) => {
             const productIds = items.map((item) => item.productId);
+            console.log(`[SalesService] Creating sale for tenant: ${tenantId}, branch: ${branchId}`);
+            console.log(`[SalesService] Requested product IDs:`, productIds);
             const products = await prisma.product.findMany({
                 where: { id: { in: productIds }, tenantId },
             });
+            console.log(`[SalesService] Found products in DB:`, products.map(p => ({ id: p.id, tenantId: p.tenantId })));
             if (products.length !== productIds.length) {
-                throw new common_1.BadRequestException('Some products were not found');
+                const foundIds = products.map(p => p.id);
+                const missingIds = productIds.filter(id => !foundIds.includes(id));
+                console.error(`[SalesService] Products mismatch! Missing:`, missingIds);
+                throw new common_1.BadRequestException(`Some products were not found: ${missingIds.join(', ')}`);
             }
             const currentShift = await prisma.cashShift.findFirst({
                 where: { branchId, status: 'OPEN' },
@@ -110,10 +116,12 @@ let SalesService = SalesService_1 = class SalesService {
                     userId,
                 }, prisma);
             }
+            let totalDiscount = 0;
             const total = items.reduce((acc, item) => {
                 const product = productMap.get(item.productId);
                 const linePrice = item.price ?? Number(product?.price || 0);
                 const discount = item.discountAmount ?? 0;
+                totalDiscount += discount;
                 return acc + (linePrice * Number(item.quantity)) - discount;
             }, 0);
             if (status === 'COMPLETED') {
@@ -129,6 +137,7 @@ let SalesService = SalesService_1 = class SalesService {
                     userId,
                     cashShiftId: currentShift.id,
                     total,
+                    discountAmount: totalDiscount,
                     status,
                     customerId,
                     quoteId,
@@ -140,6 +149,7 @@ let SalesService = SalesService_1 = class SalesService {
                                 productId: item.productId,
                                 quantity: item.quantity,
                                 price: linePrice,
+                                discountAmount: item.discountAmount ?? 0,
                             };
                         }),
                     },

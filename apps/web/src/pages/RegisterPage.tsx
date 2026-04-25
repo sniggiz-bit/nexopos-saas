@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
 import { Loader2 } from 'lucide-react';
 import { Logo } from '../components/ui/Logo';
+import { formatRut } from '@nexopos/shared';
 
 interface RegisterFormData {
     companyName: string;
@@ -11,6 +12,9 @@ interface RegisterFormData {
     email: string;
     phone: string;
     password: string;
+    rut?: string;
+    giro?: string;
+    address?: string;
 }
 import { api } from '../api/client';
 
@@ -24,13 +28,54 @@ export function RegisterPage() {
         email: '',
         phone: '',
         password: '',
+        rut: '',
+        giro: '',
+        address: '',
     });
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setFormData(prev => ({
-            ...prev,
-            [e.target.name]: e.target.value
-        }));
+        const { name, value } = e.target;
+
+        if (name === 'rut') {
+            const formatted = formatRut(value);
+            setFormData(prev => ({
+                ...prev,
+                [name]: formatted
+            }));
+
+            // Clean RUT for lookup: 76.123.456-7 -> 761234567
+            const clean = value.replace(/\./g, '').replace(/-/g, '');
+            if (clean.length >= 8) {
+                handleRutLookup(formatted);
+            }
+        } else {
+            setFormData(prev => ({
+                ...prev,
+                [name]: value
+            }));
+        }
+    };
+
+    const handleRutLookup = async (rut: string) => {
+        try {
+            const apiUrl = import.meta.env.VITE_API_URL || '';
+            const response = await fetch(`${apiUrl}/common/rut-lookup/${rut}`);
+
+            if (response.ok) {
+                const result = await response.json();
+                if (result.success && result.data) {
+                    const { reasonSocial, giro, address } = result.data;
+                    setFormData(prev => ({
+                        ...prev,
+                        companyName: prev.companyName || reasonSocial || '',
+                        giro: prev.giro || giro || '',
+                        address: prev.address || address || '',
+                    }));
+                }
+            }
+        } catch (error) {
+            console.error('RUT Lookup error:', error);
+        }
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -130,19 +175,69 @@ export function RegisterPage() {
                             />
                         </div>
 
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label htmlFor="rut" className="block text-sm font-medium text-gray-700 mb-2">
+                                    RUT
+                                </label>
+                                <input
+                                    id="rut"
+                                    name="rut"
+                                    type="text"
+                                    value={formData.rut}
+                                    onChange={handleChange}
+                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                                    placeholder="12.345.678-9"
+                                    disabled={isLoading}
+                                />
+                            </div>
+
+                            <div>
+                                <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
+                                    Teléfono *
+                                </label>
+                                <input
+                                    id="phone"
+                                    name="phone"
+                                    type="tel"
+                                    required
+                                    value={formData.phone}
+                                    onChange={handleChange}
+                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                                    placeholder="+56 9 1234 5678"
+                                    disabled={isLoading}
+                                />
+                            </div>
+                        </div>
+
                         <div>
-                            <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
-                                Teléfono *
+                            <label htmlFor="giro" className="block text-sm font-medium text-gray-700 mb-2">
+                                Giro / Actividad Económica
                             </label>
                             <input
-                                id="phone"
-                                name="phone"
-                                type="tel"
-                                required
-                                value={formData.phone}
+                                id="giro"
+                                name="giro"
+                                type="text"
+                                value={formData.giro}
                                 onChange={handleChange}
                                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-                                placeholder="+56 9 1234 5678"
+                                placeholder="Ej: Venta de alimentos"
+                                disabled={isLoading}
+                            />
+                        </div>
+
+                        <div>
+                            <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-2">
+                                Dirección Comercial
+                            </label>
+                            <input
+                                id="address"
+                                name="address"
+                                type="text"
+                                value={formData.address}
+                                onChange={handleChange}
+                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                                placeholder="Av. Siempre Viva 123, Santiago"
                                 disabled={isLoading}
                             />
                         </div>
