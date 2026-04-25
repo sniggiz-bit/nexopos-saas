@@ -1,21 +1,19 @@
-# Build stage — install deps and generate Prisma client
+# Build stage — generate Prisma client
 FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Copy workspace manifests (all workspaces needed for correct npm hoisting)
+# Copy all workspace manifests for correct dependency resolution
 COPY package.json package-lock.json ./
 COPY apps/api/package.json ./apps/api/
 COPY apps/web/package.json ./apps/web/
 COPY packages/shared/package.json ./packages/shared/
 
-# Install dependencies (workspace hoisting)
-RUN npm install
+# Install all dependencies
+RUN npm ci
 
-# Copy pre-compiled dist and source needed at runtime
-COPY apps/api/dist ./apps/api/dist
+# Copy sources needed for Prisma generation
 COPY apps/api/prisma ./apps/api/prisma
-COPY apps/api/prisma.config.ts ./apps/api/
 COPY packages/shared ./packages/shared
 
 # Generate Prisma Client
@@ -29,14 +27,25 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 
-COPY --from=builder /app/package.json /app/package-lock.json ./
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/apps/api/package.json ./apps/api/
-COPY --from=builder /app/apps/api/dist ./apps/api/dist
-COPY --from=builder /app/packages/shared ./packages/shared
-COPY --from=builder /app/apps/api/node_modules ./apps/api/node_modules
-COPY --from=builder /app/apps/api/prisma ./apps/api/prisma
-COPY --from=builder /app/apps/api/prisma.config.ts ./apps/api/
+# Copy workspace manifests
+COPY package.json package-lock.json ./
+COPY apps/api/package.json ./apps/api/
+COPY apps/web/package.json ./apps/web/
+COPY packages/shared/package.json ./packages/shared/
+
+# Install only production dependencies
+RUN npm ci --omit=dev
+
+# Copy pre-compiled dist (built locally, committed to git)
+COPY apps/api/dist ./apps/api/dist
+
+# Copy Prisma files and generated client from builder
+COPY apps/api/prisma ./apps/api/prisma
+COPY --from=builder /app/apps/api/node_modules/.prisma ./apps/api/node_modules/.prisma
+COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+
+# Copy shared package source (needed at runtime for workspace resolution)
+COPY packages/shared ./packages/shared
 
 WORKDIR /app/apps/api
 
