@@ -70,7 +70,7 @@ export function PosUserToolbar({ currentShift, branchName }: PosUserToolbarProps
         <div className="h-11 flex items-center justify-between px-4 bg-slate-900 dark:bg-slate-950 border-b border-slate-800 shrink-0 z-30">
             {/* Left: Logo + Branch */}
             <div className="flex items-center gap-3 min-w-0">
-                <Logo variant="full" mode="dark" height={26} />
+                <Logo variant="full" mode="dark" className="h-6" />
                 {branchName && (
                     <>
                         <span className="text-slate-700 select-none">·</span>
