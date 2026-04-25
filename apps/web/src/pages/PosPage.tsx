@@ -301,6 +301,7 @@ export function PosPage() {
                     isOpen={isCloseShiftModalOpen}
                     onClose={() => setIsCloseShiftModalOpen(false)}
                     shiftId={currentShift.id}
+                    currentShift={currentShift}
                 />
             )}
 

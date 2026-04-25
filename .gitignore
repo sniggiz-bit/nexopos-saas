@@ -1,4 +1,15 @@
 node_modules
 *.tar
-
 *.tar.gz
+
+# Entorno — nunca subir al repo
+.env
+.env.local
+.env.*.local
+
+# Datos PostgreSQL locales
+pgdata/
+
+# Logs y archivos temporales
+*.log
+*.sql

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import {
     Dialog,
     DialogContent,
@@ -11,55 +11,74 @@ import { useCloseShift } from '@/hooks/useShifts';
 import { useToast } from '@/hooks/use-toast';
 import { formatPrice } from '@/utils/formatters';
 import { useAuth } from '@/context/AuthContext';
-import { LogOut, Calculator, Printer, CheckCircle2, AlertTriangle, ArrowRight, DollarSign, Receipt } from 'lucide-react';
+import {
+    LogOut, Calculator, Printer, CheckCircle2, AlertTriangle,
+    DollarSign, Receipt, ChevronDown, ChevronUp, Clock,
+} from 'lucide-react';
+import { Shift } from '@/api/shifts';
+import { formatDistanceToNow, format } from 'date-fns';
+import { es } from 'date-fns/locale';
 
 interface CloseShiftModalProps {
     isOpen: boolean;
     onClose: () => void;
     shiftId: string;
+    currentShift?: Shift | null;
 }
 
-export function CloseShiftModal({ isOpen, onClose, shiftId }: CloseShiftModalProps) {
+const DENOMINATIONS = [
+    { label: '$20.000', value: 20000 },
+    { label: '$10.000', value: 10000 },
+    { label: '$5.000', value: 5000 },
+    { label: '$2.000', value: 2000 },
+    { label: '$1.000', value: 1000 },
+    { label: '$500', value: 500 },
+    { label: '$100', value: 100 },
+    { label: '$50', value: 50 },
+    { label: '$10', value: 10 },
+];
+
+export function CloseShiftModal({ isOpen, onClose, shiftId, currentShift }: CloseShiftModalProps) {
     const [finalAmount, setFinalAmount] = useState('');
     const [closedShift, setClosedShift] = useState<any>(null);
+    const [showCalculator, setShowCalculator] = useState(false);
+    const [counts, setCounts] = useState<Record<number, string>>(
+        Object.fromEntries(DENOMINATIONS.map(d => [d.value, '']))
+    );
+
     const { mutate: closeShift, isPending } = useCloseShift();
     const { toast } = useToast();
     const { user } = useAuth();
 
+    const calculatedTotal = useMemo(() => {
+        return DENOMINATIONS.reduce((sum, d) => {
+            const n = parseInt(counts[d.value] || '0', 10);
+            return sum + (isNaN(n) ? 0 : n * d.value);
+        }, 0);
+    }, [counts]);
+
+    const handleApplyCalculator = () => {
+        setFinalAmount(String(calculatedTotal));
+        setShowCalculator(false);
+    };
+
     const handleCloseShift = () => {
         const amount = parseFloat(finalAmount);
         if (isNaN(amount) || amount < 0) {
-            toast({
-                variant: 'destructive',
-                title: 'Monto inválido',
-                description: 'Por favor ingrese un monto final válido.',
-            });
+            toast({ variant: 'destructive', title: 'Monto inválido', description: 'Ingresa un monto final válido.' });
             return;
         }
-
         if (!user?.id) {
-            toast({
-                variant: 'destructive',
-                title: 'Error de Sesión',
-                description: 'No se pudo identificar al usuario. Reintente.',
-            });
+            toast({ variant: 'destructive', title: 'Error de Sesión', description: 'No se pudo identificar al usuario.' });
             return;
         }
 
         closeShift(
-            {
-                shiftId,
-                userId: user.id,
-                finalAmount: amount,
-            },
+            { shiftId, userId: user.id, finalAmount: amount },
             {
                 onSuccess: (data) => {
                     setClosedShift(data);
-                    toast({
-                        variant: 'success',
-                        title: '¡Caja Cerrada!',
-                        description: 'El turno ha finalizado correctamente.',
-                    });
+                    toast({ variant: 'success', title: '¡Caja Cerrada!', description: 'El turno ha finalizado correctamente.' });
                 },
                 onError: (error: any) => {
                     toast({
@@ -75,13 +94,13 @@ export function CloseShiftModal({ isOpen, onClose, shiftId }: CloseShiftModalPro
     const handleCloseDialog = () => {
         setClosedShift(null);
         setFinalAmount('');
+        setCounts(Object.fromEntries(DENOMINATIONS.map(d => [d.value, ''])));
+        setShowCalculator(false);
         onClose();
-        // Redirect or refresh might be needed here depending on UX
     };
 
     const handlePrintReport = () => {
         if (!closedShift?.textReport) return;
-
         const printWindow = window.open('', '_blank');
         if (printWindow) {
             printWindow.document.write(`
@@ -90,27 +109,17 @@ export function CloseShiftModal({ isOpen, onClose, shiftId }: CloseShiftModalPro
                         <title>Reporte Z - NexoPOS</title>
                         <style>
                             @page { size: 80mm auto; margin: 0; }
-                            body { 
-                                font-family: 'Courier New', Courier, monospace; 
-                                white-space: pre; 
-                                font-size: 13px; 
-                                padding: 10px;
-                                color: #000;
-                            }
+                            body { font-family: 'Courier New', Courier, monospace; white-space: pre; font-size: 13px; padding: 10px; color: #000; }
                         </style>
                     </head>
-                    <body>
-                        ${closedShift.textReport}
-                        <script>
-                            window.onload = function() { window.print(); window.close(); }
-                        </script>
-                    </body>
+                    <body>${closedShift.textReport}<script>window.onload=function(){window.print();window.close();}</script></body>
                 </html>
             `);
             printWindow.document.close();
         }
     };
 
+    // ─── Success state ────────────────────────────────────────────────────────
     if (closedShift) {
         const diff = Number(closedShift.shift.difference);
         return (
@@ -124,8 +133,8 @@ export function CloseShiftModal({ isOpen, onClose, shiftId }: CloseShiftModalPro
                         <p className="text-emerald-100 mt-1 uppercase tracking-widest text-[10px] font-bold">Turno Finalizado</p>
                     </div>
 
-                    <div className="p-8 space-y-6">
-                        <div className="grid grid-cols-2 gap-4">
+                    <div className="p-8 space-y-5">
+                        <div className="grid grid-cols-2 gap-3">
                             <div className="bg-slate-50 dark:bg-slate-900 p-4 rounded-xl border border-slate-100 dark:border-slate-800">
                                 <p className="text-xs text-slate-500 uppercase font-bold mb-1">Monto Esperado</p>
                                 <p className="text-xl font-bold text-slate-900 dark:text-white">{formatPrice(Number(closedShift.shift.expectedAmount))}</p>
@@ -136,16 +145,22 @@ export function CloseShiftModal({ isOpen, onClose, shiftId }: CloseShiftModalPro
                             </div>
                         </div>
 
-                        <div className={`p-4 rounded-xl flex items-center justify-between ${diff === 0 ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700' : diff < 0 ? 'bg-red-50 dark:bg-red-900/20 text-red-700' : 'bg-amber-50 dark:bg-amber-900/20 text-amber-700'}`}>
+                        <div className={`p-4 rounded-xl flex items-center justify-between ${
+                            diff === 0
+                                ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300'
+                                : diff < 0
+                                ? 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300'
+                                : 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300'
+                        }`}>
                             <div className="flex items-center gap-3">
-                                {diff === 0 ? <CheckCircle2 size={24} /> : <AlertTriangle size={24} />}
+                                {diff === 0 ? <CheckCircle2 size={22} /> : <AlertTriangle size={22} />}
                                 <div>
                                     <p className="text-xs font-bold uppercase">Diferencia de Caja</p>
                                     <p className="text-lg font-black">{formatPrice(diff)}</p>
                                 </div>
                             </div>
                             {diff !== 0 && (
-                                <span className="text-[10px] font-bold bg-white/50 px-2 py-1 rounded uppercase tracking-tighter">
+                                <span className="text-[10px] font-bold bg-white/50 dark:bg-black/20 px-2 py-1 rounded uppercase tracking-tight">
                                     {diff < 0 ? 'Faltante' : 'Sobrante'}
                                 </span>
                             )}
@@ -153,28 +168,19 @@ export function CloseShiftModal({ isOpen, onClose, shiftId }: CloseShiftModalPro
 
                         <div className="space-y-2">
                             <div className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase">
-                                <Receipt size={14} />
-                                Vista Previa Reporte Z
+                                <Receipt size={13} /> Vista Previa Reporte Z
                             </div>
-                            <div className="bg-slate-900 text-emerald-400 p-4 rounded-xl text-[11px] font-mono leading-tight max-h-[200px] overflow-y-auto custom-scrollbar border border-slate-800 shadow-inner">
+                            <div className="bg-slate-900 text-emerald-400 p-4 rounded-xl text-[11px] font-mono leading-tight max-h-[180px] overflow-y-auto custom-scrollbar border border-slate-800 shadow-inner whitespace-pre">
                                 {closedShift.textReport}
                             </div>
                         </div>
 
                         <div className="flex gap-3">
-                            <Button 
-                                variant="outline" 
-                                className="flex-1 h-12 border-2 hover:bg-slate-100 dark:hover:bg-slate-800 font-bold"
-                                onClick={handlePrintReport}
-                            >
-                                <Printer size={18} className="mr-2" />
-                                Imprimir Z
+                            <Button variant="outline" className="flex-1 h-12 border-2 font-bold" onClick={handlePrintReport}>
+                                <Printer size={17} className="mr-2" /> Imprimir Z
                             </Button>
-                            <Button 
-                                className="flex-1 h-12 bg-slate-900 hover:bg-black text-white font-bold"
-                                onClick={handleCloseDialog}
-                            >
-                                Salir del Sistema
+                            <Button className="flex-1 h-12 bg-slate-900 hover:bg-black text-white font-bold" onClick={handleCloseDialog}>
+                                Continuar
                             </Button>
                         </div>
                     </div>
@@ -183,28 +189,118 @@ export function CloseShiftModal({ isOpen, onClose, shiftId }: CloseShiftModalPro
         );
     }
 
+    // ─── Input state ──────────────────────────────────────────────────────────
+    const shiftElapsed = currentShift
+        ? formatDistanceToNow(new Date(currentShift.startTime), { locale: es, addSuffix: false })
+        : null;
+    const shiftStart = currentShift
+        ? format(new Date(currentShift.startTime), "HH:mm 'del' dd/MM/yyyy", { locale: es })
+        : null;
+
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="sm:max-w-[480px] p-0 overflow-hidden border-none bg-slate-50 dark:bg-slate-900 shadow-2xl rounded-2xl">
-                <div className="bg-gradient-to-br from-red-600 to-rose-700 p-8 text-white relative">
+            <DialogContent className="sm:max-w-[500px] p-0 overflow-hidden border-none bg-slate-50 dark:bg-slate-900 shadow-2xl rounded-2xl">
+                {/* Header */}
+                <div className="bg-gradient-to-br from-red-600 to-rose-700 p-7 text-white relative overflow-hidden">
                     <div className="absolute top-4 right-4 opacity-10">
-                        <LogOut size={120} />
+                        <LogOut size={110} />
                     </div>
                     <DialogHeader className="relative z-10">
-                        <div className="bg-white/20 w-12 h-12 rounded-xl flex items-center justify-center mb-4 backdrop-blur-md">
-                            <Calculator className="text-white" size={24} />
+                        <div className="bg-white/20 w-11 h-11 rounded-xl flex items-center justify-center mb-3 backdrop-blur-md">
+                            <Calculator className="text-white" size={22} />
                         </div>
                         <DialogTitle className="text-2xl font-bold tracking-tight">Cierre de Caja</DialogTitle>
-                        <p className="text-red-100 text-sm mt-1">Ingresa el recuento final de efectivo para terminar el turno.</p>
+                        <p className="text-red-100 text-sm mt-1">Ingresa el recuento final de efectivo para cerrar el turno.</p>
+                        {shiftElapsed && (
+                            <div className="flex items-center gap-2 mt-2 text-red-200 text-xs">
+                                <Clock size={12} />
+                                <span>Turno activo hace <strong className="text-white">{shiftElapsed}</strong>{shiftStart && ` (desde ${shiftStart})`}</span>
+                            </div>
+                        )}
                     </DialogHeader>
                 </div>
 
-                <div className="p-8 space-y-6">
-                    <div className="space-y-4">
-                        <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider">
-                            <DollarSign size={14} className="text-emerald-500" />
-                            Efectivo Total en Caja
+                <div className="p-7 space-y-5">
+                    {/* Shift info */}
+                    {currentShift && (
+                        <div className="flex items-center gap-3 p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
+                            <div className="p-2 bg-red-50 dark:bg-red-900/20 rounded-lg">
+                                <Receipt size={16} className="text-red-500" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <p className="text-[10px] text-slate-400 uppercase font-black tracking-widest leading-none">Turno Actual</p>
+                                <p className="text-xs font-semibold text-slate-700 dark:text-slate-300 font-mono">{shiftId.split('-')[0]}…</p>
+                            </div>
+                            <div className="text-right shrink-0">
+                                <p className="text-[10px] text-slate-400 uppercase font-black tracking-widest leading-none">Base inicial</p>
+                                <p className="text-xs font-bold text-emerald-600">{formatPrice(currentShift.initialAmount)}</p>
+                            </div>
                         </div>
+                    )}
+
+                    {/* Amount input */}
+                    <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider">
+                                <DollarSign size={13} className="text-emerald-500" />
+                                Efectivo Total en Caja
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => setShowCalculator(s => !s)}
+                                className="flex items-center gap-1 text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 transition-colors"
+                            >
+                                <Calculator size={13} />
+                                Calcular
+                                {showCalculator ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+                            </button>
+                        </div>
+
+                        {/* Denomination calculator */}
+                        {showCalculator && (
+                            <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden">
+                                <div className="px-4 py-2 bg-slate-50 dark:bg-slate-700/50 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
+                                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Calculadora de Denominaciones</span>
+                                    <span className="text-xs font-bold text-slate-700 dark:text-slate-200">
+                                        Total: <span className="text-indigo-600 dark:text-indigo-400">{formatPrice(calculatedTotal)}</span>
+                                    </span>
+                                </div>
+                                <div className="divide-y divide-slate-100 dark:divide-slate-700">
+                                    {DENOMINATIONS.map(d => {
+                                        const n = parseInt(counts[d.value] || '0', 10);
+                                        const subtotal = isNaN(n) ? 0 : n * d.value;
+                                        return (
+                                            <div key={d.value} className="grid grid-cols-[80px_1fr_80px] items-center gap-2 px-4 py-2">
+                                                <span className="text-xs font-bold text-slate-700 dark:text-slate-200 tabular-nums">{d.label}</span>
+                                                <Input
+                                                    type="number"
+                                                    min="0"
+                                                    value={counts[d.value]}
+                                                    onChange={e => setCounts(prev => ({ ...prev, [d.value]: e.target.value }))}
+                                                    placeholder="0"
+                                                    className="h-8 text-center text-sm font-semibold border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 rounded-lg focus:border-indigo-400"
+                                                />
+                                                <span className="text-xs text-right font-semibold text-slate-500 tabular-nums">
+                                                    {subtotal > 0 ? formatPrice(subtotal) : '—'}
+                                                </span>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                                <div className="px-4 py-3 bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-between border-t border-indigo-100 dark:border-indigo-800">
+                                    <span className="text-sm font-bold text-indigo-800 dark:text-indigo-300">
+                                        Total calculado: {formatPrice(calculatedTotal)}
+                                    </span>
+                                    <Button
+                                        size="sm"
+                                        onClick={handleApplyCalculator}
+                                        className="h-8 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold"
+                                    >
+                                        Aplicar
+                                    </Button>
+                                </div>
+                            </div>
+                        )}
 
                         <div className="relative group">
                             <div className="absolute inset-y-0 left-4 flex items-center text-slate-400 group-focus-within:text-red-500 transition-colors">
@@ -215,38 +311,29 @@ export function CloseShiftModal({ isOpen, onClose, shiftId }: CloseShiftModalPro
                                 type="number"
                                 value={finalAmount}
                                 onChange={(e) => setFinalAmount(e.target.value)}
-                                autoFocus
-                                className="pl-10 h-16 text-2xl font-bold border-2 border-slate-200 dark:border-slate-800 focus:border-red-500 dark:focus:border-red-400 bg-white dark:bg-slate-950 transition-all rounded-xl shadow-sm"
+                                onKeyDown={(e) => e.key === 'Enter' && handleCloseShift()}
+                                autoFocus={!showCalculator}
+                                className="pl-10 h-16 text-2xl font-bold border-2 border-slate-200 dark:border-slate-700 focus:border-red-500 dark:focus:border-red-400 bg-white dark:bg-slate-950 transition-all rounded-xl shadow-sm"
                                 placeholder="0"
                                 min="0"
                             />
                         </div>
-
-                        <div className="bg-slate-100 dark:bg-slate-800 p-4 rounded-xl flex items-center gap-3">
-                            <div className="p-2 bg-white dark:bg-slate-900 rounded-lg shadow-sm">
-                                <Receipt size={18} className="text-slate-500" />
-                            </div>
-                            <div>
-                                <p className="text-[10px] text-slate-400 uppercase font-black tracking-widest leading-none">Turno Actual</p>
-                                <p className="text-xs font-semibold text-slate-700 dark:text-slate-300">ID: {shiftId.split('-')[0]}...</p>
-                            </div>
-                            <ArrowRight className="ml-auto text-slate-300" size={16} />
-                        </div>
                     </div>
 
-                    <div className="flex gap-3 pt-2">
-                        <Button 
-                            variant="ghost" 
-                            onClick={onClose} 
+                    {/* Actions */}
+                    <div className="flex gap-3 pt-1">
+                        <Button
+                            variant="ghost"
+                            onClick={onClose}
                             disabled={isPending}
-                            className="flex-1 h-14 font-bold text-slate-500 hover:text-slate-900"
+                            className="flex-1 h-13 font-bold text-slate-500 hover:text-slate-900"
                         >
                             Cancelar
                         </Button>
                         <Button
                             onClick={handleCloseShift}
                             disabled={isPending || !finalAmount}
-                            className="flex-[2] h-14 text-lg font-bold bg-red-600 hover:bg-red-700 shadow-lg shadow-red-200 dark:shadow-none transition-all hover:scale-[1.02] active:scale-95 rounded-xl"
+                            className="flex-[2] h-14 text-base font-bold bg-red-600 hover:bg-red-700 shadow-lg shadow-red-200 dark:shadow-none transition-all hover:scale-[1.02] active:scale-95 rounded-xl"
                         >
                             {isPending ? (
                                 <div className="flex items-center gap-2">
@@ -255,7 +342,7 @@ export function CloseShiftModal({ isOpen, onClose, shiftId }: CloseShiftModalPro
                                 </div>
                             ) : (
                                 <div className="flex items-center gap-2">
-                                    <LogOut size={20} />
+                                    <LogOut size={18} />
                                     <span>Finalizar Turno</span>
                                 </div>
                             )}
