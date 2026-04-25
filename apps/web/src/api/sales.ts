@@ -44,7 +44,7 @@ export interface Sale {
     userId?: string;
     total: number;
     discountAmount?: number;
-    status: 'COMPLETED' | 'PRE_SALE';
+    status: 'COMPLETED' | 'PRE_SALE' | 'CANCELLED';
     dteFolio?: number;
     dteStatus?: string;
     dtePdfUrl?: string;
