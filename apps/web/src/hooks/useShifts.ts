@@ -6,7 +6,9 @@ export const useCurrentShift = (branchId: string) => {
     return useQuery({
         queryKey: ['current-shift', branchId],
         queryFn: () => getShift(branchId),
+        enabled: !!branchId,
         retry: false,
+        staleTime: 0,
     });
 };
 
@@ -15,8 +17,9 @@ export const useOpenShift = () => {
 
     return useMutation({
         mutationFn: (data: OpenShiftRequest) => openShift(data),
-        onSuccess: (_, variables) => {
-            queryClient.invalidateQueries({ queryKey: ['current-shift', variables.branchId] });
+        onSuccess: (newShift, variables) => {
+            // Set data immediately in cache — modal closes without waiting for a refetch
+            queryClient.setQueryData(['current-shift', variables.branchId], newShift);
         },
     });
 };

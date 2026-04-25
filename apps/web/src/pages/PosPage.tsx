@@ -239,7 +239,7 @@ export function PosPage() {
                                     </Badge>
                                     <span className="text-xs text-slate-400 dark:text-slate-500">|</span>
                                     <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-                                        {currentShift ? `Turno #${currentShift.id}` : 'Caja Cerrada'}
+                                        {isLoadingShift ? 'Verificando caja...' : currentShift ? `Turno Abierto` : 'Caja Cerrada'}
                                     </span>
                                 </div>
                             </div>
