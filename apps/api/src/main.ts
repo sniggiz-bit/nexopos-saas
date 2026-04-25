@@ -1,10 +1,6 @@
 import { NestFactory } from '@nestjs/core';
-import { ValidationPipe } from '@nestjs/common';
-import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import { ValidationPipe, Catch, ExceptionFilter, ArgumentsHost, HttpException } from '@nestjs/common';
 import { AppModule } from './app.module';
-
-import { Catch, ExceptionFilter, ArgumentsHost, HttpException } from '@nestjs/common';
-import * as fs from 'fs';
 
 @Catch()
 class AllExceptionsFilter implements ExceptionFilter {
@@ -21,15 +17,10 @@ class AllExceptionsFilter implements ExceptionFilter {
       message = exception.message;
     }
 
-    const logStr = `\n\n[GLOBAL ERROR] Date: ${new Date().toISOString()}\nPath: ${request.url}\nStatus: ${status}\nMessage: ${message}\nException: ${exception instanceof Error ? exception.stack : JSON.stringify(exception)}\n`;
-
-    try {
-      fs.appendFileSync('c:/Users/user/OneDrive/Escritorio/nexopos.cl/apps/api/nest_error.log', logStr);
-    } catch (e) {
-      console.error('Failed to write to log file:', e);
-    }
-
-    console.error(logStr);
+    console.error(
+      `[GLOBAL ERROR] ${new Date().toISOString()} | ${request.url} | ${status} | ${message}`,
+      exception instanceof Error ? exception.stack : exception,
+    );
 
     response.status(status).json({
       statusCode: status,
@@ -43,16 +34,14 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.setGlobalPrefix('api');
 
-  // Enable CORS for frontend communication
   app.enableCors({
     origin: [
       'http://localhost:3000',
-      /^http:\/\/localhost:517[0-9]$/, // Allow Vite ports 5170-5179
+      /^http:\/\/localhost:517[0-9]$/,
     ],
     credentials: true,
   });
 
-  // Enable validation globally
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -66,23 +55,20 @@ async function bootstrap() {
 
   app.useGlobalFilters(new AllExceptionsFilter());
 
-  // Swagger Configuration
-  const config = new DocumentBuilder()
-    .setTitle('NexoPOS CL API')
-    .setDescription('Documentación de la API para el ecosistema NexoPOS CL (SaaS + POS)')
-    .setVersion('1.0')
-    .addBearerAuth()
-    .build();
-
-  const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api/docs', app, document);
+  if (process.env.NODE_ENV !== 'production') {
+    const { SwaggerModule, DocumentBuilder } = await import('@nestjs/swagger');
+    const config = new DocumentBuilder()
+      .setTitle('NexoPOS CL API')
+      .setDescription('Documentación de la API para el ecosistema NexoPOS CL (SaaS + POS)')
+      .setVersion('1.0')
+      .addBearerAuth()
+      .build();
+    const document = SwaggerModule.createDocument(app, config);
+    SwaggerModule.setup('api/docs', app, document);
+    console.log(`📄 Docs: http://localhost:${process.env.PORT ?? 3000}/api/docs`);
+  }
 
   await app.listen(process.env.PORT ?? 3000);
-  console.log(
-    `🚀 Server running on http://localhost:${process.env.PORT ?? 3000}`,
-  );
-  console.log(
-    `📄 Documentation available on http://localhost:${process.env.PORT ?? 3000}/api/docs`,
-  );
+  console.log(`🚀 Server running on port ${process.env.PORT ?? 3000}`);
 }
 bootstrap();
