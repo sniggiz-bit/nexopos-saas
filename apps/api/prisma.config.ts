@@ -1,4 +1,5 @@
 import { defineConfig } from '@prisma/config';
+import 'dotenv/config';
 
 export default defineConfig({
     schema: "prisma/schema.prisma",
@@ -7,6 +8,6 @@ export default defineConfig({
         seed: 'npx tsx prisma/seed.ts',
     },
     datasource: {
-        url: "postgresql://postgres:postgres@nexopos_postgres:5432/nexopos_db",
+        url: process.env.DATABASE_URL ?? "postgresql://postgres:postgres@nexopos_postgres:5432/nexopos_db",
     }
 });

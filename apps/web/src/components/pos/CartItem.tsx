@@ -49,25 +49,37 @@ export function CartItem({ item }: CartItemProps) {
             <div className="flex justify-between items-start gap-3">
                 <div className="flex-1 min-w-0">
                     <h4 className="font-semibold text-slate-800 text-sm leading-tight mb-1">{item.name}</h4>
-                    <div className="flex items-center gap-2">
-                        <span className="text-xs text-slate-500 font-medium">
-                            {formatPrice(basePrice)}
-                        </span>
+                    <div className="flex flex-wrap items-center gap-2">
+                        <div className="flex flex-col">
+                            {item.price !== '' && item.price < item.basePrice && (
+                                <span className="text-[10px] text-slate-400 line-through leading-none mb-0.5">
+                                    {formatPrice(item.basePrice)}
+                                </span>
+                            )}
+                            <span className="text-xs text-slate-500 font-medium break-words">
+                                {formatPrice(basePrice)} {item.unitType === 'WEIGHT' ? '/kg' : '/un'}
+                            </span>
+                        </div>
+                        {item.price !== '' && item.price < item.basePrice && (
+                            <Badge variant="outline" className="text-[10px] h-4 px-1 text-blue-600 border-blue-200 bg-blue-50" title="Precio rebajado por volumen">
+                                Mayorista
+                            </Badge>
+                        )}
                         {discountAmount > 0 && (
-                            <Badge variant="outline" className="text-[10px] h-4 px-1 text-green-600 border-green-200 bg-green-50">
+                            <Badge variant="outline" className="text-[10px] h-4 px-1 text-emerald-600 border-emerald-200 bg-emerald-50">
                                 -{item.discountType === 'PERCENTAGE' ? `${item.discountValue}%` : formatPrice(Number(item.discountValue) || 0)}
                             </Badge>
                         )}
                     </div>
                 </div>
 
-                <div className="text-right">
-                    <span className="font-bold text-slate-900 text-base">
+                <div className="text-right flex flex-col items-end flex-shrink-0">
+                    <span className="font-bold text-slate-900 text-base leading-none">
                         {formatPrice(finalSubtotal)}
                     </span>
-                    {discountAmount > 0 && (
-                        <p className="text-[10px] text-slate-400 line-through">
-                            {formatPrice(baseSubtotal)}
+                    {(discountAmount > 0 || (item.price !== "" && item.price < item.basePrice)) && (
+                        <p className="text-[10px] text-slate-400 line-through mt-1">
+                            {formatPrice(Number(item.basePrice) * baseQuantity)}
                         </p>
                     )}
                 </div>

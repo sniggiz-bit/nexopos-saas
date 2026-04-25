@@ -1,216 +1,268 @@
+import { useState, useMemo } from 'react';
 import { DashboardLayout } from '../../components/dashboard/DashboardLayout';
+import { SalesHistoryTable } from '../../components/dashboard/SalesHistoryTable';
 import { useSales } from '../../hooks/useSales';
-import { Sale } from '../../api/sales';
-import { FileText, Eye } from 'lucide-react';
-import { Card } from '../../components/ui/card';
+import { useBranches } from '../../hooks/useBranches';
+import { formatCLP } from '../../services/sales.service';
+import type { SaleStatus } from '../../services/sales.service';
+import {
+    TrendingUp,
+    ReceiptText,
+    CalendarDays,
+    Store,
+    RefreshCw,
+} from 'lucide-react';
+
+// ─────────────────────────────────────────────
+// Types
+// ─────────────────────────────────────────────
+
+interface Filters {
+    startDate: string;
+    endDate: string;
+    branchId: string;
+    status: SaleStatus | '';
+}
+
+// ─────────────────────────────────────────────
+// Summary card sub-component
+// ─────────────────────────────────────────────
+
+interface SummaryCardProps {
+    label: string;
+    value: string;
+    sub?: string;
+    icon: React.ReactNode;
+    accent: string; // Tailwind bg colour class for icon wrapper
+}
+
+function SummaryCard({ label, value, sub, icon, accent }: SummaryCardProps) {
+    return (
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5 flex items-center gap-4">
+            <div className={`p-3 rounded-xl ${accent} flex-shrink-0`}>{icon}</div>
+            <div>
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-0.5">
+                    {label}
+                </p>
+                <p className="text-2xl font-bold text-gray-900 leading-tight">{value}</p>
+                {sub && <p className="text-xs text-gray-400 mt-0.5">{sub}</p>}
+            </div>
+        </div>
+    );
+}
+
+// ─────────────────────────────────────────────
+// Helpers
+// ─────────────────────────────────────────────
+
+function todayISO(): string {
+    return new Date().toISOString().slice(0, 10);
+}
+
+function thirtyDaysAgoISO(): string {
+    const d = new Date();
+    d.setDate(d.getDate() - 30);
+    return d.toISOString().slice(0, 10);
+}
+
+// ─────────────────────────────────────────────
+// Page
+// ─────────────────────────────────────────────
 
 export function SalesHistoryPage() {
-    const { data: sales, isLoading } = useSales();
+    const [filters, setFilters] = useState<Filters>({
+        startDate: thirtyDaysAgoISO(),
+        endDate: todayISO(),
+        branchId: '',
+        status: '',
+    });
 
-    // Calculate total sales amount
-    const totalSales = sales?.reduce((acc, sale) => acc + sale.total, 0) || 0;
+    // Fetch data
+    const {
+        data: salesRaw = [],
+        isLoading,
+        refetch,
+        isFetching,
+    } = useSales({
+        filters: {
+            startDate: filters.startDate || undefined,
+            endDate: filters.endDate || undefined,
+            branchId: filters.branchId || undefined,
+        },
+    });
 
-    const formatDate = (dateString: string) => {
-        const date = new Date(dateString);
-        return new Intl.DateTimeFormat('es-CL', {
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit',
-        }).format(date);
+    const { branches } = useBranches();
+
+    // Client-side status filter (API doesn't always support it)
+    const sales = useMemo(() => {
+        if (!filters.status) return salesRaw;
+        return salesRaw.filter((s) => s.status === filters.status);
+    }, [salesRaw, filters.status]);
+
+    // Summary metrics
+    const totalRevenue = useMemo(
+        () => sales.filter((s) => s.status === 'COMPLETED').reduce((acc, s) => acc + s.total, 0),
+        [sales]
+    );
+    const completedCount = useMemo(
+        () => sales.filter((s) => s.status === 'COMPLETED').length,
+        [sales]
+    );
+    const cancelledCount = useMemo(
+        () => sales.filter((s) => s.status === 'CANCELLED').length,
+        [sales]
+    );
+
+    const handleFilterChange = <K extends keyof Filters>(key: K, value: Filters[K]) => {
+        setFilters((prev) => ({ ...prev, [key]: value }));
     };
 
-    const formatCurrency = (amount: number) => {
-        return new Intl.NumberFormat('es-CL', {
-            style: 'currency',
-            currency: 'CLP',
-        }).format(amount);
-    };
-
-    const getPaymentMethodsLabel = (payments: any[]) => {
-        if (!payments || payments.length === 0) return 'N/A';
-        const labels: Record<string, string> = {
-            CASH: 'Efectivo',
-            CARD: 'Tarjeta',
-            TRANSFER: 'Transferencia',
-            DEBIT: 'Débito',
-            CREDITO: 'Crédito',
-        };
-        return payments.map(p => labels[p.paymentMethod] || p.paymentMethod).join(', ');
-    };
-
-    const getStatusBadge = (status?: string) => {
-        if (!status || status === 'PENDING') {
-            return (
-                <span className="px-2 py-1 text-xs font-medium rounded-full bg-yellow-100 text-yellow-800">
-                    Pendiente
-                </span>
-            );
-        }
-        if (status === 'SUCCESS' || status === 'EMITTED') {
-            return (
-                <span className="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">
-                    Exitoso
-                </span>
-            );
-        }
-        return (
-            <span className="px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800">
-                Error
-            </span>
-        );
-    };
-
-    const handleViewPdf = (pdfUrl: string) => {
-        // Check if it's a mock URL
-        if (pdfUrl.includes('ejemplo-mock')) {
-            alert('Esta es una venta de prueba. Configure un token real de Lioren en Configuración para generar boletas electrónicas válidas.');
-            return;
-        }
-        // For internal receipts, prepend API base URL
-        const apiUrl = import.meta.env.VITE_API_URL || '';
-        const fullUrl = pdfUrl.startsWith('/api/')
-            ? `${apiUrl}${pdfUrl}`
-            : pdfUrl;
-        window.open(fullUrl, '_blank');
-    };
-
-    const isPdfAvailable = (sale: Sale) => {
-        // PDF is available if URL exists and is not a mock URL
-        return (sale.dtePdfUrl && !sale.dtePdfUrl.includes('ejemplo-mock')) || !!sale.internalReceiptUrl;
-    };
-
-    const getPdfUrl = (sale: Sale): string | null => {
-        // Prefer DTE PDF if available and not mock
-        if (sale.dtePdfUrl && !sale.dtePdfUrl.includes('ejemplo-mock')) {
-            return sale.dtePdfUrl;
-        }
-        // Otherwise use internal receipt
-        return sale.internalReceiptUrl || null;
-    };
-
-    const getPdfButtonLabel = (sale: Sale): string => {
-        if (sale.dtePdfUrl && !sale.dtePdfUrl.includes('ejemplo-mock')) {
-            return 'Ver Boleta';
-        }
-        return 'Ver Ticket';
+    const handleResetFilters = () => {
+        setFilters({
+            startDate: thirtyDaysAgoISO(),
+            endDate: todayISO(),
+            branchId: '',
+            status: '',
+        });
     };
 
     return (
         <DashboardLayout>
             <div className="space-y-6">
-                {/* Header */}
+
+                {/* ── Page Header ── */}
                 <div className="flex items-center justify-between">
-                    <h1 className="text-2xl font-bold text-gray-900">Historial de Ventas</h1>
-                </div>
-
-                {/* Summary Card */}
-                <Card className="p-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <p className="text-sm font-medium text-gray-600 mb-1">
-                                Total de Ventas
-                            </p>
-                            <p className="text-3xl font-bold text-gray-900">
-                                {formatCurrency(totalSales)}
-                            </p>
-                            <p className="text-sm text-gray-500 mt-1">
-                                {sales?.length || 0} {sales?.length === 1 ? 'venta' : 'ventas'} registradas
-                            </p>
-                        </div>
-                        <div className="p-4 bg-blue-100 rounded-lg">
-                            <FileText className="w-8 h-8 text-blue-600" />
-                        </div>
+                    <div>
+                        <h1 className="text-2xl font-bold text-gray-900">Historial de Ventas</h1>
+                        <p className="text-sm text-gray-500 mt-0.5">
+                            Consulta, filtra y descarga tus boletas y tickets de venta.
+                        </p>
                     </div>
-                </Card>
-
-                {/* Sales Table */}
-                <div className="bg-white rounded-lg shadow overflow-hidden">
-                    <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="bg-gray-50">
-                            <tr>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Fecha/Hora
-                                </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Folio DTE
-                                </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Total
-                                </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Método de Pago
-                                </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Estado
-                                </th>
-                                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Acciones
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
-                            {isLoading ? (
-                                <tr>
-                                    <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
-                                        Cargando ventas...
-                                    </td>
-                                </tr>
-                            ) : !sales || sales.length === 0 ? (
-                                <tr>
-                                    <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
-                                        No se encontraron ventas
-                                    </td>
-                                </tr>
-                            ) : (
-                                sales.map((sale) => {
-                                    const pdfUrl = getPdfUrl(sale);
-                                    return (
-                                        <tr key={sale.id} className="hover:bg-gray-50">
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                {formatDate(sale.createdAt)}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                {sale.dteFolio ? (
-                                                    <span className="font-medium">#{sale.dteFolio}</span>
-                                                ) : (
-                                                    <span className="text-gray-400 italic">Pendiente</span>
-                                                )}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                                {formatCurrency(sale.total)}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                {getPaymentMethodsLabel(sale.payments || [])}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                {getStatusBadge(sale.dteStatus)}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                                <button
-                                                    onClick={() => pdfUrl && handleViewPdf(pdfUrl)}
-                                                    disabled={!isPdfAvailable(sale)}
-                                                    className="inline-flex items-center px-3 py-1.5 text-blue-600 hover:text-blue-900 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                                                    title={
-                                                        !pdfUrl
-                                                            ? 'PDF no disponible'
-                                                            : sale.dtePdfUrl && !sale.dtePdfUrl.includes('ejemplo-mock')
-                                                                ? 'Ver Boleta Electrónica'
-                                                                : 'Ver Ticket Interno'
-                                                    }
-                                                >
-                                                    <Eye className="w-4 h-4 mr-1" />
-                                                    {getPdfButtonLabel(sale)}
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    );
-                                })
-                            )}
-                        </tbody>
-                    </table>
+                    <button
+                        onClick={() => refetch()}
+                        disabled={isFetching}
+                        className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg
+                                   border border-gray-200 bg-white text-gray-700 shadow-sm
+                                   hover:bg-gray-50 disabled:opacity-60 transition-colors"
+                    >
+                        <RefreshCw className={`w-4 h-4 ${isFetching ? 'animate-spin' : ''}`} />
+                        Actualizar
+                    </button>
                 </div>
+
+                {/* ── Summary Cards ── */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <SummaryCard
+                        label="Ingresos (completadas)"
+                        value={formatCLP(totalRevenue)}
+                        sub={`${completedCount} ${completedCount === 1 ? 'venta' : 'ventas'}`}
+                        icon={<TrendingUp className="w-5 h-5 text-blue-600" />}
+                        accent="bg-blue-50"
+                    />
+                    <SummaryCard
+                        label="Ventas completadas"
+                        value={completedCount.toString()}
+                        icon={<ReceiptText className="w-5 h-5 text-green-600" />}
+                        accent="bg-green-50"
+                    />
+                    <SummaryCard
+                        label="Ventas anuladas"
+                        value={cancelledCount.toString()}
+                        icon={<ReceiptText className="w-5 h-5 text-red-500" />}
+                        accent="bg-red-50"
+                    />
+                </div>
+
+                {/* ── Filter Bar ── */}
+                <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-4">
+                    <div className="flex flex-wrap gap-3 items-end">
+
+                        {/* Date from */}
+                        <div className="flex flex-col gap-1 min-w-[160px]">
+                            <label className="text-xs font-medium text-gray-500 flex items-center gap-1">
+                                <CalendarDays className="w-3.5 h-3.5" />
+                                Desde
+                            </label>
+                            <input
+                                type="date"
+                                value={filters.startDate}
+                                max={filters.endDate || todayISO()}
+                                onChange={(e) => handleFilterChange('startDate', e.target.value)}
+                                className="border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700
+                                           focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            />
+                        </div>
+
+                        {/* Date to */}
+                        <div className="flex flex-col gap-1 min-w-[160px]">
+                            <label className="text-xs font-medium text-gray-500 flex items-center gap-1">
+                                <CalendarDays className="w-3.5 h-3.5" />
+                                Hasta
+                            </label>
+                            <input
+                                type="date"
+                                value={filters.endDate}
+                                min={filters.startDate}
+                                max={todayISO()}
+                                onChange={(e) => handleFilterChange('endDate', e.target.value)}
+                                className="border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700
+                                           focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            />
+                        </div>
+
+                        {/* Branch selector */}
+                        <div className="flex flex-col gap-1 min-w-[180px]">
+                            <label className="text-xs font-medium text-gray-500 flex items-center gap-1">
+                                <Store className="w-3.5 h-3.5" />
+                                Sucursal
+                            </label>
+                            <select
+                                value={filters.branchId}
+                                onChange={(e) => handleFilterChange('branchId', e.target.value)}
+                                className="border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700
+                                           focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+                            >
+                                <option value="">Todas las sucursales</option>
+                                {branches.map((b) => (
+                                    <option key={b.id} value={b.id}>
+                                        {b.name}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+
+                        {/* Status selector */}
+                        <div className="flex flex-col gap-1 min-w-[160px]">
+                            <label className="text-xs font-medium text-gray-500">Estado</label>
+                            <select
+                                value={filters.status}
+                                onChange={(e) =>
+                                    handleFilterChange('status', e.target.value as SaleStatus | '')
+                                }
+                                className="border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700
+                                           focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+                            >
+                                <option value="">Todos</option>
+                                <option value="COMPLETED">Completada</option>
+                                <option value="CANCELLED">Anulada</option>
+                                <option value="PRE_SALE">Pre-venta</option>
+                            </select>
+                        </div>
+
+                        {/* Reset */}
+                        <button
+                            onClick={handleResetFilters}
+                            className="mt-auto px-4 py-2 text-sm font-medium rounded-lg
+                                       border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors"
+                        >
+                            Limpiar filtros
+                        </button>
+                    </div>
+                </div>
+
+                {/* ── Data Table ── */}
+                <SalesHistoryTable sales={sales} isLoading={isLoading} />
+
             </div>
         </DashboardLayout>
     );

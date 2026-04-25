@@ -4,9 +4,12 @@
   "description": "Monorepo for NexoPos CL",
   "private": true,
   "workspaces": [
-    "apps/*"
+    "apps/*",
+    "packages/*"
   ],
   "scripts": {
+    "dev:web": "npm run dev --workspace web",
+    "dev:api": "npm run start:dev --workspace api",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],

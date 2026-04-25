@@ -1,16 +1,19 @@
 import React, { createContext, useContext, useState, useCallback, useMemo } from 'react';
 import { Product } from '@/api/products';
+import { resolveUnitPrice, PriceTier } from '@nexopos/shared';
 
 export type DiscountType = 'PERCENTAGE' | 'FIXED';
 
 export interface CartItemData {
     productId: string;
     name: string;
-    price: number | '';
+    basePrice: number;
+    price: number | ''; // This is the resolved price
     quantity: number | '';
     unitType: 'UNIT' | 'WEIGHT';
     discountType?: DiscountType;
     discountValue?: number | '';
+    priceTiers?: PriceTier[];
 }
 
 interface CartContextType {
@@ -39,20 +42,27 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
             const existingItem = prev.find((item) => item.productId === product.id);
 
             if (existingItem) {
-                return prev.map((item) =>
-                    item.productId === product.id
-                        ? { ...item, quantity: (Number(item.quantity) || 0) + (Number(quantity) || 0) }
-                        : item
-                );
+                return prev.map((item) => {
+                    if (item.productId === product.id) {
+                        const newQty = (Number(item.quantity) || 0) + (Number(quantity) || 0);
+                        const newPrice = resolveUnitPrice(item.basePrice, item.priceTiers, newQty);
+                        return { ...item, quantity: newQty, price: newPrice };
+                    }
+                    return item;
+                });
             } else {
+                const numericQty = Number(quantity) || 0;
+                const initialPrice = resolveUnitPrice(product.price, product.priceTiers, numericQty);
                 return [
                     ...prev,
                     {
                         productId: product.id,
                         name: product.name,
-                        price: product.price,
+                        basePrice: product.price,
+                        price: initialPrice,
                         quantity: quantity,
                         unitType: product.unitType as 'UNIT' | 'WEIGHT',
+                        priceTiers: product.priceTiers,
                     },
                 ];
             }
@@ -66,9 +76,14 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
             return;
         }
         setItems((prev) =>
-            prev.map((item) =>
-                item.productId === productId ? { ...item, quantity } : item
-            )
+            prev.map((item) => {
+                if (item.productId === productId) {
+                    const numericQty = Number(quantity) || 0;
+                    const newPrice = resolveUnitPrice(item.basePrice, item.priceTiers, numericQty);
+                    return { ...item, quantity, price: newPrice };
+                }
+                return item;
+            })
         );
     }, []);
 
@@ -100,33 +115,39 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }, []);
 
     const totals = useMemo(() => {
-        const totalWithDiscounts = items.reduce((sum, item) => {
-            let itemTotal = (Number(item.price) || 0) * (Number(item.quantity) || 0);
-            const dVal = Number(item.discountValue) || 0;
-            if (dVal && item.discountType) {
-                if (item.discountType === 'PERCENTAGE') {
-                    itemTotal -= (itemTotal * dVal) / 100;
-                } else {
-                    itemTotal -= dVal;
-                }
-            }
-            return sum + Math.max(0, itemTotal);
+        // 1. Items subtotal (price * quantity) before manual discounts
+        const itemsSubtotal = items.reduce((sum, item) => {
+            return sum + (Number(item.price) || 0) * (Number(item.quantity) || 0);
         }, 0);
 
-        const tax = totalWithDiscounts - (totalWithDiscounts / 1.19);
-        const subtotal = totalWithDiscounts - tax;
+        // 2. Total manual discounts
+        const totalDiscount = items.reduce((sum, item) => {
+            let discount = 0;
+            const itemBaseTotal = (Number(item.price) || 0) * (Number(item.quantity) || 0);
+            const dVal = Number(item.discountValue) || 0;
 
-        // Original total based on current prices (which might have been edited)
-        // If we want track "List Price" vs "Edited Price" we would need more fields
-        // For now, assuming "totalOriginal" is just Sum(Price * Qty)
-        const totalOriginal = items.reduce((sum, item) => sum + ((Number(item.price) || 0) * (Number(item.quantity) || 0)), 0);
-        const totalDiscount = totalOriginal - totalWithDiscounts;
+            if (dVal && item.discountType) {
+                if (item.discountType === 'PERCENTAGE') {
+                    discount = (itemBaseTotal * dVal) / 100;
+                } else {
+                    discount = dVal;
+                }
+            }
+            return sum + discount;
+        }, 0);
+
+        const total = Math.max(0, itemsSubtotal - totalDiscount);
+        
+        // In Chile, prices are IVA inclusivo (19%)
+        const tax = total - (total / 1.19);
+        const netAmount = total - tax;
 
         return {
-            total: totalWithDiscounts,
-            tax,
-            subtotal,
+            subtotal: itemsSubtotal,
             totalDiscount,
+            total,
+            tax,
+            netAmount,
         };
     }, [items]);
 

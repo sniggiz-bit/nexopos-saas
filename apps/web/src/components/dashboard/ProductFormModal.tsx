@@ -28,6 +28,8 @@ export function ProductFormModal({ isOpen, onClose, initialData }: ProductFormMo
         image: '',
         isActive: true,
     });
+    const [priceTiers, setPriceTiers] = useState<{ minQuantity: string; unitPrice: string }[]>([]);
+
 
     const createProduct = useCreateProduct();
     const updateProduct = useUpdateProduct();
@@ -50,6 +52,11 @@ export function ProductFormModal({ isOpen, onClose, initialData }: ProductFormMo
                 image: initialData.image || '',
                 isActive: initialData.isActive,
             });
+            setPriceTiers(initialData.priceTiers?.map(t => ({
+                minQuantity: t.minQuantity.toString(),
+                unitPrice: t.unitPrice.toString()
+            })) || []);
+
         } else if (!initialData && isOpen) {
             // Reset form for new product
             setFormData({
@@ -66,6 +73,8 @@ export function ProductFormModal({ isOpen, onClose, initialData }: ProductFormMo
                 image: '',
                 isActive: true,
             });
+            setPriceTiers([]);
+
         }
     }, [initialData, isOpen]);
 
@@ -75,6 +84,20 @@ export function ProductFormModal({ isOpen, onClose, initialData }: ProductFormMo
         // Validation
         if (!formData.name || !formData.price) {
             toast.error('Nombre y precio son obligatorios');
+            return;
+        }
+
+        const parsedTiers = priceTiers
+            .filter(t => t.minQuantity && t.unitPrice)
+            .map(t => ({
+                minQuantity: parseInt(t.minQuantity),
+                unitPrice: parseInt(t.unitPrice)
+            }));
+
+        const basePrice = parseInt(formData.price);
+
+        if (parsedTiers.some(t => t.unitPrice >= basePrice)) {
+            toast.error('El precio en los tramos mayoristas debe ser menor al Precio de Venta base.');
             return;
         }
 
@@ -94,6 +117,8 @@ export function ProductFormModal({ isOpen, onClose, initialData }: ProductFormMo
                     brandId: formData.brandId || undefined,
                     image: formData.image || undefined,
                     isActive: formData.isActive,
+                    priceTiers: parsedTiers.length > 0 ? parsedTiers : undefined,
+
                 });
                 onClose();
             } else {
@@ -111,6 +136,7 @@ export function ProductFormModal({ isOpen, onClose, initialData }: ProductFormMo
                     image: formData.image || undefined,
                     isActive: formData.isActive,
                     tenantId: 'tenant-1', // Default tenant
+                    priceTiers: parsedTiers.length > 0 ? parsedTiers : undefined,
                 });
 
                 toast.success('Producto creado exitosamente');
@@ -130,6 +156,7 @@ export function ProductFormModal({ isOpen, onClose, initialData }: ProductFormMo
                     image: '',
                     isActive: true,
                 });
+                setPriceTiers([]);
             }
         } catch (error: any) {
             const action = initialData ? 'actualizar' : 'crear';
@@ -229,6 +256,72 @@ export function ProductFormModal({ isOpen, onClose, initialData }: ProductFormMo
                                 min="0"
                             />
                         </div>
+                    </div>
+
+                    {/* Wholesale Prices Section */}
+                    <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 space-y-3">
+                        <div className="flex justify-between items-center">
+                            <h3 className="text-sm font-semibold text-gray-800">Precios por Volumen / Mayorista</h3>
+                            <button
+                                type="button"
+                                onClick={() => setPriceTiers([...priceTiers, { minQuantity: '', unitPrice: '' }])}
+                                className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                            >
+                                + Agregar Tramo
+                            </button>
+                        </div>
+
+                        {priceTiers.length === 0 ? (
+                            <p className="text-xs text-gray-500">No hay tramos de precio configurados. El producto usará el precio base.</p>
+                        ) : (
+                            <div className="space-y-2">
+                                {priceTiers.map((tier, index) => (
+                                    <div key={index} className="flex items-center gap-3">
+                                        <div className="flex-1">
+                                            <input
+                                                type="number"
+                                                min="2"
+                                                placeholder="Cant. Min. (ej: 5)"
+                                                value={tier.minQuantity}
+                                                onChange={(e) => {
+                                                    const newTiers = [...priceTiers];
+                                                    newTiers[index].minQuantity = e.target.value;
+                                                    setPriceTiers(newTiers);
+                                                }}
+                                                className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500"
+                                                required
+                                            />
+                                        </div>
+                                        <div className="flex-1">
+                                            <input
+                                                type="number"
+                                                min="0"
+                                                placeholder="Precio Unitario (ej: 1200)"
+                                                value={tier.unitPrice}
+                                                onChange={(e) => {
+                                                    const newTiers = [...priceTiers];
+                                                    newTiers[index].unitPrice = e.target.value;
+                                                    setPriceTiers(newTiers);
+                                                }}
+                                                className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500"
+                                                required
+                                            />
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                const newTiers = priceTiers.filter((_, i) => i !== index);
+                                                setPriceTiers(newTiers);
+                                            }}
+                                            className="text-red-500 hover:text-red-700 bg-red-50 p-1.5 rounded-full"
+                                            title="Eliminar Tramo"
+                                        >
+                                            <X className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                     </div>
 
                     {/* Unit Type Toggle */}

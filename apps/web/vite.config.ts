@@ -8,15 +8,17 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+      // Resolve shared package directly from source to avoid CJS/ESM mismatch
+      '@nexopos/shared': path.resolve(__dirname, '../../packages/shared/index.ts'),
     },
   },
   server: {
+    port: 5173,
+    strictPort: true,
     proxy: {
       '/api': {
-        target: 'http://localhost:3000',
+        target: 'http://localhost:4000',
         changeOrigin: true,
-        // No rewrite — NestJS uses app.setGlobalPrefix('api'),
-        // so /api/suppliers correctly maps to http://localhost:3000/api/suppliers
       },
     },
   },

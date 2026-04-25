@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../api/client';
 import type { Product } from '../api/types';
+import type { PriceTier } from '@nexopos/shared';
 
 interface CreateProductData {
     name: string;
@@ -16,6 +17,7 @@ interface CreateProductData {
     isActive: boolean;
     initialStock?: number;
     tenantId: string;
+    priceTiers?: PriceTier[];
 }
 
 async function createProduct(data: CreateProductData): Promise<Product> {

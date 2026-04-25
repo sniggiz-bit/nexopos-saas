@@ -11,12 +11,12 @@ exports.IsRut = IsRut;
 const class_validator_1 = require("class-validator");
 const shared_1 = require("@nexopos/shared");
 let IsRutConstraint = class IsRutConstraint {
-    validate(value, args) {
+    validate(value, _args) {
         if (typeof value !== 'string')
             return false;
         return (0, shared_1.validateRut)(value);
     }
-    defaultMessage(args) {
+    defaultMessage(_args) {
         return 'El RUT ingresado no es válido';
     }
 };

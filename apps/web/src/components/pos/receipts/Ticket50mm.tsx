@@ -60,7 +60,13 @@ export const Ticket50mm: React.FC<Ticket50mmProps> = ({ sale, tenantName = 'NEXO
             <div className="dashed-line" />
 
             <div className="totals">
-                <div className="flex-justify bold" style={{ fontSize: '11px' }}>
+                {sale.discountAmount ? (
+                    <div className="flex-justify" style={{ fontSize: '9px' }}>
+                        <span>DCTO:</span>
+                        <span>-{formatPrice(sale.discountAmount)}</span>
+                    </div>
+                ) : null}
+                <div className="flex-justify bold" style={{ fontSize: '11px', marginTop: '2px' }}>
                     <span>TOTAL:</span>
                     <span>{formatPrice(sale.total)}</span>
                 </div>
