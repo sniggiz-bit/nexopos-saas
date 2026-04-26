@@ -4,13 +4,15 @@ import { useProducts } from '../../hooks/useProducts';
 import { InventoryKardexModal } from '../../components/dashboard/InventoryKardexModal';
 import { Search, History, Loader2, Warehouse, AlertCircle } from 'lucide-react';
 import type { Product } from '../../api/types';
+import { useAuth } from '../../context/AuthContext';
 
 export function InventoryPage() {
     const [searchTerm, setSearchTerm] = useState('');
     const [isKardexOpen, setIsKardexOpen] = useState(false);
     const [productForKardex, setProductForKardex] = useState<Product | null>(null);
+    const { user } = useAuth();
 
-    const { data: products, isLoading } = useProducts();
+    const { data: products, isLoading } = useProducts(user?.tenantId);
 
     const filteredProducts = products?.filter(product =>
         product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||

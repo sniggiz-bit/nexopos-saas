@@ -43,6 +43,16 @@ export function DashboardOverviewPage() {
     return (
         <DashboardLayout>
             <div className="space-y-6">
+                {/* Welcome Message */}
+                <div className="bg-white rounded-lg shadow p-6">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                        Bienvenido al Panel de Administración
+                    </h3>
+                    <p className="text-gray-600 text-sm">
+                        Gestiona productos, inventario, categorías y configuración de facturación desde aquí.
+                    </p>
+                </div>
+
                 {/* Stats Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     <StatCard
@@ -179,15 +189,6 @@ export function DashboardOverviewPage() {
                     </div>
                 </div>
 
-                {/* Welcome Message */}
-                <div className="bg-white rounded-lg shadow p-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                        Bienvenido al Panel de Administración
-                    </h3>
-                    <p className="text-gray-600">
-                        Gestiona productos, inventario, categorías y configuración de facturación desde aquí.
-                    </p>
-                </div>
             </div>
 
             <div className="flex justify-end mt-6">
