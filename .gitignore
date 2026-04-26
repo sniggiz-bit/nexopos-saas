@@ -13,3 +13,4 @@ pgdata/
 # Logs y archivos temporales
 *.log
 *.sql
+!seed-demo.sql

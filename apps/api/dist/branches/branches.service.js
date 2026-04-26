@@ -39,10 +39,17 @@ let BranchesService = class BranchesService {
         return branch;
     }
     async findAll(tenantId) {
-        return this.prisma.branch.findMany({
+        const branches = await this.prisma.branch.findMany({
             where: { tenantId },
             orderBy: { createdAt: 'asc' },
         });
+        if (branches.length === 0) {
+            const branch = await this.prisma.branch.create({
+                data: { name: 'Casa Matriz', isMain: true, isActive: true, tenantId },
+            });
+            return [branch];
+        }
+        return branches;
     }
     async findOne(id) {
         return this.prisma.branch.findUnique({
