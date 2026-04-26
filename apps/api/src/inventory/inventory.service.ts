@@ -71,9 +71,9 @@ export class InventoryService {
     return { newBalance };
   }
 
-  async getKardex(productId: string, branchId: string) {
+  async getKardex(productId: string, branchId?: string) {
     return this.prisma.stockMovement.findMany({
-      where: { productId, branchId },
+      where: branchId ? { productId, branchId } : { productId },
       orderBy: { createdAt: 'desc' },
       include: {
         user: { select: { name: true } },

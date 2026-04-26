@@ -11,17 +11,9 @@ import { Separator } from '@/components/ui/separator';
 import { formatPrice } from '@/utils/formatters';
 import { CheckCircle2, XCircle, Banknote, CreditCard, RefreshCw, Layers, Calculator } from 'lucide-react';
 import { type CartItemData } from '@/context/CartContext';
-import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
-import { usePrintSettings, type PrintFormat } from '@/hooks/usePrintSettings';
+import { usePrintSettings } from '@/hooks/usePrintSettings';
 import { printSaleAction } from './receipts/ReceiptRenderer';
 import { useEffect, useState, useMemo } from 'react';
 import { PaymentMethod, type PaymentRequestData } from '@/api/sales';
@@ -58,7 +50,7 @@ export function PaymentModal({
     isError,
     saleResult,
 }: PaymentModalProps) {
-    const { autoPrint, setAutoPrint, defaultFormat, setDefaultFormat } = usePrintSettings();
+    const { autoPrint, defaultFormat } = usePrintSettings();
     const [hasAttemptedAutoPrint, setHasAttemptedAutoPrint] = useState(false);
 
     // Payment Logic States
@@ -414,43 +406,11 @@ export function PaymentModal({
 
                 <Separator />
 
-                <div className="space-y-4 py-2">
-                    <div className="flex items-center justify-between">
-                        <div className="space-y-0.5">
-                            <Label htmlFor="auto-print" className="font-bold">Imprimir Comprobante</Label>
-                            <p className="text-[10px] text-muted-foreground">Dispara la impresión automáticamente</p>
-                        </div>
-                        <Switch
-                            id="auto-print"
-                            checked={autoPrint}
-                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAutoPrint(e.target.checked)}
-                        />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-1.5">
-                            <Label className="text-[10px] uppercase font-bold text-slate-400">Formato</Label>
-                            <Select value={defaultFormat} onValueChange={(v: string) => setDefaultFormat(v as PrintFormat)}>
-                                <SelectTrigger className="h-9 bg-slate-50 dark:bg-slate-900 border-none">
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="80mm">Ticket 80mm</SelectItem>
-                                    <SelectItem value="50mm">Ticket 50mm</SelectItem>
-                                    <SelectItem value="A4">Boleta A4</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-
-                        <div className="flex items-end pr-1">
-                            {paymentType === 'MIXED' && !isTotalCovered && (
-                                <Badge variant="outline" className="h-9 w-full justify-center border-dashed border-rose-300 text-rose-500 bg-rose-50 dark:bg-rose-900/10">
-                                    Faltan {formatPrice(remaining)}
-                                </Badge>
-                            )}
-                        </div>
-                    </div>
-                </div>
+                {paymentType === 'MIXED' && !isTotalCovered && (
+                    <Badge variant="outline" className="w-full justify-center border-dashed border-rose-300 text-rose-500 bg-rose-50 dark:bg-rose-900/10 py-2">
+                        Faltan {formatPrice(remaining)}
+                    </Badge>
+                )}
 
                 <DialogFooter className="gap-2 sm:gap-0">
                     <Button variant="ghost" onClick={onClose} disabled={isProcessing} className="font-bold text-slate-500">

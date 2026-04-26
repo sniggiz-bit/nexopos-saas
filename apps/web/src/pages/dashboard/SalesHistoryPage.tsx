@@ -85,8 +85,8 @@ export function SalesHistoryPage() {
         isFetching,
     } = useSales({
         filters: {
-            startDate: filters.startDate || undefined,
-            endDate: filters.endDate || undefined,
+            startDate: filters.startDate ? `${filters.startDate}T00:00:00` : undefined,
+            endDate: filters.endDate ? `${filters.endDate}T23:59:59` : undefined,
             branchId: filters.branchId || undefined,
         },
     });

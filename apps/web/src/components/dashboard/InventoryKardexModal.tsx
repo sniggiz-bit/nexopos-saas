@@ -13,7 +13,7 @@ interface InventoryKardexModalProps {
 export function InventoryKardexModal({ isOpen, onClose, product }: InventoryKardexModalProps) {
     const { data: movements, isLoading } = useQuery({
         queryKey: ['kardex', product?.id],
-        queryFn: () => product ? getKardex(product.id, 'branch-1') : Promise.resolve([]), // Hardcoded branch for now
+        queryFn: () => product ? getKardex(product.id) : Promise.resolve([]),
         enabled: !!product && isOpen,
     });
 
