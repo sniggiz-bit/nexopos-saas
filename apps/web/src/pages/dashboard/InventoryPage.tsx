@@ -135,7 +135,7 @@ export function InventoryPage() {
                         barcode: row['Código de Barras']?.toString().trim() || undefined,
                         price: Number(row['Precio']) || 0,
                         costPrice: Number(row['Costo']) || 0,
-                        stock: Number(row['Stock Inicial']) || 0,
+                        initialStock: Number(row['Stock Inicial']) || 0,
                         minStock: Number(row['Stock Mínimo']) || 0,
                         unitType: row['Tipo']?.toString().trim() === 'Granel' ? 'WEIGHT' : 'UNIT',
                         categoryId: cat?.id || undefined,
