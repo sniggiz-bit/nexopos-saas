@@ -50,8 +50,9 @@ export function PaymentModal({
     isError,
     saleResult,
 }: PaymentModalProps) {
-    const { autoPrint, defaultFormat } = usePrintSettings();
+    const { autoPrint, defaultFormat, setDefaultFormat } = usePrintSettings();
     const [hasAttemptedAutoPrint, setHasAttemptedAutoPrint] = useState(false);
+    const [countdown, setCountdown] = useState(4);
 
     // Payment Logic States
     const [paymentType, setPaymentType] = useState<PaymentType>('SINGLE');
@@ -71,6 +72,14 @@ export function PaymentModal({
             printSaleAction(saleResult, defaultFormat);
         }
     }, [isSuccess, saleResult, autoPrint, defaultFormat, hasAttemptedAutoPrint]);
+
+    // Auto-close countdown after success
+    useEffect(() => {
+        if (!isSuccess) { setCountdown(4); return; }
+        if (countdown <= 0) { onClose(); return; }
+        const t = setTimeout(() => setCountdown(c => c - 1), 1000);
+        return () => clearTimeout(t);
+    }, [isSuccess, countdown, onClose]);
 
     // Reset auto-print and payment states when modal opens
     useEffect(() => {
@@ -119,16 +128,19 @@ export function PaymentModal({
             <Dialog open={isOpen} onOpenChange={onClose}>
                 <DialogContent>
                     <DialogHeader>
-                        <div className="flex items-center gap-2 text-green-600">
-                            <CheckCircle2 className="w-6 h-6" />
-                            <DialogTitle>¡Venta exitosa!</DialogTitle>
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2 text-green-600">
+                                <CheckCircle2 className="w-6 h-6" />
+                                <DialogTitle>¡Venta exitosa!</DialogTitle>
+                            </div>
+                            <span className="text-xs text-slate-400">Cerrando en {countdown}s</span>
                         </div>
                         <DialogDescription>
-                            La venta se ha procesado correctamente.
+                            {autoPrint ? 'Imprimiendo ticket automáticamente...' : 'La venta se ha procesado correctamente.'}
                         </DialogDescription>
                     </DialogHeader>
 
-                    <div className="bg-muted p-4 rounded-lg space-y-3 mb-4">
+                    <div className="bg-muted p-4 rounded-lg space-y-3 mb-2">
                         {saleResult?.dteFolio && (
                             <div className="flex justify-between items-center text-sm">
                                 <span className="font-medium">Folio DTE:</span>
@@ -137,40 +149,44 @@ export function PaymentModal({
                         )}
 
                         {saleResult?.dtePdfUrl && !saleResult.dtePdfUrl.includes('ejemplo-mock') && (
-                            <Button
-                                className="w-full"
-                                variant="outline"
-                                onClick={() => window.open(saleResult.dtePdfUrl, '_blank')}
-                            >
+                            <Button className="w-full" variant="outline"
+                                onClick={() => window.open(saleResult.dtePdfUrl, '_blank')}>
                                 Ver Boleta (PDF)
                             </Button>
                         )}
 
                         {saleResult?.internalReceiptUrl && (
-                            <Button
-                                className="w-full"
-                                variant="outline"
+                            <Button className="w-full" variant="outline"
                                 onClick={() => {
                                     const apiUrl = import.meta.env.VITE_API_URL || '';
-                                    const fullUrl = `${apiUrl}${saleResult.internalReceiptUrl}`;
-                                    window.open(fullUrl, '_blank');
-                                }}
-                            >
+                                    window.open(`${apiUrl}${saleResult.internalReceiptUrl}`, '_blank');
+                                }}>
                                 Ver Ticket Interno (PDF)
                             </Button>
                         )}
 
-                        <Button
-                            className="w-full"
-                            variant="secondary"
-                            onClick={() => printSaleAction(saleResult, defaultFormat)}
-                        >
-                            Imprimir Ticket ({defaultFormat}) - V2
-                        </Button>
+                        {/* Reprint + format selector */}
+                        <div className="flex gap-2">
+                            <Button className="flex-1" variant="secondary"
+                                onClick={() => printSaleAction(saleResult, defaultFormat)}>
+                                Reimprimir Ticket
+                            </Button>
+                            <select
+                                value={defaultFormat}
+                                onChange={(e) => setDefaultFormat(e.target.value as '80mm' | '50mm' | 'A4')}
+                                className="px-2 py-1 text-xs border border-slate-200 rounded-lg bg-white text-slate-600 focus:outline-none"
+                            >
+                                <option value="80mm">80mm</option>
+                                <option value="50mm">50mm</option>
+                                <option value="A4">A4</option>
+                            </select>
+                        </div>
                     </div>
 
                     <DialogFooter>
-                        <Button onClick={onClose} className="w-full">Cerrar</Button>
+                        <Button onClick={onClose} className="w-full" variant="outline">
+                            Cerrar ahora
+                        </Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
