@@ -24,6 +24,7 @@ export declare class CreditsController {
             status: string;
             tenantId: string;
             total: number;
+            discountAmount: number;
             branchId: string;
             userId: string | null;
             cashShiftId: string | null;
@@ -68,6 +69,7 @@ export declare class CreditsController {
             status: string;
             tenantId: string;
             total: number;
+            discountAmount: number;
             branchId: string;
             userId: string | null;
             cashShiftId: string | null;
@@ -96,8 +98,8 @@ export declare class CreditsController {
             id: string;
             createdAt: Date;
             cashShiftId: string | null;
-            amount: number;
             paymentMethod: string;
+            amount: number;
             creditId: string;
         }[];
     } & {

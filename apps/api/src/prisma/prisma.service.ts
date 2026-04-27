@@ -6,7 +6,8 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
   private prisma: PrismaClient;
 
   constructor() {
-    this.prisma = new PrismaClient();
+    // @ts-expect-error — generated types predate the url field in schema
+    this.prisma = new PrismaClient({ datasources: { db: { url: process.env.DATABASE_URL } } });
   }
 
   async onModuleInit() {

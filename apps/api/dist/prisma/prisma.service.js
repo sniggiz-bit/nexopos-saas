@@ -15,7 +15,7 @@ const client_1 = require("@prisma/client");
 let PrismaService = class PrismaService {
     prisma;
     constructor() {
-        this.prisma = new client_1.PrismaClient();
+        this.prisma = new client_1.PrismaClient({ datasources: { db: { url: process.env.DATABASE_URL } } });
     }
     async onModuleInit() {
         await this.prisma.$connect();

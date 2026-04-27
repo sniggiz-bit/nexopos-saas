@@ -125,6 +125,13 @@ export declare class SalesController {
             balance: number;
             dueDate: Date | null;
         } | null;
+        payments: {
+            id: string;
+            createdAt: Date;
+            saleId: string;
+            paymentMethod: import("@prisma/client").$Enums.PaymentMethod;
+            amount: number;
+        }[];
         items: {
             id: string;
             price: number;
@@ -132,13 +139,6 @@ export declare class SalesController {
             saleId: string;
             productId: string;
             quantity: import("@prisma/client-runtime-utils").Decimal;
-        }[];
-        payments: {
-            id: string;
-            createdAt: Date;
-            saleId: string;
-            amount: number;
-            paymentMethod: import("@prisma/client").$Enums.PaymentMethod;
         }[];
     } & {
         id: string;
