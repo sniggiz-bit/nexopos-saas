@@ -16,6 +16,7 @@ interface GetSalesFilters {
   startDate?: string;
   endDate?: string;
   branchId?: string;
+  tenantId?: string;
 }
 
 @Injectable()
@@ -34,8 +35,10 @@ export class SalesService {
    * Get all sales with optional filters
    */
   async getSales(filters: GetSalesFilters = {}) {
-    const { startDate, endDate, branchId } = filters;
+    const { startDate, endDate, branchId, tenantId } = filters;
     const where: any = {};
+
+    if (tenantId) where.tenantId = tenantId;
 
     if (startDate || endDate) {
       where.createdAt = {};

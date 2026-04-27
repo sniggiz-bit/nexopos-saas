@@ -33,8 +33,10 @@ let SalesService = SalesService_1 = class SalesService {
         this.inventoryService = inventoryService;
     }
     async getSales(filters = {}) {
-        const { startDate, endDate, branchId } = filters;
+        const { startDate, endDate, branchId, tenantId } = filters;
         const where = {};
+        if (tenantId)
+            where.tenantId = tenantId;
         if (startDate || endDate) {
             where.createdAt = {};
             if (startDate)

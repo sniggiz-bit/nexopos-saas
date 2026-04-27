@@ -3,6 +3,7 @@ import { DashboardLayout } from '../../components/dashboard/DashboardLayout';
 import { SalesHistoryTable } from '../../components/dashboard/SalesHistoryTable';
 import { useSales } from '../../hooks/useSales';
 import { useBranches } from '../../hooks/useBranches';
+import { useAuth } from '../../context/AuthContext';
 import { formatCLP } from '../../services/sales.service';
 import type { SaleStatus } from '../../services/sales.service';
 import {
@@ -70,6 +71,7 @@ function thirtyDaysAgoISO(): string {
 // ─────────────────────────────────────────────
 
 export function SalesHistoryPage() {
+    const { user } = useAuth();
     const [filters, setFilters] = useState<Filters>({
         startDate: thirtyDaysAgoISO(),
         endDate: todayISO(),
@@ -88,6 +90,7 @@ export function SalesHistoryPage() {
             startDate: filters.startDate ? `${filters.startDate}T00:00:00` : undefined,
             endDate: filters.endDate ? `${filters.endDate}T23:59:59` : undefined,
             branchId: filters.branchId || undefined,
+            tenantId: user?.tenantId,
         },
     });
 

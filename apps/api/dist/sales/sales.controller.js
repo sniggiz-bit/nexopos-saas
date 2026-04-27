@@ -23,8 +23,8 @@ let SalesController = class SalesController {
     constructor(salesService) {
         this.salesService = salesService;
     }
-    async findAll(startDate, endDate, branchId) {
-        return this.salesService.getSales({ startDate, endDate, branchId });
+    async findAll(startDate, endDate, branchId, tenantId) {
+        return this.salesService.getSales({ startDate, endDate, branchId, tenantId });
     }
     async create(createSaleDto, user) {
         console.log('[SalesController] Received createSaleDto:', JSON.stringify(createSaleDto, null, 2));
@@ -46,8 +46,9 @@ __decorate([
     __param(0, (0, common_1.Query)('startDate')),
     __param(1, (0, common_1.Query)('endDate')),
     __param(2, (0, common_1.Query)('branchId')),
+    __param(3, (0, common_1.Query)('tenantId')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, String, String]),
+    __metadata("design:paramtypes", [String, String, String, String]),
     __metadata("design:returntype", Promise)
 ], SalesController.prototype, "findAll", null);
 __decorate([

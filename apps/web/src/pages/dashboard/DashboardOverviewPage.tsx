@@ -14,11 +14,14 @@ export function DashboardOverviewPage() {
     const { data: stats, isLoading } = useDashboardStats(user?.tenantId || '', user?.branchId || 'branch-1');
     const { data: products } = useProducts(user?.tenantId);
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const todayStr = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD en hora local
     const { data: todaySales } = useQuery({
-        queryKey: ['sales', 'today', user?.tenantId],
-        queryFn: () => getSales({ startDate: today.toISOString() }),
+        queryKey: ['sales', 'today', user?.tenantId, todayStr],
+        queryFn: () => getSales({
+            startDate: `${todayStr}T00:00:00`,
+            endDate: `${todayStr}T23:59:59`,
+            tenantId: user?.tenantId,
+        }),
         enabled: !!user?.tenantId,
     });
 

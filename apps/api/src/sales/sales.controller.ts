@@ -37,8 +37,9 @@ export class SalesController {
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
     @Query('branchId') branchId?: string,
+    @Query('tenantId') tenantId?: string,
   ) {
-    return this.salesService.getSales({ startDate, endDate, branchId });
+    return this.salesService.getSales({ startDate, endDate, branchId, tenantId });
   }
 
   /**

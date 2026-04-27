@@ -87,6 +87,7 @@ export interface GetSalesParams {
     startDate?: string;
     endDate?: string;
     branchId?: string;
+    tenantId?: string;
 }
 
 
