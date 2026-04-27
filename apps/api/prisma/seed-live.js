@@ -72,21 +72,23 @@ async function main() {
 
     const products = [];
     for (const p of productDefs) {
-        const prod = await prisma.product.upsert({
-            where: { sku_tenantId: { sku: p.sku, tenantId: tenant.id } },
-            update: { price: p.price, stock: p.stock },
-            create: {
-                name: p.name,
-                sku: p.sku,
-                price: p.price,
-                cost: p.cost,
-                stock: p.stock,
-                minStock: p.min,
-                tenantId: tenant.id,
-                categoryId: cats[p.cat],
-                brandId: brands[p.brand],
-            },
+        let prod = await prisma.product.findFirst({
+            where: { sku: p.sku, tenantId: tenant.id },
         });
+        if (!prod) {
+            prod = await prisma.product.create({
+                data: {
+                    name: p.name,
+                    sku: p.sku,
+                    price: p.price,
+                    costPrice: p.cost,
+                    minStock: p.min,
+                    tenantId: tenant.id,
+                    categoryId: cats[p.cat],
+                    brandId: brands[p.brand],
+                },
+            });
+        }
         products.push(prod);
     }
     console.log(`✅ ${products.length} productos`);
