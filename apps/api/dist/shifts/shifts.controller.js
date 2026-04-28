@@ -37,6 +37,9 @@ let ShiftsController = class ShiftsController {
     async getCurrentShift(branchId) {
         return this.shiftsService.getCurrentShift(branchId);
     }
+    async getShiftSummary(shiftId) {
+        return this.shiftsService.getShiftSummary(shiftId);
+    }
 };
 exports.ShiftsController = ShiftsController;
 __decorate([
@@ -60,6 +63,13 @@ __decorate([
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
 ], ShiftsController.prototype, "getCurrentShift", null);
+__decorate([
+    (0, common_1.Get)('summary/:shiftId'),
+    __param(0, (0, common_1.Param)('shiftId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], ShiftsController.prototype, "getShiftSummary", null);
 exports.ShiftsController = ShiftsController = __decorate([
     (0, common_1.Controller)('shifts'),
     __metadata("design:paramtypes", [shifts_service_1.ShiftsService])

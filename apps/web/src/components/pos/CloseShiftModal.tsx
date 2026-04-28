@@ -7,13 +7,14 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { useCloseShift } from '@/hooks/useShifts';
+import { useCloseShift, useShiftLiveSummary } from '@/hooks/useShifts';
 import { useToast } from '@/hooks/use-toast';
 import { formatPrice } from '@/utils/formatters';
 import { useAuth } from '@/context/AuthContext';
 import {
     LogOut, Calculator, Printer, CheckCircle2, AlertTriangle,
     DollarSign, Receipt, ChevronDown, ChevronUp, Clock,
+    User, Banknote, CreditCard, ArrowLeftRight, TrendingUp, ShoppingBag,
 } from 'lucide-react';
 import { Shift } from '@/api/shifts';
 import { formatDistanceToNow, format } from 'date-fns';
@@ -38,6 +39,13 @@ const DENOMINATIONS = [
     { label: '$10', value: 10 },
 ];
 
+const METHOD_CONFIG = {
+    EFECTIVO:     { label: 'Efectivo',      Icon: Banknote,       color: 'text-emerald-600', bg: 'bg-emerald-50 dark:bg-emerald-900/20', border: 'border-emerald-100 dark:border-emerald-800' },
+    DEBITO:       { label: 'Débito',         Icon: CreditCard,     color: 'text-blue-600',    bg: 'bg-blue-50 dark:bg-blue-900/20',       border: 'border-blue-100 dark:border-blue-800' },
+    TRANSFERENCIA:{ label: 'Transferencia',  Icon: ArrowLeftRight, color: 'text-violet-600',  bg: 'bg-violet-50 dark:bg-violet-900/20',   border: 'border-violet-100 dark:border-violet-800' },
+    CREDITO:      { label: 'Crédito',        Icon: CreditCard,     color: 'text-amber-600',   bg: 'bg-amber-50 dark:bg-amber-900/20',     border: 'border-amber-100 dark:border-amber-800' },
+} as const;
+
 export function CloseShiftModal({ isOpen, onClose, shiftId, currentShift }: CloseShiftModalProps) {
     const [finalAmount, setFinalAmount] = useState('');
     const [closedShift, setClosedShift] = useState<any>(null);
@@ -49,6 +57,7 @@ export function CloseShiftModal({ isOpen, onClose, shiftId, currentShift }: Clos
     const { mutate: closeShift, isPending } = useCloseShift();
     const { toast } = useToast();
     const { user } = useAuth();
+    const { data: summary, isLoading: isLoadingSummary } = useShiftLiveSummary(isOpen ? shiftId : null);
 
     const calculatedTotal = useMemo(() => {
         return DENOMINATIONS.reduce((sum, d) => {
@@ -197,11 +206,13 @@ export function CloseShiftModal({ isOpen, onClose, shiftId, currentShift }: Clos
         ? format(new Date(currentShift.startTime), "HH:mm 'del' dd/MM/yyyy", { locale: es })
         : null;
 
+    const cashierName = summary?.openedBy ?? user?.name ?? user?.email ?? '—';
+
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="sm:max-w-[500px] p-0 overflow-hidden border-none bg-slate-50 dark:bg-slate-900 shadow-2xl rounded-2xl">
+            <DialogContent className="sm:max-w-[540px] p-0 overflow-hidden border-none bg-slate-50 dark:bg-slate-900 shadow-2xl rounded-2xl flex flex-col max-h-[90vh]">
                 {/* Header */}
-                <div className="bg-gradient-to-br from-red-600 to-rose-700 p-7 text-white relative overflow-hidden">
+                <div className="bg-gradient-to-br from-red-600 to-rose-700 p-7 text-white relative overflow-hidden shrink-0">
                     <div className="absolute top-4 right-4 opacity-10">
                         <LogOut size={110} />
                     </div>
@@ -220,20 +231,104 @@ export function CloseShiftModal({ isOpen, onClose, shiftId, currentShift }: Clos
                     </DialogHeader>
                 </div>
 
-                <div className="p-7 space-y-5">
-                    {/* Shift info */}
-                    {currentShift && (
-                        <div className="flex items-center gap-3 p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
-                            <div className="p-2 bg-red-50 dark:bg-red-900/20 rounded-lg">
-                                <Receipt size={16} className="text-red-500" />
+                {/* Scrollable content */}
+                <div className="overflow-y-auto flex-1 p-6 space-y-4 custom-scrollbar">
+
+                    {/* Cajero + Turno info */}
+                    <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+                        <div className="grid grid-cols-2 divide-x divide-slate-100 dark:divide-slate-700">
+                            <div className="flex items-center gap-2.5 p-3">
+                                <div className="p-1.5 bg-slate-100 dark:bg-slate-700 rounded-lg shrink-0">
+                                    <User size={14} className="text-slate-500" />
+                                </div>
+                                <div className="min-w-0">
+                                    <p className="text-[9px] text-slate-400 uppercase font-black tracking-widest leading-none">Cajero</p>
+                                    <p className="text-xs font-semibold text-slate-800 dark:text-slate-200 truncate mt-0.5">{cashierName}</p>
+                                </div>
                             </div>
-                            <div className="flex-1 min-w-0">
-                                <p className="text-[10px] text-slate-400 uppercase font-black tracking-widest leading-none">Turno Actual</p>
-                                <p className="text-xs font-semibold text-slate-700 dark:text-slate-300 font-mono">{shiftId.split('-')[0]}…</p>
+                            <div className="flex items-center gap-2.5 p-3">
+                                <div className="p-1.5 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg shrink-0">
+                                    <DollarSign size={14} className="text-emerald-600" />
+                                </div>
+                                <div>
+                                    <p className="text-[9px] text-slate-400 uppercase font-black tracking-widest leading-none">Base Inicial</p>
+                                    <p className="text-xs font-bold text-emerald-600 mt-0.5">
+                                        {currentShift ? formatPrice(currentShift.initialAmount) : '—'}
+                                    </p>
+                                </div>
                             </div>
-                            <div className="text-right shrink-0">
-                                <p className="text-[10px] text-slate-400 uppercase font-black tracking-widest leading-none">Base inicial</p>
-                                <p className="text-xs font-bold text-emerald-600">{formatPrice(currentShift.initialAmount)}</p>
+                        </div>
+                    </div>
+
+                    {/* Ventas del turno */}
+                    <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+                        <div className="px-4 py-2.5 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between">
+                            <div className="flex items-center gap-2 text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider">
+                                <TrendingUp size={13} className="text-indigo-500" />
+                                Ventas del Turno
+                            </div>
+                            {isLoadingSummary ? (
+                                <div className="w-3 h-3 border-2 border-slate-300 border-t-indigo-500 rounded-full animate-spin" />
+                            ) : (
+                                <div className="flex items-center gap-1.5">
+                                    <ShoppingBag size={12} className="text-slate-400" />
+                                    <span className="text-xs font-bold text-slate-500">
+                                        {summary?.salesCount ?? 0} {summary?.salesCount === 1 ? 'venta' : 'ventas'}
+                                    </span>
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="divide-y divide-slate-50 dark:divide-slate-700/50">
+                            {(Object.keys(METHOD_CONFIG) as (keyof typeof METHOD_CONFIG)[]).map((method) => {
+                                const { label, Icon, color, bg, border } = METHOD_CONFIG[method];
+                                const amount = summary?.paymentMethods[method] ?? 0;
+                                const hasAmount = amount > 0;
+                                return (
+                                    <div key={method} className={`flex items-center justify-between px-4 py-2.5 ${!hasAmount ? 'opacity-50' : ''}`}>
+                                        <div className="flex items-center gap-2.5">
+                                            <div className={`p-1.5 rounded-lg ${bg} border ${border}`}>
+                                                <Icon size={13} className={color} />
+                                            </div>
+                                            <span className="text-sm text-slate-700 dark:text-slate-300 font-medium">{label}</span>
+                                        </div>
+                                        {isLoadingSummary ? (
+                                            <div className="h-4 w-20 bg-slate-100 dark:bg-slate-700 rounded animate-pulse" />
+                                        ) : (
+                                            <span className={`text-sm font-bold tabular-nums ${hasAmount ? color : 'text-slate-400'}`}>
+                                                {formatPrice(amount)}
+                                            </span>
+                                        )}
+                                    </div>
+                                );
+                            })}
+                        </div>
+
+                        {/* Total ventas */}
+                        <div className="px-4 py-3 bg-slate-50 dark:bg-slate-700/40 border-t border-slate-200 dark:border-slate-700 flex items-center justify-between">
+                            <span className="text-xs font-black text-slate-600 dark:text-slate-300 uppercase tracking-wider">Total Ventas</span>
+                            {isLoadingSummary ? (
+                                <div className="h-5 w-24 bg-slate-200 dark:bg-slate-600 rounded animate-pulse" />
+                            ) : (
+                                <span className="text-base font-black text-slate-900 dark:text-white tabular-nums">
+                                    {formatPrice(summary?.totalSales ?? 0)}
+                                </span>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Cuadratura previa */}
+                    {summary && (
+                        <div className="bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-800 rounded-xl px-4 py-3">
+                            <p className="text-[10px] text-indigo-600 dark:text-indigo-400 uppercase font-black tracking-widest mb-2">Monto Esperado en Caja</p>
+                            <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300 flex-wrap">
+                                <span className="font-semibold">{formatPrice(summary.initialAmount)}</span>
+                                <span className="text-slate-400">base</span>
+                                <span className="text-slate-400">+</span>
+                                <span className="font-semibold text-emerald-600">{formatPrice(summary.paymentMethods.EFECTIVO)}</span>
+                                <span className="text-slate-400">efectivo</span>
+                                <span className="text-slate-400">=</span>
+                                <span className="font-black text-indigo-700 dark:text-indigo-300 text-sm">{formatPrice(summary.expectedAmount)}</span>
                             </div>
                         </div>
                     )}
@@ -242,7 +337,7 @@ export function CloseShiftModal({ isOpen, onClose, shiftId, currentShift }: Clos
                     <div className="space-y-3">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider">
-                                <DollarSign size={13} className="text-emerald-500" />
+                                <Banknote size={13} className="text-emerald-500" />
                                 Efectivo Total en Caja
                             </div>
                             <button
@@ -319,35 +414,35 @@ export function CloseShiftModal({ isOpen, onClose, shiftId, currentShift }: Clos
                             />
                         </div>
                     </div>
+                </div>
 
-                    {/* Actions */}
-                    <div className="flex gap-3 pt-1">
-                        <Button
-                            variant="ghost"
-                            onClick={onClose}
-                            disabled={isPending}
-                            className="flex-1 h-13 font-bold text-slate-500 hover:text-slate-900"
-                        >
-                            Cancelar
-                        </Button>
-                        <Button
-                            onClick={handleCloseShift}
-                            disabled={isPending || !finalAmount}
-                            className="flex-[2] h-14 text-base font-bold bg-red-600 hover:bg-red-700 shadow-lg shadow-red-200 dark:shadow-none transition-all hover:scale-[1.02] active:scale-95 rounded-xl"
-                        >
-                            {isPending ? (
-                                <div className="flex items-center gap-2">
-                                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                    <span>Cerrando...</span>
-                                </div>
-                            ) : (
-                                <div className="flex items-center gap-2">
-                                    <LogOut size={18} />
-                                    <span>Finalizar Turno</span>
-                                </div>
-                            )}
-                        </Button>
-                    </div>
+                {/* Actions - sticky footer */}
+                <div className="shrink-0 px-6 pb-6 pt-2 flex gap-3 bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800">
+                    <Button
+                        variant="ghost"
+                        onClick={onClose}
+                        disabled={isPending}
+                        className="flex-1 h-12 font-bold text-slate-500 hover:text-slate-900"
+                    >
+                        Cancelar
+                    </Button>
+                    <Button
+                        onClick={handleCloseShift}
+                        disabled={isPending || !finalAmount}
+                        className="flex-[2] h-14 text-base font-bold bg-red-600 hover:bg-red-700 shadow-lg shadow-red-200 dark:shadow-none transition-all hover:scale-[1.02] active:scale-95 rounded-xl"
+                    >
+                        {isPending ? (
+                            <div className="flex items-center gap-2">
+                                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                <span>Cerrando...</span>
+                            </div>
+                        ) : (
+                            <div className="flex items-center gap-2">
+                                <LogOut size={18} />
+                                <span>Finalizar Turno</span>
+                            </div>
+                        )}
+                    </Button>
                 </div>
             </DialogContent>
         </Dialog>

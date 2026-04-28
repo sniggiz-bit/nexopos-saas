@@ -62,4 +62,17 @@ export declare class ShiftsController {
         difference: import("@prisma/client-runtime-utils").Decimal | null;
         metadata: import("@prisma/client/runtime/client").JsonValue | null;
     } | null>;
+    getShiftSummary(shiftId: string): Promise<{
+        openedBy: string;
+        initialAmount: number;
+        salesCount: number;
+        totalSales: number;
+        paymentMethods: {
+            EFECTIVO: number;
+            DEBITO: number;
+            CREDITO: number;
+            TRANSFERENCIA: number;
+        };
+        expectedAmount: number;
+    }>;
 }
