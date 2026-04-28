@@ -1,11 +1,14 @@
 import { useState, useMemo } from 'react';
+import { useMutation } from '@tanstack/react-query';
 import { DashboardLayout } from '../../components/dashboard/DashboardLayout';
 import { SalesHistoryTable } from '../../components/dashboard/SalesHistoryTable';
 import { useSales } from '../../hooks/useSales';
 import { useBranches } from '../../hooks/useBranches';
 import { useAuth } from '../../context/AuthContext';
+import { useToast } from '@/hooks/use-toast';
 import { formatCLP } from '../../services/sales.service';
 import type { SaleStatus } from '../../services/sales.service';
+import { emitNotaCredito } from '../../api/sales';
 import {
     TrendingUp,
     ReceiptText,
@@ -72,6 +75,7 @@ function thirtyDaysAgoISO(): string {
 
 export function SalesHistoryPage() {
     const { user } = useAuth();
+    const { toast } = useToast();
     const [filters, setFilters] = useState<Filters>({
         startDate: thirtyDaysAgoISO(),
         endDate: todayISO(),
@@ -95,6 +99,32 @@ export function SalesHistoryPage() {
     });
 
     const { branches } = useBranches();
+
+    const { mutate: emitNC, isPending: isEmittingNC, variables: ncSaleId } = useMutation({
+        mutationFn: (saleId: string) => emitNotaCredito(saleId),
+        onSuccess: (data) => {
+            if (data.success) {
+                toast({
+                    title: 'Nota de Crédito emitida',
+                    description: data.folio ? `Folio #${data.folio}` : 'DTE emitido exitosamente',
+                });
+                refetch();
+            } else {
+                toast({
+                    variant: 'destructive',
+                    title: 'Error al emitir NC',
+                    description: data.error || 'No se pudo emitir la Nota de Crédito',
+                });
+            }
+        },
+        onError: () => {
+            toast({
+                variant: 'destructive',
+                title: 'Error',
+                description: 'No se pudo emitir la Nota de Crédito',
+            });
+        },
+    });
 
     // Client-side status filter (API doesn't always support it)
     const sales = useMemo(() => {
@@ -264,7 +294,12 @@ export function SalesHistoryPage() {
                 </div>
 
                 {/* ── Data Table ── */}
-                <SalesHistoryTable sales={sales} isLoading={isLoading} />
+                <SalesHistoryTable
+                    sales={sales}
+                    isLoading={isLoading}
+                    onEmitNotaCredito={(saleId) => emitNC(saleId)}
+                    emittingNcId={isEmittingNC ? ncSaleId : null}
+                />
 
             </div>
         </DashboardLayout>

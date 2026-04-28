@@ -9,7 +9,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { formatPrice } from '@/utils/formatters';
-import { CheckCircle2, XCircle, Banknote, CreditCard, RefreshCw, Layers, Calculator, FileText, Building2 } from 'lucide-react';
+import { CheckCircle2, XCircle, Banknote, CreditCard, RefreshCw, Layers, Calculator, FileText, Building2, Truck } from 'lucide-react';
 import { type CartItemData } from '@/context/CartContext';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -71,7 +71,7 @@ export function PaymentModal({
     });
 
     // DTE States
-    const [dteType, setDteType] = useState<39 | 33>(39);
+    const [dteType, setDteType] = useState<39 | 33 | 52>(39);
     const [customerSearch, setCustomerSearch] = useState('');
     const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
     const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
@@ -371,15 +371,21 @@ export function PaymentModal({
                             <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
                                 <button
                                     onClick={() => setDteType(39)}
-                                    className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-bold transition-all ${dteType === 39 ? 'bg-white dark:bg-slate-700 shadow-sm text-indigo-600' : 'text-slate-500'}`}
+                                    className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-bold transition-all ${dteType === 39 ? 'bg-white dark:bg-slate-700 shadow-sm text-indigo-600' : 'text-slate-500'}`}
                                 >
-                                    <FileText className="w-4 h-4" /> Boleta
+                                    <FileText className="w-3.5 h-3.5" /> Boleta
                                 </button>
                                 <button
                                     onClick={() => { setDteType(33); setSelectedCustomer(null); setCustomerSearch(''); }}
-                                    className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-bold transition-all ${dteType === 33 ? 'bg-white dark:bg-slate-700 shadow-sm text-indigo-600' : 'text-slate-500'}`}
+                                    className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-bold transition-all ${dteType === 33 ? 'bg-white dark:bg-slate-700 shadow-sm text-indigo-600' : 'text-slate-500'}`}
                                 >
-                                    <Building2 className="w-4 h-4" /> Factura
+                                    <Building2 className="w-3.5 h-3.5" /> Factura
+                                </button>
+                                <button
+                                    onClick={() => { setDteType(52); setSelectedCustomer(null); setCustomerSearch(''); }}
+                                    className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-bold transition-all ${dteType === 52 ? 'bg-white dark:bg-slate-700 shadow-sm text-indigo-600' : 'text-slate-500'}`}
+                                >
+                                    <Truck className="w-3.5 h-3.5" /> Guía
                                 </button>
                             </div>
 

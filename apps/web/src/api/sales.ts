@@ -124,3 +124,11 @@ export async function getSale(id: string): Promise<Sale> {
     return response.data;
 }
 
+/**
+ * Emit a Nota de Crédito for an existing completed sale
+ */
+export async function emitNotaCredito(id: string): Promise<{ success: boolean; folio?: number; url_pdf?: string; error?: string }> {
+    const response = await apiClient.post(`/sales/${id}/nota-credito`);
+    return response.data;
+}
+

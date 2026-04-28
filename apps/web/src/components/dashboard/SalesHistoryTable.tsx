@@ -1,4 +1,4 @@
-import { Eye, FileX, ReceiptText } from 'lucide-react';
+import { Eye, FileX, ReceiptText, RefreshCw } from 'lucide-react';
 import type { SaleRecord } from '../../services/sales.service';
 import {
     formatSaleDate,
@@ -6,6 +6,26 @@ import {
     formatPaymentMethods,
     resolvePdfUrl,
 } from '../../services/sales.service';
+
+// ─────────────────────────────────────────────
+// DTE type badge
+// ─────────────────────────────────────────────
+
+function DteTypeBadge({ dteType }: { dteType: number }) {
+    const map: Record<number, { label: string; cls: string }> = {
+        39: { label: 'Boleta', cls: 'bg-blue-50 text-blue-700 border-blue-200' },
+        33: { label: 'Factura', cls: 'bg-green-50 text-green-700 border-green-200' },
+        52: { label: 'G. Despacho', cls: 'bg-purple-50 text-purple-700 border-purple-200' },
+        61: { label: 'Nota Créd.', cls: 'bg-orange-50 text-orange-700 border-orange-200' },
+    };
+    const info = map[dteType];
+    if (!info) return null;
+    return (
+        <span className={`inline-flex text-[9px] font-semibold px-1.5 py-0.5 rounded border ${info.cls}`}>
+            {info.label}
+        </span>
+    );
+}
 
 // ─────────────────────────────────────────────
 // Status badge
@@ -28,7 +48,6 @@ function StatusBadge({ status }: { status: SaleRecord['status'] }) {
             </span>
         );
     }
-    // PRE_SALE / any other status
     return (
         <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-800">
             <span className="w-1.5 h-1.5 rounded-full bg-yellow-500" />
@@ -78,22 +97,34 @@ function EmptyState() {
 interface SalesHistoryTableProps {
     sales: SaleRecord[];
     isLoading: boolean;
+    onEmitNotaCredito?: (saleId: string) => void;
+    emittingNcId?: string | null;
 }
 
-export function SalesHistoryTable({ sales, isLoading }: SalesHistoryTableProps) {
+export function SalesHistoryTable({
+    sales,
+    isLoading,
+    onEmitNotaCredito,
+    emittingNcId,
+}: SalesHistoryTableProps) {
     const handleViewPdf = (sale: SaleRecord) => {
         const pdfUrl = resolvePdfUrl(sale);
         if (!pdfUrl) return;
-
         const apiUrl = import.meta.env.VITE_API_URL ?? '';
         const fullUrl = pdfUrl.startsWith('/api/') ? `${apiUrl}${pdfUrl}` : pdfUrl;
         window.open(fullUrl, '_blank', 'noopener,noreferrer');
     };
 
-    const getPdfLabel = (sale: SaleRecord): string =>
-        sale.dtePdfUrl && !sale.dtePdfUrl.includes('ejemplo-mock')
-            ? 'Ver Boleta'
-            : 'Ver Ticket';
+    const getPdfLabel = (sale: SaleRecord): string => {
+        if (!sale.dtePdfUrl || sale.dtePdfUrl.includes('ejemplo-mock')) return 'Ver Ticket';
+        const labels: Record<number, string> = {
+            39: 'Ver Boleta',
+            33: 'Ver Factura',
+            52: 'Ver Guía',
+            61: 'Ver NC',
+        };
+        return labels[sale.dteType ?? 39] ?? 'Ver DTE';
+    };
 
     return (
         <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm">
@@ -107,7 +138,7 @@ export function SalesHistoryTable({ sales, isLoading }: SalesHistoryTableProps) 
                             'Método de Pago',
                             'Total',
                             'Estado',
-                            'Acción',
+                            'Acciones',
                         ].map((col) => (
                             <th
                                 key={col}
@@ -133,6 +164,11 @@ export function SalesHistoryTable({ sales, isLoading }: SalesHistoryTableProps) 
                     ) : (
                         sales.map((sale) => {
                             const pdfAvailable = !!resolvePdfUrl(sale);
+                            const canEmitNC =
+                                sale.status === 'COMPLETED' &&
+                                !!sale.dteFolio &&
+                                !!onEmitNotaCredito;
+
                             return (
                                 <tr
                                     key={sale.id}
@@ -140,18 +176,20 @@ export function SalesHistoryTable({ sales, isLoading }: SalesHistoryTableProps) 
                                 >
                                     {/* Folio / ID */}
                                     <td className="px-6 py-4 whitespace-nowrap font-mono text-gray-700">
-                                        {sale.dteFolio ? (
-                                            <span className="font-semibold text-blue-700">
-                                                #{sale.dteFolio}
-                                            </span>
-                                        ) : (
-                                            <span
-                                                className="text-gray-400 text-xs"
-                                                title={sale.id}
-                                            >
-                                                {sale.id.slice(0, 8)}…
-                                            </span>
-                                        )}
+                                        <div className="flex items-center gap-2">
+                                            {sale.dteFolio ? (
+                                                <span className="font-semibold text-blue-700">
+                                                    #{sale.dteFolio}
+                                                </span>
+                                            ) : (
+                                                <span className="text-gray-400 text-xs" title={sale.id}>
+                                                    {sale.id.slice(0, 8)}…
+                                                </span>
+                                            )}
+                                            {sale.dteType && (
+                                                <DteTypeBadge dteType={sale.dteType} />
+                                            )}
+                                        </div>
                                     </td>
 
                                     {/* Fecha y Hora */}
@@ -181,24 +219,47 @@ export function SalesHistoryTable({ sales, isLoading }: SalesHistoryTableProps) 
                                         <StatusBadge status={sale.status} />
                                     </td>
 
-                                    {/* Acción */}
-                                    <td className="px-6 py-4 whitespace-nowrap text-right">
-                                        <button
-                                            onClick={() => handleViewPdf(sale)}
-                                            disabled={!pdfAvailable}
-                                            title={pdfAvailable ? 'Abrir documento' : 'Documento no disponible'}
-                                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium
-                                                       text-blue-600 hover:bg-blue-50 border border-blue-200
-                                                       disabled:opacity-40 disabled:cursor-not-allowed
-                                                       transition-colors duration-150"
-                                        >
-                                            {sale.dteFolio ? (
-                                                <ReceiptText className="w-3.5 h-3.5" />
-                                            ) : (
-                                                <Eye className="w-3.5 h-3.5" />
+                                    {/* Acciones */}
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                        <div className="flex items-center gap-2 justify-end">
+                                            {/* PDF button */}
+                                            <button
+                                                onClick={() => handleViewPdf(sale)}
+                                                disabled={!pdfAvailable}
+                                                title={pdfAvailable ? 'Abrir documento' : 'Documento no disponible'}
+                                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium
+                                                           text-blue-600 hover:bg-blue-50 border border-blue-200
+                                                           disabled:opacity-40 disabled:cursor-not-allowed
+                                                           transition-colors duration-150"
+                                            >
+                                                {sale.dteFolio ? (
+                                                    <ReceiptText className="w-3.5 h-3.5" />
+                                                ) : (
+                                                    <Eye className="w-3.5 h-3.5" />
+                                                )}
+                                                {getPdfLabel(sale)}
+                                            </button>
+
+                                            {/* Nota de Crédito button */}
+                                            {canEmitNC && (
+                                                <button
+                                                    onClick={() => onEmitNotaCredito!(sale.id)}
+                                                    disabled={emittingNcId === sale.id}
+                                                    title="Emitir Nota de Crédito"
+                                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium
+                                                               text-orange-600 hover:bg-orange-50 border border-orange-200
+                                                               disabled:opacity-40 disabled:cursor-not-allowed
+                                                               transition-colors duration-150"
+                                                >
+                                                    {emittingNcId === sale.id ? (
+                                                        <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                                                    ) : (
+                                                        <ReceiptText className="w-3.5 h-3.5" />
+                                                    )}
+                                                    NC
+                                                </button>
                                             )}
-                                            {getPdfLabel(sale)}
-                                        </button>
+                                        </div>
                                     </td>
                                 </tr>
                             );

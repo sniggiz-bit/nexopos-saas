@@ -343,6 +343,21 @@ export class SalesService {
     });
   }
 
+  async emitirNotaCreditoForSale(saleId: string) {
+    const sale = await this.prisma.sale.findUnique({ where: { id: saleId } });
+    if (!sale) throw new NotFoundException('Sale not found');
+    if (sale.status !== 'COMPLETED') {
+      throw new BadRequestException(
+        'Solo se puede emitir Nota de Crédito para ventas completadas',
+      );
+    }
+    await this.prisma.sale.update({
+      where: { id: saleId },
+      data: { dteType: 61, dteStatus: 'PENDING' },
+    });
+    return this.dteService.emitirDte(saleId);
+  }
+
   private async emitDteAndReceipt(saleId: string) {
     try {
       await this.dteService.emitirDte(saleId);
