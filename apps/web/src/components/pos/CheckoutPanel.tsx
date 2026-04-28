@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, useMemo } from 'react';
+import { useCallback, useEffect, useRef, useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { formatPrice } from '@/utils/formatters';
 import {
     CheckCircle2, XCircle, Banknote, CreditCard, RefreshCw,
-    Layers, Calculator, FileText, Building2, Truck, ArrowLeft,
+    Layers, Calculator, FileText, Building2, Truck, ArrowLeft, ChevronRight,
 } from 'lucide-react';
 import { PaymentMethod, type PaymentRequestData } from '@/api/sales';
 import { useQuery } from '@tanstack/react-query';
@@ -55,6 +55,17 @@ export function CheckoutPanel({
     const [customerSearch, setCustomerSearch] = useState('');
     const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
     const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
+
+    type Step = 'dte' | 'payment' | 'cash' | 'confirm';
+    const [activeStep, setActiveStep] = useState<Step>('dte');
+    const cashInputRef = useRef<HTMLInputElement>(null);
+
+    // Auto-focus cash input when step advances to 'cash'
+    useEffect(() => {
+        if (activeStep === 'cash') {
+            setTimeout(() => cashInputRef.current?.focus(), 30);
+        }
+    }, [activeStep]);
 
     const { data: customers = [] } = useQuery({
         queryKey: ['customers', user?.tenantId],
@@ -117,26 +128,27 @@ export function CheckoutPanel({
     useEffect(() => {
         if (isSuccess || isError) return;
         const onKey = (e: KeyboardEvent) => {
+            const isCashField = e.target === cashInputRef.current;
             const tag = (e.target as HTMLElement).tagName;
-            const inInput = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
+            const inInput = (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') && !isCashField;
 
             if (e.key === 'Escape') { e.preventDefault(); if (!isProcessing) onBack(); return; }
 
-            // DTE type — always active (even when input focused)
-            if (e.key === 'F1') { e.preventDefault(); setDteType(39); setSelectedCustomer(null); setCustomerSearch(''); return; }
-            if (e.key === 'F2') { e.preventDefault(); setDteType(33); setSelectedCustomer(null); setCustomerSearch(''); return; }
-            if (e.key === 'F3') { e.preventDefault(); setDteType(52); setSelectedCustomer(null); setCustomerSearch(''); return; }
+            // DTE type — always active (even when input focused) → advances to payment step
+            if (e.key === 'F1') { e.preventDefault(); setDteType(39); setSelectedCustomer(null); setCustomerSearch(''); setActiveStep('payment'); return; }
+            if (e.key === 'F2') { e.preventDefault(); setDteType(33); setSelectedCustomer(null); setCustomerSearch(''); setActiveStep('payment'); return; }
+            if (e.key === 'F3') { e.preventDefault(); setDteType(52); setSelectedCustomer(null); setCustomerSearch(''); setActiveStep('payment'); return; }
 
             if (inInput) return;
 
-            // Payment method
-            if (e.key === 'F5') { e.preventDefault(); setPaymentType('SINGLE'); setSingleMethod(PaymentMethod.CASH); return; }
-            if (e.key === 'F6') { e.preventDefault(); setPaymentType('SINGLE'); setSingleMethod(PaymentMethod.DEBIT); return; }
-            if (e.key === 'F7') { e.preventDefault(); setPaymentType('SINGLE'); setSingleMethod(PaymentMethod.CARD); return; }
-            if (e.key === 'F8') { e.preventDefault(); setPaymentType('SINGLE'); setSingleMethod(PaymentMethod.TRANSFER); return; }
+            // Payment method: Efectivo → paso 'cash' (auto-focus amount field), resto → 'confirm'
+            if (e.key === 'F5') { e.preventDefault(); setPaymentType('SINGLE'); setSingleMethod(PaymentMethod.CASH); setActiveStep('cash'); return; }
+            if (e.key === 'F6') { e.preventDefault(); setPaymentType('SINGLE'); setSingleMethod(PaymentMethod.DEBIT); setActiveStep('confirm'); return; }
+            if (e.key === 'F7') { e.preventDefault(); setPaymentType('SINGLE'); setSingleMethod(PaymentMethod.CARD); setActiveStep('confirm'); return; }
+            if (e.key === 'F8') { e.preventDefault(); setPaymentType('SINGLE'); setSingleMethod(PaymentMethod.TRANSFER); setActiveStep('confirm'); return; }
 
-            // Confirm
-            if (e.key === 'F12' || e.key === 'Enter') {
+            // Confirm — works from anywhere including the cash input field
+            if (e.key === 'F12' || (e.key === 'Enter' && isCashField)) {
                 if (!canConfirm || isProcessing) return;
                 if (paymentType === 'MIXED' && !isTotalCovered) return;
                 e.preventDefault();
@@ -254,6 +266,28 @@ export function CheckoutPanel({
                 <span className="ml-auto text-[9px] font-mono bg-slate-100 dark:bg-slate-700 text-slate-400 px-1.5 py-0.5 rounded">Esc volver</span>
             </div>
 
+            {/* Step indicator */}
+            <div className="flex items-center justify-center gap-1.5 px-4 py-2 bg-slate-50 dark:bg-slate-900 border-b border-slate-100 dark:border-slate-700 shrink-0">
+                {([
+                    { steps: ['dte'] as Step[], num: 1, label: 'Documento' },
+                    { steps: ['payment'] as Step[], num: 2, label: 'Pago' },
+                    { steps: ['cash', 'confirm'] as Step[], num: 3, label: activeStep === 'cash' ? 'Monto' : 'Confirmar' },
+                ]).map(({ steps, num, label }, i) => {
+                    const isActive = steps.includes(activeStep);
+                    return (
+                        <div key={num} className="flex items-center gap-1">
+                            <div className={`flex items-center gap-1 transition-all ${isActive ? 'text-indigo-600' : 'text-slate-400'}`}>
+                                <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black transition-all ${
+                                    isActive ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-300' : 'bg-slate-200 dark:bg-slate-700 text-slate-500'
+                                }`}>{num}</div>
+                                <span className="text-[10px] font-bold">{label}</span>
+                            </div>
+                            {i < 2 && <ChevronRight className="w-3 h-3 text-slate-300 ml-1" />}
+                        </div>
+                    );
+                })}
+            </div>
+
             {/* Scrollable body */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
 
@@ -277,8 +311,10 @@ export function CheckoutPanel({
                 </div>
 
                 {/* DTE selector */}
-                <div>
-                    <p className="text-[10px] font-bold uppercase text-slate-400 tracking-wider mb-2">Documento</p>
+                <div className={`rounded-xl transition-all duration-200 ${activeStep === 'dte' ? 'ring-2 ring-indigo-400 p-2 bg-indigo-50/30 dark:bg-indigo-900/10' : 'opacity-75'}`}>
+                    <p className={`text-[10px] font-bold uppercase tracking-wider mb-2 ${activeStep === 'dte' ? 'text-indigo-500' : 'text-slate-400'}`}>
+                        1 · Documento
+                    </p>
                     <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
                         {([
                             { type: 39 as const, label: 'Boleta', Icon: FileText, kbd: 'F1' },
@@ -291,6 +327,7 @@ export function CheckoutPanel({
                                     setDteType(type);
                                     setSelectedCustomer(null);
                                     setCustomerSearch('');
+                                    setActiveStep('payment');
                                 }}
                                 className={`flex-1 flex flex-col items-center justify-center py-2 rounded-lg text-xs font-bold transition-all gap-0.5 ${
                                     dteType === type
@@ -356,8 +393,10 @@ export function CheckoutPanel({
                 </div>
 
                 {/* Payment mode tabs */}
-                <div>
-                    <p className="text-[10px] font-bold uppercase text-slate-400 tracking-wider mb-2">Método de Pago</p>
+                <div className={`rounded-xl transition-all duration-200 ${activeStep === 'payment' ? 'ring-2 ring-indigo-400 p-2 bg-indigo-50/30 dark:bg-indigo-900/10' : 'opacity-75'}`}>
+                    <p className={`text-[10px] font-bold uppercase tracking-wider mb-2 ${activeStep === 'payment' ? 'text-indigo-500' : 'text-slate-400'}`}>
+                        2 · Método de Pago
+                    </p>
                     <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl mb-3">
                         <button
                             onClick={() => setPaymentType('SINGLE')}
@@ -392,7 +431,10 @@ export function CheckoutPanel({
                                 ].map(({ id, label, Icon, kbd }) => (
                                     <button
                                         key={id}
-                                        onClick={() => setSingleMethod(id)}
+                                        onClick={() => {
+                                            setSingleMethod(id);
+                                            setActiveStep(id === PaymentMethod.CASH ? 'cash' : 'confirm');
+                                        }}
                                         className={`flex flex-col items-center justify-center p-3 rounded-xl border-2 transition-all ${
                                             singleMethod === id
                                                 ? 'border-indigo-600 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600'
@@ -414,11 +456,13 @@ export function CheckoutPanel({
                                     <div className="relative">
                                         <Banknote className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                                         <Input
+                                            ref={cashInputRef}
                                             type="number"
-                                            autoFocus
                                             value={cashReceived}
                                             onChange={(e) => setCashReceived(e.target.value)}
-                                            className="pl-9 h-10 text-base font-bold"
+                                            className={`pl-9 h-10 text-base font-bold transition-all ${
+                                                activeStep === 'cash' ? 'ring-2 ring-indigo-400 border-indigo-400' : ''
+                                            }`}
                                             placeholder="Ej: 5000"
                                         />
                                     </div>
@@ -482,7 +526,9 @@ export function CheckoutPanel({
                 <Button
                     onClick={handleConfirm}
                     disabled={isProcessing || (paymentType === 'MIXED' && !isTotalCovered) || !canConfirm}
-                    className="w-full h-12 text-base font-black tracking-tight rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-500/20 disabled:bg-slate-200 disabled:text-slate-400 disabled:shadow-none transition-all active:scale-[0.98]"
+                    className={`w-full h-12 text-base font-black tracking-tight rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-500/20 disabled:bg-slate-200 disabled:text-slate-400 disabled:shadow-none transition-all active:scale-[0.98] ${
+                        (activeStep === 'confirm' || activeStep === 'cash') && canConfirm ? 'ring-2 ring-offset-2 ring-emerald-400 animate-pulse' : ''
+                    }`}
                 >
                     {isProcessing ? (
                         <div className="flex items-center gap-2">
