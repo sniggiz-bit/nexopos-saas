@@ -13,19 +13,25 @@ import { useToast } from '@/hooks/use-toast';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { createQuote } from '@/api/quotes';
 import { useAuth } from '@/context/AuthContext';
+import { CheckoutPanel } from './CheckoutPanel';
+import { type PaymentRequestData } from '@/api/sales';
 
 interface CartProps {
-    onCheckout: () => void;
+    onConfirm: (payments: PaymentRequestData[], dteType: number, customerId?: string) => void;
+    onCheckoutClose?: () => void;
     isProcessing?: boolean;
-    checkoutLabel?: string;
+    isSuccess?: boolean;
+    isError?: boolean;
+    saleResult?: any;
 }
 
 type Tab = 'cart' | 'presales';
 
-export function Cart({ onCheckout, isProcessing, checkoutLabel = 'COBRAR' }: CartProps) {
+export function Cart({ onConfirm, onCheckoutClose, isProcessing, isSuccess, isError, saleResult }: CartProps) {
     const { items, totals, clearCart, addItem, updateQuantity } = useCart();
-    const { total, subtotal, totalDiscount } = totals;
+    const { total, subtotal, totalDiscount, tax } = totals;
     const [activeTab, setActiveTab] = useState<Tab>('cart');
+    const [checkoutMode, setCheckoutMode] = useState(false);
     const { toast } = useToast();
     const { user } = useAuth();
     const queryClient = useQueryClient();
@@ -76,8 +82,29 @@ export function Cart({ onCheckout, isProcessing, checkoutLabel = 'COBRAR' }: Car
         toast({ title: 'Preventa restaurada', description: 'Los productos han sido cargados al carrito.' });
     };
 
+    const outerClass = "relative flex flex-col h-full bg-slate-50 dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden";
+
+    if (checkoutMode) {
+        return (
+            <div className={outerClass}>
+                <CheckoutPanel
+                    subtotal={subtotal}
+                    totalDiscount={totalDiscount}
+                    tax={tax}
+                    total={total}
+                    onConfirm={onConfirm}
+                    onBack={() => { setCheckoutMode(false); onCheckoutClose?.(); }}
+                    isProcessing={isProcessing ?? false}
+                    isSuccess={isSuccess ?? false}
+                    isError={isError ?? false}
+                    saleResult={saleResult}
+                />
+            </div>
+        );
+    }
+
     return (
-        <div className="relative flex flex-col h-full bg-slate-50 dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden">
+        <div className={outerClass}>
             {/* Tabs Header */}
             <div className="bg-white dark:bg-slate-800 px-3 pt-3 pb-2 border-b border-slate-200 dark:border-slate-700 shrink-0">
                 <div className="grid grid-cols-2 gap-1.5 p-1 bg-slate-100 dark:bg-slate-900 rounded-xl">
@@ -204,15 +231,10 @@ export function Cart({ onCheckout, isProcessing, checkoutLabel = 'COBRAR' }: Car
                         {/* Checkout */}
                         <Button
                             className="flex-1 h-12 bg-emerald-600 hover:bg-emerald-500 active:scale-[0.98] text-white shadow-lg shadow-emerald-500/20 rounded-xl transition-all duration-200 font-black tracking-widest text-base uppercase"
-                            onClick={onCheckout}
+                            onClick={() => setCheckoutMode(true)}
                             disabled={isEmpty || isProcessing}
                         >
-                            {isProcessing ? (
-                                <div className="flex items-center gap-2">
-                                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                    <span>Procesando</span>
-                                </div>
-                            ) : checkoutLabel}
+                            COBRAR
                         </Button>
                     </div>
                 </div>
