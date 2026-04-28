@@ -34,6 +34,7 @@ export interface CreateSaleRequest {
     status?: 'COMPLETED' | 'PRE_SALE';
     customerId?: string;
     quoteId?: string;
+    dteType?: number;
 }
 
 

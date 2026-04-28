@@ -95,7 +95,7 @@ export function PosPage() {
 
     const handleCheckout = () => setIsPaymentModalOpen(true);
 
-    const handleConfirmPayment = (payments: PaymentRequestData[]) => {
+    const handleConfirmPayment = (payments: PaymentRequestData[], dteType?: number, customerId?: string) => {
         if (!user?.tenantId || !user?.branchId) {
             toast({
                 variant: 'destructive',
@@ -119,6 +119,8 @@ export function PosPage() {
                 return { productId: item.productId, quantity: qty, price, discountAmount };
             }),
             payments,
+            dteType,
+            customerId,
         };
         createSale(saleData);
     };

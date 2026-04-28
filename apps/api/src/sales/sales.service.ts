@@ -74,6 +74,7 @@ export class SalesService {
       status = 'COMPLETED',
       customerId,
       quoteId,
+      dteType,
     } = createSaleDto;
 
     if (!tenantId) {
@@ -201,6 +202,7 @@ export class SalesService {
           status,
           customerId,
           quoteId,
+          dteType: dteType ?? 39,
           items: {
             create: items.map((item) => {
               const product = productMap.get(item.productId);

@@ -9,7 +9,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { formatPrice } from '@/utils/formatters';
-import { CheckCircle2, XCircle, Banknote, CreditCard, RefreshCw, Layers, Calculator } from 'lucide-react';
+import { CheckCircle2, XCircle, Banknote, CreditCard, RefreshCw, Layers, Calculator, FileText, Building2 } from 'lucide-react';
 import { type CartItemData } from '@/context/CartContext';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -18,11 +18,15 @@ import { printSaleAction } from './receipts/ReceiptRenderer';
 import { useEffect, useState, useMemo } from 'react';
 import { PaymentMethod, type PaymentRequestData } from '@/api/sales';
 import { Badge } from '@/components/ui/badge';
+import { useQuery } from '@tanstack/react-query';
+import { getCustomers } from '@/api/customers';
+import { useAuth } from '@/context/AuthContext';
+import type { Customer } from '@/api/types';
 
 interface PaymentModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onConfirm: (payments: PaymentRequestData[]) => void;
+    onConfirm: (payments: PaymentRequestData[], dteType: number, customerId?: string) => void;
     items: CartItemData[];
     subtotal: number;
     totalDiscount: number;
@@ -53,6 +57,7 @@ export function PaymentModal({
     const { autoPrint, defaultFormat, setDefaultFormat } = usePrintSettings();
     const [hasAttemptedAutoPrint, setHasAttemptedAutoPrint] = useState(false);
     const [countdown, setCountdown] = useState(4);
+    const { user } = useAuth();
 
     // Payment Logic States
     const [paymentType, setPaymentType] = useState<PaymentType>('SINGLE');
@@ -64,6 +69,28 @@ export function PaymentModal({
         [PaymentMethod.CARD]: 0,
         [PaymentMethod.TRANSFER]: 0,
     });
+
+    // DTE States
+    const [dteType, setDteType] = useState<39 | 33>(39);
+    const [customerSearch, setCustomerSearch] = useState('');
+    const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+    const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
+
+    // Fetch customers only when Factura is selected
+    const { data: customers = [] } = useQuery({
+        queryKey: ['customers', user?.tenantId],
+        queryFn: () => getCustomers(user?.tenantId),
+        enabled: dteType === 33 && !!user?.tenantId,
+        staleTime: 5 * 60 * 1000,
+    });
+
+    const filteredCustomers = useMemo(() => {
+        if (!customerSearch) return customers.slice(0, 8);
+        const q = customerSearch.toLowerCase();
+        return customers.filter(c =>
+            c.name.toLowerCase().includes(q) || c.rut.toLowerCase().includes(q)
+        ).slice(0, 8);
+    }, [customers, customerSearch]);
 
     // Auto-print effect
     useEffect(() => {
@@ -81,7 +108,7 @@ export function PaymentModal({
         return () => clearTimeout(t);
     }, [isSuccess, countdown, onClose]);
 
-    // Reset auto-print and payment states when modal opens
+    // Reset all states when modal opens
     useEffect(() => {
         if (isOpen) {
             setHasAttemptedAutoPrint(false);
@@ -94,6 +121,10 @@ export function PaymentModal({
                 [PaymentMethod.CARD]: 0,
                 [PaymentMethod.TRANSFER]: 0,
             });
+            setDteType(39);
+            setCustomerSearch('');
+            setSelectedCustomer(null);
+            setShowCustomerDropdown(false);
         }
     }, [isOpen]);
 
@@ -112,14 +143,17 @@ export function PaymentModal({
         return 0;
     }, [paymentType, singleMethod, cashReceived, total]);
 
+    const canConfirm = dteType === 33 ? !!selectedCustomer : true;
+
     const handleConfirm = () => {
+        const customerId = selectedCustomer?.id;
         if (paymentType === 'SINGLE') {
-            onConfirm([{ paymentMethod: singleMethod, amount: total }]);
+            onConfirm([{ paymentMethod: singleMethod, amount: total }], dteType, customerId);
         } else {
             const payments = Object.entries(mixedPayments)
                 .filter(([_, amount]) => (Number(amount) || 0) > 0)
                 .map(([method, amount]) => ({ paymentMethod: method, amount: Number(amount) || 0 }));
-            onConfirm(payments);
+            onConfirm(payments, dteType, customerId);
         }
     };
 
@@ -151,7 +185,7 @@ export function PaymentModal({
                         {saleResult?.dtePdfUrl && !saleResult.dtePdfUrl.includes('ejemplo-mock') && (
                             <Button className="w-full" variant="outline"
                                 onClick={() => window.open(saleResult.dtePdfUrl, '_blank')}>
-                                Ver Boleta (PDF)
+                                Ver DTE (PDF)
                             </Button>
                         )}
 
@@ -223,7 +257,7 @@ export function PaymentModal({
                 <DialogHeader>
                     <DialogTitle className="text-2xl font-black">Checkout</DialogTitle>
                     <DialogDescription>
-                        Selecciona el método de pago y confirma la transacción.
+                        Selecciona el tipo de documento y método de pago.
                     </DialogDescription>
                 </DialogHeader>
 
@@ -329,8 +363,74 @@ export function PaymentModal({
                         )}
                     </div>
 
-                    {/* Métodos de Pago */}
+                    {/* Tipo de Documento + Métodos de Pago */}
                     <div className="space-y-4">
+                        {/* DTE Type Selector */}
+                        <div>
+                            <h4 className="font-bold text-xs uppercase text-slate-400 tracking-wider mb-2">Tipo de Documento</h4>
+                            <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
+                                <button
+                                    onClick={() => setDteType(39)}
+                                    className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-bold transition-all ${dteType === 39 ? 'bg-white dark:bg-slate-700 shadow-sm text-indigo-600' : 'text-slate-500'}`}
+                                >
+                                    <FileText className="w-4 h-4" /> Boleta
+                                </button>
+                                <button
+                                    onClick={() => { setDteType(33); setSelectedCustomer(null); setCustomerSearch(''); }}
+                                    className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-bold transition-all ${dteType === 33 ? 'bg-white dark:bg-slate-700 shadow-sm text-indigo-600' : 'text-slate-500'}`}
+                                >
+                                    <Building2 className="w-4 h-4" /> Factura
+                                </button>
+                            </div>
+
+                            {dteType === 33 && (
+                                <div className="relative mt-2">
+                                    <Input
+                                        placeholder="Buscar cliente por RUT o nombre..."
+                                        value={selectedCustomer ? `${selectedCustomer.name} (${selectedCustomer.rut})` : customerSearch}
+                                        onChange={(e) => {
+                                            if (selectedCustomer) setSelectedCustomer(null);
+                                            setCustomerSearch(e.target.value);
+                                            setShowCustomerDropdown(true);
+                                        }}
+                                        onFocus={() => setShowCustomerDropdown(true)}
+                                        onBlur={() => setTimeout(() => setShowCustomerDropdown(false), 200)}
+                                        className="text-sm pr-8"
+                                    />
+                                    {selectedCustomer && (
+                                        <button
+                                            className="absolute right-2 top-1/2 -translate-y-1/2"
+                                            onClick={() => { setSelectedCustomer(null); setCustomerSearch(''); }}
+                                        >
+                                            <XCircle className="w-4 h-4 text-slate-400 hover:text-slate-600" />
+                                        </button>
+                                    )}
+                                    {showCustomerDropdown && !selectedCustomer && filteredCustomers.length > 0 && (
+                                        <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                                            {filteredCustomers.map(c => (
+                                                <button
+                                                    key={c.id}
+                                                    onMouseDown={(e) => e.preventDefault()}
+                                                    onClick={() => {
+                                                        setSelectedCustomer(c);
+                                                        setShowCustomerDropdown(false);
+                                                    }}
+                                                    className="w-full text-left px-3 py-2 text-sm hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors border-b border-slate-100 dark:border-slate-800 last:border-0"
+                                                >
+                                                    <div className="font-medium text-slate-800 dark:text-slate-200">{c.name}</div>
+                                                    <div className="text-xs text-slate-400">{c.rut}</div>
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
+                                    {!selectedCustomer && (
+                                        <p className="text-xs text-amber-600 mt-1">Se requiere cliente para emitir Factura</p>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Payment Type Tabs */}
                         <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
                             <button
                                 onClick={() => setPaymentType('SINGLE')}
@@ -434,8 +534,8 @@ export function PaymentModal({
                     </Button>
                     <Button
                         onClick={handleConfirm}
-                        disabled={isProcessing || (paymentType === 'MIXED' && !isTotalCovered)}
-                        className={`flex-1 h-12 text-lg font-black tracking-tight rounded-xl transition-all duration-300 ${(paymentType === 'MIXED' && !isTotalCovered)
+                        disabled={isProcessing || (paymentType === 'MIXED' && !isTotalCovered) || !canConfirm}
+                        className={`flex-1 h-12 text-lg font-black tracking-tight rounded-xl transition-all duration-300 ${(paymentType === 'MIXED' && !isTotalCovered) || !canConfirm
                             ? 'bg-slate-200 text-slate-400 dark:bg-slate-800'
                             : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-xl shadow-emerald-500/20 active:scale-95'
                             }`}
