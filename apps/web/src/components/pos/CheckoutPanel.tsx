@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useCallback, useEffect, useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -102,7 +102,7 @@ export function CheckoutPanel({
 
     const canConfirm = dteType === 33 ? !!selectedCustomer : true;
 
-    const handleConfirm = () => {
+    const handleConfirm = useCallback(() => {
         const customerId = selectedCustomer?.id;
         if (paymentType === 'SINGLE') {
             onConfirm([{ paymentMethod: singleMethod, amount: total }], dteType, customerId);
@@ -112,7 +112,40 @@ export function CheckoutPanel({
                 .map(([method, amount]) => ({ paymentMethod: method, amount: Number(amount) || 0 }));
             onConfirm(payments, dteType, customerId);
         }
-    };
+    }, [selectedCustomer, paymentType, singleMethod, total, dteType, mixedPayments, onConfirm]);
+
+    useEffect(() => {
+        if (isSuccess || isError) return;
+        const onKey = (e: KeyboardEvent) => {
+            const tag = (e.target as HTMLElement).tagName;
+            const inInput = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
+
+            if (e.key === 'Escape') { e.preventDefault(); if (!isProcessing) onBack(); return; }
+
+            // DTE type — always active (even when input focused)
+            if (e.key === 'F1') { e.preventDefault(); setDteType(39); setSelectedCustomer(null); setCustomerSearch(''); return; }
+            if (e.key === 'F2') { e.preventDefault(); setDteType(33); setSelectedCustomer(null); setCustomerSearch(''); return; }
+            if (e.key === 'F3') { e.preventDefault(); setDteType(52); setSelectedCustomer(null); setCustomerSearch(''); return; }
+
+            if (inInput) return;
+
+            // Payment method
+            if (e.key === 'F5') { e.preventDefault(); setPaymentType('SINGLE'); setSingleMethod(PaymentMethod.CASH); return; }
+            if (e.key === 'F6') { e.preventDefault(); setPaymentType('SINGLE'); setSingleMethod(PaymentMethod.DEBIT); return; }
+            if (e.key === 'F7') { e.preventDefault(); setPaymentType('SINGLE'); setSingleMethod(PaymentMethod.CARD); return; }
+            if (e.key === 'F8') { e.preventDefault(); setPaymentType('SINGLE'); setSingleMethod(PaymentMethod.TRANSFER); return; }
+
+            // Confirm
+            if (e.key === 'F12' || e.key === 'Enter') {
+                if (!canConfirm || isProcessing) return;
+                if (paymentType === 'MIXED' && !isTotalCovered) return;
+                e.preventDefault();
+                handleConfirm();
+            }
+        };
+        window.addEventListener('keydown', onKey);
+        return () => window.removeEventListener('keydown', onKey);
+    }, [isSuccess, isError, isProcessing, canConfirm, paymentType, isTotalCovered, onBack, handleConfirm]);
 
     // ── Success state ─────────────────────────────────────────────────────────
     if (isSuccess) {
@@ -218,6 +251,7 @@ export function CheckoutPanel({
                 <h3 className="text-sm font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
                     Checkout
                 </h3>
+                <span className="ml-auto text-[9px] font-mono bg-slate-100 dark:bg-slate-700 text-slate-400 px-1.5 py-0.5 rounded">Esc volver</span>
             </div>
 
             {/* Scrollable body */}
@@ -247,10 +281,10 @@ export function CheckoutPanel({
                     <p className="text-[10px] font-bold uppercase text-slate-400 tracking-wider mb-2">Documento</p>
                     <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
                         {([
-                            { type: 39 as const, label: 'Boleta', Icon: FileText },
-                            { type: 33 as const, label: 'Factura', Icon: Building2 },
-                            { type: 52 as const, label: 'Guía', Icon: Truck },
-                        ] as const).map(({ type, label, Icon }) => (
+                            { type: 39 as const, label: 'Boleta', Icon: FileText, kbd: 'F1' },
+                            { type: 33 as const, label: 'Factura', Icon: Building2, kbd: 'F2' },
+                            { type: 52 as const, label: 'Guía', Icon: Truck, kbd: 'F3' },
+                        ] as const).map(({ type, label, Icon, kbd }) => (
                             <button
                                 key={type}
                                 onClick={() => {
@@ -258,13 +292,14 @@ export function CheckoutPanel({
                                     setSelectedCustomer(null);
                                     setCustomerSearch('');
                                 }}
-                                className={`flex-1 flex items-center justify-center gap-1 py-2 rounded-lg text-xs font-bold transition-all ${
+                                className={`flex-1 flex flex-col items-center justify-center py-2 rounded-lg text-xs font-bold transition-all gap-0.5 ${
                                     dteType === type
                                         ? 'bg-white dark:bg-slate-700 shadow-sm text-indigo-600'
                                         : 'text-slate-500 hover:text-slate-700'
                                 }`}
                             >
-                                <Icon className="w-3 h-3" /> {label}
+                                <div className="flex items-center gap-1"><Icon className="w-3 h-3" /> {label}</div>
+                                <span className="text-[9px] font-mono bg-slate-200 dark:bg-slate-600 text-slate-500 dark:text-slate-400 px-1 rounded">{kbd}</span>
                             </button>
                         ))}
                     </div>
@@ -350,11 +385,11 @@ export function CheckoutPanel({
                         <div className="space-y-3">
                             <div className="grid grid-cols-2 gap-2">
                                 {[
-                                    { id: PaymentMethod.CASH, label: 'Efectivo', Icon: Banknote },
-                                    { id: PaymentMethod.DEBIT, label: 'Débito', Icon: Calculator },
-                                    { id: PaymentMethod.CARD, label: 'Crédito', Icon: CreditCard },
-                                    { id: PaymentMethod.TRANSFER, label: 'Transf.', Icon: RefreshCw },
-                                ].map(({ id, label, Icon }) => (
+                                    { id: PaymentMethod.CASH, label: 'Efectivo', Icon: Banknote, kbd: 'F5' },
+                                    { id: PaymentMethod.DEBIT, label: 'Débito', Icon: Calculator, kbd: 'F6' },
+                                    { id: PaymentMethod.CARD, label: 'Crédito', Icon: CreditCard, kbd: 'F7' },
+                                    { id: PaymentMethod.TRANSFER, label: 'Transf.', Icon: RefreshCw, kbd: 'F8' },
+                                ].map(({ id, label, Icon, kbd }) => (
                                     <button
                                         key={id}
                                         onClick={() => setSingleMethod(id)}
@@ -366,6 +401,7 @@ export function CheckoutPanel({
                                     >
                                         <Icon className="w-5 h-5 mb-1" />
                                         <span className="text-[10px] font-black uppercase">{label}</span>
+                                        <span className="text-[9px] font-mono bg-slate-100 dark:bg-slate-700 text-slate-400 px-1 rounded mt-0.5">{kbd}</span>
                                     </button>
                                 ))}
                             </div>
@@ -453,7 +489,12 @@ export function CheckoutPanel({
                             <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                             PROCESANDO...
                         </div>
-                    ) : 'CONFIRMAR PAGO'}
+                    ) : (
+                        <div className="flex items-center gap-2">
+                            CONFIRMAR PAGO
+                            <span className="text-[10px] font-mono bg-white/20 px-1.5 py-0.5 rounded">F12</span>
+                        </div>
+                    )}
                 </Button>
             </div>
         </div>

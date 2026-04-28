@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useCart } from '@/context/CartContext';
@@ -42,6 +42,18 @@ export function Cart({ onConfirm, onCheckoutClose, isProcessing, isSuccess, isEr
 
     const isEmpty = items.length === 0;
     const itemCount = items.reduce((sum, i) => sum + (Number(i.quantity) || 0), 0);
+
+    useEffect(() => {
+        const onKey = (e: KeyboardEvent) => {
+            if (checkoutMode) return;
+            if (e.key === 'F12') {
+                e.preventDefault();
+                if (!isEmpty) setCheckoutMode(true);
+            }
+        };
+        window.addEventListener('keydown', onKey);
+        return () => window.removeEventListener('keydown', onKey);
+    }, [checkoutMode, isEmpty]);
 
     const { mutate: savePresale, isPending: isSavingPresale } = useMutation({
         mutationFn: () => createQuote({
@@ -234,7 +246,10 @@ export function Cart({ onConfirm, onCheckoutClose, isProcessing, isSuccess, isEr
                             onClick={() => setCheckoutMode(true)}
                             disabled={isEmpty || isProcessing}
                         >
-                            COBRAR
+                            <div className="flex items-center gap-2">
+                                COBRAR
+                                <span className="text-[10px] font-mono bg-white/20 px-1.5 py-0.5 rounded">F12</span>
+                            </div>
                         </Button>
                     </div>
                 </div>
