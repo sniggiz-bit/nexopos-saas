@@ -128,36 +128,42 @@ export function CheckoutPanel({
     useEffect(() => {
         if (isSuccess || isError) return;
         const onKey = (e: KeyboardEvent) => {
-            const isCashField = e.target === cashInputRef.current;
+            // Allow all shortcuts when in the cash step (even while typing in the input)
+            const isInCashStep = activeStep === 'cash';
             const tag = (e.target as HTMLElement).tagName;
-            const inInput = (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') && !isCashField;
+            const inInput = (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') && !isInCashStep;
 
             if (e.key === 'Escape') { e.preventDefault(); if (!isProcessing) onBack(); return; }
 
-            // DTE type — always active (even when input focused) → advances to payment step
+            // DTE type — always active → advances to payment step
             if (e.key === 'F1') { e.preventDefault(); setDteType(39); setSelectedCustomer(null); setCustomerSearch(''); setActiveStep('payment'); return; }
             if (e.key === 'F2') { e.preventDefault(); setDteType(33); setSelectedCustomer(null); setCustomerSearch(''); setActiveStep('payment'); return; }
             if (e.key === 'F3') { e.preventDefault(); setDteType(52); setSelectedCustomer(null); setCustomerSearch(''); setActiveStep('payment'); return; }
 
             if (inInput) return;
 
-            // Payment method: Efectivo → paso 'cash' (auto-focus amount field), resto → 'confirm'
+            // Payment method
             if (e.key === 'F5') { e.preventDefault(); setPaymentType('SINGLE'); setSingleMethod(PaymentMethod.CASH); setActiveStep('cash'); return; }
             if (e.key === 'F6') { e.preventDefault(); setPaymentType('SINGLE'); setSingleMethod(PaymentMethod.DEBIT); setActiveStep('confirm'); return; }
             if (e.key === 'F7') { e.preventDefault(); setPaymentType('SINGLE'); setSingleMethod(PaymentMethod.CARD); setActiveStep('confirm'); return; }
             if (e.key === 'F8') { e.preventDefault(); setPaymentType('SINGLE'); setSingleMethod(PaymentMethod.TRANSFER); setActiveStep('confirm'); return; }
 
-            // Confirm — works from anywhere including the cash input field
-            if (e.key === 'F12' || (e.key === 'Enter' && isCashField)) {
-                if (!canConfirm || isProcessing) return;
-                if (paymentType === 'MIXED' && !isTotalCovered) return;
+            // Confirm — F12 from anywhere, Enter only from cash step
+            if (e.key === 'F12' || (e.key === 'Enter' && isInCashStep)) {
                 e.preventDefault();
+                if (isProcessing) return;
+                if (paymentType === 'MIXED' && !isTotalCovered) return;
+                if (!canConfirm) {
+                    // Factura sin cliente: volver al paso DTE para que el usuario lo corrija
+                    setActiveStep('dte');
+                    return;
+                }
                 handleConfirm();
             }
         };
         window.addEventListener('keydown', onKey);
         return () => window.removeEventListener('keydown', onKey);
-    }, [isSuccess, isError, isProcessing, canConfirm, paymentType, isTotalCovered, onBack, handleConfirm]);
+    }, [isSuccess, isError, isProcessing, canConfirm, activeStep, paymentType, isTotalCovered, onBack, handleConfirm]);
 
     // ── Success state ─────────────────────────────────────────────────────────
     if (isSuccess) {
