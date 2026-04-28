@@ -9,8 +9,8 @@ export declare class PlansController {
         updatedAt: Date;
         price: number;
         description: string | null;
-        maxUsers: number;
         features: import("@prisma/client/runtime/client").JsonValue | null;
+        maxUsers: number;
         maxProducts: number;
         maxStorage: number;
         isRecommended: boolean;
@@ -23,8 +23,8 @@ export declare class PlansController {
         updatedAt: Date;
         price: number;
         description: string | null;
-        maxUsers: number;
         features: import("@prisma/client/runtime/client").JsonValue | null;
+        maxUsers: number;
         maxProducts: number;
         maxStorage: number;
         isRecommended: boolean;
@@ -37,8 +37,8 @@ export declare class PlansController {
         updatedAt: Date;
         price: number;
         description: string | null;
-        maxUsers: number;
         features: import("@prisma/client/runtime/client").JsonValue | null;
+        maxUsers: number;
         maxProducts: number;
         maxStorage: number;
         isRecommended: boolean;
@@ -51,8 +51,8 @@ export declare class PlansController {
         updatedAt: Date;
         price: number;
         description: string | null;
-        maxUsers: number;
         features: import("@prisma/client/runtime/client").JsonValue | null;
+        maxUsers: number;
         maxProducts: number;
         maxStorage: number;
         isRecommended: boolean;
@@ -65,8 +65,8 @@ export declare class PlansController {
         updatedAt: Date;
         price: number;
         description: string | null;
-        maxUsers: number;
         features: import("@prisma/client/runtime/client").JsonValue | null;
+        maxUsers: number;
         maxProducts: number;
         maxStorage: number;
         isRecommended: boolean;
@@ -79,8 +79,8 @@ export declare class PlansController {
         updatedAt: Date;
         price: number;
         description: string | null;
-        maxUsers: number;
         features: import("@prisma/client/runtime/client").JsonValue | null;
+        maxUsers: number;
         maxProducts: number;
         maxStorage: number;
         isRecommended: boolean;

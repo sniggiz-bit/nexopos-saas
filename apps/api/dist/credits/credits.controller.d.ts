@@ -98,8 +98,8 @@ export declare class CreditsController {
             id: string;
             createdAt: Date;
             cashShiftId: string | null;
-            paymentMethod: string;
             amount: number;
+            paymentMethod: string;
             creditId: string;
         }[];
     } & {

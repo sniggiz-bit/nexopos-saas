@@ -23,4 +23,5 @@ export declare class CreateSaleDto {
     status?: 'COMPLETED' | 'PRE_SALE';
     customerId?: string;
     quoteId?: string;
+    dteType?: number;
 }

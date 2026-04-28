@@ -39,6 +39,9 @@ let SalesController = class SalesController {
     async complete(id, payments) {
         return this.salesService.completePreSale(id, payments);
     }
+    async emitNotaCredito(id) {
+        return this.salesService.emitirNotaCreditoForSale(id);
+    }
 };
 exports.SalesController = SalesController;
 __decorate([
@@ -69,6 +72,14 @@ __decorate([
     __metadata("design:paramtypes", [String, Array]),
     __metadata("design:returntype", Promise)
 ], SalesController.prototype, "complete", null);
+__decorate([
+    (0, common_1.Post)(':id/nota-credito'),
+    (0, common_1.HttpCode)(common_1.HttpStatus.OK),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], SalesController.prototype, "emitNotaCredito", null);
 exports.SalesController = SalesController = __decorate([
     (0, common_1.Controller)('sales'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),

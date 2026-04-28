@@ -140,13 +140,6 @@ export declare class SalesService {
             balance: number;
             dueDate: Date | null;
         } | null;
-        payments: {
-            id: string;
-            createdAt: Date;
-            saleId: string;
-            paymentMethod: import("@prisma/client").$Enums.PaymentMethod;
-            amount: number;
-        }[];
         items: {
             id: string;
             price: number;
@@ -154,6 +147,13 @@ export declare class SalesService {
             saleId: string;
             productId: string;
             quantity: import("@prisma/client-runtime-utils").Decimal;
+        }[];
+        payments: {
+            id: string;
+            createdAt: Date;
+            saleId: string;
+            amount: number;
+            paymentMethod: import("@prisma/client").$Enums.PaymentMethod;
         }[];
     } & {
         id: string;
@@ -174,6 +174,17 @@ export declare class SalesService {
         dtePdfUrl: string | null;
         internalReceiptUrl: string | null;
     }) | null>;
+    emitirNotaCreditoForSale(saleId: string): Promise<{
+        success: boolean;
+        folio: any;
+        url_pdf: any;
+        error?: undefined;
+    } | {
+        success: boolean;
+        error: any;
+        folio?: undefined;
+        url_pdf?: undefined;
+    }>;
     private emitDteAndReceipt;
 }
 export {};
