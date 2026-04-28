@@ -2,9 +2,11 @@ import { useState } from 'react';
 import { DashboardLayout } from '../../components/dashboard/DashboardLayout';
 import { useCategories, useCreateCategory, useUpdateCategory, useDeleteCategory } from '../../hooks/useCategories';
 import { Plus, Edit, Trash2, Loader2 } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 
 export function CategoriesPage() {
-    const tenantId = 'tenant-1';
+    const { user } = useAuth();
+    const tenantId = user?.tenantId ?? '';
     const { data: categories, isLoading } = useCategories(tenantId);
     const createCategory = useCreateCategory();
     const updateCategory = useUpdateCategory();

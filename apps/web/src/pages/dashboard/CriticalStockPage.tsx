@@ -3,9 +3,11 @@ import { LoadingSpinner } from '../../components/ui/loading-spinner';
 import { useCriticalStock } from '../../hooks/useCriticalStock';
 import { AlertTriangle, Package, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 
 export function CriticalStockPage() {
-    const tenantId = 'tenant-1';
+    const { user } = useAuth();
+    const tenantId = user?.tenantId ?? '';
     const { data: products, isLoading } = useCriticalStock(tenantId);
 
     if (isLoading) {

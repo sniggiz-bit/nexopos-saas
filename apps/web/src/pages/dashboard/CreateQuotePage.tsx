@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { DashboardLayout } from '../../components/dashboard/DashboardLayout';
 import { useCreateQuote } from '@/hooks/useQuotes';
+import { useAuth } from '@/context/AuthContext';
 import { CustomerSelector } from '@/components/dashboard/CustomerSelector';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Save, Printer, FileText } from 'lucide-react';
@@ -16,6 +17,7 @@ import { Card, CardContent, CardHeader, CardFooter } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator';
 
 export function CreateQuotePage() {
+    const { user } = useAuth();
     const { items, addItem, clearCart, totals } = useCart();
     const [customerId, setCustomerId] = useState<string>('');
     const [issueDate, setIssueDate] = useState<string>(new Date().toISOString().split('T')[0]);
@@ -46,7 +48,7 @@ export function CreateQuotePage() {
 
         try {
             await createQuote.mutateAsync({
-                tenantId: 'tenant-1',
+                tenantId: user?.tenantId ?? '',
                 customerId,
                 items: items.map(item => ({
                     productId: item.productId,
