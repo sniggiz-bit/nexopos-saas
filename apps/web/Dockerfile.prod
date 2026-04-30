@@ -5,12 +5,13 @@ WORKDIR /app
 
 # Copy root workspace files
 COPY package.json package-lock.json ./
-# Copy web and shared package.json
+# Copy all workspace package.json files so npm workspaces resolves correctly
 COPY apps/web/package.json ./apps/web/
+COPY apps/api/package.json ./apps/api/
 COPY packages/shared/package.json ./packages/shared/
 
-# Install dependencies
-RUN npm install
+# Install all deps including devDependencies (needed for tsc, vite)
+RUN npm ci
 
 # Copy the rest of the application
 COPY apps/web ./apps/web
