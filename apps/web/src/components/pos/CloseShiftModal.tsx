@@ -11,6 +11,7 @@ import { useCloseShift, useShiftLiveSummary } from '@/hooks/useShifts';
 import { useToast } from '@/hooks/use-toast';
 import { formatPrice } from '@/utils/formatters';
 import { useAuth } from '@/context/AuthContext';
+import { useQueryClient } from '@tanstack/react-query';
 import {
     LogOut, Calculator, Printer, CheckCircle2, AlertTriangle,
     DollarSign, Receipt, ChevronDown, ChevronUp, Clock,
@@ -57,7 +58,8 @@ export function CloseShiftModal({ isOpen, onClose, shiftId, currentShift }: Clos
     const { mutate: closeShift, isPending } = useCloseShift();
     const { toast } = useToast();
     const { user } = useAuth();
-    const { data: summary, isLoading: isLoadingSummary } = useShiftLiveSummary(isOpen ? shiftId : null);
+    const queryClient = useQueryClient();
+    const { data: summary, isLoading: isLoadingSummary } = useShiftLiveSummary(isOpen && !!shiftId ? shiftId : null);
 
     const calculatedTotal = useMemo(() => {
         return DENOMINATIONS.reduce((sum, d) => {
@@ -87,6 +89,8 @@ export function CloseShiftModal({ isOpen, onClose, shiftId, currentShift }: Clos
             {
                 onSuccess: (data) => {
                     setClosedShift(data);
+                    // Null the cache immediately so the modal stays mounted (no currentShift = no unmount race)
+                    queryClient.setQueryData(['current-shift', user?.branchId ?? ''], null);
                     toast({ variant: 'success', title: '¡Caja Cerrada!', description: 'El turno ha finalizado correctamente.' });
                 },
                 onError: (error: any) => {
@@ -105,6 +109,8 @@ export function CloseShiftModal({ isOpen, onClose, shiftId, currentShift }: Clos
         setFinalAmount('');
         setCounts(Object.fromEntries(DENOMINATIONS.map(d => [d.value, ''])));
         setShowCalculator(false);
+        // Force currentShift to null immediately so OpenShiftModal appears without waiting for refetch
+        queryClient.setQueryData(['current-shift', user?.branchId ?? ''], null);
         onClose();
     };
 

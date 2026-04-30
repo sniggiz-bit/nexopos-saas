@@ -285,14 +285,12 @@ export function PosPage() {
             {/* Modals */}
             <OpenShiftModal isOpen={!isLoadingShift && !currentShift} />
 
-            {currentShift && (
-                <CloseShiftModal
-                    isOpen={isCloseShiftModalOpen}
-                    onClose={() => setIsCloseShiftModalOpen(false)}
-                    shiftId={currentShift.id}
-                    currentShift={currentShift}
-                />
-            )}
+            <CloseShiftModal
+                isOpen={isCloseShiftModalOpen}
+                onClose={() => setIsCloseShiftModalOpen(false)}
+                shiftId={currentShift?.id ?? ''}
+                currentShift={currentShift}
+            />
 
         </div>
     );
