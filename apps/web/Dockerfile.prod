@@ -19,7 +19,8 @@ RUN npm install
 COPY apps/web ./apps/web
 COPY packages/shared ./packages/shared
 
-# Build from workspace root so npm correctly sets up PATH for all workspace binaries
+# Include both hoisted root and workspace-local bin paths — npm may not hoist typescript
+ENV PATH="/app/node_modules/.bin:/app/apps/web/node_modules/.bin:$PATH"
 RUN npm run build -w apps/web
 
 # Production stage (Nginx)
