@@ -11,15 +11,18 @@ COPY apps/api/package.json ./apps/api/
 COPY packages/shared/package.json ./packages/shared/
 
 # Install all deps including devDependencies (needed for tsc, vite)
-RUN npm ci
+RUN npm install
 
 # Copy the rest of the application
 COPY apps/web ./apps/web
 COPY packages/shared ./packages/shared
 
+# Add hoisted node_modules/.bin to PATH so tsc/vite are found from any WORKDIR
+ENV PATH="/app/node_modules/.bin:$PATH"
+
 # Build the application
 WORKDIR /app/apps/web
-RUN npm run build
+RUN tsc -b && vite build
 
 # Production stage (Nginx)
 FROM nginx:alpine AS runner
