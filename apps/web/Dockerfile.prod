@@ -10,15 +10,16 @@ COPY apps/web/package.json ./apps/web/
 COPY apps/api/package.json ./apps/api/
 COPY packages/shared/package.json ./packages/shared/
 
-# Install all deps — force devDependencies regardless of NODE_ENV
-RUN npm install --include=dev
+# Force development mode so npm installs devDependencies (tsc, vite, typescript)
+# regardless of any NODE_ENV set in the host environment
+ENV NODE_ENV=development
+RUN npm install
 
 # Copy the rest of the application
 COPY apps/web ./apps/web
 COPY packages/shared ./packages/shared
 
-# Run build from workspace root so npm sets up PATH with all node_modules/.bin correctly
-WORKDIR /app
+# Build from workspace root so npm correctly sets up PATH for all workspace binaries
 RUN npm run build -w apps/web
 
 # Production stage (Nginx)
