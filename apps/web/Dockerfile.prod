@@ -17,9 +17,9 @@ RUN npm install --include=dev
 COPY apps/web ./apps/web
 COPY packages/shared ./packages/shared
 
-# Build using npx so it finds tsc/vite wherever npm placed them in the workspace
-WORKDIR /app/apps/web
-RUN npx tsc -b && npx vite build
+# Run build from workspace root so npm sets up PATH with all node_modules/.bin correctly
+WORKDIR /app
+RUN npm run build -w apps/web
 
 # Production stage (Nginx)
 FROM nginx:alpine AS runner
