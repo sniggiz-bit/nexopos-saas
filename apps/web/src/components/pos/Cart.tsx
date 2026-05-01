@@ -30,18 +30,18 @@ type Tab = 'cart' | 'presales';
 export function Cart({ onConfirm, onCheckoutClose, isProcessing, isSuccess, isError, saleResult }: CartProps) {
     const { items, totals, clearCart, addItem, updateQuantity } = useCart();
     const { total, subtotal, totalDiscount, tax } = totals;
-    const [activeTab, setActiveTab] = useState<Tab>('cart');
+    const [activeTab, setActiveTab]     = useState<Tab>('cart');
     const [checkoutMode, setCheckoutMode] = useState(false);
-    const { toast } = useToast();
-    const { user } = useAuth();
-    const queryClient = useQueryClient();
+    const { toast }        = useToast();
+    const { user }         = useAuth();
+    const queryClient      = useQueryClient();
 
     const { data: quotesData, isLoading: isLoadingQuotes } = useQuotes();
-    const quotes = Array.isArray(quotesData) ? quotesData : [];
+    const quotes        = Array.isArray(quotesData) ? quotesData : [];
     const pendingQuotes = quotes.filter(q => q.status === 'DRAFT' || q.status === 'SENT');
 
-    const isEmpty = items.length === 0;
-    const itemCount = items.reduce((sum, i) => sum + (Number(i.quantity) || 0), 0);
+    const isEmpty    = items.length === 0;
+    const itemCount  = items.reduce((sum, i) => sum + (Number(i.quantity) || 0), 0);
 
     useEffect(() => {
         const onKey = (e: KeyboardEvent) => {
@@ -58,12 +58,12 @@ export function Cart({ onConfirm, onCheckoutClose, isProcessing, isSuccess, isEr
     const { mutate: savePresale, isPending: isSavingPresale } = useMutation({
         mutationFn: () => createQuote({
             tenantId: user!.tenantId,
-            userId: user!.id,
+            userId:   user!.id,
             items: items.map(item => ({
-                productId: item.productId,
+                productId:   item.productId,
                 productName: item.name,
-                quantity: Number(item.quantity) || 1,
-                price: Number(item.price) || 0,
+                quantity:    Number(item.quantity) || 1,
+                price:       Number(item.price) || 0,
             })),
         }),
         onSuccess: () => {
@@ -85,16 +85,14 @@ export function Cart({ onConfirm, onCheckoutClose, isProcessing, isSuccess, isEr
         quote.items.forEach(qItem => {
             if (qItem.product) {
                 addItem(qItem.product);
-                setTimeout(() => {
-                    updateQuantity(qItem.product!.id, qItem.quantity);
-                }, 0);
+                setTimeout(() => { updateQuantity(qItem.product!.id, qItem.quantity); }, 0);
             }
         });
         setActiveTab('cart');
         toast({ title: 'Preventa restaurada', description: 'Los productos han sido cargados al carrito.' });
     };
 
-    const outerClass = "relative flex flex-col h-full bg-slate-50 dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden";
+    const outerClass = 'relative flex flex-col h-full bg-background border-l border-border shadow-xl overflow-hidden';
 
     if (checkoutMode) {
         return (
@@ -117,60 +115,36 @@ export function Cart({ onConfirm, onCheckoutClose, isProcessing, isSuccess, isEr
 
     return (
         <div className={outerClass}>
-            {/* Tabs Header */}
-            <div className="bg-white dark:bg-slate-800 px-3 pt-3 pb-2 border-b border-slate-200 dark:border-slate-700 shrink-0">
-                <div className="grid grid-cols-2 gap-1.5 p-1 bg-slate-100 dark:bg-slate-900 rounded-xl">
-                    <button
+            {/* ── Tabs ── */}
+            <div className="bg-background px-3 pt-3 pb-2 border-b border-border shrink-0">
+                <div className="grid grid-cols-2 gap-1 p-1 bg-muted rounded-xl">
+                    <TabButton
+                        active={activeTab === 'cart'}
                         onClick={() => setActiveTab('cart')}
-                        className={`flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-sm font-medium transition-all ${
-                            activeTab === 'cart'
-                                ? 'bg-white dark:bg-slate-700 text-emerald-600 dark:text-emerald-400 shadow-sm'
-                                : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'
-                        }`}
-                    >
-                        <ShoppingBag className="w-4 h-4" />
-                        <span>Venta</span>
-                        {items.length > 0 && (
-                            <Badge className="ml-0.5 h-5 px-1.5 min-w-[1.25rem] bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400 border-0 text-[10px]">
-                                {items.length}
-                            </Badge>
-                        )}
-                    </button>
-                    <button
+                        icon={<ShoppingBag className="w-4 h-4" />}
+                        label="Venta"
+                        badge={items.length > 0 ? items.length : undefined}
+                        badgeVariant="success"
+                    />
+                    <TabButton
+                        active={activeTab === 'presales'}
                         onClick={() => setActiveTab('presales')}
-                        className={`flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-sm font-medium transition-all ${
-                            activeTab === 'presales'
-                                ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm'
-                                : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'
-                        }`}
-                    >
-                        <Clock className="w-4 h-4" />
-                        <span>Preventas</span>
-                        {pendingQuotes.length > 0 && (
-                            <Badge className="ml-0.5 h-5 px-1.5 min-w-[1.25rem] bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-400 border-0 text-[10px]">
-                                {pendingQuotes.length}
-                            </Badge>
-                        )}
-                    </button>
+                        icon={<Clock className="w-4 h-4" />}
+                        label="Preventas"
+                        badge={pendingQuotes.length > 0 ? pendingQuotes.length : undefined}
+                        badgeVariant="primary"
+                    />
                 </div>
             </div>
 
-            {/* Content Area */}
+            {/* ── Content ── */}
             <div className="flex-1 overflow-hidden relative">
                 {activeTab === 'cart' ? (
-                    <ScrollArea className="h-full bg-white dark:bg-slate-800">
+                    <ScrollArea className="h-full bg-background">
                         <div className="p-3 space-y-2 pb-52">
-                            {isEmpty ? (
-                                <div className="flex flex-col items-center justify-center h-[45vh] text-slate-300 dark:text-slate-600">
-                                    <ShoppingCart className="w-16 h-16 mb-4 opacity-20" />
-                                    <p className="text-base font-semibold text-slate-400 dark:text-slate-500">Carrito vacío</p>
-                                    <p className="text-xs text-slate-400 mt-1">Escanea o selecciona productos</p>
-                                </div>
-                            ) : (
-                                items.map((item) => (
-                                    <CartItem key={item.productId} item={item} />
-                                ))
-                            )}
+                            {isEmpty ? <CartEmpty /> : items.map(item => (
+                                <CartItem key={item.productId} item={item} />
+                            ))}
                         </div>
                     </ScrollArea>
                 ) : (
@@ -182,30 +156,46 @@ export function Cart({ onConfirm, onCheckoutClose, isProcessing, isSuccess, isEr
                 )}
             </div>
 
-            {/* Footer - Cart Tab */}
+            {/* ── Footer ── */}
             {activeTab === 'cart' && (
-                <div className="absolute bottom-0 w-full bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 p-4 z-20 shadow-[0_-8px_24px_-6px_rgba(0,0,0,0.15)]">
+                <div className="absolute bottom-0 w-full bg-background border-t border-border p-4 z-20 shadow-[0_-8px_24px_-6px_rgb(0_0_0/0.12)]">
                     {/* Totals */}
-                    <div className="space-y-2 mb-4">
+                    <div className="space-y-1.5 mb-4">
                         {totalDiscount > 0 && (
-                            <div className="flex justify-between items-center">
-                                <span className="text-xs text-slate-500">Subtotal</span>
-                                <span className="text-sm font-semibold text-slate-500">{formatPrice(subtotal)}</span>
-                            </div>
+                            <>
+                                <div className="flex justify-between items-center">
+                                    <span className="text-xs text-muted-foreground">Subtotal</span>
+                                    <span className="text-sm font-semibold text-muted-foreground tabular-nums">
+                                        {formatPrice(subtotal)}
+                                    </span>
+                                </div>
+                                <div className="flex justify-between items-center">
+                                    <span className="text-xs text-danger font-semibold">Descuento</span>
+                                    <span className="text-sm font-bold text-danger tabular-nums">
+                                        −{formatPrice(totalDiscount)}
+                                    </span>
+                                </div>
+                            </>
                         )}
-                        {totalDiscount > 0 && (
+                        {tax > 0 && (
                             <div className="flex justify-between items-center">
-                                <span className="text-xs text-rose-500 font-semibold">Descuento</span>
-                                <span className="text-sm font-bold text-rose-600">−{formatPrice(totalDiscount)}</span>
+                                <span className="text-xs text-muted-foreground">IVA (19%)</span>
+                                <span className="text-xs text-muted-foreground tabular-nums">
+                                    {formatPrice(tax)}
+                                </span>
                             </div>
                         )}
 
-                        <div className="flex justify-between items-end pt-1 border-t border-slate-100 dark:border-slate-800">
+                        <div className="flex justify-between items-end pt-2 border-t border-border">
                             <div>
-                                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest block">Total</span>
-                                <span className="text-[10px] text-slate-400">IVA incluido · {itemCount} {itemCount === 1 ? 'ítem' : 'ítems'}</span>
+                                <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest block">
+                                    Total
+                                </span>
+                                <span className="text-[10px] text-muted-foreground">
+                                    IVA incluido · {itemCount} {itemCount === 1 ? 'ítem' : 'ítems'}
+                                </span>
                             </div>
-                            <span className="text-3xl font-black text-slate-900 dark:text-white tracking-tighter">
+                            <span className="text-3xl font-black text-foreground tracking-tighter tabular-nums">
                                 {formatPrice(total)}
                             </span>
                         </div>
@@ -213,11 +203,10 @@ export function Cart({ onConfirm, onCheckoutClose, isProcessing, isSuccess, isEr
 
                     {/* Action buttons */}
                     <div className="flex gap-2">
-                        {/* Clear cart */}
                         <Button
                             variant="outline"
                             size="icon"
-                            className="h-12 w-12 shrink-0 border-slate-200 dark:border-slate-700 hover:bg-red-50 hover:text-red-600 hover:border-red-200 dark:hover:bg-red-900/20 transition-all rounded-xl"
+                            className="h-12 w-12 shrink-0 rounded-xl hover:bg-danger-subtle hover:text-danger hover:border-danger/30 transition-all"
                             onClick={() => { if (confirm('¿Vaciar carrito?')) clearCart(); }}
                             disabled={isEmpty}
                             title="Vaciar carrito"
@@ -225,11 +214,10 @@ export function Cart({ onConfirm, onCheckoutClose, isProcessing, isSuccess, isEr
                             <X className="w-4 h-4" />
                         </Button>
 
-                        {/* Save as presale */}
                         <Button
                             variant="outline"
                             size="icon"
-                            className="h-12 w-12 shrink-0 border-slate-200 dark:border-slate-700 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-200 dark:hover:bg-indigo-900/20 transition-all rounded-xl"
+                            className="h-12 w-12 shrink-0 rounded-xl hover:bg-primary/10 hover:text-primary hover:border-primary/30 transition-all"
                             onClick={() => savePresale()}
                             disabled={isEmpty || isSavingPresale || !user?.tenantId}
                             title="Guardar como Preventa"
@@ -240,20 +228,73 @@ export function Cart({ onConfirm, onCheckoutClose, isProcessing, isSuccess, isEr
                             }
                         </Button>
 
-                        {/* Checkout */}
                         <Button
-                            className="flex-1 h-12 bg-emerald-600 hover:bg-emerald-500 active:scale-[0.98] text-white shadow-lg shadow-emerald-500/20 rounded-xl transition-all duration-200 font-black tracking-widest text-base uppercase"
+                            className="flex-1 h-12 bg-emerald-600 hover:bg-emerald-500 active:scale-[0.98] text-white shadow-lg shadow-emerald-500/25 rounded-xl transition-all duration-150 font-black tracking-widest text-base uppercase"
                             onClick={() => setCheckoutMode(true)}
                             disabled={isEmpty || isProcessing}
                         >
-                            <div className="flex items-center gap-2">
-                                COBRAR
-                                <span className="text-[10px] font-mono bg-white/20 px-1.5 py-0.5 rounded">F12</span>
-                            </div>
+                            COBRAR
+                            <span className="ml-2 text-[10px] font-mono bg-white/20 px-1.5 py-0.5 rounded">
+                                F12
+                            </span>
                         </Button>
                     </div>
                 </div>
             )}
         </div>
+    );
+}
+
+/* ── Sub-components ── */
+
+function CartEmpty() {
+    return (
+        <div className="flex flex-col items-center justify-center h-[45vh] gap-3 select-none">
+            <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center">
+                <ShoppingCart className="w-8 h-8 text-muted-foreground/40" />
+            </div>
+            <div className="text-center">
+                <p className="text-sm font-semibold text-foreground/60">Carrito vacío</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                    Selecciona productos o escanea un código
+                </p>
+            </div>
+        </div>
+    );
+}
+
+function TabButton({
+    active, onClick, icon, label, badge, badgeVariant,
+}: {
+    active: boolean;
+    onClick: () => void;
+    icon: React.ReactNode;
+    label: string;
+    badge?: number;
+    badgeVariant: 'success' | 'primary';
+}) {
+    const badgeCls = badgeVariant === 'success'
+        ? 'bg-success-subtle text-success border-0'
+        : 'bg-primary/10 text-primary border-0';
+
+    return (
+        <button
+            type="button"
+            onClick={onClick}
+            className={[
+                'flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-sm font-medium transition-all duration-150',
+                active
+                    ? 'bg-background text-foreground shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground',
+            ].join(' ')}
+        >
+            {icon}
+            <span>{label}</span>
+            {badge !== undefined && (
+                <Badge className={`ml-0.5 h-5 px-1.5 min-w-[1.25rem] text-[10px] ${badgeCls}`}>
+                    {badge}
+                </Badge>
+            )}
+        </button>
     );
 }
