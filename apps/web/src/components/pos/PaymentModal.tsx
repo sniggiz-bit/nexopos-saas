@@ -22,6 +22,8 @@ import { useQuery } from '@tanstack/react-query';
 import { getCustomers } from '@/api/customers';
 import { useAuth } from '@/context/AuthContext';
 import type { Customer } from '@/api/types';
+import { TransbankPaymentModal } from './TransbankPaymentModal';
+import type { TransbankPaymentResult } from '@/hooks/useTransbankPayment';
 
 interface PaymentModalProps {
     isOpen: boolean;
@@ -69,6 +71,13 @@ export function PaymentModal({
         [PaymentMethod.CARD]: 0,
         [PaymentMethod.TRANSFER]: 0,
     });
+
+    // Transbank state
+    const [transbankOpen, setTransbankOpen]           = useState(false);
+    const [transbankResult, setTransbankResult]       = useState<TransbankPaymentResult | null>(null);
+    const [pendingPayments, setPendingPayments]       = useState<PaymentRequestData[] | null>(null);
+    const [pendingDteType, setPendingDteType]         = useState<number>(39);
+    const [pendingCustomerId, setPendingCustomerId]   = useState<string | undefined>(undefined);
 
     // DTE States
     const [dteType, setDteType] = useState<39 | 33 | 52>(39);
@@ -145,17 +154,58 @@ export function PaymentModal({
 
     const canConfirm = dteType === 33 ? !!selectedCustomer : true;
 
+    const isTransbankMethod = (method: string) =>
+        method === PaymentMethod.DEBIT || method === PaymentMethod.CARD;
+
     const handleConfirm = () => {
         const customerId = selectedCustomer?.id;
+        let payments: PaymentRequestData[];
+
         if (paymentType === 'SINGLE') {
-            onConfirm([{ paymentMethod: singleMethod, amount: total }], dteType, customerId);
+            payments = [{ paymentMethod: singleMethod, amount: total }];
         } else {
-            const payments = Object.entries(mixedPayments)
-                .filter(([_, amount]) => (Number(amount) || 0) > 0)
-                .map(([method, amount]) => ({ paymentMethod: method, amount: Number(amount) || 0 }));
-            onConfirm(payments, dteType, customerId);
+            payments = Object.entries(mixedPayments)
+                .filter(([, amt]) => (Number(amt) || 0) > 0)
+                .map(([method, amt]) => ({ paymentMethod: method, amount: Number(amt) || 0 }));
+        }
+
+        // Si el único método es débito o crédito, pasa por Transbank primero
+        const isSingleCardPayment =
+            payments.length === 1 && isTransbankMethod(payments[0].paymentMethod);
+
+        if (isSingleCardPayment && !transbankResult) {
+            setPendingPayments(payments);
+            setPendingDteType(dteType);
+            setPendingCustomerId(customerId);
+            setTransbankOpen(true);
+            return;
+        }
+
+        onConfirm(payments, dteType, customerId);
+    };
+
+    const handleTransbankApproved = (result: TransbankPaymentResult) => {
+        setTransbankResult(result);
+        setTransbankOpen(false);
+        if (pendingPayments) {
+            onConfirm(pendingPayments, pendingDteType, pendingCustomerId);
         }
     };
+
+    const transbankCardType =
+        pendingPayments?.[0]?.paymentMethod === PaymentMethod.DEBIT ? 'DEBITO' : 'CREDITO';
+
+    if (transbankOpen) {
+        return (
+            <TransbankPaymentModal
+                isOpen={transbankOpen}
+                amount={total}
+                cardType={transbankCardType}
+                onApproved={handleTransbankApproved}
+                onCancel={() => { setTransbankOpen(false); setPendingPayments(null); }}
+            />
+        );
+    }
 
     if (isSuccess) {
         return (

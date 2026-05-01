@@ -37,8 +37,9 @@ model Tenant {
   storeSettings Json?
   systemLogs    SystemLog[]
   settings      TenantSettings?
-  suppliers     Supplier[]
-  purchases     Purchase[]
+  suppliers               Supplier[]
+  purchases               Purchase[]
+  transbankTransactions   PaymentTransaction[]
 }
 
 model Branch {
@@ -58,7 +59,8 @@ model Branch {
   stockMovements StockMovement[]
   transfersFrom  Transfer[]       @relation("OriginBranch")
   transfersTo    Transfer[]       @relation("DestinationBranch")
-  purchases      Purchase[]
+  purchases               Purchase[]
+  transbankTransactions   PaymentTransaction[]
 }
 
 model User {
@@ -262,6 +264,42 @@ enum PaymentMethod {
   DEBITO
   CREDITO
   TRANSFERENCIA
+}
+
+enum TransbankStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  ERROR
+  CANCELLED
+  TIMEOUT
+}
+
+model PaymentTransaction {
+  id                String          @id @default(uuid())
+  tenantId          String
+  branchId          String
+  saleId            String?
+  orderId           String          @unique
+  amount            Int
+  status            TransbankStatus @default(PENDING)
+  provider          String          @default("TRANSBANK_POS")
+  responseCode      Int?
+  authorizationCode String?
+  responseMessage   String?
+  cardType          String?
+  lastFourDigits    String?
+  transactionDate   DateTime?
+  installments      Int?
+  rawResponse       Json?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  tenant  Tenant  @relation(fields: [tenantId], references: [id])
+  branch  Branch  @relation(fields: [branchId], references: [id])
+
+  @@index([tenantId, createdAt(sort: Desc)])
+  @@index([branchId])
 }
 
 model DteConfig {
