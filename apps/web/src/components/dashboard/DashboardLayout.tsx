@@ -17,45 +17,45 @@ const navigationGroups = [
     {
         title: 'Principal',
         items: [
-            { name: 'Resumen',        href: '/dashboard',              icon: LayoutDashboard },
+            { name: 'Resumen',        href: '/dashboard',                       icon: LayoutDashboard },
         ],
     },
     {
         title: 'Ventas',
         items: [
-            { name: 'Punto de Venta', href: '/pos',                    icon: ShoppingCart },
-            { name: 'Ventas',         href: '/dashboard/sales',        icon: History },
-            { name: 'Cotizaciones',   href: '/dashboard/quotes',       icon: FileText },
-            { name: 'Clientes',       href: '/dashboard/clients',      icon: Users },
+            { name: 'Punto de Venta', href: '/pos',                             icon: ShoppingCart },
+            { name: 'Ventas',         href: '/dashboard/sales',                 icon: History },
+            { name: 'Cotizaciones',   href: '/dashboard/quotes',                icon: FileText },
+            { name: 'Clientes',       href: '/dashboard/clients',               icon: Users },
         ],
     },
     {
         title: 'Catálogo e Inventario',
         items: [
-            { name: 'Productos',      href: '/dashboard/products',     icon: Package },
-            { name: 'Categorías',     href: '/dashboard/categories',   icon: FolderTree },
-            { name: 'Marcas',         href: '/dashboard/brands',       icon: Tag },
-            { name: 'Inventario',     href: '/dashboard/inventory',    icon: Warehouse },
-            { name: 'Traspasos',      href: '/dashboard/transfers',    icon: ArrowRightLeft },
-            { name: 'Stock Crítico',  href: '/dashboard/reports/critical-stock', icon: AlertTriangle },
-            { name: 'Tienda Online',  href: '/dashboard/ecommerce',    icon: ShoppingBag },
+            { name: 'Productos',      href: '/dashboard/products',              icon: Package },
+            { name: 'Categorías',     href: '/dashboard/categories',            icon: FolderTree },
+            { name: 'Marcas',         href: '/dashboard/brands',                icon: Tag },
+            { name: 'Inventario',     href: '/dashboard/inventory',             icon: Warehouse },
+            { name: 'Traspasos',      href: '/dashboard/transfers',             icon: ArrowRightLeft },
+            { name: 'Stock Crítico',  href: '/dashboard/reports/critical-stock',icon: AlertTriangle },
+            { name: 'Tienda Online',  href: '/dashboard/ecommerce',             icon: ShoppingBag },
         ],
     },
     {
         title: 'Compras',
         items: [
-            { name: 'Compras',        href: '/dashboard/purchases',    icon: ShoppingBag },
-            { name: 'Proveedores',    href: '/dashboard/suppliers',    icon: Truck },
+            { name: 'Compras',        href: '/dashboard/purchases',             icon: ShoppingBag },
+            { name: 'Proveedores',    href: '/dashboard/suppliers',             icon: Truck },
         ],
     },
     {
         title: 'Administración',
         items: [
-            { name: 'Sucursales',     href: '/dashboard/branches',     icon: Store },
-            { name: 'Personal',       href: '/dashboard/users',        icon: UserCog },
-            { name: 'Créditos',       href: '/dashboard/credits',      icon: CreditCard },
-            { name: 'Tesorería',      href: '/dashboard/treasury',     icon: BarChart3 },
-            { name: 'Configuración',  href: '/dashboard/settings',     icon: Settings },
+            { name: 'Sucursales',     href: '/dashboard/branches',              icon: Store },
+            { name: 'Personal',       href: '/dashboard/users',                 icon: UserCog },
+            { name: 'Créditos',       href: '/dashboard/credits',               icon: CreditCard },
+            { name: 'Tesorería',      href: '/dashboard/treasury',              icon: BarChart3 },
+            { name: 'Configuración',  href: '/dashboard/settings',              icon: Settings },
         ],
     },
 ];
@@ -63,10 +63,9 @@ const navigationGroups = [
 const flattenedNavigation = navigationGroups.flatMap(g => g.items);
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
-    const location  = useLocation();
+    const location         = useLocation();
     const { user, logout } = useAuth();
-
-    const isImpersonating = localStorage.getItem('impersonating') === 'true';
+    const isImpersonating  = localStorage.getItem('impersonating') === 'true';
 
     const handleExitImpersonation = () => {
         localStorage.removeItem('token');
@@ -75,7 +74,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     };
 
     return (
-        <div className="min-h-screen bg-surface-raised dark:bg-background">
+        <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
             {/* Impersonation banner */}
             {isImpersonating && (
                 <div className="bg-purple-600 text-white px-4 py-2 text-center text-sm font-medium flex justify-center items-center gap-4 fixed top-0 w-full z-50 shadow-lg">
@@ -89,13 +88,13 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                 </div>
             )}
 
-            {/* ── Sidebar ── */}
-            <aside className={`fixed inset-y-0 left-0 w-64 bg-background border-r border-border flex flex-col ${isImpersonating ? 'mt-10' : ''}`}>
+            {/* ── Sidebar oscuro ── */}
+            <aside className={`fixed inset-y-0 left-0 w-64 bg-slate-900 flex flex-col z-20 ${isImpersonating ? 'mt-10' : ''}`}>
 
                 {/* Logo */}
-                <div className="flex items-center h-16 px-6 border-b border-border shrink-0">
-                    <Logo variant="full" />
-                    <span className="ml-2 px-2 py-0.5 text-[10px] font-bold bg-primary/10 text-primary rounded uppercase tracking-wide">
+                <div className="flex items-center h-16 px-6 border-b border-slate-800 shrink-0">
+                    <Logo variant="full" mode="dark" />
+                    <span className="ml-2 px-2 py-0.5 text-[10px] font-bold bg-indigo-500/20 text-indigo-300 rounded uppercase tracking-wide border border-indigo-500/30">
                         Admin
                     </span>
                 </div>
@@ -104,13 +103,13 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                 <nav className="flex-1 px-3 py-4 overflow-y-auto scrollbar-thin space-y-5">
                     {navigationGroups.map((group) => (
                         <div key={group.title}>
-                            <p className="px-3 mb-1 text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">
+                            <p className="px-3 mb-1 text-[10px] font-semibold text-slate-500 uppercase tracking-widest">
                                 {group.title}
                             </p>
                             <div className="space-y-0.5">
                                 {group.items.map(item => {
                                     const isActive = location.pathname === item.href;
-                                    const Icon = item.icon;
+                                    const Icon     = item.icon;
                                     return (
                                         <Link
                                             key={item.name}
@@ -118,8 +117,8 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                                             className={[
                                                 'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-150',
                                                 isActive
-                                                    ? 'bg-primary/10 text-primary'
-                                                    : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+                                                    ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-900'
+                                                    : 'text-slate-400 hover:bg-slate-800 hover:text-slate-100',
                                             ].join(' ')}
                                         >
                                             <Icon className="w-4 h-4 shrink-0" />
@@ -133,25 +132,25 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                 </nav>
 
                 {/* User footer */}
-                <div className="p-4 border-t border-border shrink-0">
+                <div className="p-4 border-t border-slate-800 shrink-0">
                     <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center shrink-0">
-                            <span className="text-sm font-bold text-primary-foreground">
+                        <div className="w-8 h-8 bg-indigo-600 rounded-full flex items-center justify-center shrink-0">
+                            <span className="text-sm font-bold text-white">
                                 {(user?.name || user?.email || 'A').charAt(0).toUpperCase()}
                             </span>
                         </div>
                         <div className="flex-1 min-w-0">
-                            <p className="text-sm font-semibold text-foreground truncate">
+                            <p className="text-sm font-semibold text-slate-100 truncate">
                                 {user?.name || user?.email}
                             </p>
-                            <p className="text-xs text-muted-foreground capitalize">
+                            <p className="text-xs text-slate-500 capitalize">
                                 {user?.role?.replace(/_/g, ' ').toLowerCase()}
                             </p>
                         </div>
                         <button
                             onClick={logout}
                             title="Cerrar sesión"
-                            className="p-1.5 text-muted-foreground hover:text-danger hover:bg-danger-subtle rounded-lg transition-colors"
+                            className="p-1.5 text-slate-500 hover:text-red-400 hover:bg-slate-800 rounded-lg transition-colors"
                         >
                             <LogOut className="w-4 h-4" />
                         </button>
@@ -162,9 +161,9 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             {/* ── Main Content ── */}
             <div className={`pl-64 ${isImpersonating ? 'mt-10' : ''}`}>
                 {/* Top header */}
-                <header className="bg-background border-b border-border sticky top-0 z-10">
+                <header className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-10 shadow-sm">
                     <div className="px-8 py-4">
-                        <h2 className="text-xl font-bold text-foreground">
+                        <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100">
                             {flattenedNavigation.find(item => item.href === location.pathname)?.name || 'Dashboard'}
                         </h2>
                     </div>
