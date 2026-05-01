@@ -42,7 +42,9 @@ jobs:
           script: |
             set -e
             cd /home/nexopos/nexopos.cl
-            git pull
+            git fetch origin
+            git checkout main
+            git pull origin main
             docker build --network=host -t nexoposcl-api:latest -f apps/api/Dockerfile.prod .
             docker-compose -f docker-compose.prod.yml up -d --no-build --force-recreate api
             echo "✓ API deployed"
@@ -64,7 +66,9 @@ jobs:
           script: |
             set -e
             cd /home/nexopos/nexopos.cl
-            git pull
-            docker build --network=host -t nexoposcl-web:latest -f apps/web/Dockerfile.prod .
+            git fetch origin
+            git checkout main
+            git pull origin main
+            docker build --no-cache --network=host -t nexoposcl-web:latest -f apps/web/Dockerfile.prod .
             docker-compose -f docker-compose.prod.yml up -d --no-build --force-recreate web
             echo "✓ Web deployed"
