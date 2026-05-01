@@ -163,4 +163,36 @@ export class ShiftsService {
       },
     });
   }
+
+  async getShiftSummary(shiftId: string) {
+    const shift = await this.prisma.cashShift.findUnique({
+      where: { id: shiftId },
+      include: {
+        sales: { include: { payments: true } },
+        openedBy: true,
+      },
+    });
+
+    if (!shift) throw new NotFoundException('Shift not found');
+
+    const totalsByMethod = { EFECTIVO: 0, DEBITO: 0, CREDITO: 0, TRANSFERENCIA: 0 };
+    let totalSales = 0;
+
+    shift.sales.forEach((sale) => {
+      sale.payments.forEach((payment) => {
+        const method = payment.paymentMethod as keyof typeof totalsByMethod;
+        if (method in totalsByMethod) totalsByMethod[method] += Number(payment.amount);
+        totalSales += Number(payment.amount);
+      });
+    });
+
+    return {
+      openedBy: shift.openedBy?.name || shift.openedBy?.email || 'Desconocido',
+      initialAmount: Number(shift.initialAmount),
+      salesCount: shift.sales.length,
+      totalSales,
+      paymentMethods: totalsByMethod,
+      expectedAmount: Number(shift.initialAmount) + totalsByMethod.EFECTIVO,
+    };
+  }
 }

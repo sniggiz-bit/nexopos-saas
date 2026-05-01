@@ -33,8 +33,10 @@ let SalesService = SalesService_1 = class SalesService {
         this.inventoryService = inventoryService;
     }
     async getSales(filters = {}) {
-        const { startDate, endDate, branchId } = filters;
+        const { startDate, endDate, branchId, tenantId } = filters;
         const where = {};
+        if (tenantId)
+            where.tenantId = tenantId;
         if (startDate || endDate) {
             where.createdAt = {};
             if (startDate)
@@ -58,7 +60,7 @@ let SalesService = SalesService_1 = class SalesService {
     }
     async createSale(createSaleDto) {
         this.logger.log(`Starting createSale with DTO: ${JSON.stringify(createSaleDto, null, 2)}`);
-        const { tenantId, branchId, userId, items, payments, status = 'COMPLETED', customerId, quoteId, } = createSaleDto;
+        const { tenantId, branchId, userId, items, payments, status = 'COMPLETED', customerId, quoteId, dteType, } = createSaleDto;
         if (!tenantId) {
             throw new common_1.BadRequestException('tenantId is required');
         }
@@ -141,6 +143,7 @@ let SalesService = SalesService_1 = class SalesService {
                     status,
                     customerId,
                     quoteId,
+                    dteType: dteType ?? 39,
                     items: {
                         create: items.map((item) => {
                             const product = productMap.get(item.productId);
@@ -247,6 +250,19 @@ let SalesService = SalesService_1 = class SalesService {
             where: { id },
             include: { items: true, payments: true, customer: true, credit: true },
         });
+    }
+    async emitirNotaCreditoForSale(saleId) {
+        const sale = await this.prisma.sale.findUnique({ where: { id: saleId } });
+        if (!sale)
+            throw new common_1.NotFoundException('Sale not found');
+        if (sale.status !== 'COMPLETED') {
+            throw new common_1.BadRequestException('Solo se puede emitir Nota de Crédito para ventas completadas');
+        }
+        await this.prisma.sale.update({
+            where: { id: saleId },
+            data: { dteType: 61, dteStatus: 'PENDING' },
+        });
+        return this.dteService.emitirDte(saleId);
     }
     async emitDteAndReceipt(saleId) {
         try {

@@ -55,4 +55,9 @@ export class ShiftsController {
   async getCurrentShift(@Param('branchId') branchId: string) {
     return this.shiftsService.getCurrentShift(branchId);
   }
+
+  @Get('summary/:shiftId')
+  async getShiftSummary(@Param('shiftId') shiftId: string) {
+    return this.shiftsService.getShiftSummary(shiftId);
+  }
 }

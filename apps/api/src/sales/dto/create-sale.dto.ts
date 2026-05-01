@@ -78,4 +78,8 @@ export class CreateSaleDto {
   @IsOptional()
   @IsString()
   quoteId?: string;
+
+  @IsOptional()
+  @IsNumber()
+  dteType?: number;
 }

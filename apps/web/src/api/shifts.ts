@@ -45,3 +45,22 @@ export const closeShift = async (data: CloseShiftRequest): Promise<CloseShiftRes
     const response = await api.post('/shifts/close', data);
     return response.data;
 };
+
+export interface ShiftLiveSummary {
+    openedBy: string;
+    initialAmount: number;
+    salesCount: number;
+    totalSales: number;
+    paymentMethods: {
+        EFECTIVO: number;
+        DEBITO: number;
+        CREDITO: number;
+        TRANSFERENCIA: number;
+    };
+    expectedAmount: number;
+}
+
+export const getShiftLiveSummary = async (shiftId: string): Promise<ShiftLiveSummary> => {
+    const response = await api.get(`/shifts/summary/${shiftId}`);
+    return response.data;
+};

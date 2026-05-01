@@ -6,6 +6,7 @@ import { useCategories } from '../../hooks/useCategories';
 import { useBrands } from '../../hooks/useBrands';
 import toast from 'react-hot-toast';
 import type { Product } from '../../api/types';
+import { useAuth } from '../../context/AuthContext';
 
 interface ProductFormModalProps {
     isOpen: boolean;
@@ -14,6 +15,7 @@ interface ProductFormModalProps {
 }
 
 export function ProductFormModal({ isOpen, onClose, initialData }: ProductFormModalProps) {
+    const { user } = useAuth();
     const [formData, setFormData] = useState({
         name: '',
         sku: '',
@@ -33,8 +35,8 @@ export function ProductFormModal({ isOpen, onClose, initialData }: ProductFormMo
 
     const createProduct = useCreateProduct();
     const updateProduct = useUpdateProduct();
-    const { data: categories } = useCategories();
-    const { data: brands } = useBrands();
+    const { data: categories } = useCategories(user?.tenantId ?? '');
+    const { data: brands } = useBrands(user?.tenantId ?? '');
 
     useEffect(() => {
         if (initialData && isOpen) {
@@ -135,7 +137,7 @@ export function ProductFormModal({ isOpen, onClose, initialData }: ProductFormMo
                     brandId: formData.brandId || undefined,
                     image: formData.image || undefined,
                     isActive: formData.isActive,
-                    tenantId: 'tenant-1', // Default tenant
+                    tenantId: user?.tenantId ?? '',
                     priceTiers: parsedTiers.length > 0 ? parsedTiers : undefined,
                 });
 

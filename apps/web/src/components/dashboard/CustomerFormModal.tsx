@@ -6,6 +6,7 @@ import { useUpdateCustomer } from '../../hooks/useCustomers';
 import toast from 'react-hot-toast';
 import type { Customer } from '../../api/types';
 import { formatRut } from '@nexopos/shared';
+import { useAuth } from '../../context/AuthContext';
 
 interface CustomerFormModalProps {
     isOpen: boolean;
@@ -14,6 +15,7 @@ interface CustomerFormModalProps {
 }
 
 export function CustomerFormModal({ isOpen, onClose, initialData }: CustomerFormModalProps) {
+    const { user } = useAuth();
     const [formData, setFormData] = useState({
         name: '',
         rut: '',
@@ -110,7 +112,7 @@ export function CustomerFormModal({ isOpen, onClose, initialData }: CustomerForm
                     comuna: formData.comuna || undefined,
                     email: formData.email || undefined,
                     phone: formData.phone || undefined,
-                    tenantId: 'tenant-1',
+                    tenantId: user?.tenantId ?? '',
                 });
                 toast.success('Cliente creado exitosamente');
                 onClose();

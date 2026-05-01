@@ -27,6 +27,7 @@ let PrismaService = class PrismaService {
     }
     async onModuleDestroy() {
         await this.prisma.$disconnect();
+        await this.pool.end();
     }
     get client() {
         return this.prisma;

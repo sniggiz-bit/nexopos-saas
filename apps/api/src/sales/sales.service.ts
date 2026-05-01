@@ -16,6 +16,7 @@ interface GetSalesFilters {
   startDate?: string;
   endDate?: string;
   branchId?: string;
+  tenantId?: string;
 }
 
 @Injectable()
@@ -34,8 +35,10 @@ export class SalesService {
    * Get all sales with optional filters
    */
   async getSales(filters: GetSalesFilters = {}) {
-    const { startDate, endDate, branchId } = filters;
+    const { startDate, endDate, branchId, tenantId } = filters;
     const where: any = {};
+
+    if (tenantId) where.tenantId = tenantId;
 
     if (startDate || endDate) {
       where.createdAt = {};
@@ -71,6 +74,7 @@ export class SalesService {
       status = 'COMPLETED',
       customerId,
       quoteId,
+      dteType,
     } = createSaleDto;
 
     if (!tenantId) {
@@ -198,6 +202,7 @@ export class SalesService {
           status,
           customerId,
           quoteId,
+          dteType: dteType ?? 39,
           items: {
             create: items.map((item) => {
               const product = productMap.get(item.productId);
@@ -336,6 +341,21 @@ export class SalesService {
       where: { id },
       include: { items: true, payments: true, customer: true, credit: true },
     });
+  }
+
+  async emitirNotaCreditoForSale(saleId: string) {
+    const sale = await this.prisma.sale.findUnique({ where: { id: saleId } });
+    if (!sale) throw new NotFoundException('Sale not found');
+    if (sale.status !== 'COMPLETED') {
+      throw new BadRequestException(
+        'Solo se puede emitir Nota de Crédito para ventas completadas',
+      );
+    }
+    await this.prisma.sale.update({
+      where: { id: saleId },
+      data: { dteType: 61, dteStatus: 'PENDING' },
+    });
+    return this.dteService.emitirDte(saleId);
   }
 
   private async emitDteAndReceipt(saleId: string) {

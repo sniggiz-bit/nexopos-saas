@@ -1,6 +1,6 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getShift, openShift, closeShift, OpenShiftRequest, CloseShiftRequest } from '../api/shifts';
+import { getShift, openShift, closeShift, getShiftLiveSummary, OpenShiftRequest, CloseShiftRequest } from '../api/shifts';
 
 export const useCurrentShift = (branchId: string) => {
     return useQuery({
@@ -32,5 +32,15 @@ export const useCloseShift = () => {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['current-shift'] });
         },
+    });
+};
+
+export const useShiftLiveSummary = (shiftId: string | null) => {
+    return useQuery({
+        queryKey: ['shift-live-summary', shiftId],
+        queryFn: () => getShiftLiveSummary(shiftId!),
+        enabled: !!shiftId,
+        refetchInterval: 30 * 1000,
+        staleTime: 0,
     });
 };

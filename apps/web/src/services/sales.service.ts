@@ -64,6 +64,7 @@ export interface SaleRecord {
     status: SaleStatus;
     dteFolio?: number | null;
     dteStatus?: string | null;
+    dteType?: number | null;
     dtePdfUrl?: string | null;
     internalReceiptUrl?: string | null;
     createdAt: string;

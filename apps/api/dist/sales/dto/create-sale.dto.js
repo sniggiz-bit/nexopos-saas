@@ -70,6 +70,7 @@ class CreateSaleDto {
     status;
     customerId;
     quoteId;
+    dteType;
 }
 exports.CreateSaleDto = CreateSaleDto;
 __decorate([
@@ -114,4 +115,9 @@ __decorate([
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], CreateSaleDto.prototype, "quoteId", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsNumber)(),
+    __metadata("design:type", Number)
+], CreateSaleDto.prototype, "dteType", void 0);
 //# sourceMappingURL=create-sale.dto.js.map

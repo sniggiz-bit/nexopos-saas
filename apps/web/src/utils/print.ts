@@ -23,40 +23,30 @@ export async function printThroughIframe(html: string): Promise<void> {
             return;
         }
 
+        let printed = false;
+
+        const doPrint = () => {
+            if (printed) return;
+            printed = true;
+            if (iframe.contentWindow) {
+                iframe.contentWindow.focus();
+                iframe.contentWindow.print();
+            }
+            setTimeout(() => {
+                if (document.getElementById('print-iframe')) {
+                    document.body.removeChild(iframe);
+                }
+                resolve();
+            }, 1000);
+        };
+
         doc.open();
         doc.write(html);
         doc.close();
 
-        // Small delay to ensure styles and images are loaded
-        iframe.onload = () => {
-            setTimeout(() => {
-                if (iframe.contentWindow) {
-                    iframe.contentWindow.focus();
-                    iframe.contentWindow.print();
-                }
+        iframe.onload = () => setTimeout(doPrint, 300);
 
-                // Clean up after print dialog is closed (or after a reasonable time)
-                setTimeout(() => {
-                    document.body.removeChild(iframe);
-                    resolve();
-                }, 1000);
-            }, 500);
-        };
-
-        // If onload doesn't fire for some reason (no images/links)
-        setTimeout(() => {
-            if (document.getElementById('print-iframe')) {
-                if (iframe.contentWindow) {
-                    iframe.contentWindow.focus();
-                    iframe.contentWindow.print();
-                }
-                setTimeout(() => {
-                    if (document.getElementById('print-iframe')) {
-                        document.body.removeChild(iframe);
-                    }
-                    resolve();
-                }, 1000);
-            }
-        }, 2000);
+        // Fallback if onload never fires
+        setTimeout(doPrint, 1500);
     });
 }

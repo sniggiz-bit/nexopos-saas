@@ -8,7 +8,7 @@ export declare class InventoryService {
     logMovement(data: CreateMovementDto, tx?: Prisma.TransactionClient): Promise<{
         newBalance: number;
     }>;
-    getKardex(productId: string, branchId: string): Promise<({
+    getKardex(productId: string, branchId?: string): Promise<({
         user: {
             name: string | null;
         } | null;

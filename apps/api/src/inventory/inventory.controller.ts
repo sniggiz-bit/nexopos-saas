@@ -8,7 +8,7 @@ export class InventoryController {
   @Get('kardex/:productId')
   async getKardex(
     @Param('productId') productId: string,
-    @Query('branchId') branchId: string,
+    @Query('branchId') branchId?: string,
   ) {
     return this.inventoryService.getKardex(productId, branchId);
   }

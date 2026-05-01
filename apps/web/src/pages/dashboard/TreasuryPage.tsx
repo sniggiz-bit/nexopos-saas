@@ -3,9 +3,11 @@ import { LoadingSpinner } from '../../components/ui/loading-spinner';
 import { useTreasuryReceivables, useTreasuryCashFlow, useTreasuryMaturities } from '../../hooks/useTreasury';
 import { CreditCard, Calendar, TrendingUp } from 'lucide-react';
 import { formatCurrency, formatDate } from '../../utils/format';
+import { useAuth } from '../../context/AuthContext';
 
 export function TreasuryPage() {
-    const tenantId = 'tenant-1'; // TODO: Get from context/auth
+    const { user } = useAuth();
+    const tenantId = user?.tenantId ?? '';
     const { data: receivables, isLoading: loadingReceivables } = useTreasuryReceivables(tenantId);
     const { data: cashFlow, isLoading: loadingCashFlow } = useTreasuryCashFlow(tenantId);
     const { data: maturities, isLoading: loadingMaturities } = useTreasuryMaturities(tenantId);

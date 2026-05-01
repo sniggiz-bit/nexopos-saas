@@ -8,6 +8,7 @@ interface GetSalesFilters {
     startDate?: string;
     endDate?: string;
     branchId?: string;
+    tenantId?: string;
 }
 export declare class SalesService {
     private prisma;
@@ -88,6 +89,7 @@ export declare class SalesService {
         } & {
             id: string;
             price: number;
+            discountAmount: number;
             saleId: string;
             productId: string;
             quantity: import("@prisma/client-runtime-utils").Decimal;
@@ -99,6 +101,7 @@ export declare class SalesService {
         status: string;
         tenantId: string;
         total: number;
+        discountAmount: number;
         branchId: string;
         userId: string | null;
         cashShiftId: string | null;
@@ -140,6 +143,7 @@ export declare class SalesService {
         items: {
             id: string;
             price: number;
+            discountAmount: number;
             saleId: string;
             productId: string;
             quantity: import("@prisma/client-runtime-utils").Decimal;
@@ -158,6 +162,7 @@ export declare class SalesService {
         status: string;
         tenantId: string;
         total: number;
+        discountAmount: number;
         branchId: string;
         userId: string | null;
         cashShiftId: string | null;
@@ -169,6 +174,17 @@ export declare class SalesService {
         dtePdfUrl: string | null;
         internalReceiptUrl: string | null;
     }) | null>;
+    emitirNotaCreditoForSale(saleId: string): Promise<{
+        success: boolean;
+        folio: any;
+        url_pdf: any;
+        error?: undefined;
+    } | {
+        success: boolean;
+        error: any;
+        folio?: undefined;
+        url_pdf?: undefined;
+    }>;
     private emitDteAndReceipt;
 }
 export {};

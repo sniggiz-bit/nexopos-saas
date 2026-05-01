@@ -7,7 +7,6 @@ import { useSale } from '@/hooks/useSale';
 import { ProductGrid } from '@/components/pos/ProductGrid';
 import { CategoryFilter } from '@/components/pos/CategoryFilter';
 import { Cart } from '@/components/pos/Cart';
-import { PaymentModal } from '@/components/pos/PaymentModal';
 import { PosUserToolbar } from '@/components/pos/PosUserToolbar';
 import { CreateSaleRequest, PaymentRequestData } from '@/api/sales';
 import { useToast } from '@/hooks/use-toast';
@@ -25,8 +24,7 @@ import { apiClient } from '@/api/client';
 import { Scan, Search, X, LogOut, LayoutGrid, List, Package } from 'lucide-react';
 
 export function PosPage() {
-    const { items: cartItems, addItem, totals, clearCart } = useCart();
-    const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+    const { items: cartItems, addItem, clearCart } = useCart();
     const [saleResult, setSaleResult] = useState<any>(null);
     const [isCloseShiftModalOpen, setIsCloseShiftModalOpen] = useState(false);
     const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
@@ -60,12 +58,6 @@ export function PosPage() {
             });
             clearCart();
             queryClient.invalidateQueries({ queryKey: ['products'] });
-            const hasDocument = data.dtePdfUrl || data.internalReceiptUrl;
-            setTimeout(() => {
-                setIsPaymentModalOpen(false);
-                reset();
-                setSaleResult(null);
-            }, hasDocument ? 10000 : 2000);
         },
         onError: (error) => {
             toast({
@@ -90,12 +82,10 @@ export function PosPage() {
 
     useBarcodeScanner({
         onScan: addToCartByBarcode,
-        enabled: !isPaymentModalOpen && !isCloseShiftModalOpen,
+        enabled: !isCloseShiftModalOpen,
     });
 
-    const handleCheckout = () => setIsPaymentModalOpen(true);
-
-    const handleConfirmPayment = (payments: PaymentRequestData[]) => {
+    const handleConfirmPayment = (payments: PaymentRequestData[], dteType?: number, customerId?: string) => {
         if (!user?.tenantId || !user?.branchId) {
             toast({
                 variant: 'destructive',
@@ -119,6 +109,8 @@ export function PosPage() {
                 return { productId: item.productId, quantity: qty, price, discountAmount };
             }),
             payments,
+            dteType,
+            customerId,
         };
         createSale(saleData);
     };
@@ -141,15 +133,10 @@ export function PosPage() {
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
-            if (isPaymentModalOpen || isCloseShiftModalOpen) return;
+            if (isCloseShiftModalOpen) return;
             if (e.key === 'F3' || (e.ctrlKey && e.key === 'b')) {
                 e.preventDefault();
                 inputRef.current?.focus();
-            }
-            if (e.key === 'F12') {
-                e.preventDefault();
-                if (cartItems.length > 0) handleCheckout();
-                else toast({ title: 'Carrito vacío', description: 'Agrega productos antes de cobrar' });
             }
             if (e.key === 'Escape' && document.activeElement !== inputRef.current) {
                 if (cartItems.length > 0 && confirm('¿Deseas vaciar el carrito?')) {
@@ -160,7 +147,7 @@ export function PosPage() {
         };
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [cartItems, isPaymentModalOpen, isCloseShiftModalOpen, clearCart, toast]);
+    }, [cartItems, isCloseShiftModalOpen, clearCart, toast]);
 
     const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === 'Enter' && filteredProducts.length === 1) {
@@ -168,8 +155,6 @@ export function PosPage() {
             setSearchQuery('');
         }
     };
-
-    const { total, tax, subtotal, totalDiscount } = totals;
 
     return (
         <div className="h-screen w-full flex flex-col bg-slate-100 dark:bg-slate-950 overflow-hidden">
@@ -287,8 +272,12 @@ export function PosPage() {
                 {/* Right: Cart (30%) */}
                 <div className="w-[30%] h-full z-20">
                     <Cart
-                        onCheckout={handleCheckout}
+                        onConfirm={handleConfirmPayment}
+                        onCheckoutClose={() => { reset(); setSaleResult(null); }}
                         isProcessing={isPending}
+                        isSuccess={isSuccess}
+                        isError={isError}
+                        saleResult={saleResult}
                     />
                 </div>
             </div>
@@ -296,29 +285,13 @@ export function PosPage() {
             {/* Modals */}
             <OpenShiftModal isOpen={!isLoadingShift && !currentShift} />
 
-            {currentShift && (
-                <CloseShiftModal
-                    isOpen={isCloseShiftModalOpen}
-                    onClose={() => setIsCloseShiftModalOpen(false)}
-                    shiftId={currentShift.id}
-                    currentShift={currentShift}
-                />
-            )}
-
-            <PaymentModal
-                isOpen={isPaymentModalOpen}
-                onClose={() => { setIsPaymentModalOpen(false); reset(); }}
-                onConfirm={handleConfirmPayment}
-                items={cartItems}
-                subtotal={subtotal}
-                totalDiscount={totalDiscount}
-                tax={tax}
-                total={total}
-                isProcessing={isPending}
-                isSuccess={isSuccess}
-                isError={isError}
-                saleResult={saleResult}
+            <CloseShiftModal
+                isOpen={isCloseShiftModalOpen}
+                onClose={() => setIsCloseShiftModalOpen(false)}
+                shiftId={currentShift?.id ?? ''}
+                currentShift={currentShift}
             />
+
         </div>
     );
 }

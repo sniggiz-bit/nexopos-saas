@@ -3,7 +3,7 @@ import { CreateSaleDto, CreatePaymentDto } from './dto/create-sale.dto';
 export declare class SalesController {
     private readonly salesService;
     constructor(salesService: SalesService);
-    findAll(startDate?: string, endDate?: string, branchId?: string): Promise<({
+    findAll(startDate?: string, endDate?: string, branchId?: string, tenantId?: string): Promise<({
         branch: {
             name: string;
             id: string;
@@ -74,6 +74,7 @@ export declare class SalesController {
         } & {
             id: string;
             price: number;
+            discountAmount: number;
             saleId: string;
             productId: string;
             quantity: import("@prisma/client-runtime-utils").Decimal;
@@ -85,6 +86,7 @@ export declare class SalesController {
         status: string;
         tenantId: string;
         total: number;
+        discountAmount: number;
         branchId: string;
         userId: string | null;
         cashShiftId: string | null;
@@ -126,6 +128,7 @@ export declare class SalesController {
         items: {
             id: string;
             price: number;
+            discountAmount: number;
             saleId: string;
             productId: string;
             quantity: import("@prisma/client-runtime-utils").Decimal;
@@ -144,6 +147,7 @@ export declare class SalesController {
         status: string;
         tenantId: string;
         total: number;
+        discountAmount: number;
         branchId: string;
         userId: string | null;
         cashShiftId: string | null;
@@ -155,4 +159,15 @@ export declare class SalesController {
         dtePdfUrl: string | null;
         internalReceiptUrl: string | null;
     }) | null>;
+    emitNotaCredito(id: string): Promise<{
+        success: boolean;
+        folio: any;
+        url_pdf: any;
+        error?: undefined;
+    } | {
+        success: boolean;
+        error: any;
+        folio?: undefined;
+        url_pdf?: undefined;
+    }>;
 }

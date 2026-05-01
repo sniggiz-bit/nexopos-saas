@@ -8,23 +8,49 @@ export declare class LiorenService {
     constructor(prisma: PrismaService);
     emitirBoleta(saleId: string): Promise<{
         success: boolean;
-        message: string;
-        folio?: undefined;
-        url_pdf?: undefined;
-        error?: undefined;
-    } | {
-        success: boolean;
         folio: any;
         url_pdf: any;
-        message?: undefined;
         error?: undefined;
     } | {
         success: boolean;
         error: any;
-        message?: undefined;
         folio?: undefined;
         url_pdf?: undefined;
     }>;
+    emitirFactura(saleId: string): Promise<{
+        success: boolean;
+        folio: any;
+        url_pdf: any;
+        error?: undefined;
+    } | {
+        success: boolean;
+        error: any;
+        folio?: undefined;
+        url_pdf?: undefined;
+    }>;
+    emitirNotaCredito(saleId: string): Promise<{
+        success: boolean;
+        folio: any;
+        url_pdf: any;
+        error?: undefined;
+    } | {
+        success: boolean;
+        error: any;
+        folio?: undefined;
+        url_pdf?: undefined;
+    }>;
+    emitirGuiaDespacho(saleId: string): Promise<{
+        success: boolean;
+        folio: any;
+        url_pdf: any;
+        error?: undefined;
+    } | {
+        success: boolean;
+        error: any;
+        folio?: undefined;
+        url_pdf?: undefined;
+    }>;
+    private _emitir;
     consultaRut(rut: string): Promise<{
         success: boolean;
         data: {
@@ -47,4 +73,7 @@ export declare class LiorenService {
         data?: undefined;
         message?: undefined;
     }>;
+    private _labelDoc;
+    private _slugDoc;
+    private _findOriginalDte;
 }

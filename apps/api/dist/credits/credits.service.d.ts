@@ -24,6 +24,7 @@ export declare class CreditsService {
             status: string;
             tenantId: string;
             total: number;
+            discountAmount: number;
             branchId: string;
             userId: string | null;
             cashShiftId: string | null;
@@ -68,6 +69,7 @@ export declare class CreditsService {
             status: string;
             tenantId: string;
             total: number;
+            discountAmount: number;
             branchId: string;
             userId: string | null;
             cashShiftId: string | null;

@@ -34,6 +34,7 @@ export interface CreateSaleRequest {
     status?: 'COMPLETED' | 'PRE_SALE';
     customerId?: string;
     quoteId?: string;
+    dteType?: number;
 }
 
 
@@ -87,6 +88,7 @@ export interface GetSalesParams {
     startDate?: string;
     endDate?: string;
     branchId?: string;
+    tenantId?: string;
 }
 
 
@@ -119,6 +121,14 @@ export async function getSales(params?: GetSalesParams): Promise<Sale[]> {
  */
 export async function getSale(id: string): Promise<Sale> {
     const response = await apiClient.get<Sale>(`/sales/${id}`);
+    return response.data;
+}
+
+/**
+ * Emit a Nota de Crédito for an existing completed sale
+ */
+export async function emitNotaCredito(id: string): Promise<{ success: boolean; folio?: number; url_pdf?: string; error?: string }> {
+    const response = await apiClient.post(`/sales/${id}/nota-credito`);
     return response.data;
 }
 

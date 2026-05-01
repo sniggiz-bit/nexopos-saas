@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
     Dialog,
     DialogContent,
@@ -43,6 +44,7 @@ export function OpenShiftModal({ isOpen }: OpenShiftModalProps) {
     const { mutate: openShift, isPending } = useOpenShift();
     const { toast } = useToast();
     const { user } = useAuth();
+    const navigate = useNavigate();
     const queryClient = useQueryClient();
 
     const { data: tenantUsers = [], isLoading: isLoadingUsers } = useQuery<UserOption[]>({
@@ -145,7 +147,7 @@ export function OpenShiftModal({ isOpen }: OpenShiftModalProps) {
     const isLoading = isPending || isVerifying;
 
     return (
-        <Dialog open={isOpen} onOpenChange={() => {}}>
+        <Dialog open={isOpen} onOpenChange={(open) => { if (!open) navigate('/dashboard'); }}>
             <DialogContent className="sm:max-w-[500px] p-0 overflow-hidden border-none bg-slate-50 dark:bg-slate-900 shadow-2xl rounded-2xl">
                 {/* Header */}
                 <div className="bg-gradient-to-br from-indigo-600 via-indigo-700 to-purple-800 p-7 text-white relative overflow-hidden">

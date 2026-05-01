@@ -37,8 +37,9 @@ export class SalesController {
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
     @Query('branchId') branchId?: string,
+    @Query('tenantId') tenantId?: string,
   ) {
-    return this.salesService.getSales({ startDate, endDate, branchId });
+    return this.salesService.getSales({ startDate, endDate, branchId, tenantId });
   }
 
   /**
@@ -96,10 +97,12 @@ export class SalesController {
     @Param('id') id: string,
     @Body() payments: CreatePaymentDto[],
   ) {
-    // Assuming body is array of payment methods
-    // Need a DTO for this usually, but reusing CreatePaymentDto[] is fine for now or create a wrapper DTO
-    // Actually Body should be object { payments: ... } or just array?
-    // Let's assume array of payments for simplicity, matching service signature
     return this.salesService.completePreSale(id, payments);
+  }
+
+  @Post(':id/nota-credito')
+  @HttpCode(HttpStatus.OK)
+  async emitNotaCredito(@Param('id') id: string) {
+    return this.salesService.emitirNotaCreditoForSale(id);
   }
 }

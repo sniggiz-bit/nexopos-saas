@@ -6,6 +6,7 @@ import { ProductFormModal } from '../../components/dashboard/ProductFormModal';
 import { InventoryKardexModal } from '../../components/dashboard/InventoryKardexModal';
 import { Plus, Search, Edit, Trash2, History } from 'lucide-react';
 import type { Product } from '../../api/types';
+import { useAuth } from '../../context/AuthContext';
 
 export function ProductsPage() {
     const [searchTerm, setSearchTerm] = useState('');
@@ -13,8 +14,9 @@ export function ProductsPage() {
     const [productToEdit, setProductToEdit] = useState<Product | null>(null);
     const [isKardexOpen, setIsKardexOpen] = useState(false);
     const [productForKardex, setProductForKardex] = useState<Product | null>(null);
+    const { user } = useAuth();
 
-    const { data: products, isLoading } = useProducts();
+    const { data: products, isLoading } = useProducts(user?.tenantId);
     const deleteProduct = useDeleteProduct();
 
     const filteredProducts = products?.filter(product =>

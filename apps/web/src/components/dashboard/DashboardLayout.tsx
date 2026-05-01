@@ -19,8 +19,10 @@ import {
     UserCog,
     ArrowRightLeft,
     Store,
+    LogOut,
 } from 'lucide-react';
 import { Logo } from '../ui/Logo';
+import { useAuth } from '@/context/AuthContext';
 
 interface DashboardLayoutProps {
     children: ReactNode;
@@ -77,6 +79,7 @@ const flattenedNavigation = navigationGroups.flatMap(group => group.items);
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
     const location = useLocation();
+    const { user, logout } = useAuth();
 
     const isImpersonating = localStorage.getItem('impersonating') === 'true';
 
@@ -145,18 +148,27 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                         ))}
                     </nav>
 
-                    {/* User Info */}
+                    {/* User Info + Logout */}
                     <div className="p-4 border-t border-gray-200">
-                        <div className="flex items-center">
+                        <div className="flex items-center gap-2">
                             <div className="flex-shrink-0">
                                 <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
-                                    <span className="text-sm font-medium text-white">A</span>
+                                    <span className="text-sm font-medium text-white">
+                                        {(user?.name || user?.email || 'A').charAt(0).toUpperCase()}
+                                    </span>
                                 </div>
                             </div>
-                            <div className="ml-3">
-                                <p className="text-sm font-medium text-gray-700">Admin</p>
-                                <p className="text-xs text-gray-500">Tenant 1</p>
+                            <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium text-gray-700 truncate">{user?.name || user?.email}</p>
+                                <p className="text-xs text-gray-500 capitalize">{user?.role?.replace('_', ' ').toLowerCase()}</p>
                             </div>
+                            <button
+                                onClick={logout}
+                                title="Cerrar sesión"
+                                className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                            >
+                                <LogOut className="w-4 h-4" />
+                            </button>
                         </div>
                     </div>
                 </div>
