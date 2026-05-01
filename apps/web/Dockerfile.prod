@@ -1,27 +1,27 @@
 # Build stage
 FROM node:20-alpine AS builder
 
-WORKDIR /app
+# Copy shared package — vite aliases @nexopos/shared to this local path
+COPY packages/shared /app/packages/shared
 
-# Copy root workspace files
-COPY package.json package-lock.json ./
-# Copy all workspace package.json files so npm workspaces resolves correctly
-COPY apps/web/package.json ./apps/web/
-COPY apps/api/package.json ./apps/api/
-COPY packages/shared/package.json ./packages/shared/
+# Install web app deps in isolation (no workspace hoisting issues)
+WORKDIR /app/apps/web
+COPY apps/web/package.json ./
 
-# Force development mode so npm installs devDependencies (tsc, vite, typescript)
-# regardless of any NODE_ENV set in the host environment
+# Remove @nexopos/shared workspace dep; vite resolves it via local alias in vite.config.ts
+RUN node -e "const fs=require('fs'); const p=JSON.parse(fs.readFileSync('package.json','utf8')); delete p.dependencies['@nexopos/shared']; fs.writeFileSync('package.json',JSON.stringify(p,null,2));"
+
 ENV NODE_ENV=development
 RUN npm install
 
-# Copy the rest of the application
-COPY apps/web ./apps/web
-COPY packages/shared ./packages/shared
+# Copy source files
+COPY apps/web/src ./src
+COPY apps/web/public ./public
+COPY apps/web/index.html apps/web/vite.config.ts apps/web/tailwind.config.js apps/web/postcss.config.js ./
+COPY apps/web/tsconfig.json apps/web/tsconfig.app.json apps/web/tsconfig.node.json ./
 
-# Vite uses esbuild internally for TS transpilation — skip tsc type-check entirely
-WORKDIR /app/apps/web
-RUN node /app/node_modules/vite/bin/vite.js build
+# Skip tsc type-check; vite uses esbuild for TS transpilation
+RUN ./node_modules/.bin/vite build
 
 # Production stage (Nginx)
 FROM nginx:alpine AS runner
