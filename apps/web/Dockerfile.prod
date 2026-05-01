@@ -14,14 +14,15 @@ COPY packages/shared/package.json ./packages/shared/
 # regardless of any NODE_ENV set in the host environment
 ENV NODE_ENV=development
 RUN npm install
-# Global install guarantees tsc/vite are in /usr/local/bin regardless of workspace hoisting
-RUN npm install -g typescript vite
 
 # Copy the rest of the application
 COPY apps/web ./apps/web
 COPY packages/shared ./packages/shared
 
-RUN npm run build -w apps/web
+# Run from web app dir; call node directly on the scripts to bypass .bin symlink/PATH issues
+WORKDIR /app/apps/web
+RUN node /app/node_modules/typescript/bin/tsc -b && \
+    node /app/node_modules/vite/bin/vite.js build
 
 # Production stage (Nginx)
 FROM nginx:alpine AS runner
