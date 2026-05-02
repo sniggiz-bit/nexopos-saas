@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { startOfDay, startOfMonth } from 'date-fns';
+import { startOfDay, endOfDay, startOfMonth } from 'date-fns';
 
 @Injectable()
 export class DashboardService {
@@ -8,6 +8,7 @@ export class DashboardService {
 
   async getStats(tenantId: string, branchId: string = 'branch-1') {
     const today = startOfDay(new Date());
+    const todayEnd = endOfDay(new Date());
     const firstDayOfMonth = startOfMonth(new Date());
 
     // 1. Total Products (Active)
@@ -26,6 +27,7 @@ export class DashboardService {
         status: 'COMPLETED',
         createdAt: {
           gte: today,
+          lte: todayEnd,
         },
       },
       _sum: {
