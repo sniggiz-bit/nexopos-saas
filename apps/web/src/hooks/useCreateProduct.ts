@@ -17,6 +17,7 @@ interface CreateProductData {
     isActive: boolean;
     initialStock?: number;
     tenantId: string;
+    branchId?: string;
     priceTiers?: PriceTier[];
 }
 

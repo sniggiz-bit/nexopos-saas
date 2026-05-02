@@ -180,7 +180,7 @@ export class ProductsService {
       '[ProductsService] Service starting with DTO:',
       JSON.stringify(createProductDto, null, 2),
     );
-    const { tenantId, barcode, initialStock, priceTiers, ...productData } =
+    const { tenantId, barcode, initialStock, priceTiers, branchId, ...productData } =
       createProductDto;
 
     // Validate barcode uniqueness per tenant if provided
@@ -214,26 +214,19 @@ export class ProductsService {
         isActive: productData.isActive ?? true,
         // If initialStock is provided, create inventory entry in transaction (implicit in nested create)
         inventory: {
-          create: initialStock
-            ? [
-              {
-                branchId: 'branch-1', // Default branch
-                quantity: new Prisma.Decimal(initialStock),
-              },
-            ]
+          create: initialStock && branchId
+            ? [{ branchId, quantity: new Prisma.Decimal(initialStock) }]
             : [],
         },
         stockMovements: {
-          create: initialStock
-            ? [
-              {
-                branchId: 'branch-1',
+          create: initialStock && branchId
+            ? [{
+                branchId,
                 quantity: new Prisma.Decimal(initialStock),
                 type: 'INITIAL',
                 balance: new Prisma.Decimal(initialStock),
                 reference: 'Inventario Inicial',
-              },
-            ]
+              }]
             : [],
         },
         priceTiers: priceTiers

@@ -1,0 +1,51 @@
+import {
+  Controller, Post, UploadedFile, UseGuards, UseInterceptors,
+  BadRequestException,
+} from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import { extname, join } from 'path';
+import { existsSync, mkdirSync } from 'fs';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+
+const UPLOAD_DIR = join(process.cwd(), '..', '..', 'uploads', 'products');
+const MAX_SIZE   = 5 * 1024 * 1024; // 5 MB
+const ALLOWED    = ['.jpg', '.jpeg', '.png', '.webp', '.gif'];
+
+function ensureDir(dir: string) {
+  if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
+}
+
+@Controller('uploads')
+@UseGuards(JwtAuthGuard)
+export class UploadsController {
+
+  @Post('image')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      limits:  { fileSize: MAX_SIZE },
+      storage: diskStorage({
+        destination: (_req, _file, cb) => {
+          ensureDir(UPLOAD_DIR);
+          cb(null, UPLOAD_DIR);
+        },
+        filename: (_req, file, cb) => {
+          const unique = `${Date.now()}-${Math.round(Math.random() * 1e6)}`;
+          cb(null, `${unique}${extname(file.originalname).toLowerCase()}`);
+        },
+      }),
+      fileFilter: (_req, file, cb) => {
+        const ext = extname(file.originalname).toLowerCase();
+        if (!ALLOWED.includes(ext)) {
+          return cb(new BadRequestException(`Formato no permitido: ${ext}. Usa JPG, PNG o WebP.`), false);
+        }
+        cb(null, true);
+      },
+    }),
+  )
+  uploadImage(@UploadedFile() file: Express.Multer.File) {
+    if (!file) throw new BadRequestException('No se recibió ningún archivo');
+    const url = `/api/static/products/${file.filename}`;
+    return { url, filename: file.filename, size: file.size };
+  }
+}

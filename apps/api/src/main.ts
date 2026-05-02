@@ -1,5 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe, Catch, ExceptionFilter, ArgumentsHost, HttpException } from '@nestjs/common';
+import { NestExpressApplication } from '@nestjs/platform-express';
+import { join } from 'path';
 import { AppModule } from './app.module';
 
 @Catch()
@@ -31,8 +33,12 @@ class AllExceptionsFilter implements ExceptionFilter {
 }
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
   app.setGlobalPrefix('api');
+
+  // Servir archivos subidos como estáticos en /api/static/
+  const uploadsPath = join(process.cwd(), '..', '..', 'uploads');
+  app.useStaticAssets(uploadsPath, { prefix: '/api/static' });
 
   app.enableCors({
     origin: [
