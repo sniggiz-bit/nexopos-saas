@@ -14,6 +14,7 @@ RUN npm ci
 
 # Copy sources needed for Prisma generation
 COPY apps/api/prisma ./apps/api/prisma
+COPY apps/api/prisma.config.ts ./apps/api/prisma.config.ts
 COPY packages/shared ./packages/shared
 
 # Generate Prisma Client (usa binario local, evita que npx contacte npm registry)
@@ -41,6 +42,7 @@ COPY apps/api/dist ./apps/api/dist
 
 # Copy Prisma files and generated client from builder
 COPY apps/api/prisma ./apps/api/prisma
+COPY apps/api/prisma.config.ts ./apps/api/prisma.config.ts
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 
 # Copy shared package source (needed at runtime for workspace resolution)
