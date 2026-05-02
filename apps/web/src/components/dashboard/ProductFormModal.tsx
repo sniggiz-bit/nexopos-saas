@@ -92,8 +92,9 @@ export function ProductFormModal({ isOpen, onClose, initialData }: ProductFormMo
                 headers: { 'Content-Type': 'multipart/form-data' },
             });
             setFormData(prev => ({ ...prev, image: data.url }));
-        } catch {
-            toast.error('Error al subir la imagen. Verifica el formato (JPG, PNG, WebP).');
+        } catch (err: any) {
+            const msg = err?.response?.data?.message || err?.message || 'Error al subir la imagen';
+            toast.error(msg);
         } finally {
             setUploadingImage(false);
         }

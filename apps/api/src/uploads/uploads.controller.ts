@@ -1,12 +1,11 @@
 import {
-  Controller, Post, UploadedFile, UseGuards, UseInterceptors,
+  Controller, Post, UploadedFile, UseInterceptors,
   BadRequestException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname, join } from 'path';
 import { existsSync, mkdirSync } from 'fs';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 const UPLOAD_DIR = join(process.cwd(), '..', '..', 'uploads', 'products');
 const MAX_SIZE   = 5 * 1024 * 1024; // 5 MB
@@ -17,7 +16,6 @@ function ensureDir(dir: string) {
 }
 
 @Controller('uploads')
-@UseGuards(JwtAuthGuard)
 export class UploadsController {
 
   @Post('image')
