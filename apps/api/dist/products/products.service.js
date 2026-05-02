@@ -141,7 +141,7 @@ let ProductsService = class ProductsService {
     }
     async create(createProductDto) {
         console.log('[ProductsService] Service starting with DTO:', JSON.stringify(createProductDto, null, 2));
-        const { tenantId, barcode, initialStock, priceTiers, ...productData } = createProductDto;
+        const { tenantId, barcode, initialStock, priceTiers, branchId, ...productData } = createProductDto;
         if (barcode) {
             const existingProduct = await this.prisma.product.findFirst({
                 where: {
@@ -164,26 +164,19 @@ let ProductsService = class ProductsService {
                 unitType: productData.unitType ?? 'UNIT',
                 isActive: productData.isActive ?? true,
                 inventory: {
-                    create: initialStock
-                        ? [
-                            {
-                                branchId: 'branch-1',
-                                quantity: new client_1.Prisma.Decimal(initialStock),
-                            },
-                        ]
+                    create: initialStock && branchId
+                        ? [{ branchId, quantity: new client_1.Prisma.Decimal(initialStock) }]
                         : [],
                 },
                 stockMovements: {
-                    create: initialStock
-                        ? [
-                            {
-                                branchId: 'branch-1',
+                    create: initialStock && branchId
+                        ? [{
+                                branchId,
                                 quantity: new client_1.Prisma.Decimal(initialStock),
                                 type: 'INITIAL',
                                 balance: new client_1.Prisma.Decimal(initialStock),
                                 reference: 'Inventario Inicial',
-                            },
-                        ]
+                            }]
                         : [],
                 },
                 priceTiers: priceTiers
