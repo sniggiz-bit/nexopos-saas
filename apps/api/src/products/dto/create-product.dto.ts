@@ -81,4 +81,8 @@ export class CreateProductDto {
   @IsOptional()
   @IsString()
   tenantId: string;
+
+  @IsOptional()
+  @IsString()
+  branchId?: string;
 }

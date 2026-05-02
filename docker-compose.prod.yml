@@ -26,6 +26,8 @@ services:
       JWT_SECRET: ${JWT_SECRET}
     env_file:
       - .env
+    volumes:
+      - ./uploads:/app/uploads
     depends_on:
       - postgres
     networks:

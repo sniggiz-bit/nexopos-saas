@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { X } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { X, Upload, ImageIcon, Loader2 } from 'lucide-react';
 import { useCreateProduct } from '../../hooks/useCreateProduct';
 import { useUpdateProduct } from '../../hooks/useUpdateProduct';
 import { useCategories } from '../../hooks/useCategories';
@@ -7,6 +7,7 @@ import { useBrands } from '../../hooks/useBrands';
 import toast from 'react-hot-toast';
 import type { Product } from '../../api/types';
 import { useAuth } from '../../context/AuthContext';
+import { apiClient } from '../../api/client';
 
 interface ProductFormModalProps {
     isOpen: boolean;
@@ -31,7 +32,8 @@ export function ProductFormModal({ isOpen, onClose, initialData }: ProductFormMo
         isActive: true,
     });
     const [priceTiers, setPriceTiers] = useState<{ minQuantity: string; unitPrice: string }[]>([]);
-
+    const [uploadingImage, setUploadingImage] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     const createProduct = useCreateProduct();
     const updateProduct = useUpdateProduct();
@@ -79,6 +81,23 @@ export function ProductFormModal({ isOpen, onClose, initialData }: ProductFormMo
 
         }
     }, [initialData, isOpen]);
+
+    const handleImageFile = async (file: File) => {
+        if (!file) return;
+        setUploadingImage(true);
+        try {
+            const form = new FormData();
+            form.append('file', file);
+            const { data } = await apiClient.post<{ url: string }>('/uploads/image', form, {
+                headers: { 'Content-Type': 'multipart/form-data' },
+            });
+            setFormData(prev => ({ ...prev, image: data.url }));
+        } catch {
+            toast.error('Error al subir la imagen. Verifica el formato (JPG, PNG, WebP).');
+        } finally {
+            setUploadingImage(false);
+        }
+    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -138,6 +157,7 @@ export function ProductFormModal({ isOpen, onClose, initialData }: ProductFormMo
                     image: formData.image || undefined,
                     isActive: formData.isActive,
                     tenantId: user?.tenantId ?? '',
+                    branchId: user?.branchId ?? undefined,
                     priceTiers: parsedTiers.length > 0 ? parsedTiers : undefined,
                 });
 
@@ -384,18 +404,64 @@ export function ProductFormModal({ isOpen, onClose, initialData }: ProductFormMo
                         </div>
                     </div>
 
-                    {/* Image URL */}
+                    {/* Image Upload */}
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                            URL de Imagen
+                            Imagen del Producto
                         </label>
-                        <input
-                            type="text"
-                            value={formData.image}
-                            onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            placeholder="https://ejemplo.com/imagen.jpg"
-                        />
+                        <div className="flex items-start gap-3">
+                            {/* Preview */}
+                            <div className="w-20 h-20 rounded-lg border-2 border-dashed border-gray-200 flex items-center justify-center bg-gray-50 shrink-0 overflow-hidden">
+                                {formData.image
+                                    ? <img src={formData.image} alt="preview" className="w-full h-full object-cover rounded-lg" />
+                                    : <ImageIcon className="w-7 h-7 text-gray-300" />
+                                }
+                            </div>
+
+                            <div className="flex-1 space-y-2">
+                                {/* File picker */}
+                                <input
+                                    ref={fileInputRef}
+                                    type="file"
+                                    accept="image/jpeg,image/png,image/webp,image/gif"
+                                    className="hidden"
+                                    onChange={(e) => {
+                                        const file = e.target.files?.[0];
+                                        if (file) handleImageFile(file);
+                                        e.target.value = '';
+                                    }}
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => fileInputRef.current?.click()}
+                                    disabled={uploadingImage}
+                                    className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-indigo-600 bg-indigo-50 border border-indigo-200 rounded-lg hover:bg-indigo-100 transition-colors disabled:opacity-50"
+                                >
+                                    {uploadingImage
+                                        ? <><Loader2 className="w-4 h-4 animate-spin" /> Subiendo...</>
+                                        : <><Upload className="w-4 h-4" /> Subir imagen</>
+                                    }
+                                </button>
+
+                                {/* URL manual como fallback */}
+                                <input
+                                    type="text"
+                                    value={formData.image}
+                                    onChange={(e) => setFormData({ ...formData, image: e.target.value })}
+                                    className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-lg text-gray-500 focus:ring-1 focus:ring-blue-400"
+                                    placeholder="O pega una URL externa..."
+                                />
+                                {formData.image && (
+                                    <button
+                                        type="button"
+                                        onClick={() => setFormData({ ...formData, image: '' })}
+                                        className="text-xs text-red-500 hover:underline"
+                                    >
+                                        Quitar imagen
+                                    </button>
+                                )}
+                            </div>
+                        </div>
                     </div>
 
                     {/* Stock and Min Stock */}
