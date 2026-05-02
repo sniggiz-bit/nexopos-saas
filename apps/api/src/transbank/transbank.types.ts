@@ -29,3 +29,14 @@ export interface PaymentProviderStatus {
   port?: string;
   terminalId?: string;
 }
+
+export interface TransbankBranchSettings {
+  comPort:   string;
+  baudRate:  number;
+  mockMode:  boolean;
+  agentPort: number;
+}
+
+export function defaultTransbankSettings(): TransbankBranchSettings {
+  return { comPort: 'COM3', baudRate: 115200, mockMode: false, agentPort: 7777 };
+}

@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { RecordTransactionDto } from './dto/record-transaction.dto';
+import { TransbankBranchSettings, defaultTransbankSettings } from './transbank.types';
 
 @Injectable()
 export class TransbankService {
@@ -77,5 +78,26 @@ export class TransbankService {
       where: { orderId },
       data:  { saleId },
     });
+  }
+
+  async getConfig(branchId: string) {
+    const branch = await this.prisma.branch.findUnique({
+      where:  { id: branchId },
+      select: { id: true, name: true, transbankSettings: true },
+    });
+    return {
+      branchId: branch?.id,
+      branchName: branch?.name,
+      settings: (branch?.transbankSettings as TransbankBranchSettings | null) ?? defaultTransbankSettings(),
+    };
+  }
+
+  async saveConfig(branchId: string, settings: TransbankBranchSettings) {
+    await this.prisma.branch.update({
+      where: { id: branchId },
+      data:  { transbankSettings: settings as any },
+    });
+    this.logger.log(`Transbank config saved for branch ${branchId}: port=${settings.comPort}`);
+    return { ok: true };
   }
 }

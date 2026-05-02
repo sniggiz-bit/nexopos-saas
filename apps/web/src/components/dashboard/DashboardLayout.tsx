@@ -4,7 +4,7 @@ import {
     LayoutDashboard, Package, Warehouse, FolderTree, Tag,
     Settings, Users, FileText, CreditCard, AlertTriangle,
     BarChart3, History, ShoppingBag, Truck, ShoppingCart,
-    UserCog, ArrowRightLeft, Store, LogOut,
+    UserCog, ArrowRightLeft, Store, LogOut, Wifi,
 } from 'lucide-react';
 import { Logo } from '../ui/Logo';
 import { useAuth } from '@/context/AuthContext';
@@ -56,6 +56,7 @@ const navigationGroups = [
             { name: 'Créditos',       href: '/dashboard/credits',               icon: CreditCard },
             { name: 'Tesorería',      href: '/dashboard/treasury',              icon: BarChart3 },
             { name: 'Configuración',  href: '/dashboard/settings',              icon: Settings },
+            { name: 'Transbank',      href: '/dashboard/transbank',             icon: Wifi },
         ],
     },
 ];

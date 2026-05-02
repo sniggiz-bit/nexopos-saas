@@ -36,3 +36,29 @@ export async function getTransactionByOrderId(orderId: string) {
   const { data } = await apiClient.get(`/transbank/order/${orderId}`);
   return data;
 }
+
+export interface TransbankBranchSettings {
+  comPort:   string;
+  baudRate:  number;
+  mockMode:  boolean;
+  agentPort: number;
+}
+
+export interface TransbankConfigResponse {
+  branchId:   string;
+  branchName: string;
+  settings:   TransbankBranchSettings;
+}
+
+export async function getTransbankConfig(branchId: string): Promise<TransbankConfigResponse> {
+  const { data } = await apiClient.get(`/transbank/config/${branchId}`);
+  return data;
+}
+
+export async function saveTransbankConfig(
+  branchId: string,
+  settings: TransbankBranchSettings,
+): Promise<{ ok: boolean }> {
+  const { data } = await apiClient.patch(`/transbank/config/${branchId}`, settings);
+  return data;
+}
