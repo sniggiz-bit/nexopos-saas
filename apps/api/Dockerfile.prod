@@ -17,9 +17,9 @@ COPY apps/api/prisma ./apps/api/prisma
 COPY apps/api/prisma.config.ts ./apps/api/prisma.config.ts
 COPY packages/shared ./packages/shared
 
-# Generate Prisma Client (usa binario local, evita que npx contacte npm registry)
+# Generate Prisma Client — busca el binario en root o workspace según donde npm lo haya instalado
 WORKDIR /app/apps/api
-RUN /app/node_modules/.bin/prisma generate
+RUN node /app/node_modules/prisma/build/index.js generate
 
 # Production stage
 FROM node:20-alpine AS runner
