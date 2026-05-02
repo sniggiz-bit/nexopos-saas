@@ -46,7 +46,8 @@ jobs:
             git checkout main
             git pull origin main
             docker compose -f docker-compose.prod.yml build --no-cache api
-            docker compose -f docker-compose.prod.yml up -d --force-recreate api
+            docker rm -f nexopos_api 2>/dev/null || true
+            docker compose -f docker-compose.prod.yml up -d api
             echo "✓ API deployed"
 
   deploy-web:
@@ -70,5 +71,6 @@ jobs:
             git checkout main
             git pull origin main
             docker compose -f docker-compose.prod.yml build --no-cache web
-            docker compose -f docker-compose.prod.yml up -d --force-recreate web
+            docker rm -f nexopos_web 2>/dev/null || true
+            docker compose -f docker-compose.prod.yml up -d web
             echo "✓ Web deployed"
