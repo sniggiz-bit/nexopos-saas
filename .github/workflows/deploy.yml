@@ -45,8 +45,8 @@ jobs:
             git fetch origin
             git checkout main
             git pull origin main
-            docker build --no-cache --network=host -t nexoposcl-api:latest -f apps/api/Dockerfile.prod .
-            docker-compose -f docker-compose.prod.yml up -d --no-build --force-recreate api
+            docker compose -f docker-compose.prod.yml build --no-cache api
+            docker compose -f docker-compose.prod.yml up -d --force-recreate api
             echo "✓ API deployed"
 
   deploy-web:
@@ -69,6 +69,6 @@ jobs:
             git fetch origin
             git checkout main
             git pull origin main
-            docker build --no-cache --network=host -t nexoposcl-web:latest -f apps/web/Dockerfile.prod .
-            docker-compose -f docker-compose.prod.yml up -d --no-build --force-recreate web
+            docker compose -f docker-compose.prod.yml build --no-cache web
+            docker compose -f docker-compose.prod.yml up -d --force-recreate web
             echo "✓ Web deployed"

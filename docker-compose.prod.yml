@@ -18,12 +18,14 @@ services:
     build:
       context: .
       dockerfile: apps/api/Dockerfile.prod
+      network: host
     container_name: nexopos_api
     restart: always
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-nexopos_db}
       PORT: 3000
       JWT_SECRET: ${JWT_SECRET}
+      TZ: America/Santiago
     env_file:
       - .env
     volumes:
@@ -37,6 +39,7 @@ services:
     build:
       context: .
       dockerfile: apps/web/Dockerfile.prod
+      network: host
     container_name: nexopos_web
     restart: always
     ports:
