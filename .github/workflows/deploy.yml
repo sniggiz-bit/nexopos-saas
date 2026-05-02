@@ -45,7 +45,7 @@ jobs:
             git fetch origin
             git checkout main
             git pull origin main
-            docker build --network=host -t nexoposcl-api:latest -f apps/api/Dockerfile.prod .
+            docker build --no-cache --network=host -t nexoposcl-api:latest -f apps/api/Dockerfile.prod .
             docker-compose -f docker-compose.prod.yml up -d --no-build --force-recreate api
             echo "✓ API deployed"
 

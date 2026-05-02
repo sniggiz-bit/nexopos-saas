@@ -16,9 +16,9 @@ RUN npm ci
 COPY apps/api/prisma ./apps/api/prisma
 COPY packages/shared ./packages/shared
 
-# Generate Prisma Client
+# Generate Prisma Client (usa binario local, evita que npx contacte npm registry)
 WORKDIR /app/apps/api
-RUN npx prisma generate
+RUN /app/node_modules/.bin/prisma generate
 
 # Production stage
 FROM node:20-alpine AS runner
