@@ -1,7 +1,8 @@
-import { Controller, Post, Get, Body, Param, UseGuards } from '@nestjs/common';
+import { Controller, Post, Get, Patch, Body, Param, UseGuards } from '@nestjs/common';
 import { TransbankService } from './transbank.service';
 import { RecordTransactionDto } from './dto/record-transaction.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import type { TransbankBranchSettings } from './transbank.types';
 
 @Controller('transbank')
 @UseGuards(JwtAuthGuard)
@@ -30,5 +31,19 @@ export class TransbankController {
   @Post('link-sale')
   linkToSale(@Body() body: { orderId: string; saleId: string }) {
     return this.transbankService.linkToSale(body.orderId, body.saleId);
+  }
+
+  // Configuración del terminal por sucursal
+  @Get('config/:branchId')
+  getConfig(@Param('branchId') branchId: string) {
+    return this.transbankService.getConfig(branchId);
+  }
+
+  @Patch('config/:branchId')
+  saveConfig(
+    @Param('branchId') branchId: string,
+    @Body() body: TransbankBranchSettings,
+  ) {
+    return this.transbankService.saveConfig(branchId, body);
   }
 }

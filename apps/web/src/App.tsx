@@ -33,6 +33,7 @@ import { SuppliersPage } from './pages/dashboard/SuppliersPage';
 import { PurchasesPage } from './pages/dashboard/PurchasesPage';
 import { TransfersPage } from './pages/dashboard/transfers/TransfersPage';
 import { UsersPage } from './pages/dashboard/users/UsersPage';
+import { TransbankConfigPage } from './pages/dashboard/TransbankConfigPage';
 import { LoginPage } from './pages/LoginPage';
 import { LandingPage } from './pages/LandingPage';
 import { RegisterPage } from './pages/RegisterPage';
@@ -148,6 +149,7 @@ function App() {
                 <Route path="/dashboard/suppliers" element={<SuppliersPage />} />
                 <Route path="/dashboard/purchases" element={<PurchasesPage />} />
                 <Route path="/dashboard/transfers" element={<TransfersPage />} />
+                <Route path="/dashboard/transbank" element={<TransbankConfigPage />} />
               </Route>
 
               {/* Default Redirect */}
