@@ -20,6 +20,7 @@ let DashboardService = class DashboardService {
     }
     async getStats(tenantId, branchId = 'branch-1') {
         const today = (0, date_fns_1.startOfDay)(new Date());
+        const todayEnd = (0, date_fns_1.endOfDay)(new Date());
         const firstDayOfMonth = (0, date_fns_1.startOfMonth)(new Date());
         const totalProducts = await this.prisma.product.count({
             where: {
@@ -34,6 +35,7 @@ let DashboardService = class DashboardService {
                 status: 'COMPLETED',
                 createdAt: {
                     gte: today,
+                    lte: todayEnd,
                 },
             },
             _sum: {

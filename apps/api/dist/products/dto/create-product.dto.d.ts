@@ -18,4 +18,5 @@ export declare class CreateProductDto {
     initialStock?: number;
     priceTiers?: PriceTierDto[];
     tenantId: string;
+    branchId?: string;
 }
