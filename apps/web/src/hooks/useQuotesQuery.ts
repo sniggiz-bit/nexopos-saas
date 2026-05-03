@@ -11,5 +11,6 @@ export function useQuotes() {
         queryKey: ['quotes', tenantId],
         queryFn: () => getQuotes(tenantId),
         enabled: !!tenantId,
+        refetchOnMount: 'always',
     });
 }

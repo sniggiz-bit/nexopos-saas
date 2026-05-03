@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { formatPrice } from '@/utils/formatters';
 
 export function QuotesPage() {
-    const { data: quotesData, isLoading, refetch } = useQuotes();
+    const { data: quotesData, isLoading, isError, refetch } = useQuotes();
     const quotes = Array.isArray(quotesData) ? quotesData : [];
     const convertQuote = useConvertQuote();
     const navigate = useNavigate();
@@ -22,7 +22,7 @@ export function QuotesPage() {
                 hour: '2-digit',
                 minute: '2-digit',
             }).format(new Date(dateString));
-        } catch (error) {
+        } catch (_e) {
             return 'Fecha inválida';
         }
     };
@@ -35,8 +35,8 @@ export function QuotesPage() {
         try {
             await convertQuote.mutateAsync(id);
             refetch();
-        } catch (error) {
-            console.error('Error converting quote:', error);
+        } catch (_error) {
+            console.error('Error converting quote:', _error);
         }
     };
 
@@ -65,6 +65,8 @@ export function QuotesPage() {
                         <tbody className="bg-white divide-y divide-gray-200">
                             {isLoading ? (
                                 <tr><td colSpan={5} className="px-6 py-4 text-center text-gray-500">Cargando cotizaciones...</td></tr>
+                            ) : isError ? (
+                                <tr><td colSpan={5} className="px-6 py-4 text-center text-red-500">Error al cargar cotizaciones. <button onClick={() => refetch()} className="underline">Reintentar</button></td></tr>
                             ) : !quotes || quotes.length === 0 ? (
                                 <tr><td colSpan={5} className="px-6 py-4 text-center text-gray-500">No se encontraron cotizaciones</td></tr>
                             ) : (
