@@ -36,6 +36,9 @@ async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
   app.setGlobalPrefix('api');
 
+  // Disable ETags so browsers never get 304 on dynamic API data
+  app.set('etag', false);
+
   // Servir archivos subidos como estáticos en /api/static/
   const uploadsPath = join(process.cwd(), '..', '..', 'uploads');
   app.useStaticAssets(uploadsPath, { prefix: '/api/static' });
