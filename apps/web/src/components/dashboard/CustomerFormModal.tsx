@@ -5,7 +5,7 @@ import { useCreateCustomer } from '../../hooks/useCustomers';
 import { useUpdateCustomer } from '../../hooks/useCustomers';
 import toast from 'react-hot-toast';
 import type { Customer } from '../../api/types';
-import { formatRut } from '@nexopos/shared';
+import { formatRut, validateRut } from '@nexopos/shared';
 import { useAuth } from '../../context/AuthContext';
 
 interface CustomerFormModalProps {
@@ -87,6 +87,11 @@ export function CustomerFormModal({ isOpen, onClose, initialData }: CustomerForm
             return;
         }
 
+        if (!validateRut(formData.rut)) {
+            toast.error('El RUT ingresado no es válido. Verifica el dígito verificador.');
+            return;
+        }
+
         try {
             if (initialData) {
                 await updateCustomer.mutateAsync({
@@ -119,7 +124,9 @@ export function CustomerFormModal({ isOpen, onClose, initialData }: CustomerForm
             }
         } catch (error: any) {
             const action = initialData ? 'actualizar' : 'crear';
-            toast.error(error.response?.data?.message || `Error al ${action} cliente`);
+            const msg = error.response?.data?.message;
+            const errorText = Array.isArray(msg) ? msg[0] : (msg || `Error al ${action} cliente`);
+            toast.error(errorText);
         }
     };
 
@@ -161,10 +168,19 @@ export function CustomerFormModal({ isOpen, onClose, initialData }: CustomerForm
                                     handleRutLookup(formatted);
                                 }
                             }}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                            className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 ${
+                                formData.rut && formData.rut.includes('-')
+                                    ? validateRut(formData.rut)
+                                        ? 'border-green-400 bg-green-50'
+                                        : 'border-red-400 bg-red-50'
+                                    : 'border-gray-300'
+                            }`}
                             placeholder="12.345.678-9"
                             required
                         />
+                        {formData.rut && formData.rut.includes('-') && !validateRut(formData.rut) && (
+                            <p className="mt-1 text-xs text-red-600">RUT inválido — verifica el dígito verificador</p>
+                        )}
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Giro</label>
