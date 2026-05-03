@@ -6,6 +6,8 @@ import {
   Body,
   UseGuards,
   Query,
+  Request,
+  ForbiddenException,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { TenantsService } from './tenants.service';
@@ -31,8 +33,13 @@ export class TenantsController {
   @ApiOperation({ summary: 'Obtener un inquilino por ID' })
   @ApiResponse({ status: 200, description: 'Detalles del inquilino.' })
   @ApiResponse({ status: 404, description: 'Inquilino no encontrado.' })
+  @UseGuards(JwtAuthGuard)
   @Get(':id')
-  findOne(@Param('id') id: string) {
+  findOne(@Param('id') id: string, @Request() req: any) {
+    const isSuperAdmin = req.user?.role === 'SUPER_ADMIN';
+    if (!isSuperAdmin && req.user?.tenantId !== id) {
+      throw new ForbiddenException('Solo puedes acceder a los datos de tu propio tenant.');
+    }
     return this.tenantsService.findOne(id);
   }
 
