@@ -15,6 +15,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { usePrintSettings } from '@/hooks/usePrintSettings';
 import { printSaleAction } from './receipts/ReceiptRenderer';
+import { useTenant } from '@/hooks/useTenant';
 import { useEffect, useState, useMemo } from 'react';
 import { PaymentMethod, type PaymentRequestData } from '@/api/sales';
 import { Badge } from '@/components/ui/badge';
@@ -60,6 +61,7 @@ export function PaymentModal({
     const [hasAttemptedAutoPrint, setHasAttemptedAutoPrint] = useState(false);
     const [countdown, setCountdown] = useState(4);
     const { user } = useAuth();
+    const { data: tenant } = useTenant(user?.tenantId);
 
     // Payment Logic States
     const [paymentType, setPaymentType] = useState<PaymentType>('SINGLE');
@@ -105,9 +107,9 @@ export function PaymentModal({
     useEffect(() => {
         if (isSuccess && saleResult && autoPrint && !hasAttemptedAutoPrint) {
             setHasAttemptedAutoPrint(true);
-            printSaleAction(saleResult, defaultFormat);
+            printSaleAction(saleResult, defaultFormat, tenant);
         }
-    }, [isSuccess, saleResult, autoPrint, defaultFormat, hasAttemptedAutoPrint]);
+    }, [isSuccess, saleResult, autoPrint, defaultFormat, hasAttemptedAutoPrint, tenant]);
 
     // Auto-close countdown after success
     useEffect(() => {
@@ -252,7 +254,7 @@ export function PaymentModal({
                         {/* Reprint + format selector */}
                         <div className="flex gap-2">
                             <Button className="flex-1" variant="secondary"
-                                onClick={() => printSaleAction(saleResult, defaultFormat)}>
+                                onClick={() => printSaleAction(saleResult, defaultFormat, tenant)}>
                                 Reimprimir Ticket
                             </Button>
                             <select
