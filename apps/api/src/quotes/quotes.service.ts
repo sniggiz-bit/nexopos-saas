@@ -45,7 +45,7 @@ export class QuotesService {
   }
 
   async create(createQuoteDto: CreateQuoteDto) {
-    const { items, ...quoteData } = createQuoteDto;
+    const { items, issueDate, validUntil, ...quoteData } = createQuoteDto;
     const { subtotal, tax, total } = this.calculateTotals(items);
     const number = await this.generateQuoteNumber(createQuoteDto.tenantId);
 
@@ -56,6 +56,8 @@ export class QuotesService {
         subtotal,
         tax,
         total,
+        ...(issueDate && { issueDate: new Date(issueDate) }),
+        ...(validUntil && { validUntil: new Date(validUntil) }),
         items: {
           create: items.map((item) => ({
             productId: item.productId,

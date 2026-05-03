@@ -49,7 +49,7 @@ let QuotesService = class QuotesService {
         return `QT-${nextNumber.toString().padStart(4, '0')}`;
     }
     async create(createQuoteDto) {
-        const { items, ...quoteData } = createQuoteDto;
+        const { items, issueDate, validUntil, ...quoteData } = createQuoteDto;
         const { subtotal, tax, total } = this.calculateTotals(items);
         const number = await this.generateQuoteNumber(createQuoteDto.tenantId);
         return this.prisma.quote.create({
@@ -59,6 +59,8 @@ let QuotesService = class QuotesService {
                 subtotal,
                 tax,
                 total,
+                ...(issueDate && { issueDate: new Date(issueDate) }),
+                ...(validUntil && { validUntil: new Date(validUntil) }),
                 items: {
                     create: items.map((item) => ({
                         productId: item.productId,
