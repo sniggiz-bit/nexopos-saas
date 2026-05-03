@@ -28,7 +28,7 @@ interface CartProps {
 type Tab = 'cart' | 'presales';
 
 export function Cart({ onConfirm, onCheckoutClose, isProcessing, isSuccess, isError, saleResult }: CartProps) {
-    const { items, totals, clearCart, addItem, updateQuantity } = useCart();
+    const { items, totals, clearCart, addItem } = useCart();
     const { total, subtotal, totalDiscount, tax } = totals;
     const [activeTab, setActiveTab]     = useState<Tab>('cart');
     const [checkoutMode, setCheckoutMode] = useState(false);
@@ -82,14 +82,19 @@ export function Cart({ onConfirm, onCheckoutClose, isProcessing, isSuccess, isEr
             if (!confirm('¿Reemplazar carrito actual?')) return;
             clearCart();
         }
+        let restored = 0;
         quote.items.forEach(qItem => {
             if (qItem.product) {
-                addItem(qItem.product);
-                setTimeout(() => { updateQuantity(qItem.product!.id, qItem.quantity); }, 0);
+                addItem(qItem.product, Number(qItem.quantity) || 1);
+                restored++;
             }
         });
         setActiveTab('cart');
-        toast({ title: 'Preventa restaurada', description: 'Los productos han sido cargados al carrito.' });
+        if (restored > 0) {
+            toast({ title: 'Preventa restaurada', description: `${restored} producto${restored > 1 ? 's' : ''} cargado${restored > 1 ? 's' : ''} al carrito.` });
+        } else {
+            toast({ variant: 'destructive', title: 'Sin productos', description: 'No se encontraron productos en esta preventa.' });
+        }
     };
 
     const outerClass = 'relative flex flex-col h-full bg-background border-l border-border shadow-xl overflow-hidden';
@@ -149,7 +154,7 @@ export function Cart({ onConfirm, onCheckoutClose, isProcessing, isSuccess, isEr
                     </ScrollArea>
                 ) : (
                     <PresalesList
-                        quotes={quotes}
+                        quotes={pendingQuotes}
                         isLoading={isLoadingQuotes}
                         onRestore={handleRestorePresale}
                     />

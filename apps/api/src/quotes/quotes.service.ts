@@ -83,7 +83,9 @@ export class QuotesService {
       where: { tenantId },
       include: {
         customer: true,
-        items: true,
+        items: {
+          include: { product: true },
+        },
         user: true,
       },
       orderBy: { createdAt: 'desc' },
