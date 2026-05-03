@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { createQuote, CreateQuoteData, generateQuotePdf, convertQuote, updateQuote, deleteQuote } from '../api/quotes';
+import { createQuote, CreateQuoteData, generateQuotePdf, convertQuote, updateQuote, deleteQuote, markQuoteAccepted } from '../api/quotes';
 import { toast } from 'react-hot-toast';
 
 export function useCreateQuote() {
@@ -48,6 +48,16 @@ export function useConvertQuote() {
             console.error('Error converting quote:', error);
             toast.error(error.response?.data?.message || 'Error al convertir cotización');
         }
+    });
+}
+
+export function useMarkQuoteAccepted() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: (id: string) => markQuoteAccepted(id),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['quotes'] });
+        },
     });
 }
 

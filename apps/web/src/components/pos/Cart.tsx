@@ -8,7 +8,7 @@ import { CartItem } from './CartItem';
 import { Badge } from '@/components/ui/badge';
 import { PresalesList } from './PresalesList';
 import { useQuotes } from '@/hooks/useQuotesQuery';
-import { useDeleteQuote } from '@/hooks/useQuotes';
+import { useDeleteQuote, useMarkQuoteAccepted } from '@/hooks/useQuotes';
 import { Quote } from '@/api/types';
 import { useToast } from '@/hooks/use-toast';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -41,7 +41,17 @@ export function Cart({ onConfirm, onCheckoutClose, isProcessing, isSuccess, isEr
     const quotes        = Array.isArray(quotesData) ? quotesData : [];
     const pendingQuotes = quotes.filter(q => q.status === 'DRAFT' || q.status === 'SENT');
 
+    const [restoredQuoteId, setRestoredQuoteId] = useState<string | null>(null);
     const { mutate: deletePresale, isPending: isDeletingPresale, variables: deletingPresaleId } = useDeleteQuote();
+    const { mutate: acceptQuote } = useMarkQuoteAccepted();
+
+    // Auto-mark presale as ACCEPTED when sale is paid
+    useEffect(() => {
+        if (isSuccess && restoredQuoteId) {
+            acceptQuote(restoredQuoteId);
+            setRestoredQuoteId(null);
+        }
+    }, [isSuccess]);
 
     const isEmpty    = items.length === 0;
     const itemCount  = items.reduce((sum, i) => sum + (Number(i.quantity) || 0), 0);
@@ -85,6 +95,7 @@ export function Cart({ onConfirm, onCheckoutClose, isProcessing, isSuccess, isEr
             if (!confirm('¿Reemplazar carrito actual?')) return;
             clearCart();
         }
+        setRestoredQuoteId(quote.id);
         let restored = 0;
         quote.items.forEach(qItem => {
             if (qItem.product) {
