@@ -160,7 +160,7 @@ export class QuotesService {
 
     if (quote.status === QuoteStatus.ACCEPTED) {
       throw new BadRequestException(
-        'This quote has already been accepted and converted to a sale.',
+        'Esta cotización ya fue aceptada y convertida en venta.',
       );
     }
 
