@@ -27,7 +27,11 @@ let TenantsController = class TenantsController {
     async findAll(search) {
         return this.tenantsService.findAll(search);
     }
-    findOne(id) {
+    findOne(id, req) {
+        const isSuperAdmin = req.user?.role === 'SUPER_ADMIN';
+        if (!isSuperAdmin && req.user?.tenantId !== id) {
+            throw new common_1.ForbiddenException('Solo puedes acceder a los datos de tu propio tenant.');
+        }
         return this.tenantsService.findOne(id);
     }
     updateSettings(id, dto) {
@@ -55,10 +59,12 @@ __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Obtener un inquilino por ID' }),
     (0, swagger_1.ApiResponse)({ status: 200, description: 'Detalles del inquilino.' }),
     (0, swagger_1.ApiResponse)({ status: 404, description: 'Inquilino no encontrado.' }),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, common_1.Get)(':id'),
     __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", void 0)
 ], TenantsController.prototype, "findOne", null);
 __decorate([
