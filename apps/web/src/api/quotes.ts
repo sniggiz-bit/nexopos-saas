@@ -45,6 +45,10 @@ export async function convertQuote(id: string): Promise<any> {
     return response.data;
 }
 
+export async function deleteQuote(id: string): Promise<void> {
+    await apiClient.delete(`/quotes/${id}`);
+}
+
 export async function generateQuotePdf(id: string): Promise<Blob> {
     const response = await apiClient.get(`/quotes/${id}/pdf`, { responseType: 'blob' });
     return response.data;

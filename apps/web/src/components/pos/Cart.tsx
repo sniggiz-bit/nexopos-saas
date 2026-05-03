@@ -8,6 +8,7 @@ import { CartItem } from './CartItem';
 import { Badge } from '@/components/ui/badge';
 import { PresalesList } from './PresalesList';
 import { useQuotes } from '@/hooks/useQuotesQuery';
+import { useDeleteQuote } from '@/hooks/useQuotes';
 import { Quote } from '@/api/types';
 import { useToast } from '@/hooks/use-toast';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -39,6 +40,8 @@ export function Cart({ onConfirm, onCheckoutClose, isProcessing, isSuccess, isEr
     const { data: quotesData, isLoading: isLoadingQuotes } = useQuotes();
     const quotes        = Array.isArray(quotesData) ? quotesData : [];
     const pendingQuotes = quotes.filter(q => q.status === 'DRAFT' || q.status === 'SENT');
+
+    const { mutate: deletePresale, isPending: isDeletingPresale, variables: deletingPresaleId } = useDeleteQuote();
 
     const isEmpty    = items.length === 0;
     const itemCount  = items.reduce((sum, i) => sum + (Number(i.quantity) || 0), 0);
@@ -157,6 +160,8 @@ export function Cart({ onConfirm, onCheckoutClose, isProcessing, isSuccess, isEr
                         quotes={pendingQuotes}
                         isLoading={isLoadingQuotes}
                         onRestore={handleRestorePresale}
+                        onDelete={(id) => deletePresale(id)}
+                        deletingId={isDeletingPresale ? deletingPresaleId : null}
                     />
                 )}
             </div>
