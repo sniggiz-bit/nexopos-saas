@@ -139,22 +139,22 @@ export function ProductCard({ product, onAddToCart, viewMode = 'grid' }: Product
                     )}
                 </div>
 
-                {/* Center: avatar + name + sku */}
+                {/* Center: avatar/image + name + sku */}
                 <div className="flex-1 flex flex-col items-center justify-center gap-1.5 py-1">
-                    <div className={[
-                        'w-9 h-9 rounded-xl border flex items-center justify-center text-sm font-bold transition-all duration-200 overflow-hidden',
-                        added
-                            ? 'bg-success/10 border-success/30 text-success animate-pop-add'
-                            : 'bg-surface-raised border-border text-muted-foreground group-hover:bg-primary/10 group-hover:border-primary/20 group-hover:text-primary',
-                    ].join(' ')}>
-                        {added ? (
-                            <Check className="w-4 h-4" />
-                        ) : product.image ? (
+                    {product.image ? (
+                        <div className="w-16 h-16 rounded-xl overflow-hidden border border-border shrink-0">
                             <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
-                        ) : (
-                            product.name.charAt(0).toUpperCase()
-                        )}
-                    </div>
+                        </div>
+                    ) : (
+                        <div className={[
+                            'w-9 h-9 rounded-xl border flex items-center justify-center text-sm font-bold transition-all duration-200',
+                            added
+                                ? 'bg-success/10 border-success/30 text-success animate-pop-add'
+                                : 'bg-surface-raised border-border text-muted-foreground group-hover:bg-primary/10 group-hover:border-primary/20 group-hover:text-primary',
+                        ].join(' ')}>
+                            {added ? <Check className="w-4 h-4" /> : product.name.charAt(0).toUpperCase()}
+                        </div>
+                    )}
 
                     <h3 className="font-semibold text-foreground text-center leading-tight line-clamp-2 text-[13px] min-h-[2.25rem] w-full">
                         {product.name}
