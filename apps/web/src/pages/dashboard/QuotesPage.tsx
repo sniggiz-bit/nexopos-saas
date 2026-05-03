@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { DashboardLayout } from '../../components/dashboard/DashboardLayout';
 import { useQuotes } from '../../hooks/useQuotesQuery';
 import { useConvertQuote } from '../../hooks/useQuotes';
@@ -11,6 +12,7 @@ export function QuotesPage() {
     const quotes = Array.isArray(quotesData) ? quotesData : [];
     const convertQuote = useConvertQuote();
     const navigate = useNavigate();
+    const [convertingId, setConvertingId] = useState<string | null>(null);
 
     const formatDate = (dateString: string) => {
         if (!dateString) return 'N/A';
@@ -28,15 +30,19 @@ export function QuotesPage() {
     };
 
     const handleConvert = async (id: string) => {
+        if (convertingId) return;
         if (!confirm('¿Está seguro de convertir esta cotización en una venta pre-seleccionada?')) {
             return;
         }
 
+        setConvertingId(id);
         try {
             await convertQuote.mutateAsync(id);
             refetch();
         } catch (_error) {
-            console.error('Error converting quote:', _error);
+            // error shown by useConvertQuote hook toast
+        } finally {
+            setConvertingId(null);
         }
     };
 
@@ -95,11 +101,14 @@ export function QuotesPage() {
                                             {quote.status !== 'ACCEPTED' && (
                                                 <button
                                                     onClick={() => handleConvert(quote.id)}
-                                                    className="text-green-600 hover:text-green-900 inline-flex items-center p-2 rounded-full hover:bg-green-50"
+                                                    className="text-green-600 hover:text-green-900 inline-flex items-center p-2 rounded-full hover:bg-green-50 disabled:opacity-40 disabled:cursor-not-allowed"
                                                     title="Convertir a Venta"
-                                                    disabled={convertQuote.isPending}
+                                                    disabled={!!convertingId}
                                                 >
-                                                    <ShoppingCart className="w-4 h-4" />
+                                                    {convertingId === quote.id
+                                                        ? <div className="w-4 h-4 border-2 border-green-600 border-t-transparent rounded-full animate-spin" />
+                                                        : <ShoppingCart className="w-4 h-4" />
+                                                    }
                                                 </button>
                                             )}
                                         </td>
