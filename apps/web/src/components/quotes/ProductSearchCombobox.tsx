@@ -1,6 +1,7 @@
 import { useState, useCallback } from "react"
 import { Search } from "lucide-react"
 import { useProducts } from "@/hooks/useProducts"
+import { useAuth } from "@/context/AuthContext"
 import { Product } from "@/api/types"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -24,12 +25,11 @@ interface ProductSearchComboboxProps {
 }
 
 export function ProductSearchCombobox({ onSelect, className }: ProductSearchComboboxProps) {
+    const { user } = useAuth()
     const [open, setOpen] = useState(false)
     const [searchQuery, setSearchQuery] = useState("")
 
-    // Fetch all products. In a real large app we'd use server-side search with debounced query.
-    // For now we rely on Command's internal filtering or just list them all.
-    const { data: products = [] } = useProducts()
+    const { data: products = [] } = useProducts(user?.tenantId)
 
     const handleSelect = useCallback((product: Product) => {
         onSelect(product)

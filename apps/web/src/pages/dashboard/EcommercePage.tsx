@@ -203,7 +203,7 @@ export const EcommercePage = () => {
 const ProductVisibilityManager = () => {
     const { user } = useAuth();
     const [searchTerm, setSearchTerm] = useState('');
-    const { data: products, isLoading, refetch } = useProducts();
+    const { data: products, isLoading, refetch } = useProducts(user?.tenantId);
     const [localProducts, setLocalProducts] = useState<any[]>([]);
 
     useEffect(() => {
@@ -230,7 +230,7 @@ const ProductVisibilityManager = () => {
                 params: { tenantId: user?.tenantId }
             });
             toast.success('Producto actualizado');
-        } catch (error) {
+        } catch (_error) {
             toast.error('Error al actualizar');
             // Revert
             setLocalProducts(prev => prev.map(p => p.id === id ? { ...p, isPublic: currentStatus } : p));
@@ -251,7 +251,7 @@ const ProductVisibilityManager = () => {
             });
             toast.success(`Productos ${makePublic ? 'publicados' : 'ocultos'} correctamente`);
             refetch();
-        } catch (error) {
+        } catch (_error) {
             toast.error('Error al actualizar masivamente');
             refetch();
         }

@@ -4,6 +4,7 @@ import { usePurchases, useCreatePurchase } from '../../hooks/usePurchases';
 import { useSuppliers } from '../../hooks/useSuppliers';
 import { useBranches } from '../../hooks/useBranches';
 import { useProducts } from '../../hooks/useProducts';
+import { useAuth } from '../../context/AuthContext';
 import type { Product } from '../../api/types';
 import type { Purchase } from '../../api/purchases';
 import {
@@ -49,11 +50,12 @@ function StatusBadge({ status }: { status: string }) {
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export function PurchasesPage() {
+    const { user } = useAuth();
     const { data: purchases, isLoading: loadingPurchases } = usePurchases();
     const createPurchase = useCreatePurchase();
     const { data: suppliers } = useSuppliers();
     const { branches } = useBranches();
-    const { data: allProducts } = useProducts();
+    const { data: allProducts } = useProducts(user?.tenantId);
 
     const [showForm, setShowForm] = useState(false);
 

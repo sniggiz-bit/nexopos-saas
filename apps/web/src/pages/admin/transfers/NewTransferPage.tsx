@@ -3,7 +3,8 @@ import { ArrowLeft, ArrowRight, Search, Package } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useBranches } from '../../../hooks/useBranches';
 import { useTransfers, TransferItem } from '../../../hooks/useTransfers';
-import { useProducts } from '../../../hooks/useProducts'; // Assuming this exists
+import { useProducts } from '../../../hooks/useProducts';
+import { useAuth } from '../../../context/AuthContext';
 import { Button } from '../../../components/ui/button';
 import { Input } from '../../../components/ui/input';
 import { Label } from '../../../components/ui/label';
@@ -15,20 +16,10 @@ import { Card, CardContent } from '../../../components/ui/card';
 
 export default function NewTransferPage() {
     const navigate = useNavigate();
+    const { user } = useAuth();
     const { branches, loading: branchesLoading } = useBranches();
     const { createTransfer, loading: submitting } = useTransfers();
-    // Ideally use useProducts with search, but for now let's assume useProducts returns all or use search
-    // Actually, I need to fetch products to select. 
-    // I'll assume useProducts exists and works. If not, I'll need to implement a product search/fetcher here.
-    // Based on previous conversations, useProducts exists.
-
-    // I'll use a mocked list or fetch real products. 
-    // Use `useProducts` from `hooks/useProducts`.
-    const { data: products = [], refetch: fetchProducts } = useProducts();
-    // Wait, useProducts in `apps/web/src/hooks/useProducts.ts`
-
-    // Let's implement dynamic product fetching in the component if needed.
-    // For now I'll use a placeholder or basic fetch. 
+    const { data: products = [], refetch: fetchProducts } = useProducts(user?.tenantId);
 
     const [step, setStep] = useState(1);
     const [originBranchId, setOriginBranchId] = useState('');
