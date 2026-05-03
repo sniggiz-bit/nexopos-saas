@@ -15,6 +15,7 @@ import { useAuth } from '@/context/AuthContext';
 import type { Customer } from '@/api/types';
 import { usePrintSettings } from '@/hooks/usePrintSettings';
 import { printSaleAction } from './receipts/ReceiptRenderer';
+import { useTenant } from '@/hooks/useTenant';
 
 interface CheckoutPanelProps {
     subtotal: number;
@@ -40,6 +41,7 @@ export function CheckoutPanel({
     const [hasAttemptedAutoPrint, setHasAttemptedAutoPrint] = useState(false);
     const [countdown, setCountdown] = useState(4);
     const { user } = useAuth();
+    const { data: tenant } = useTenant(user?.tenantId);
 
     const [paymentType, setPaymentType] = useState<PaymentType>('SINGLE');
     const [singleMethod, setSingleMethod] = useState<string>(PaymentMethod.CASH);
@@ -85,9 +87,9 @@ export function CheckoutPanel({
     useEffect(() => {
         if (isSuccess && saleResult && autoPrint && !hasAttemptedAutoPrint) {
             setHasAttemptedAutoPrint(true);
-            printSaleAction(saleResult, defaultFormat);
+            printSaleAction(saleResult, defaultFormat, tenant);
         }
-    }, [isSuccess, saleResult, autoPrint, defaultFormat, hasAttemptedAutoPrint]);
+    }, [isSuccess, saleResult, autoPrint, defaultFormat, hasAttemptedAutoPrint, tenant]);
 
     useEffect(() => {
         if (!isSuccess) { setCountdown(4); return; }
@@ -206,7 +208,7 @@ export function CheckoutPanel({
 
                     <div className="flex gap-2 w-full">
                         <Button className="flex-1" variant="secondary"
-                            onClick={() => printSaleAction(saleResult, defaultFormat)}>
+                            onClick={() => printSaleAction(saleResult, defaultFormat, tenant)}>
                             Reimprimir
                         </Button>
                         <select
