@@ -52,29 +52,33 @@ export function ProductSearchCombobox({ onSelect, className }: ProductSearchComb
                     </div>
                 </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+            <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0 shadow-xl border-2 border-border" align="start">
                 <Command shouldFilter={true}>
                     <CommandInput
                         placeholder="Escribe para buscar..."
                         value={searchQuery}
                         onValueChange={setSearchQuery}
-                        className="h-12 text-base"
+                        className="h-12 text-base border-b border-border"
                     />
-                    <CommandList>
-                        <CommandEmpty>No se encontraron productos.</CommandEmpty>
+                    <CommandList className="max-h-[320px]">
+                        <CommandEmpty className="py-6 text-center text-sm text-muted-foreground">No se encontraron productos.</CommandEmpty>
                         <CommandGroup>
                             {products.map((product) => (
                                 <CommandItem
                                     key={product.id}
                                     value={`${product.name} ${product.barcode || ''}`}
                                     onSelect={() => handleSelect(product)}
-                                    className="cursor-pointer py-3"
+                                    className="cursor-pointer px-4 py-3 border-b border-border/50 last:border-0 hover:bg-primary/5 aria-selected:bg-primary/10 data-[selected=true]:bg-primary/10"
                                 >
-                                    <div className="flex flex-col">
-                                        <span className="font-medium">{product.name}</span>
-                                        <span className="text-xs text-muted-foreground">SKU: {product.barcode || 'N/A'} - Stock: {product.stock || 0}</span>
+                                    <div className="flex flex-col gap-0.5 flex-1">
+                                        <span className="font-semibold text-foreground text-sm">{product.name}</span>
+                                        <span className="text-xs text-muted-foreground">
+                                            SKU: <span className="font-mono">{product.barcode || 'N/A'}</span>
+                                            {' · '}
+                                            Stock: <span className={product.stock && product.stock > 0 ? 'text-green-600 font-medium' : 'text-red-500 font-medium'}>{product.stock || 0}</span>
+                                        </span>
                                     </div>
-                                    <span className="ml-auto font-bold">
+                                    <span className="ml-4 font-bold text-primary text-sm tabular-nums">
                                         ${product.price.toLocaleString()}
                                     </span>
                                 </CommandItem>
