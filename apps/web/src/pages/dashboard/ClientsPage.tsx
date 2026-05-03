@@ -5,13 +5,15 @@ import { useCustomers, useDeleteCustomer } from '../../hooks/useCustomers';
 import { CustomerFormModal } from '../../components/dashboard/CustomerFormModal';
 import { Plus, Search, Edit, Trash2 } from 'lucide-react';
 import type { Customer } from '../../api/types';
+import { useAuth } from '../../context/AuthContext';
 
 export function ClientsPage() {
+    const { user } = useAuth();
     const [searchTerm, setSearchTerm] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [customerToEdit, setCustomerToEdit] = useState<Customer | null>(null);
 
-    const { data: customers, isLoading } = useCustomers();
+    const { data: customers, isLoading } = useCustomers(user?.tenantId ?? '');
     const deleteCustomer = useDeleteCustomer();
 
     const filteredCustomers = customers?.filter(customer =>

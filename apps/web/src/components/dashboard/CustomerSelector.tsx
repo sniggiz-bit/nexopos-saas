@@ -1,5 +1,6 @@
 
 import { useState } from 'react';
+import { useAuth } from '@/context/AuthContext';
 import { useCustomers } from '../../hooks/useCustomers';
 import { Check, ChevronsUpDown, UserPlus } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -25,9 +26,10 @@ interface CustomerSelectorProps {
 }
 
 export function CustomerSelector({ value, onChange }: CustomerSelectorProps) { // value is customerId
+    const { user } = useAuth();
     const [open, setOpen] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const { data: customers } = useCustomers();
+    const { data: customers } = useCustomers(user?.tenantId ?? '');
 
     const selectedCustomer = customers?.find((customer) => customer.id === value);
 
