@@ -34,6 +34,7 @@ export function ProductFormModal({ isOpen, onClose, initialData }: ProductFormMo
     const [priceTiers, setPriceTiers] = useState<{ minQuantity: string; unitPrice: string }[]>([]);
     const [uploadingImage, setUploadingImage] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const wasOpenRef = useRef(false);
 
     const createProduct = useCreateProduct();
     const updateProduct = useUpdateProduct();
@@ -41,7 +42,16 @@ export function ProductFormModal({ isOpen, onClose, initialData }: ProductFormMo
     const { data: brands } = useBrands(user?.tenantId ?? '');
 
     useEffect(() => {
-        if (initialData && isOpen) {
+        // Solo inicializar cuando el modal recién se abre (transición cerrado → abierto).
+        // Ignorar cambios de initialData mientras el modal ya está abierto (background refetches).
+        if (!isOpen) {
+            wasOpenRef.current = false;
+            return;
+        }
+        if (wasOpenRef.current) return;
+        wasOpenRef.current = true;
+
+        if (initialData) {
             setFormData({
                 name: initialData.name,
                 sku: initialData.sku || '',
@@ -60,9 +70,7 @@ export function ProductFormModal({ isOpen, onClose, initialData }: ProductFormMo
                 minQuantity: t.minQuantity.toString(),
                 unitPrice: t.unitPrice.toString()
             })) || []);
-
-        } else if (!initialData && isOpen) {
-            // Reset form for new product
+        } else {
             setFormData({
                 name: '',
                 sku: '',
@@ -78,7 +86,6 @@ export function ProductFormModal({ isOpen, onClose, initialData }: ProductFormMo
                 isActive: true,
             });
             setPriceTiers([]);
-
         }
     }, [initialData, isOpen]);
 
