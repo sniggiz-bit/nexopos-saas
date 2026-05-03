@@ -46,12 +46,18 @@ export function ProductCard({ product, onAddToCart, viewMode = 'grid' }: Product
             >
                 {/* Avatar */}
                 <div className={[
-                    'w-9 h-9 rounded-lg flex items-center justify-center text-sm font-bold shrink-0 transition-colors duration-150',
+                    'w-9 h-9 rounded-lg flex items-center justify-center text-sm font-bold shrink-0 transition-colors duration-150 overflow-hidden',
                     added
                         ? 'bg-success/10 text-success'
                         : 'bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary',
                 ].join(' ')}>
-                    {added ? <Check className="w-4 h-4" /> : product.name.charAt(0).toUpperCase()}
+                    {added ? (
+                        <Check className="w-4 h-4" />
+                    ) : product.image ? (
+                        <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
+                    ) : (
+                        product.name.charAt(0).toUpperCase()
+                    )}
                 </div>
 
                 {/* Info */}
@@ -136,12 +142,18 @@ export function ProductCard({ product, onAddToCart, viewMode = 'grid' }: Product
                 {/* Center: avatar + name + sku */}
                 <div className="flex-1 flex flex-col items-center justify-center gap-1.5 py-1">
                     <div className={[
-                        'w-9 h-9 rounded-xl border flex items-center justify-center text-sm font-bold transition-all duration-200',
+                        'w-9 h-9 rounded-xl border flex items-center justify-center text-sm font-bold transition-all duration-200 overflow-hidden',
                         added
                             ? 'bg-success/10 border-success/30 text-success animate-pop-add'
                             : 'bg-surface-raised border-border text-muted-foreground group-hover:bg-primary/10 group-hover:border-primary/20 group-hover:text-primary',
                     ].join(' ')}>
-                        {added ? <Check className="w-4 h-4" /> : product.name.charAt(0).toUpperCase()}
+                        {added ? (
+                            <Check className="w-4 h-4" />
+                        ) : product.image ? (
+                            <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
+                        ) : (
+                            product.name.charAt(0).toUpperCase()
+                        )}
                     </div>
 
                     <h3 className="font-semibold text-foreground text-center leading-tight line-clamp-2 text-[13px] min-h-[2.25rem] w-full">
