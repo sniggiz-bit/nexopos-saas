@@ -85,7 +85,9 @@ let QuotesService = class QuotesService {
             where: { tenantId },
             include: {
                 customer: true,
-                items: true,
+                items: {
+                    include: { product: true },
+                },
                 user: true,
             },
             orderBy: { createdAt: 'desc' },
@@ -147,7 +149,7 @@ let QuotesService = class QuotesService {
     async convertToSale(id) {
         const quote = await this.findOne(id);
         if (quote.status === client_1.QuoteStatus.ACCEPTED) {
-            throw new common_1.BadRequestException('This quote has already been accepted and converted to a sale.');
+            throw new common_1.BadRequestException('Esta cotización ya fue aceptada y convertida en venta.');
         }
         const user = await this.prisma.user.findUnique({
             where: { id: quote.userId || '' },
