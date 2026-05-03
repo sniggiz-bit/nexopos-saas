@@ -63,16 +63,16 @@ export const Ticket80mm: React.FC<Ticket80mmProps> = ({
     const neto = Math.round(sale.total / 1.19);
     const iva = sale.total - neto;
     const subtotalBruto = sale.total + (Number(sale.discountAmount) || 0);
-    const displayName = tenant?.name || tenantName || 'NEXOPOS';
+    const displayName = tenant?.name || tenantName || '';
     const folio = sale.id?.split('-')[0]?.toUpperCase() ?? '';
 
     return (
         <div className="ticket-80mm" style={{
             width: '80mm',
             padding: '6px 8px',
-            fontFamily: "'Courier New', Courier, monospace",
+            fontFamily: "'Arial', 'Helvetica', sans-serif",
             fontSize: '11px',
-            lineHeight: '1.3',
+            lineHeight: '1.35',
             color: '#000',
             backgroundColor: '#fff',
         }}>
@@ -86,23 +86,24 @@ export const Ticket80mm: React.FC<Ticket80mmProps> = ({
                 .tc { text-align: center; }
                 .tr { text-align: right; }
                 .tl { text-align: left; }
-                .bold { font-weight: bold; }
-                .small { font-size: 9px; }
-                .dash { border-top: 1px dashed #000; margin: 4px 0; }
-                .solid { border-top: 1px solid #000; margin: 4px 0; }
-                .double { border-top: 3px double #000; margin: 4px 0; }
+                .bold { font-weight: 700; }
+                .small { font-size: 9.5px; }
+                .dash { border-top: 1px dashed #000; margin: 5px 0; }
+                .solid { border-top: 1px solid #000; margin: 5px 0; }
+                .double { border-top: 3px double #000; margin: 5px 0; }
                 .row { display: flex; justify-content: space-between; align-items: baseline; }
-                .row-col { display: flex; flex-direction: column; }
                 .upper { text-transform: uppercase; }
             `}</style>
 
             {/* ── ENCABEZADO EMISOR ── */}
-            <div className="tc" style={{ marginBottom: '4px' }}>
-                <div className="bold upper" style={{ fontSize: '13px', letterSpacing: '0.5px' }}>
-                    {displayName}
-                </div>
+            <div className="tc" style={{ marginBottom: '5px' }}>
+                {displayName && (
+                    <div className="bold upper" style={{ fontSize: '16px', letterSpacing: '0.5px', lineHeight: '1.2' }}>
+                        {displayName}
+                    </div>
+                )}
                 {tenant?.rut && (
-                    <div className="small">RUT: {formatRut(tenant.rut)}</div>
+                    <div className="bold small" style={{ marginTop: '2px' }}>RUT: {formatRut(tenant.rut)}</div>
                 )}
                 {tenant?.giro && (
                     <div className="small upper">{tenant.giro}</div>
@@ -121,10 +122,10 @@ export const Ticket80mm: React.FC<Ticket80mmProps> = ({
             <div className="double" />
 
             {/* ── TIPO DOCUMENTO ── */}
-            <div className="tc bold" style={{ fontSize: '12px', margin: '3px 0' }}>
-                COMPROBANTE DE VENTA
+            <div className="tc bold upper" style={{ fontSize: '13px', margin: '4px 0 1px' }}>
+                Comprobante de Venta
             </div>
-            <div className="tc small">
+            <div className="tc" style={{ fontSize: '9px', marginBottom: '2px' }}>
                 (No es documento tributario oficial)
             </div>
 
@@ -137,7 +138,7 @@ export const Ticket80mm: React.FC<Ticket80mmProps> = ({
             </div>
             <div className="row small" style={{ marginTop: '2px' }}>
                 <span>Fecha:</span>
-                <span>{formatChileanDate(sale.createdAt)}</span>
+                <span className="bold">{formatChileanDate(sale.createdAt)}</span>
             </div>
             {sale.customer && (
                 <>
@@ -148,8 +149,8 @@ export const Ticket80mm: React.FC<Ticket80mmProps> = ({
                     </div>
                     {sale.customer.rut && (
                         <div className="row small">
-                            <span>RUT:</span>
-                            <span>{formatRut(sale.customer.rut)}</span>
+                            <span>RUT Cliente:</span>
+                            <span className="bold">{formatRut(sale.customer.rut)}</span>
                         </div>
                     )}
                 </>
@@ -158,7 +159,7 @@ export const Ticket80mm: React.FC<Ticket80mmProps> = ({
             <div className="dash" />
 
             {/* ── DETALLE ITEMS ── */}
-            <div className="row bold small upper" style={{ borderBottom: '1px solid #000', paddingBottom: '2px', marginBottom: '3px' }}>
+            <div className="row bold small upper" style={{ borderBottom: '1px solid #000', paddingBottom: '3px', marginBottom: '4px' }}>
                 <span style={{ flex: 2 }}>Descripción</span>
                 <span style={{ textAlign: 'right', flex: 1 }}>Total</span>
             </div>
@@ -168,7 +169,7 @@ export const Ticket80mm: React.FC<Ticket80mmProps> = ({
                 const itemDiscount = Number(item.discountAmount) || 0;
                 const finalTotal = itemTotal - itemDiscount;
                 return (
-                    <div key={idx} style={{ marginBottom: '4px' }}>
+                    <div key={idx} style={{ marginBottom: '5px' }}>
                         <div className="bold" style={{ fontSize: '11px' }}>{item.product.name}</div>
                         <div className="row small">
                             <span>{Number(item.quantity)} x {formatPrice(Number(item.price))}</span>
@@ -176,7 +177,7 @@ export const Ticket80mm: React.FC<Ticket80mmProps> = ({
                         </div>
                         {itemDiscount > 0 && (
                             <div className="row small" style={{ opacity: 0.7 }}>
-                                <span>Dcto. ítem:</span>
+                                <span>Descuento ítem:</span>
                                 <span>-{formatPrice(itemDiscount)}</span>
                             </div>
                         )}
@@ -199,8 +200,7 @@ export const Ticket80mm: React.FC<Ticket80mmProps> = ({
                     <span>-{formatPrice(Number(sale.discountAmount))}</span>
                 </div>
             )}
-
-            <div className="row small" style={{ marginTop: '2px' }}>
+            <div className="row small" style={{ marginTop: '3px' }}>
                 <span>Neto:</span>
                 <span>{formatPrice(neto)}</span>
             </div>
@@ -211,7 +211,7 @@ export const Ticket80mm: React.FC<Ticket80mmProps> = ({
 
             <div className="double" />
 
-            <div className="row bold" style={{ fontSize: '15px' }}>
+            <div className="row bold" style={{ fontSize: '16px' }}>
                 <span>TOTAL</span>
                 <span>{formatPrice(sale.total)}</span>
             </div>
@@ -219,9 +219,12 @@ export const Ticket80mm: React.FC<Ticket80mmProps> = ({
             <div className="dash" />
 
             {/* ── MEDIOS DE PAGO ── */}
+            <div className="small bold upper" style={{ marginBottom: '3px', letterSpacing: '0.3px' }}>
+                Medio de Pago:
+            </div>
             {sale.payments?.map((payment, idx) => (
-                <div key={idx} className="row small bold">
-                    <span>{getPaymentLabel(payment.paymentMethod)}:</span>
+                <div key={idx} className="row small">
+                    <span className="bold">{getPaymentLabel(payment.paymentMethod)}</span>
                     <span>{formatPrice(payment.amount)}</span>
                 </div>
             ))}
@@ -231,7 +234,7 @@ export const Ticket80mm: React.FC<Ticket80mmProps> = ({
                 const pagado = sale.payments?.reduce((s, p) => s + Number(p.amount), 0) ?? 0;
                 const vuelto = pagado - sale.total;
                 return vuelto > 0 ? (
-                    <div className="row small bold" style={{ marginTop: '2px' }}>
+                    <div className="row small bold" style={{ marginTop: '3px' }}>
                         <span>VUELTO:</span>
                         <span>{formatPrice(vuelto)}</span>
                     </div>
@@ -242,10 +245,9 @@ export const Ticket80mm: React.FC<Ticket80mmProps> = ({
 
             {/* ── PIE ── */}
             <div className="tc" style={{ marginTop: '6px', fontSize: '10px' }}>
-                <div>¡Gracias por su preferencia!</div>
-                <div style={{ marginTop: '2px' }}>www.nexopos.cl</div>
-                <div className="small" style={{ marginTop: '4px', opacity: 0.6 }}>
-                    Documento generado por NexoPOS
+                <div className="bold">¡Gracias por su preferencia!</div>
+                <div className="small" style={{ marginTop: '5px', opacity: 0.6 }}>
+                    Documento generado por nexopos.cl
                 </div>
             </div>
 
