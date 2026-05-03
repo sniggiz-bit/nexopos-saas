@@ -36,7 +36,7 @@ export function CreateQuotePage() {
         clearCart();
     }, [clearCart]);
 
-    const handleCreateQuote = async () => {
+    const handleCreateQuote = async (openPdf = false) => {
         if (!customerId) {
             toast({ variant: 'destructive', title: 'Error', description: 'Debe seleccionar un cliente' });
             return;
@@ -47,18 +47,25 @@ export function CreateQuotePage() {
         }
 
         try {
-            await createQuote.mutateAsync({
+            const result = await createQuote.mutateAsync({
                 tenantId: user?.tenantId ?? '',
                 customerId,
+                issueDate,
+                validUntil,
+                notes: notes || undefined,
                 items: items.map(item => ({
                     productId: item.productId,
+                    productName: item.name,
                     quantity: Number(item.quantity) || 0,
                     price: Number(item.price) || 0
                 }))
             });
             clearCart();
-            toast({ variant: 'success', title: 'Cotización creada exitosamente' });
-            navigate('/dashboard/quotes');
+            if (openPdf && result?.id) {
+                navigate(`/dashboard/quotes/${result.id}/print`);
+            } else {
+                navigate('/dashboard/quotes');
+            }
         } catch (error: any) {
             toast({ variant: 'destructive', title: 'Error', description: error.message || 'Error al crear cotización' });
         }
@@ -79,11 +86,11 @@ export function CreateQuotePage() {
                         </div>
                     </div>
                     <div className="flex gap-2">
-                        <Button variant="outline" onClick={() => handleCreateQuote()} disabled={createQuote.isPending}>
+                        <Button variant="outline" onClick={() => handleCreateQuote(false)} disabled={createQuote.isPending}>
                             <Save className="w-4 h-4 mr-2" />
                             Guardar Borrador
                         </Button>
-                        <Button onClick={() => handleCreateQuote()} disabled={createQuote.isPending}>
+                        <Button onClick={() => handleCreateQuote(true)} disabled={createQuote.isPending}>
                             <Printer className="w-4 h-4 mr-2" />
                             Guardar y PDF
                         </Button>
