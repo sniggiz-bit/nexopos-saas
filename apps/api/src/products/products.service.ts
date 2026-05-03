@@ -366,7 +366,17 @@ export class ProductsService {
     // Handle Stock Update Logging if stock is provided
     if (updateProductDto.stock !== undefined) {
       const newStock = new Prisma.Decimal(updateProductDto.stock);
-      const branchId = 'branch-1';
+
+      // Use existing inventory branch, or the first branch of the tenant
+      const existingInv = await this.prisma.inventory.findFirst({
+        where: { productId: id },
+      });
+      const fallbackBranch = existingInv ? null : await this.prisma.branch.findFirst({
+        where: { tenantId: existingProductForValidation.tenantId },
+        orderBy: { id: 'asc' },
+      });
+      const branchId = existingInv?.branchId ?? fallbackBranch?.id;
+      if (!branchId) return this.findOne(id, existingProductForValidation.tenantId);
 
       // Get current stock for this branch
       const currentInv = await this.prisma.inventory.findUnique({

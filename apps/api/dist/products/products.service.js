@@ -289,7 +289,16 @@ let ProductsService = class ProductsService {
         });
         if (updateProductDto.stock !== undefined) {
             const newStock = new client_1.Prisma.Decimal(updateProductDto.stock);
-            const branchId = 'branch-1';
+            const existingInv = await this.prisma.inventory.findFirst({
+                where: { productId: id },
+            });
+            const fallbackBranch = existingInv ? null : await this.prisma.branch.findFirst({
+                where: { tenantId: existingProductForValidation.tenantId },
+                orderBy: { id: 'asc' },
+            });
+            const branchId = existingInv?.branchId ?? fallbackBranch?.id;
+            if (!branchId)
+                return this.findOne(id, existingProductForValidation.tenantId);
             const currentInv = await this.prisma.inventory.findUnique({
                 where: { productId_branchId: { productId: id, branchId } },
             });
