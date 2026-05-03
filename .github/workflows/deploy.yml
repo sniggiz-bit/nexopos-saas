@@ -52,8 +52,8 @@ jobs:
 
   deploy-web:
     name: Deploy Web
-    needs: changes
-    if: needs.changes.outputs.web == 'true' || github.event_name == 'workflow_dispatch'
+    needs: [changes, deploy-api]
+    if: always() && (needs.changes.outputs.web == 'true' || github.event_name == 'workflow_dispatch') && needs.deploy-api.result != 'failure'
     runs-on: ubuntu-latest
     steps:
       - name: Build and deploy Web on server
