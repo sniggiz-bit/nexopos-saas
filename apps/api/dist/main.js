@@ -35,6 +35,7 @@ AllExceptionsFilter = __decorate([
 async function bootstrap() {
     const app = await core_1.NestFactory.create(app_module_1.AppModule);
     app.setGlobalPrefix('api');
+    app.set('etag', false);
     const uploadsPath = (0, path_1.join)(process.cwd(), '..', '..', 'uploads');
     app.useStaticAssets(uploadsPath, { prefix: '/api/static' });
     app.enableCors({
