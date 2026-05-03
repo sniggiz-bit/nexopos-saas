@@ -133,6 +133,9 @@ let QuotesService = class QuotesService {
                 })),
             };
         }
+        if (Object.keys(updateData).length === 0) {
+            return this.findOne(id);
+        }
         return this.prisma.quote.update({
             where: { id },
             data: updateData,
@@ -143,10 +146,12 @@ let QuotesService = class QuotesService {
         });
     }
     async remove(id) {
-        await this.prisma.quoteItem.deleteMany({ where: { quoteId: id } });
-        return this.prisma.quote.delete({
-            where: { id },
+        await this.prisma.sale.updateMany({
+            where: { quoteId: id },
+            data: { quoteId: null },
         });
+        await this.prisma.quoteItem.deleteMany({ where: { quoteId: id } });
+        return this.prisma.quote.delete({ where: { id } });
     }
     async convertToSale(id) {
         const quote = await this.findOne(id);

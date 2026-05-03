@@ -126,7 +126,6 @@ export class QuotesService {
       updateData.tax = tax;
       updateData.total = total;
 
-      // Delete old items and create new ones
       await this.prisma.quoteItem.deleteMany({ where: { quoteId: id } });
       updateData.items = {
         create: items.map((item) => ({
@@ -140,6 +139,11 @@ export class QuotesService {
       };
     }
 
+    // Guard against empty update (e.g. whitelist stripped all fields)
+    if (Object.keys(updateData).length === 0) {
+      return this.findOne(id);
+    }
+
     return this.prisma.quote.update({
       where: { id },
       data: updateData,
@@ -151,10 +155,13 @@ export class QuotesService {
   }
 
   async remove(id: string) {
-    await this.prisma.quoteItem.deleteMany({ where: { quoteId: id } });
-    return this.prisma.quote.delete({
-      where: { id },
+    // Detach related sales (quoteId is nullable) before deleting
+    await this.prisma.sale.updateMany({
+      where: { quoteId: id },
+      data: { quoteId: null },
     });
+    await this.prisma.quoteItem.deleteMany({ where: { quoteId: id } });
+    return this.prisma.quote.delete({ where: { id } });
   }
 
   async convertToSale(id: string) {
