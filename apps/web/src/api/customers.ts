@@ -13,7 +13,7 @@ export interface CreateCustomerData {
     tenantId: string;
 }
 
-export async function getCustomers(tenantId: string = 'tenant-1'): Promise<Customer[]> {
+export async function getCustomers(tenantId: string): Promise<Customer[]> {
     const response = await apiClient.get<Customer[]>('/customers', { params: { tenantId } });
     return response.data;
 }
