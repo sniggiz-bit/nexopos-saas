@@ -18,22 +18,22 @@ import { UpdateTenantSettingsDto } from './dto/update-tenant-settings.dto';
 @ApiTags('inquilinos (tenants)')
 @ApiBearerAuth()
 @Controller('tenants')
-@UseGuards(JwtAuthGuard, SuperAdminGuard)
 export class TenantsController {
   constructor(private readonly tenantsService: TenantsService) { }
 
-  @ApiOperation({ summary: 'Listar todos los inquilinos', description: 'Retorna una lista de todas las empresas/tenants registrados en el sistema. Requiere rol SUPER_ADMIN.' })
-  @ApiQuery({ name: 'search', required: false, description: 'Término de búsqueda por nombre o RUT' })
-  @ApiResponse({ status: 200, description: 'Lista de inquilinos obtenida exitosamente.' })
+  @UseGuards(JwtAuthGuard, SuperAdminGuard)
+  @ApiOperation({ summary: 'Listar todos los inquilinos' })
+  @ApiQuery({ name: 'search', required: false })
+  @ApiResponse({ status: 200 })
   @Get()
   async findAll(@Query('search') search?: string) {
     return this.tenantsService.findAll(search);
   }
 
-  @ApiOperation({ summary: 'Obtener un inquilino por ID' })
-  @ApiResponse({ status: 200, description: 'Detalles del inquilino.' })
-  @ApiResponse({ status: 404, description: 'Inquilino no encontrado.' })
+  // Accessible by any authenticated user for their own tenant
   @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Obtener un inquilino por ID' })
+  @ApiResponse({ status: 200 })
   @Get(':id')
   findOne(@Param('id') id: string, @Request() req: any) {
     const isSuperAdmin = req.user?.role === 'SUPER_ADMIN';
@@ -43,23 +43,23 @@ export class TenantsController {
     return this.tenantsService.findOne(id);
   }
 
-  @ApiOperation({ summary: 'Actualizar configuración del inquilino', description: 'Permite activar/desactivar módulos y cambiar límites de recursos.' })
-  @ApiResponse({ status: 200, description: 'Configuración actualizada.' })
+  @UseGuards(JwtAuthGuard, SuperAdminGuard)
+  @ApiOperation({ summary: 'Actualizar configuración del inquilino' })
+  @ApiResponse({ status: 200 })
   @Patch(':id/settings')
-  updateSettings(
-    @Param('id') id: string,
-    @Body() dto: UpdateTenantSettingsDto,
-  ) {
+  updateSettings(@Param('id') id: string, @Body() dto: UpdateTenantSettingsDto) {
     return this.tenantsService.updateSettings(id, dto);
   }
 
-  @ApiOperation({ summary: 'Suspender inquilino', description: 'Marca al inquilino como SUSPENDED, bloqueando el acceso a sus usuarios.' })
+  @UseGuards(JwtAuthGuard, SuperAdminGuard)
+  @ApiOperation({ summary: 'Suspender inquilino' })
   @Patch(':id/suspend')
   suspend(@Param('id') id: string) {
     return this.tenantsService.suspend(id);
   }
 
-  @ApiOperation({ summary: 'Activar inquilino', description: 'Restaura el estado ACTIVE de un inquilino suspendido.' })
+  @UseGuards(JwtAuthGuard, SuperAdminGuard)
+  @ApiOperation({ summary: 'Activar inquilino' })
   @Patch(':id/activate')
   activate(@Param('id') id: string) {
     return this.tenantsService.activate(id);
