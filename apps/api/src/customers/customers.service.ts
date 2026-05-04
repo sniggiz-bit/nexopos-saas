@@ -24,9 +24,17 @@ export class CustomersService {
     } catch (error: any) {
       if (error.code === 'P2002') {
         const target = error.meta?.target;
-        if (Array.isArray(target) && target.includes('rut')) {
+        const targetStr = Array.isArray(target)
+          ? target.join(',')
+          : String(target ?? '');
+        if (targetStr.includes('rut')) {
           throw new ConflictException(
             'Ya existe un cliente con este RUT en el sistema.',
+          );
+        }
+        if (targetStr.includes('email')) {
+          throw new ConflictException(
+            'Ya existe un cliente con este email en el sistema.',
           );
         }
         throw new ConflictException(
@@ -70,10 +78,28 @@ export class CustomersService {
     const data = { ...updateCustomerDto };
     if (data.rut) data.rut = formatRut(data.rut);
 
-    return this.prisma.customer.update({
-      where: { id },
-      data,
-    });
+    try {
+      return await this.prisma.customer.update({
+        where: { id },
+        data,
+      });
+    } catch (error: any) {
+      if (error.code === 'P2002') {
+        const target = error.meta?.target;
+        const targetStr = Array.isArray(target)
+          ? target.join(',')
+          : String(target ?? '');
+        if (targetStr.includes('rut')) {
+          throw new ConflictException(
+            'Ya existe un cliente con este RUT en el sistema.',
+          );
+        }
+        throw new ConflictException(
+          'Ya existe un cliente con estos datos únicos.',
+        );
+      }
+      throw error;
+    }
   }
 
   async remove(id: string) {
