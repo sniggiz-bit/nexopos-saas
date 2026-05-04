@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getBrands, createBrand, updateBrand, deleteBrand, CreateBrandData } from '../api/brands';
 import { toast } from 'react-hot-toast';
+import { useAuth } from '@/context/AuthContext';
 
 export function useBrands(tenantId: string = 'tenant-1') {
     return useQuery({
@@ -11,10 +12,11 @@ export function useBrands(tenantId: string = 'tenant-1') {
 
 export function useCreateBrand() {
     const queryClient = useQueryClient();
+    const { user } = useAuth();
     return useMutation({
         mutationFn: (data: CreateBrandData) => createBrand(data),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['brands'] });
+            queryClient.refetchQueries({ queryKey: ['brands', user?.tenantId] });
             toast.success('Marca creada exitosamente');
         },
         onError: () => {
@@ -25,10 +27,11 @@ export function useCreateBrand() {
 
 export function useUpdateBrand() {
     const queryClient = useQueryClient();
+    const { user } = useAuth();
     return useMutation({
         mutationFn: ({ id, data }: { id: string, data: any }) => updateBrand(id, data),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['brands'] });
+            queryClient.refetchQueries({ queryKey: ['brands', user?.tenantId] });
             toast.success('Marca actualizada exitosamente');
         },
         onError: () => {
@@ -39,10 +42,11 @@ export function useUpdateBrand() {
 
 export function useDeleteBrand() {
     const queryClient = useQueryClient();
+    const { user } = useAuth();
     return useMutation({
         mutationFn: (id: string) => deleteBrand(id),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['brands'] });
+            queryClient.refetchQueries({ queryKey: ['brands', user?.tenantId] });
             toast.success('Marca eliminada exitosamente');
         },
         onError: (error: any) => {

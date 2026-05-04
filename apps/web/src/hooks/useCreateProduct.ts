@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../api/client';
 import type { Product } from '../api/types';
 import type { PriceTier } from '@nexopos/shared';
+import { useAuth } from '@/context/AuthContext';
 
 interface CreateProductData {
     name: string;
@@ -28,12 +29,12 @@ async function createProduct(data: CreateProductData): Promise<Product> {
 
 export function useCreateProduct() {
     const queryClient = useQueryClient();
+    const { user } = useAuth();
 
     return useMutation({
         mutationFn: createProduct,
         onSuccess: () => {
-            // Invalidate products query to refetch the list
-            queryClient.invalidateQueries({ queryKey: ['products'] });
+            queryClient.refetchQueries({ queryKey: ['products', user?.tenantId] });
         },
     });
 }

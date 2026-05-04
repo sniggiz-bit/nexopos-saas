@@ -3,6 +3,7 @@ import { apiClient } from '../api/client';
 import type { Product } from '../api/types';
 import type { PriceTier } from '@nexopos/shared';
 import toast from 'react-hot-toast';
+import { useAuth } from '@/context/AuthContext';
 
 interface UpdateProductData {
     id: string;
@@ -28,11 +29,12 @@ async function updateProduct({ id, ...data }: UpdateProductData): Promise<Produc
 
 export function useUpdateProduct() {
     const queryClient = useQueryClient();
+    const { user } = useAuth();
 
     return useMutation({
         mutationFn: updateProduct,
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['products'] });
+            queryClient.refetchQueries({ queryKey: ['products', user?.tenantId] });
             toast.success('Producto actualizado exitosamente');
         },
         onError: (error: any) => {

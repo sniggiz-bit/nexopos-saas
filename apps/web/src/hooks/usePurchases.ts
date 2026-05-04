@@ -5,6 +5,7 @@ import {
     type CreatePurchaseData,
 } from '../api/purchases';
 import { toast } from 'react-hot-toast';
+import { useAuth } from '@/context/AuthContext';
 
 export function usePurchases(branchId?: string) {
     return useQuery({
@@ -15,13 +16,12 @@ export function usePurchases(branchId?: string) {
 
 export function useCreatePurchase() {
     const queryClient = useQueryClient();
+    const { user } = useAuth();
     return useMutation({
         mutationFn: (data: CreatePurchaseData) => createPurchase(data),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['purchases'] });
-            // Also invalidate inventory/products so stock reflects immediately
-            queryClient.invalidateQueries({ queryKey: ['inventory'] });
-            queryClient.invalidateQueries({ queryKey: ['products'] });
+            queryClient.refetchQueries({ queryKey: ['purchases', user?.branchId] });
+            queryClient.refetchQueries({ queryKey: ['products', user?.tenantId] });
             toast.success('Compra registrada y stock actualizado exitosamente');
         },
         onError: (error: any) => {
