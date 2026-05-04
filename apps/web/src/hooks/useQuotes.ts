@@ -8,7 +8,7 @@ export function useCreateQuote() {
     return useMutation({
         mutationFn: (data: CreateQuoteData) => createQuote(data),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['quotes'] });
+            queryClient.refetchQueries({ queryKey: ['quotes'] });
             toast.success('Cotización creada exitosamente');
         },
         onError: (error: any) => {

@@ -81,7 +81,7 @@ export function Cart({ onConfirm, onCheckoutClose, isProcessing, isSuccess, isEr
             })),
         }),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['quotes'] });
+            queryClient.refetchQueries({ queryKey: ['quotes'] });
             toast({ variant: 'success', title: 'Preventa guardada', description: 'El carrito fue guardado como preventa.' });
             clearCart();
             setActiveTab('presales');
