@@ -54,7 +54,7 @@ export function PresalesList({ quotes, onRestore, onDelete, deletingId, isLoadin
                             </div>
                             <div className="flex items-center gap-2">
                                 <span className="font-bold text-emerald-600 dark:text-emerald-500 text-lg">
-                                    {formatPrice(quote.total)}
+                                    {formatPrice(quote.items.reduce((s, i) => s + i.price * Number(i.quantity), 0))}
                                 </span>
                                 <button
                                     onClick={() => onDelete(quote.id)}
