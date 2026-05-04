@@ -57,6 +57,7 @@ export function PosPage() {
             });
             clearCart();
             queryClient.invalidateQueries({ queryKey: ['products'] });
+            queryClient.invalidateQueries({ queryKey: ['quotes'] });
         },
         onError: (error) => {
             toast({

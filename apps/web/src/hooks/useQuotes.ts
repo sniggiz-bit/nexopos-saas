@@ -58,6 +58,9 @@ export function useMarkQuoteAccepted() {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['quotes'] });
         },
+        onError: (error: any) => {
+            console.error('Error marking presale as accepted:', error);
+        },
     });
 }
 
