@@ -20,7 +20,7 @@ export function useCreateSupplier() {
     return useMutation({
         mutationFn: (data: CreateSupplierData) => createSupplier(data),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['suppliers'] });
+            queryClient.refetchQueries({ queryKey: ['suppliers'] });
             toast.success('Proveedor creado exitosamente');
         },
         onError: () => {
@@ -35,7 +35,7 @@ export function useUpdateSupplier() {
         mutationFn: ({ id, data }: { id: string; data: Partial<CreateSupplierData> }) =>
             updateSupplier(id, data),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['suppliers'] });
+            queryClient.refetchQueries({ queryKey: ['suppliers'] });
             toast.success('Proveedor actualizado exitosamente');
         },
         onError: () => {
@@ -49,7 +49,7 @@ export function useDeleteSupplier() {
     return useMutation({
         mutationFn: (id: string) => deleteSupplier(id),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['suppliers'] });
+            queryClient.refetchQueries({ queryKey: ['suppliers'] });
             toast.success('Proveedor eliminado');
         },
         onError: (error: any) => {
