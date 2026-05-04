@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useCart } from '@/context/CartContext';
@@ -41,17 +41,18 @@ export function Cart({ onConfirm, onCheckoutClose, isProcessing, isSuccess, isEr
     const quotes        = Array.isArray(quotesData) ? quotesData : [];
     const pendingQuotes = quotes.filter(q => q.status === 'DRAFT' || q.status === 'SENT');
 
-    const [restoredQuoteId, setRestoredQuoteId] = useState<string | null>(null);
+    const restoredQuoteIdRef = useRef<string | null>(null);
     const { mutate: deletePresale, isPending: isDeletingPresale, variables: deletingPresaleId } = useDeleteQuote();
     const { mutate: acceptQuote } = useMarkQuoteAccepted();
 
     // Auto-mark presale as ACCEPTED when sale is paid
     useEffect(() => {
-        if (isSuccess && restoredQuoteId) {
-            acceptQuote(restoredQuoteId);
-            setRestoredQuoteId(null);
+        if (isSuccess && restoredQuoteIdRef.current) {
+            const id = restoredQuoteIdRef.current;
+            restoredQuoteIdRef.current = null;
+            acceptQuote(id);
         }
-    }, [isSuccess]);
+    }, [isSuccess, acceptQuote]);
 
     const isEmpty    = items.length === 0;
     const itemCount  = items.reduce((sum, i) => sum + (Number(i.quantity) || 0), 0);
@@ -95,7 +96,7 @@ export function Cart({ onConfirm, onCheckoutClose, isProcessing, isSuccess, isEr
             if (!confirm('¿Reemplazar carrito actual?')) return;
             clearCart();
         }
-        setRestoredQuoteId(quote.id);
+        restoredQuoteIdRef.current = quote.id;
         let restored = 0;
         quote.items.forEach(qItem => {
             if (qItem.product) {
@@ -122,7 +123,7 @@ export function Cart({ onConfirm, onCheckoutClose, isProcessing, isSuccess, isEr
                     tax={tax}
                     total={total}
                     onConfirm={onConfirm}
-                    onBack={() => { setCheckoutMode(false); onCheckoutClose?.(); }}
+                    onBack={() => { if (!isSuccess) restoredQuoteIdRef.current = null; setCheckoutMode(false); onCheckoutClose?.(); }}
                     isProcessing={isProcessing ?? false}
                     isSuccess={isSuccess ?? false}
                     isError={isError ?? false}
