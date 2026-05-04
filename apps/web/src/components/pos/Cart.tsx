@@ -86,8 +86,8 @@ export function Cart({ onConfirm, onCheckoutClose, isProcessing, isSuccess, isEr
             clearCart();
             setActiveTab('presales');
         },
-        onError: () => {
-            toast({ variant: 'destructive', title: 'Error', description: 'No se pudo guardar la preventa.' });
+        onError: (error: any) => {
+            toast({ variant: 'destructive', title: 'Error al guardar preventa', description: error?.response?.data?.message || error?.message || 'No se pudo guardar la preventa.' });
         },
     });
 
@@ -148,7 +148,10 @@ export function Cart({ onConfirm, onCheckoutClose, isProcessing, isSuccess, isEr
                     />
                     <TabButton
                         active={activeTab === 'presales'}
-                        onClick={() => setActiveTab('presales')}
+                        onClick={() => {
+                            queryClient.refetchQueries({ queryKey: ['quotes', user?.tenantId] });
+                            setActiveTab('presales');
+                        }}
                         icon={<Clock className="w-4 h-4" />}
                         label="Preventas"
                         badge={pendingQuotes.length > 0 ? pendingQuotes.length : undefined}
