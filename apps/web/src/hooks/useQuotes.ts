@@ -1,14 +1,16 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { createQuote, CreateQuoteData, generateQuotePdf, convertQuote, updateQuote, deleteQuote } from '../api/quotes';
 import { toast } from 'react-hot-toast';
+import { useAuth } from '@/context/AuthContext';
 
 export function useCreateQuote() {
     const queryClient = useQueryClient();
+    const { user } = useAuth();
 
     return useMutation({
         mutationFn: (data: CreateQuoteData) => createQuote(data),
         onSuccess: () => {
-            queryClient.refetchQueries({ queryKey: ['quotes'] });
+            queryClient.refetchQueries({ queryKey: ['quotes', user?.tenantId] });
             toast.success('Cotización creada exitosamente');
         },
         onError: (error: any) => {
@@ -53,10 +55,11 @@ export function useConvertQuote() {
 
 export function useMarkQuoteAccepted() {
     const queryClient = useQueryClient();
+    const { user } = useAuth();
     return useMutation({
         mutationFn: (id: string) => deleteQuote(id),
         onSuccess: () => {
-            queryClient.refetchQueries({ queryKey: ['quotes'] });
+            queryClient.refetchQueries({ queryKey: ['quotes', user?.tenantId] });
         },
         onError: (error: any) => {
             console.error('Error deleting presale after payment:', error);
@@ -66,11 +69,12 @@ export function useMarkQuoteAccepted() {
 
 export function useDeleteQuote() {
     const queryClient = useQueryClient();
+    const { user } = useAuth();
 
     return useMutation({
         mutationFn: (id: string) => deleteQuote(id),
         onSuccess: () => {
-            queryClient.refetchQueries({ queryKey: ['quotes'] });
+            queryClient.refetchQueries({ queryKey: ['quotes', user?.tenantId] });
         },
         onError: (error: any) => {
             console.error('Error deleting quote:', error);
