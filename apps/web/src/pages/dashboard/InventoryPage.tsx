@@ -4,7 +4,8 @@ import { useProducts } from '../../hooks/useProducts';
 import { useCategories } from '../../hooks/useCategories';
 import { useBrands } from '../../hooks/useBrands';
 import { InventoryKardexModal } from '../../components/dashboard/InventoryKardexModal';
-import { Search, History, Loader2, Warehouse, AlertCircle, Download, Upload, X } from 'lucide-react';
+import { StockAdjustModal } from '../../components/dashboard/StockAdjustModal';
+import { Search, History, Loader2, Warehouse, AlertCircle, Download, Upload, X, PackagePlus } from 'lucide-react';
 import type { Product } from '../../api/types';
 import { useAuth } from '../../context/AuthContext';
 import * as XLSX from 'xlsx';
@@ -18,6 +19,8 @@ export function InventoryPage() {
     const [brandFilter, setBrandFilter] = useState('');
     const [isKardexOpen, setIsKardexOpen] = useState(false);
     const [productForKardex, setProductForKardex] = useState<Product | null>(null);
+    const [isAdjustOpen, setIsAdjustOpen] = useState(false);
+    const [productForAdjust, setProductForAdjust] = useState<Product | null>(null);
     const [isImporting, setIsImporting] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const { user } = useAuth();
@@ -40,6 +43,11 @@ export function InventoryPage() {
     const handleKardex = (product: Product) => {
         setProductForKardex(product);
         setIsKardexOpen(true);
+    };
+
+    const handleAdjust = (product: Product) => {
+        setProductForAdjust(product);
+        setIsAdjustOpen(true);
     };
 
     const handleExportExcel = () => {
@@ -359,13 +367,23 @@ export function InventoryPage() {
                                             )}
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                            <button
-                                                onClick={() => handleKardex(product)}
-                                                className="inline-flex items-center px-3 py-1.5 border border-gray-300 rounded-lg text-gray-700 bg-white hover:bg-gray-50 transition-colors shadow-sm text-xs font-bold"
-                                            >
-                                                <History className="w-3.5 h-3.5 mr-1.5 text-blue-600" />
-                                                Ver Kardex
-                                            </button>
+                                            <div className="flex items-center justify-end gap-2">
+                                                <button
+                                                    onClick={() => handleAdjust(product)}
+                                                    className="inline-flex items-center px-3 py-1.5 border border-emerald-300 rounded-lg text-emerald-700 bg-emerald-50 hover:bg-emerald-100 transition-colors shadow-sm text-xs font-bold"
+                                                    title="Ajustar stock"
+                                                >
+                                                    <PackagePlus className="w-3.5 h-3.5 mr-1.5" />
+                                                    + Stock
+                                                </button>
+                                                <button
+                                                    onClick={() => handleKardex(product)}
+                                                    className="inline-flex items-center px-3 py-1.5 border border-gray-300 rounded-lg text-gray-700 bg-white hover:bg-gray-50 transition-colors shadow-sm text-xs font-bold"
+                                                >
+                                                    <History className="w-3.5 h-3.5 mr-1.5 text-blue-600" />
+                                                    Ver Kardex
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                 ))
@@ -382,6 +400,20 @@ export function InventoryPage() {
                     }}
                     product={productForKardex}
                 />
+
+                {isAdjustOpen && productForAdjust && (
+                    <StockAdjustModal
+                        product={productForAdjust}
+                        branchId={user?.branchId ?? ''}
+                        onClose={() => {
+                            setIsAdjustOpen(false);
+                            setProductForAdjust(null);
+                        }}
+                        onSuccess={() => {
+                            queryClient.refetchQueries({ queryKey: ['products', user?.tenantId] });
+                        }}
+                    />
+                )}
             </div>
         </DashboardLayout>
     );
