@@ -6,12 +6,11 @@ import type { Product } from '../../api/types';
 
 interface StockAdjustModalProps {
     product: Product;
-    branchId: string;
     onClose: () => void;
     onSuccess: () => void;
 }
 
-export function StockAdjustModal({ product, branchId, onClose, onSuccess }: StockAdjustModalProps) {
+export function StockAdjustModal({ product, onClose, onSuccess }: StockAdjustModalProps) {
     const [quantity, setQuantity] = useState('');
     const [note, setNote] = useState('');
     const [mode, setMode] = useState<'add' | 'subtract'>('add');
@@ -34,11 +33,8 @@ export function StockAdjustModal({ product, branchId, onClose, onSuccess }: Stoc
 
         setIsLoading(true);
         try {
-            await apiClient.post('/inventory/adjust', {
-                productId: product.id,
-                branchId,
-                quantity: finalQty,
-                note: note || undefined,
+            await apiClient.patch(`/products/${product.id}`, {
+                stock: newStock,
             });
             toast.success(
                 mode === 'add'

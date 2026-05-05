@@ -1,6 +1,6 @@
 import { DashboardLayout } from '../../components/dashboard/DashboardLayout';
 import { LoadingSpinner } from '../../components/ui/loading-spinner';
-import { useCriticalStock } from '../../hooks/useCriticalStock';
+import { useProducts } from '../../hooks/useProducts';
 import { AlertTriangle, Package, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
@@ -8,7 +8,8 @@ import { useAuth } from '../../context/AuthContext';
 export function CriticalStockPage() {
     const { user } = useAuth();
     const tenantId = user?.tenantId ?? '';
-    const { data: products, isLoading } = useCriticalStock(tenantId);
+    const { data: allProducts, isLoading } = useProducts(tenantId);
+    const products = (allProducts ?? []).filter(p => p.isActive && p.stock <= p.minStock);
 
     if (isLoading) {
         return (
