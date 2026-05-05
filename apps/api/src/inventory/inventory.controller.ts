@@ -1,24 +1,7 @@
 import { Controller, Get, Post, Param, Query, Body, UseGuards, Request } from '@nestjs/common';
 import { InventoryService } from './inventory.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { IsNumber, IsOptional, IsString, IsNotEmpty } from 'class-validator';
-
-class AdjustStockDto {
-  @IsString()
-  @IsNotEmpty()
-  productId: string;
-
-  @IsString()
-  @IsNotEmpty()
-  branchId: string;
-
-  @IsNumber()
-  quantity: number;
-
-  @IsOptional()
-  @IsString()
-  note?: string;
-}
+import { MovementType } from '@prisma/client';
 
 @Controller('inventory')
 export class InventoryController {
@@ -34,13 +17,14 @@ export class InventoryController {
 
   @UseGuards(JwtAuthGuard)
   @Post('adjust')
-  async adjustStock(@Body() body: AdjustStockDto, @Request() req: any) {
+  async adjustStock(@Body() body: any, @Request() req: any) {
+    const { productId, branchId, quantity, note } = body;
     return this.inventoryService.logMovement({
-      productId: body.productId,
-      branchId: body.branchId,
-      quantity: body.quantity,
-      type: 'ADJUSTMENT',
-      reference: body.note || 'Ajuste manual',
+      productId,
+      branchId,
+      quantity: Number(quantity),
+      type: MovementType.ADJUSTMENT,
+      reference: note || 'Ajuste manual',
       userId: req.user?.userId,
     });
   }
