@@ -366,22 +366,21 @@ export function InventoryPage() {
                                                 </span>
                                             )}
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                            <div className="flex items-center justify-end gap-2">
+                                        <td className="px-4 py-4 whitespace-nowrap text-right">
+                                            <div className="flex items-center justify-end gap-1.5">
                                                 <button
                                                     onClick={() => handleAdjust(product)}
-                                                    className="inline-flex items-center px-3 py-1.5 border border-emerald-300 rounded-lg text-emerald-700 bg-emerald-50 hover:bg-emerald-100 transition-colors shadow-sm text-xs font-bold"
                                                     title="Ajustar stock"
+                                                    className="p-2 rounded-lg text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 border border-transparent hover:border-emerald-200 transition-all"
                                                 >
-                                                    <PackagePlus className="w-3.5 h-3.5 mr-1.5" />
-                                                    + Stock
+                                                    <PackagePlus className="w-4 h-4" />
                                                 </button>
                                                 <button
                                                     onClick={() => handleKardex(product)}
-                                                    className="inline-flex items-center px-3 py-1.5 border border-gray-300 rounded-lg text-gray-700 bg-white hover:bg-gray-50 transition-colors shadow-sm text-xs font-bold"
+                                                    title="Ver Kardex"
+                                                    className="p-2 rounded-lg text-blue-500 hover:text-blue-700 hover:bg-blue-50 border border-transparent hover:border-blue-200 transition-all"
                                                 >
-                                                    <History className="w-3.5 h-3.5 mr-1.5 text-blue-600" />
-                                                    Ver Kardex
+                                                    <History className="w-4 h-4" />
                                                 </button>
                                             </div>
                                         </td>

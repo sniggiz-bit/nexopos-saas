@@ -21,7 +21,7 @@ export function StockAdjustModal({ product, branchId, onClose, onSuccess }: Stoc
     const finalQty = mode === 'add' ? qty : -qty;
     const newStock = product.stock + finalQty;
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.SyntheticEvent) => {
         e.preventDefault();
         if (!qty || qty <= 0) {
             toast.error('Ingresa una cantidad válida');
@@ -117,7 +117,7 @@ export function StockAdjustModal({ product, branchId, onClose, onSuccess }: Stoc
                         </label>
                         <input
                             type="number"
-                            min="0.001"
+                            min={product.unitType === 'WEIGHT' ? '0.001' : '1'}
                             step={product.unitType === 'WEIGHT' ? '0.001' : '1'}
                             value={quantity}
                             onChange={(e) => setQuantity(e.target.value)}
