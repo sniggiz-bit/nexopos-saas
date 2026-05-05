@@ -17,9 +17,8 @@ COPY apps/api/prisma ./apps/api/prisma
 COPY apps/api/prisma.config.ts ./apps/api/prisma.config.ts
 COPY packages/shared ./packages/shared
 
-# Generate Prisma Client — busca el binario en root o workspace según donde npm lo haya instalado
 WORKDIR /app/apps/api
-RUN node /app/node_modules/prisma/build/index.js generate
+RUN /app/node_modules/.bin/prisma generate
 
 # Production stage
 FROM node:20-alpine AS runner
@@ -55,4 +54,4 @@ EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=10s --retries=3 --start-period=40s \
     CMD wget --no-verbose --tries=1 --spider http://localhost:3000/api || exit 1
 
-CMD ["sh", "-c", "node /app/node_modules/prisma/build/index.js migrate deploy && node dist/main.js"]
+CMD ["sh", "-c", "/app/node_modules/.bin/prisma migrate deploy && node dist/main.js"]
