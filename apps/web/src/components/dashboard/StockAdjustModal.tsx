@@ -45,7 +45,10 @@ export function StockAdjustModal({ product, onClose, onSuccess }: StockAdjustMod
                     ? `+${qty} ${product.unitType === 'WEIGHT' ? 'kg' : 'uds'} agregados a ${product.name}`
                     : `-${qty} ${product.unitType === 'WEIGHT' ? 'kg' : 'uds'} descontados de ${product.name}`
             );
-            queryClient.refetchQueries({ queryKey: ['products', user?.tenantId] });
+            queryClient.setQueryData<Product[]>(
+                ['products', user?.tenantId],
+                (old) => old ? old.map((p) => p.id === product.id ? { ...p, stock: newStock } : p) : old,
+            );
             onSuccess();
             onClose();
         } catch (error: any) {
