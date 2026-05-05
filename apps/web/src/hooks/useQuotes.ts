@@ -22,11 +22,12 @@ export function useCreateQuote() {
 
 export function useUpdateQuote() {
     const queryClient = useQueryClient();
+    const { user } = useAuth();
 
     return useMutation({
         mutationFn: ({ id, data }: { id: string, data: Partial<CreateQuoteData> }) => updateQuote(id, data),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['quotes'] });
+            queryClient.refetchQueries({ queryKey: ['quotes', user?.tenantId] });
             toast.success('Cotización actualizada exitosamente');
         },
         onError: (error: any) => {
@@ -38,11 +39,12 @@ export function useUpdateQuote() {
 
 export function useConvertQuote() {
     const queryClient = useQueryClient();
+    const { user } = useAuth();
 
     return useMutation({
         mutationFn: (id: string) => convertQuote(id),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['quotes'] });
+            queryClient.refetchQueries({ queryKey: ['quotes', user?.tenantId] });
             queryClient.invalidateQueries({ queryKey: ['sales'] });
             toast.success('Cotización convertida a venta exitosamente');
         },
