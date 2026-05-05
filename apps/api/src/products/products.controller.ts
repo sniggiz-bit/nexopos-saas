@@ -27,9 +27,8 @@ export class ProductsController {
   @Get('critical')
   async findCritical(
     @Query('tenantId') tenantId: string = 'tenant-1',
-    @Query('branchId') branchId?: string,
   ) {
-    return this.productsService.findCritical(tenantId, branchId);
+    return this.productsService.findCritical(tenantId);
   }
 
   /**
