@@ -403,7 +403,6 @@ export function InventoryPage() {
                 {isAdjustOpen && productForAdjust && (
                     <StockAdjustModal
                         product={productForAdjust}
-                        branchId={user?.branchId ?? ''}
                         onClose={() => {
                             setIsAdjustOpen(false);
                             setProductForAdjust(null);
