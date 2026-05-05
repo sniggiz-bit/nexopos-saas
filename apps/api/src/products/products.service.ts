@@ -434,16 +434,14 @@ export class ProductsService {
   /**
    * Find products with critical stock (<= minStock)
    */
-  async findCritical(tenantId: string, branchId: string = 'branch-1') {
+  async findCritical(tenantId: string) {
     const products = await this.prisma.product.findMany({
       where: {
         tenantId,
         isActive: true,
       },
       include: {
-        inventory: {
-          where: { branchId },
-        },
+        inventory: true,
         category: true,
         brand: true,
       },
