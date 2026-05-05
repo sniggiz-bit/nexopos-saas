@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { X, Plus, Minus, PackagePlus } from 'lucide-react';
 import { apiClient } from '../../api/client';
 import { toast } from 'react-hot-toast';
+import { useQueryClient } from '@tanstack/react-query';
+import { useAuth } from '../../context/AuthContext';
 import type { Product } from '../../api/types';
 
 interface StockAdjustModalProps {
@@ -15,6 +17,8 @@ export function StockAdjustModal({ product, onClose, onSuccess }: StockAdjustMod
     const [note, setNote] = useState('');
     const [mode, setMode] = useState<'add' | 'subtract'>('add');
     const [isLoading, setIsLoading] = useState(false);
+    const queryClient = useQueryClient();
+    const { user } = useAuth();
 
     const qty = Number(quantity) || 0;
     const finalQty = mode === 'add' ? qty : -qty;
@@ -41,6 +45,7 @@ export function StockAdjustModal({ product, onClose, onSuccess }: StockAdjustMod
                     ? `+${qty} ${product.unitType === 'WEIGHT' ? 'kg' : 'uds'} agregados a ${product.name}`
                     : `-${qty} ${product.unitType === 'WEIGHT' ? 'kg' : 'uds'} descontados de ${product.name}`
             );
+            queryClient.refetchQueries({ queryKey: ['products', user?.tenantId] });
             onSuccess();
             onClose();
         } catch (error: any) {
