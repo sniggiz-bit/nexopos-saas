@@ -1,6 +1,6 @@
 import { Controller, Get, Post, Param, Query, Body, UseGuards, Request } from '@nestjs/common';
 import { InventoryService } from './inventory.service';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { IsNumber, IsOptional, IsString, IsNotEmpty } from 'class-validator';
 
 class AdjustStockDto {
