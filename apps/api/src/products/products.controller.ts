@@ -7,11 +7,14 @@ import {
   Body,
   Param,
   Query,
+  UseGuards,
+  Request,
 } from '@nestjs/common';
 import { ProductsService } from './products.service';
 import { ProductResponseDto } from './dto/product-response.dto';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 @Controller('products')
 export class ProductsController {
@@ -85,12 +88,14 @@ export class ProductsController {
    * @param updateProductDto - Updated product data
    * @returns Updated product
    */
+  @UseGuards(JwtAuthGuard)
   @Patch(':id')
   async update(
     @Param('id') id: string,
     @Body() updateProductDto: UpdateProductDto,
+    @Request() req: any,
   ): Promise<ProductResponseDto> {
-    return this.productsService.update(id, updateProductDto);
+    return this.productsService.update(id, updateProductDto, req.user?.userId);
   }
 
   /**

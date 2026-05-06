@@ -289,6 +289,7 @@ export class ProductsService {
   async update(
     id: string,
     updateProductDto: UpdateProductDto,
+    userId?: string,
   ): Promise<ProductResponseDto> {
     const existingProductForValidation = await this.prisma.product.findUnique({
       where: { id },
@@ -403,18 +404,13 @@ export class ProductsService {
               quantity: diff,
               type: 'ADJUSTMENT',
               balance: newStock,
-              reference: 'Ajuste Manual',
+              reference: updateProductDto.stockNote || 'Ajuste Manual',
+              ...(userId ? { userId } : {}),
             },
           }),
         ]);
       }
     }
-
-    // Fetch updated product to return
-    // Note: The previous query `product` might be stale regarding inventory if we just updated it above.
-    // But `updateProductDto.stock` was NOT passed to the initial `prisma.product.update` call in my modified code?
-    // Wait, I need to REMOVE the inventory update from the initial `prisma.product.update` if I'm doing it manually here.
-    // OR better: Do everything in a transaction.
 
     return this.findOne(id, product.tenantId);
   }

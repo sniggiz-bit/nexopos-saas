@@ -37,8 +37,9 @@ export function StockAdjustModal({ product, onClose, onSuccess }: StockAdjustMod
 
         setIsLoading(true);
         try {
-            await apiClient.patch(`/products/${product.id}`, {
+            const { data: updatedProduct } = await apiClient.patch<Product>(`/products/${product.id}`, {
                 stock: newStock,
+                stockNote: note || undefined,
             });
             toast.success(
                 mode === 'add'
@@ -47,7 +48,7 @@ export function StockAdjustModal({ product, onClose, onSuccess }: StockAdjustMod
             );
             queryClient.setQueryData<Product[]>(
                 ['products', user?.tenantId],
-                (old) => old ? old.map((p) => p.id === product.id ? { ...p, stock: newStock } : p) : old,
+                (old) => old ? old.map((p) => p.id === product.id ? updatedProduct : p) : old,
             );
             onSuccess();
             onClose();
