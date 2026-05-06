@@ -5,7 +5,7 @@ import { UpdateProductDto } from './dto/update-product.dto';
 export declare class ProductsController {
     private readonly productsService;
     constructor(productsService: ProductsService);
-    findCritical(tenantId?: string, branchId?: string): Promise<{
+    findCritical(tenantId?: string): Promise<{
         stock: number;
         brand: {
             name: string;
@@ -50,7 +50,7 @@ export declare class ProductsController {
     findAll(tenantId?: string): Promise<ProductResponseDto[]>;
     findOne(id: string, tenantId?: string): Promise<ProductResponseDto>;
     create(createProductDto: CreateProductDto): Promise<ProductResponseDto>;
-    update(id: string, updateProductDto: UpdateProductDto): Promise<ProductResponseDto>;
+    update(id: string, updateProductDto: UpdateProductDto, req: any): Promise<ProductResponseDto>;
     remove(id: string): Promise<void>;
     bulkUpdatePublic(body: {
         ids: string[];

@@ -113,6 +113,9 @@ let PrismaService = class PrismaService {
     get transferItem() {
         return this.prisma.transferItem;
     }
+    get paymentTransaction() {
+        return this.prisma.paymentTransaction;
+    }
 };
 exports.PrismaService = PrismaService;
 exports.PrismaService = PrismaService = __decorate([

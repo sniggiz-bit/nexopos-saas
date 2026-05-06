@@ -10,9 +10,9 @@ export declare class ProductsService {
     findAll(tenantId: string): Promise<ProductResponseDto[]>;
     findOne(id: string, tenantId: string): Promise<ProductResponseDto>;
     create(createProductDto: CreateProductDto): Promise<ProductResponseDto>;
-    update(id: string, updateProductDto: UpdateProductDto): Promise<ProductResponseDto>;
+    update(id: string, updateProductDto: UpdateProductDto, userId?: string): Promise<ProductResponseDto>;
     remove(id: string): Promise<void>;
-    findCritical(tenantId: string, branchId?: string): Promise<{
+    findCritical(tenantId: string): Promise<{
         stock: number;
         brand: {
             name: string;

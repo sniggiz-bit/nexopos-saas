@@ -17,13 +17,14 @@ const common_1 = require("@nestjs/common");
 const products_service_1 = require("./products.service");
 const create_product_dto_1 = require("./dto/create-product.dto");
 const update_product_dto_1 = require("./dto/update-product.dto");
+const jwt_auth_guard_1 = require("../auth/jwt-auth.guard");
 let ProductsController = class ProductsController {
     productsService;
     constructor(productsService) {
         this.productsService = productsService;
     }
-    async findCritical(tenantId = 'tenant-1', branchId) {
-        return this.productsService.findCritical(tenantId, branchId);
+    async findCritical(tenantId = 'tenant-1') {
+        return this.productsService.findCritical(tenantId);
     }
     async findAll(tenantId = 'tenant-1') {
         return this.productsService.findAll(tenantId);
@@ -34,8 +35,8 @@ let ProductsController = class ProductsController {
     async create(createProductDto) {
         return this.productsService.create(createProductDto);
     }
-    async update(id, updateProductDto) {
-        return this.productsService.update(id, updateProductDto);
+    async update(id, updateProductDto, req) {
+        return this.productsService.update(id, updateProductDto, req.user?.userId);
     }
     async remove(id) {
         return this.productsService.remove(id);
@@ -48,9 +49,8 @@ exports.ProductsController = ProductsController;
 __decorate([
     (0, common_1.Get)('critical'),
     __param(0, (0, common_1.Query)('tenantId')),
-    __param(1, (0, common_1.Query)('branchId')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
 ], ProductsController.prototype, "findCritical", null);
 __decorate([
@@ -76,11 +76,13 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], ProductsController.prototype, "create", null);
 __decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, common_1.Patch)(':id'),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Body)()),
+    __param(2, (0, common_1.Request)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, update_product_dto_1.UpdateProductDto]),
+    __metadata("design:paramtypes", [String, update_product_dto_1.UpdateProductDto, Object]),
     __metadata("design:returntype", Promise)
 ], ProductsController.prototype, "update", null);
 __decorate([

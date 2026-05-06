@@ -28,6 +28,7 @@ export declare class SalesService {
             isMain: boolean;
             isActive: boolean;
             tenantId: string;
+            transbankSettings: import("@prisma/client/runtime/client").JsonValue | null;
         };
         user: {
             name: string | null;

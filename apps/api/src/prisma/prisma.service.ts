@@ -136,4 +136,8 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
   get transferItem() {
     return this.prisma.transferItem;
   }
+
+  get paymentTransaction() {
+    return this.prisma.paymentTransaction;
+  }
 }

@@ -45,6 +45,7 @@ export declare class TransfersController {
             isMain: boolean;
             isActive: boolean;
             tenantId: string;
+            transbankSettings: import("@prisma/client/runtime/client").JsonValue | null;
         };
         destinationBranch: {
             name: string;
@@ -55,6 +56,7 @@ export declare class TransfersController {
             isMain: boolean;
             isActive: boolean;
             tenantId: string;
+            transbankSettings: import("@prisma/client/runtime/client").JsonValue | null;
         };
         requestedBy: {
             name: string | null;

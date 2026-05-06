@@ -15,6 +15,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.InventoryController = void 0;
 const common_1 = require("@nestjs/common");
 const inventory_service_1 = require("./inventory.service");
+const jwt_auth_guard_1 = require("../auth/jwt-auth.guard");
+const client_1 = require("@prisma/client");
 let InventoryController = class InventoryController {
     inventoryService;
     constructor(inventoryService) {
@@ -22,6 +24,17 @@ let InventoryController = class InventoryController {
     }
     async getKardex(productId, branchId) {
         return this.inventoryService.getKardex(productId, branchId);
+    }
+    async adjustStock(body, req) {
+        const { productId, branchId, quantity, note } = body;
+        return this.inventoryService.logMovement({
+            productId,
+            branchId,
+            quantity: Number(quantity),
+            type: client_1.MovementType.ADJUSTMENT,
+            reference: note || 'Ajuste manual',
+            userId: req.user?.userId,
+        });
     }
 };
 exports.InventoryController = InventoryController;
@@ -33,6 +46,15 @@ __decorate([
     __metadata("design:paramtypes", [String, String]),
     __metadata("design:returntype", Promise)
 ], InventoryController.prototype, "getKardex", null);
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.Post)('adjust'),
+    __param(0, (0, common_1.Body)()),
+    __param(1, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", Promise)
+], InventoryController.prototype, "adjustStock", null);
 exports.InventoryController = InventoryController = __decorate([
     (0, common_1.Controller)('inventory'),
     __metadata("design:paramtypes", [inventory_service_1.InventoryService])

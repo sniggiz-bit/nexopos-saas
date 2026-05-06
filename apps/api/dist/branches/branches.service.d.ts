@@ -16,6 +16,7 @@ export declare class BranchesService {
         isMain: boolean;
         isActive: boolean;
         tenantId: string;
+        transbankSettings: import("@prisma/client/runtime/client").JsonValue | null;
     }>;
     findAll(tenantId: string): Promise<{
         name: string;
@@ -26,6 +27,7 @@ export declare class BranchesService {
         isMain: boolean;
         isActive: boolean;
         tenantId: string;
+        transbankSettings: import("@prisma/client/runtime/client").JsonValue | null;
     }[]>;
     findOne(id: string): Promise<{
         name: string;
@@ -36,6 +38,7 @@ export declare class BranchesService {
         isMain: boolean;
         isActive: boolean;
         tenantId: string;
+        transbankSettings: import("@prisma/client/runtime/client").JsonValue | null;
     } | null>;
     findAllSystemWide(): Promise<({
         tenant: {
@@ -51,6 +54,7 @@ export declare class BranchesService {
         isMain: boolean;
         isActive: boolean;
         tenantId: string;
+        transbankSettings: import("@prisma/client/runtime/client").JsonValue | null;
     })[]>;
     updateStatus(id: string, isActive: boolean): Promise<{
         name: string;
@@ -61,5 +65,6 @@ export declare class BranchesService {
         isMain: boolean;
         isActive: boolean;
         tenantId: string;
+        transbankSettings: import("@prisma/client/runtime/client").JsonValue | null;
     }>;
 }

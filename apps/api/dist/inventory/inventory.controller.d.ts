@@ -17,4 +17,7 @@ export declare class InventoryController {
         type: import("@prisma/client").$Enums.MovementType;
         reference: string | null;
     })[]>;
+    adjustStock(body: any, req: any): Promise<{
+        newBalance: number;
+    }>;
 }

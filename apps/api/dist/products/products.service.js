@@ -223,7 +223,7 @@ let ProductsService = class ProductsService {
             priceTiers: product.priceTiers || [],
         };
     }
-    async update(id, updateProductDto) {
+    async update(id, updateProductDto, userId) {
         const existingProductForValidation = await this.prisma.product.findUnique({
             where: { id },
         });
@@ -320,7 +320,8 @@ let ProductsService = class ProductsService {
                             quantity: diff,
                             type: 'ADJUSTMENT',
                             balance: newStock,
-                            reference: 'Ajuste Manual',
+                            reference: updateProductDto.stockNote || 'Ajuste Manual',
+                            ...(userId ? { userId } : {}),
                         },
                     }),
                 ]);
@@ -336,16 +337,14 @@ let ProductsService = class ProductsService {
             },
         });
     }
-    async findCritical(tenantId, branchId = 'branch-1') {
+    async findCritical(tenantId) {
         const products = await this.prisma.product.findMany({
             where: {
                 tenantId,
                 isActive: true,
             },
             include: {
-                inventory: {
-                    where: { branchId },
-                },
+                inventory: true,
                 category: true,
                 brand: true,
             },

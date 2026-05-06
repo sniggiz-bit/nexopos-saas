@@ -7,10 +7,9 @@ export declare class TenantsController {
     findOne(id: string, req: any): Promise<any>;
     updateSettings(id: string, dto: UpdateTenantSettingsDto): Promise<any>;
     suspend(id: string): Promise<{
+        name: string;
         id: string;
         slug: string;
-        storeSlug: string | null;
-        name: string;
         phone: string | null;
         rut: string | null;
         giro: string | null;
@@ -20,13 +19,13 @@ export declare class TenantsController {
         planId: string | null;
         status: string;
         nextPayment: Date | null;
+        storeSlug: string | null;
         storeSettings: import("@prisma/client/runtime/client").JsonValue | null;
     }>;
     activate(id: string): Promise<{
+        name: string;
         id: string;
         slug: string;
-        storeSlug: string | null;
-        name: string;
         phone: string | null;
         rut: string | null;
         giro: string | null;
@@ -36,6 +35,7 @@ export declare class TenantsController {
         planId: string | null;
         status: string;
         nextPayment: Date | null;
+        storeSlug: string | null;
         storeSettings: import("@prisma/client/runtime/client").JsonValue | null;
     }>;
 }
