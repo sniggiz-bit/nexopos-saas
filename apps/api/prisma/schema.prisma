@@ -40,6 +40,8 @@ model Tenant {
   suppliers               Supplier[]
   purchases               Purchase[]
   transbankTransactions   PaymentTransaction[]
+  ecommerceConnections    EcommerceConnection[]
+  ecommerceOrders         EcommerceOrder[]
 }
 
 model Branch {
@@ -145,6 +147,7 @@ model Product {
   transferItems TransferItem[]
   purchaseItems PurchaseItem[]
   priceTiers    ProductPriceTier[]
+  ecommerceMappings ProductMapping[]
 
   @@unique([barcode, tenantId])
 }
@@ -545,6 +548,157 @@ model PurchaseItem {
   costPrice  Float    // precio de costo unitario al momento de la compra
   purchase   Purchase @relation(fields: [purchaseId], references: [id], onDelete: Cascade)
   product    Product  @relation(fields: [productId], references: [id])
+}
+
+// ============================================================
+// MÓDULO INTEGRACIONES ECOMMERCE (Shopify / WooCommerce)
+// ============================================================
+
+enum EcommercePlatform {
+  SHOPIFY
+  WOOCOMMERCE
+}
+
+enum SyncStatus {
+  IDLE
+  SYNCING
+  SUCCESS
+  ERROR
+  PARTIAL
+}
+
+enum SyncDirection {
+  PUSH
+  PULL
+}
+
+enum SyncEntityType {
+  PRODUCT
+  INVENTORY
+  ORDER
+  CUSTOMER
+  FULL
+}
+
+enum EcommerceOrderStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  IGNORED
+}
+
+model EcommerceConnection {
+  id       String            @id @default(uuid())
+  tenantId String
+  platform EcommercePlatform
+  name     String
+
+  // Shopify
+  shopDomain  String?
+  accessToken String?
+  locationId  String?
+  webhookSecret String?
+
+  // WooCommerce
+  siteUrl        String?
+  consumerKey    String?
+  consumerSecret String?
+
+  // Opciones de sync
+  syncProducts   Boolean @default(true)
+  syncInventory  Boolean @default(true)
+  syncOrders     Boolean @default(true)
+  syncCustomers  Boolean @default(false)
+  autoCreateSale Boolean @default(false)
+
+  isActive   Boolean    @default(true)
+  lastSyncAt DateTime?
+  syncStatus SyncStatus @default(IDLE)
+  lastError  String?
+
+  tenant   Tenant             @relation(fields: [tenantId], references: [id])
+  mappings ProductMapping[]
+  webhooks RegisteredWebhook[]
+  orders   EcommerceOrder[]
+  syncLogs SyncLog[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ProductMapping {
+  id               String @id @default(uuid())
+  connectionId     String
+  nexoposProductId String
+  externalId       String
+  externalVariantId String?
+
+  lastPushedAt DateTime?
+  lastPulledAt DateTime?
+
+  connection EcommerceConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+  product    Product             @relation(fields: [nexoposProductId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([connectionId, nexoposProductId])
+  @@unique([connectionId, externalId])
+}
+
+model RegisteredWebhook {
+  id           String @id @default(uuid())
+  connectionId String
+  topic        String
+  externalId   String
+  callbackUrl  String
+  isActive     Boolean @default(true)
+
+  connection EcommerceConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+}
+
+model EcommerceOrder {
+  id             String               @id @default(uuid())
+  connectionId   String
+  tenantId       String
+  externalId     String
+  externalNumber String?
+  platform       EcommercePlatform
+  status         EcommerceOrderStatus @default(PENDING)
+  rawData        Json
+  processedAt    DateTime?
+  saleId         String?
+  errorMessage   String?
+
+  connection EcommerceConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+  tenant     Tenant              @relation(fields: [tenantId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([connectionId, externalId])
+}
+
+model SyncLog {
+  id           String         @id @default(uuid())
+  connectionId String
+  tenantId     String
+  entityType   SyncEntityType
+  direction    SyncDirection
+  status       SyncStatus
+  total        Int            @default(0)
+  synced       Int            @default(0)
+  failed       Int            @default(0)
+  errors       Json?
+  durationMs   Int?
+
+  connection EcommerceConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+
+  startedAt   DateTime  @default(now())
+  completedAt DateTime?
 }
 
 model TenantSettings {

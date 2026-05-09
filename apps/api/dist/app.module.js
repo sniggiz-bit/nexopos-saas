@@ -9,6 +9,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.AppModule = void 0;
 const common_1 = require("@nestjs/common");
 const config_1 = require("@nestjs/config");
+const schedule_1 = require("@nestjs/schedule");
+const ecommerce_integrations_module_1 = require("./ecommerce-integrations/ecommerce-integrations.module");
 const app_controller_1 = require("./app.controller");
 const app_service_1 = require("./app.service");
 const debug_controller_1 = require("./debug/debug.controller");
@@ -52,6 +54,8 @@ exports.AppModule = AppModule = __decorate([
                 isGlobal: true,
                 envFilePath: '.env',
             }),
+            schedule_1.ScheduleModule.forRoot(),
+            ecommerce_integrations_module_1.EcommerceIntegrationsModule,
             sales_module_1.SalesModule,
             prisma_module_1.PrismaModule,
             dte_module_1.DteModule,
