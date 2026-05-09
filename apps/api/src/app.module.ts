@@ -1,5 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { ScheduleModule } from '@nestjs/schedule';
+import { EcommerceIntegrationsModule } from './ecommerce-integrations/ecommerce-integrations.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { DebugController } from './debug/debug.controller';
@@ -40,6 +42,8 @@ import { UploadsModule } from './uploads/uploads.module';
       isGlobal: true,
       envFilePath: '.env',
     }),
+    ScheduleModule.forRoot(),
+    EcommerceIntegrationsModule,
     SalesModule,
     PrismaModule,
     DteModule,

@@ -28,6 +28,7 @@ import BranchesPage from './pages/admin/BranchesPage';
 import SuperAdminBranchesPage from './pages/admin/SuperAdminBranchesPage';
 import NewTransferPage from './pages/admin/transfers/NewTransferPage';
 import { EcommercePage } from './pages/dashboard/EcommercePage';
+import { IntegrationsPage } from './pages/dashboard/IntegrationsPage';
 import { SsoLoginPage } from './pages/SsoLoginPage';
 import { SuppliersPage } from './pages/dashboard/SuppliersPage';
 import { PurchasesPage } from './pages/dashboard/PurchasesPage';
@@ -145,6 +146,7 @@ function App() {
                 <Route path="/dashboard/transfers/new" element={<NewTransferPage />} />
                 <Route path="/admin/transfers/new" element={<NewTransferPage />} /> {/* Alias */}
                 <Route path="/dashboard/ecommerce" element={<EcommercePage />} />
+                <Route path="/dashboard/integrations" element={<IntegrationsPage />} />
                 <Route path="/admin/ecommerce" element={<EcommercePage />} />
                 <Route path="/dashboard/suppliers" element={<SuppliersPage />} />
                 <Route path="/dashboard/purchases" element={<PurchasesPage />} />

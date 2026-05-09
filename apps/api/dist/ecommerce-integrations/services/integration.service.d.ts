@@ -1,0 +1,167 @@
+import { PrismaService } from '../../prisma/prisma.service';
+import { CreateConnectionDto } from '../dto/create-connection.dto';
+import { UpdateConnectionDto } from '../dto/update-connection.dto';
+import { EcommerceDriverInterface } from '../interfaces/ecommerce-driver.interface';
+export declare class IntegrationService {
+    private readonly prisma;
+    private readonly logger;
+    constructor(prisma: PrismaService);
+    create(tenantId: string, dto: CreateConnectionDto): Promise<{
+        name: string;
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        isActive: boolean;
+        tenantId: string;
+        platform: import("@prisma/client").$Enums.EcommercePlatform;
+        shopDomain: string | null;
+        accessToken: string | null;
+        locationId: string | null;
+        webhookSecret: string | null;
+        siteUrl: string | null;
+        consumerKey: string | null;
+        consumerSecret: string | null;
+        syncProducts: boolean;
+        syncInventory: boolean;
+        syncOrders: boolean;
+        syncCustomers: boolean;
+        autoCreateSale: boolean;
+        lastSyncAt: Date | null;
+        syncStatus: import("@prisma/client").$Enums.SyncStatus;
+        lastError: string | null;
+    }>;
+    findAll(tenantId: string): Promise<{
+        name: string;
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        isActive: boolean;
+        platform: import("@prisma/client").$Enums.EcommercePlatform;
+        shopDomain: string | null;
+        locationId: string | null;
+        siteUrl: string | null;
+        syncProducts: boolean;
+        syncInventory: boolean;
+        syncOrders: boolean;
+        syncCustomers: boolean;
+        autoCreateSale: boolean;
+        lastSyncAt: Date | null;
+        syncStatus: import("@prisma/client").$Enums.SyncStatus;
+        lastError: string | null;
+    }[]>;
+    findOne(id: string, tenantId: string): Promise<{
+        name: string;
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        isActive: boolean;
+        tenantId: string;
+        platform: import("@prisma/client").$Enums.EcommercePlatform;
+        shopDomain: string | null;
+        accessToken: string | null;
+        locationId: string | null;
+        webhookSecret: string | null;
+        siteUrl: string | null;
+        consumerKey: string | null;
+        consumerSecret: string | null;
+        syncProducts: boolean;
+        syncInventory: boolean;
+        syncOrders: boolean;
+        syncCustomers: boolean;
+        autoCreateSale: boolean;
+        lastSyncAt: Date | null;
+        syncStatus: import("@prisma/client").$Enums.SyncStatus;
+        lastError: string | null;
+    }>;
+    update(id: string, tenantId: string, dto: UpdateConnectionDto): Promise<{
+        name: string;
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        isActive: boolean;
+        tenantId: string;
+        platform: import("@prisma/client").$Enums.EcommercePlatform;
+        shopDomain: string | null;
+        accessToken: string | null;
+        locationId: string | null;
+        webhookSecret: string | null;
+        siteUrl: string | null;
+        consumerKey: string | null;
+        consumerSecret: string | null;
+        syncProducts: boolean;
+        syncInventory: boolean;
+        syncOrders: boolean;
+        syncCustomers: boolean;
+        autoCreateSale: boolean;
+        lastSyncAt: Date | null;
+        syncStatus: import("@prisma/client").$Enums.SyncStatus;
+        lastError: string | null;
+    }>;
+    remove(id: string, tenantId: string): Promise<{
+        message: string;
+    }>;
+    testConnection(id: string, tenantId: string): Promise<{
+        success: boolean;
+        message: string;
+    }>;
+    getMappings(connectionId: string, tenantId: string): Promise<({
+        product: {
+            name: string;
+            id: string;
+            sku: string | null;
+        };
+    } & {
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        connectionId: string;
+        externalId: string;
+        nexoposProductId: string;
+        externalVariantId: string | null;
+        lastPushedAt: Date | null;
+        lastPulledAt: Date | null;
+    })[]>;
+    deleteMapping(connectionId: string, mappingId: string, tenantId: string): Promise<{
+        message: string;
+    }>;
+    getLogs(tenantId: string, connectionId?: string): Promise<{
+        id: string;
+        status: import("@prisma/client").$Enums.SyncStatus;
+        tenantId: string;
+        total: number;
+        connectionId: string;
+        entityType: import("@prisma/client").$Enums.SyncEntityType;
+        direction: import("@prisma/client").$Enums.SyncDirection;
+        synced: number;
+        failed: number;
+        errors: import("@prisma/client/runtime/client").JsonValue | null;
+        durationMs: number | null;
+        startedAt: Date;
+        completedAt: Date | null;
+    }[]>;
+    getOrders(tenantId: string, connectionId?: string): Promise<{
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        status: import("@prisma/client").$Enums.EcommerceOrderStatus;
+        tenantId: string;
+        saleId: string | null;
+        platform: import("@prisma/client").$Enums.EcommercePlatform;
+        connectionId: string;
+        externalId: string;
+        externalNumber: string | null;
+        rawData: import("@prisma/client/runtime/client").JsonValue;
+        processedAt: Date | null;
+        errorMessage: string | null;
+    }[]>;
+    buildDriver(conn: {
+        platform: string;
+        shopDomain?: string | null;
+        accessToken?: string | null;
+        locationId?: string | null;
+        siteUrl?: string | null;
+        consumerKey?: string | null;
+        consumerSecret?: string | null;
+        webhookSecret?: string | null;
+    }): EcommerceDriverInterface;
+}

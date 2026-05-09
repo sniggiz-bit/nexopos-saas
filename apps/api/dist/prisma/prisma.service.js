@@ -116,6 +116,21 @@ let PrismaService = class PrismaService {
     get paymentTransaction() {
         return this.prisma.paymentTransaction;
     }
+    get ecommerceConnection() {
+        return this.prisma.ecommerceConnection;
+    }
+    get productMapping() {
+        return this.prisma.productMapping;
+    }
+    get registeredWebhook() {
+        return this.prisma.registeredWebhook;
+    }
+    get ecommerceOrder() {
+        return this.prisma.ecommerceOrder;
+    }
+    get syncLog() {
+        return this.prisma.syncLog;
+    }
 };
 exports.PrismaService = PrismaService;
 exports.PrismaService = PrismaService = __decorate([

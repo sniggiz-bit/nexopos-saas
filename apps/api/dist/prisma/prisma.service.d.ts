@@ -35,4 +35,9 @@ export declare class PrismaService implements OnModuleInit, OnModuleDestroy {
     get transfer(): import("@prisma/client").Prisma.TransferDelegate<import("@prisma/client/runtime/client").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;
     get transferItem(): import("@prisma/client").Prisma.TransferItemDelegate<import("@prisma/client/runtime/client").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;
     get paymentTransaction(): import("@prisma/client").Prisma.PaymentTransactionDelegate<import("@prisma/client/runtime/client").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;
+    get ecommerceConnection(): import("@prisma/client").Prisma.EcommerceConnectionDelegate<import("@prisma/client/runtime/client").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;
+    get productMapping(): import("@prisma/client").Prisma.ProductMappingDelegate<import("@prisma/client/runtime/client").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;
+    get registeredWebhook(): import("@prisma/client").Prisma.RegisteredWebhookDelegate<import("@prisma/client/runtime/client").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;
+    get ecommerceOrder(): import("@prisma/client").Prisma.EcommerceOrderDelegate<import("@prisma/client/runtime/client").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;
+    get syncLog(): import("@prisma/client").Prisma.SyncLogDelegate<import("@prisma/client/runtime/client").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;
 }
