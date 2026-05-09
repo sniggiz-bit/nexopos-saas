@@ -407,9 +407,7 @@ export function InventoryPage() {
                             setIsAdjustOpen(false);
                             setProductForAdjust(null);
                         }}
-                        onSuccess={() => {
-                            queryClient.refetchQueries({ queryKey: ['products', user?.tenantId] });
-                        }}
+                        onSuccess={() => {}}
                     />
                 )}
             </div>
