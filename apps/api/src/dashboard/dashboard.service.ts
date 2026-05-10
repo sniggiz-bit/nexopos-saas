@@ -115,16 +115,11 @@ export class DashboardService {
     const prevMonthStart = startOfMonth(subMonths(now, 1));
     const prevMonthEnd = new Date(currentMonthStart.getTime() - 1);
 
-    const branchFilter = branchId && branchId !== 'branch-1' ? { branchId } : {};
+    const bid = branchId && branchId !== 'branch-1' ? branchId : undefined;
 
-    // Sales by hour for today (raw query for grouping)
+    // Sales by hour for today
     const hourlySales = await this.prisma.sale.findMany({
-      where: {
-        tenantId,
-        ...branchFilter,
-        status: 'COMPLETED',
-        createdAt: { gte: todayStart, lte: todayEnd },
-      },
+      where: { tenantId, branchId: bid, status: 'COMPLETED', createdAt: { gte: todayStart, lte: todayEnd } },
       select: { createdAt: true, total: true },
     });
 
@@ -137,26 +132,21 @@ export class DashboardService {
     // Top 5 products this month by quantity sold
     const saleItems = await this.prisma.saleItem.findMany({
       where: {
-        sale: {
-          tenantId,
-          ...branchFilter,
-          status: 'COMPLETED',
-          createdAt: { gte: currentMonthStart },
-        },
+        sale: { tenantId, branchId: bid, status: 'COMPLETED', createdAt: { gte: currentMonthStart } },
       },
       select: {
         quantity: true,
-        subtotal: true,
+        price: true,
+        discountAmount: true,
         product: { select: { id: true, name: true } },
       },
     });
 
     const productMap = new Map<string, { name: string; qty: number; revenue: number }>();
     for (const item of saleItems) {
-      if (!item.product) continue;
       const existing = productMap.get(item.product.id) ?? { name: item.product.name, qty: 0, revenue: 0 };
-      existing.qty += item.quantity;
-      existing.revenue += Number(item.subtotal);
+      existing.qty += Number(item.quantity);
+      existing.revenue += item.price * Number(item.quantity) - item.discountAmount;
       productMap.set(item.product.id, existing);
     }
 
@@ -168,11 +158,11 @@ export class DashboardService {
     // Month comparison
     const [currentRevResult, prevRevResult] = await Promise.all([
       this.prisma.sale.aggregate({
-        where: { tenantId, ...branchFilter, status: 'COMPLETED', createdAt: { gte: currentMonthStart } },
+        where: { tenantId, branchId: bid, status: 'COMPLETED', createdAt: { gte: currentMonthStart } },
         _sum: { total: true },
       }),
       this.prisma.sale.aggregate({
-        where: { tenantId, ...branchFilter, status: 'COMPLETED', createdAt: { gte: prevMonthStart, lte: prevMonthEnd } },
+        where: { tenantId, branchId: bid, status: 'COMPLETED', createdAt: { gte: prevMonthStart, lte: prevMonthEnd } },
         _sum: { total: true },
       }),
     ]);
