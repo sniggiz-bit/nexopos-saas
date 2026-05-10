@@ -4,6 +4,7 @@ import {
   Get,
   Body,
   Param,
+  Query,
   BadRequestException,
 } from '@nestjs/common';
 import { ShiftsService } from './shifts.service';
@@ -59,5 +60,24 @@ export class ShiftsController {
   @Get('summary/:shiftId')
   async getShiftSummary(@Param('shiftId') shiftId: string) {
     return this.shiftsService.getShiftSummary(shiftId);
+  }
+
+  @Get('history')
+  async getShiftHistory(
+    @Query('tenantId') tenantId: string,
+    @Query('branchId') branchId?: string,
+    @Query('page') page?: string,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+  ) {
+    if (!tenantId) throw new BadRequestException('tenantId is required');
+    return this.shiftsService.getShiftHistory(
+      tenantId,
+      branchId,
+      page ? parseInt(page, 10) : 1,
+      20,
+      from,
+      to,
+    );
   }
 }
