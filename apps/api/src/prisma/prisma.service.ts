@@ -160,4 +160,12 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
   get syncLog() {
     return this.prisma.syncLog;
   }
+
+  get tenantSettings() {
+    return this.prisma.tenantSettings;
+  }
+
+  get landingConfig() {
+    return this.prisma.landingConfig;
+  }
 }
