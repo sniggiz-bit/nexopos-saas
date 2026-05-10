@@ -5,6 +5,7 @@ import {
     ForbiddenException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { EventsService } from '../events/events.service';
 
 interface PurchaseItemDto {
     productId: string;
@@ -21,7 +22,10 @@ interface CreatePurchaseDto {
 
 @Injectable()
 export class PurchasesService {
-    constructor(private prisma: PrismaService) { }
+    constructor(
+        private prisma: PrismaService,
+        private eventsService: EventsService,
+    ) { }
 
     // ─────────────────────────────────────────────────────────────────────
     // LIST all purchases for a tenant (with optional branchId filter)
@@ -172,6 +176,13 @@ export class PurchasesService {
                     data: { costPrice: item.costPrice },
                 });
             }
+
+            this.eventsService.emit({
+                type: 'purchase.created',
+                tenantId,
+                branchId,
+                payload: { purchaseId: purchase.id },
+            });
 
             return purchase;
         });

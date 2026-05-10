@@ -10,6 +10,6 @@ export function useProducts(tenantId?: string) {
         queryFn: () => getProducts(tenantId),
         staleTime: 1000 * 30,
         refetchOnWindowFocus: true,
-        refetchInterval: 1000 * 60,
+        refetchInterval: 1000 * 120, // SSE handles real-time; this is a safety fallback
     });
 }
