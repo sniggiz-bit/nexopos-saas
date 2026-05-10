@@ -164,6 +164,50 @@ export class ShiftsService {
     });
   }
 
+  async getShiftHistory(
+    tenantId: string,
+    branchId?: string,
+    page = 1,
+    limit = 20,
+    from?: string,
+    to?: string,
+  ) {
+    const where: Record<string, any> = {
+      status: 'CLOSED',
+      branch: { tenantId },
+    };
+
+    if (branchId) where.branchId = branchId;
+
+    if (from || to) {
+      where.startTime = {};
+      if (from) where.startTime.gte = new Date(from);
+      if (to) where.startTime.lte = new Date(`${to}T23:59:59`);
+    }
+
+    const [total, shifts] = await Promise.all([
+      this.prisma.cashShift.count({ where }),
+      this.prisma.cashShift.findMany({
+        where,
+        orderBy: { startTime: 'desc' },
+        skip: (page - 1) * limit,
+        take: limit,
+        include: {
+          openedBy: { select: { name: true, email: true } },
+          closedBy: { select: { name: true, email: true } },
+          branch: { select: { name: true } },
+        },
+      }),
+    ]);
+
+    return {
+      data: shifts,
+      total,
+      page,
+      lastPage: Math.ceil(total / limit) || 1,
+    };
+  }
+
   async getShiftSummary(shiftId: string) {
     const shift = await this.prisma.cashShift.findUnique({
       where: { id: shiftId },
