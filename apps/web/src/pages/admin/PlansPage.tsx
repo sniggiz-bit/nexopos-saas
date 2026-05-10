@@ -302,6 +302,7 @@ function PlanDrawer({ plan, onClose, onSaved }: { plan: Partial<Plan>; onClose: 
                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400 text-sm font-medium">$</span>
                     <input type="number" required min={0} value={form.price ?? ''}
                       onChange={e => set({ price: Number(e.target.value) })}
+                      onFocus={e => e.target.select()}
                       className="w-full bg-neutral-800 border border-neutral-700 rounded-xl pl-8 pr-16 py-3.5 text-white text-xl font-bold focus:outline-none focus:border-purple-500 transition-colors tabular-nums"
                       placeholder="0" />
                     <span className="absolute right-4 top-1/2 -translate-y-1/2 text-neutral-500 text-xs font-medium">CLP</span>
