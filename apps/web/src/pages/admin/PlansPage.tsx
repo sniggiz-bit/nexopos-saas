@@ -3,7 +3,7 @@ import api from '../../lib/api';
 import toast from 'react-hot-toast';
 import {
   Plus, Edit2, Trash2, Check, X, Star, Users, Package, HardDrive,
-  DollarSign, Loader2, CheckCheck, Tag, Info, Settings2, ListChecks,
+  DollarSign, Loader2, CheckCheck, Tag, Info, Settings2, ListChecks, RefreshCw,
 } from 'lucide-react';
 
 interface Plan {
@@ -400,11 +400,17 @@ export default function PlansPage() {
   const [drawerPlan, setDrawerPlan] = useState<Partial<Plan> | null>(null);
 
   const fetchPlans = async () => {
+    setLoading(true);
     try {
       const { data } = await api.get('/plans');
-      setPlans(data);
-    } catch {
-      toast.error('Error cargando planes');
+      setPlans(Array.isArray(data) ? data : []);
+    } catch (err: any) {
+      const status = err?.response?.status;
+      const msg = status === 403 ? 'Sin permisos para ver planes (403)'
+        : status === 401 ? 'Sesión expirada, por favor recarga'
+        : `Error cargando planes${status ? ` (${status})` : ''}`;
+      toast.error(msg, { duration: 5000 });
+      console.error('[PlansPage] fetchPlans error:', err?.response?.status, err?.response?.data);
     } finally {
       setLoading(false);
     }
@@ -443,12 +449,21 @@ export default function PlansPage() {
               {plans.length} plan{plans.length !== 1 ? 'es' : ''} configurado{plans.length !== 1 ? 's' : ''}
             </p>
           </div>
-          <button
-            onClick={openCreate}
-            className="flex items-center gap-2 px-4 py-2.5 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-xl transition-colors shadow-lg shadow-purple-600/20 text-sm"
-          >
-            <Plus size={17} />Nuevo Plan
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={fetchPlans}
+              className="p-2.5 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-400 hover:text-white transition-colors border border-neutral-700"
+              title="Recargar"
+            >
+              <RefreshCw size={15} />
+            </button>
+            <button
+              onClick={openCreate}
+              className="flex items-center gap-2 px-4 py-2.5 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-xl transition-colors shadow-lg shadow-purple-600/20 text-sm"
+            >
+              <Plus size={17} />Nuevo Plan
+            </button>
+          </div>
         </div>
 
         {plans.length === 0 ? (
