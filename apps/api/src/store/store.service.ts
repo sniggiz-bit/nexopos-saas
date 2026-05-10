@@ -154,6 +154,7 @@ export class StoreService {
     return this.prisma.tenant.update({
       where: { id: tenantId },
       data: {
+        ...(settings.name ? { name: settings.name } : {}),
         storeSlug: settings.storeSlug,
         storeSettings: settings.storeSettings,
       },

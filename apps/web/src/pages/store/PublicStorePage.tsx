@@ -56,12 +56,17 @@ interface StoreData {
     whatsappNumber?: string;
     brandColor?: string;
     bannerUrl?: string;
+    logoUrl?: string;
     isActive: boolean;
     announcementEnabled?: boolean;
     announcementText?: string;
     announcementColor?: string;
     sliders?: Slide[];
     featuredProductIds?: string[];
+    seoTitle?: string;
+    seoDescription?: string;
+    seoKeywords?: string;
+    ogImageUrl?: string;
   };
 }
 
@@ -749,6 +754,21 @@ export const PublicStorePage = () => {
   const searchRef = useRef<HTMLInputElement>(null);
   const brandColor = store?.storeSettings.brandColor || '#3B82F6';
 
+  // Restore cart from localStorage (per store)
+  useEffect(() => {
+    if (!slug) return;
+    try {
+      const saved = localStorage.getItem(`nexopos-cart-${slug}`);
+      if (saved) setCart(JSON.parse(saved));
+    } catch { /* ignore */ }
+  }, [slug]);
+
+  // Persist cart changes
+  useEffect(() => {
+    if (!slug) return;
+    localStorage.setItem(`nexopos-cart-${slug}`, JSON.stringify(cart));
+  }, [cart, slug]);
+
   // Initial: fetch store + filters
   useEffect(() => {
     const load = async () => {
@@ -767,6 +787,37 @@ export const PublicStorePage = () => {
     };
     load();
   }, [slug]);
+
+  // Apply SEO meta tags from store settings
+  useEffect(() => {
+    if (!store) return;
+    const ss = store.storeSettings;
+    const title = ss.seoTitle || store.name;
+    const description = ss.seoDescription || '';
+    const keywords = ss.seoKeywords || '';
+    const ogImage = ss.ogImageUrl || '';
+
+    document.title = title;
+
+    const setMeta = (selector: string, attr: string, attrVal: string, content: string) => {
+      let el = document.querySelector(selector) as HTMLMetaElement | null;
+      if (!el) {
+        el = document.createElement('meta');
+        el.setAttribute(attr, attrVal);
+        document.head.appendChild(el);
+      }
+      el.content = content;
+    };
+
+    setMeta('meta[name="description"]', 'name', 'description', description);
+    if (keywords) setMeta('meta[name="keywords"]', 'name', 'keywords', keywords);
+    setMeta('meta[property="og:title"]', 'property', 'og:title', title);
+    setMeta('meta[property="og:description"]', 'property', 'og:description', description);
+    if (ogImage) setMeta('meta[property="og:image"]', 'property', 'og:image', ogImage);
+    setMeta('meta[property="og:type"]', 'property', 'og:type', 'website');
+
+    return () => { document.title = 'NexoPOS'; };
+  }, [store]);
 
   // Fetch products when filters change
   useEffect(() => {
