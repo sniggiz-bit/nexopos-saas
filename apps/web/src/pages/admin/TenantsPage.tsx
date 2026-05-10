@@ -1,175 +1,217 @@
 import { useEffect, useState } from 'react';
-import { Search, LogIn, Ban } from 'lucide-react';
-// import { useAuth } from '../../context/AuthContext';
-// import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import { Search, LogIn, Ban, CheckCircle, ChevronLeft, ChevronRight, Package, Users, GitBranch } from 'lucide-react';
 import api from '../../lib/api';
 
 interface Tenant {
-    id: string;
-    name: string;
-    createdAt: string;
-    owner: {
-        name: string;
-        email: string;
-    };
-    _count: {
-        users: number;
-        branches: number;
-    };
-    status: 'ACTIVE' | 'SUSPENDED'; // Placeholder type
+  id: string;
+  name: string;
+  createdAt: string;
+  status: 'ACTIVE' | 'SUSPENDED';
+  owner: { id: string | null; name: string; email: string };
+  plan: { id: string; name: string; price: number } | null;
+  _count: { users: number; branches: number; products: number };
 }
 
 export default function TenantsPage() {
-    const [tenants, setTenants] = useState<Tenant[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [searchTerm, setSearchTerm] = useState('');
-    // const { login } = useAuth();
-    // const navigate = useNavigate();
+  const navigate = useNavigate();
+  const [tenants, setTenants] = useState<Tenant[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [page, setPage] = useState(1);
+  const [lastPage, setLastPage] = useState(1);
+  const [total, setTotal] = useState(0);
 
-    useEffect(() => {
-        fetchTenants();
-    }, [searchTerm]);
+  useEffect(() => {
+    setPage(1);
+  }, [searchTerm]);
 
-    const fetchTenants = async () => {
-        try {
-            const response = await api.get('/tenants', {
-                params: { search: searchTerm }
-            });
-            // Backend returns array directly now
-            const rawTenants = response.data;
+  useEffect(() => {
+    fetchTenants();
+  }, [searchTerm, page]);
 
-            // Map backend structure to frontend interface
-            // Backend returns: users: [ { id, name, email } ] if they are ADMINs
-            const mappedTenants = rawTenants.map((t: any) => ({
-                ...t,
-                owner: t.users?.[0] || { id: null, name: 'Sin Dueño', email: 'N/A' }
-            }));
+  const fetchTenants = async () => {
+    setLoading(true);
+    try {
+      const res = await api.get('/admin/tenants', {
+        params: { search: searchTerm || undefined, page, limit: 15 },
+      });
+      setTenants(res.data.data);
+      setTotal(res.data.total);
+      setLastPage(res.data.lastPage);
+    } catch (err) {
+      console.error('Error fetching tenants:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-            setTenants(mappedTenants);
-        } catch (error) {
-            console.error('Error fetching tenants:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
+  const handleImpersonate = async (tenant: Tenant, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!tenant.owner?.id) {
+      alert('Este tenant no tiene un administrador asignado.');
+      return;
+    }
+    try {
+      const prev = localStorage.getItem('token');
+      if (prev) localStorage.setItem('__prev_session', prev);
+      const res = await api.post(`/auth/impersonate/${tenant.owner.id}`);
+      if (res.data.access_token) {
+        localStorage.setItem('token', res.data.access_token);
+        localStorage.setItem('impersonating', tenant.name);
+        window.location.href = '/dashboard';
+      }
+    } catch {
+      alert('No se pudo acceder como este cliente.');
+    }
+  };
 
-    const handleImpersonate = async (tenant: Tenant) => {
-        // Logic for impersonation
-        // 1. Get the admin user ID for this tenant (we fetched owner)
-        // Wait, we need the user ID to impersonate. The backend returns `owner` object. 
-        // I should update the backend to return owner ID or just pick the first user.
-        // The backend returns: owner: t.users[0] || { name: 'N/A', email: 'N/A' }
-        // It doesn't include ID. I need to fix the backend service first or assume I have it.
-        // Let's assume I'll fix the backend to return ID.
+  const handleToggleStatus = async (tenant: Tenant, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const newStatus = tenant.status === 'ACTIVE' ? 'SUSPENDED' : 'ACTIVE';
+    const label = newStatus === 'SUSPENDED' ? 'suspender' : 'activar';
+    if (!confirm(`¿Seguro que deseas ${label} a ${tenant.name}?`)) return;
+    try {
+      await api.patch(`/admin/tenants/${tenant.id}/status`, { status: newStatus });
+      setTenants(prev => prev.map(t => t.id === tenant.id ? { ...t, status: newStatus } : t));
+    } catch {
+      alert('Error al cambiar el estado del tenant.');
+    }
+  };
 
-        try {
-            // Assuming I can get the ID somehow, or I need to fetch it. 
-            // Actually, let's fix the backend service to return the ID in the owner object.
-            // coping with what I have: I'll assume the owner object has an ID in the updated backend.
-
-            // Temporary fix: fail if no ID
-            // console.log('Impersonating', tenant.owner);
-
-            // Let's optimisticly retry fetching or just call the endpoint if I had the ID.
-            // Since I can't easily change the backend *right now* smoothly without context switching, 
-            // I'll write the frontend code assuming `tenant.owner.id` exists and then I will go fix the backend service.
-
-            if (!tenant.owner || !(tenant.owner as any).id) {
-                alert('No se puede encontrar el usuario administrador de este tenant.');
-                return;
-            }
-
-            const response = await api.post(`/auth/impersonate/${(tenant.owner as any).id}`);
-
-            if (response.data.access_token) {
-                // Store the token
-                localStorage.setItem('token', response.data.access_token);
-                // Set a flag for impersonation to show the banner
-                localStorage.setItem('impersonating', 'true');
-                // Reload or navigate to dashboard
-                window.location.href = '/';
-            }
-        } catch (error) {
-            console.error('Impersonation failed', error);
-            alert('Fallo al iniciar sesión como cliente.');
-        }
-    };
-
-    return (
-        <div className="space-y-6">
-            <div className="flex items-center justify-between">
-                <h1 className="text-2xl font-bold text-white">Gestión de Tenants</h1>
-                <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-500" size={18} />
-                    <input
-                        type="text"
-                        placeholder="Buscar empresa..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="pl-10 pr-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-white focus:outline-none focus:border-purple-500 w-64"
-                    />
-                </div>
-            </div>
-
-            <div className="bg-neutral-800 border border-neutral-700 rounded-xl overflow-hidden">
-                <table className="w-full text-left">
-                    <thead className="bg-neutral-900 border-b border-neutral-700">
-                        <tr>
-                            <th className="px-6 py-4 text-xs font-semibold text-neutral-400 uppercase tracking-wider">Empresa</th>
-                            <th className="px-6 py-4 text-xs font-semibold text-neutral-400 uppercase tracking-wider">Dueño</th>
-                            <th className="px-6 py-4 text-xs font-semibold text-neutral-400 uppercase tracking-wider">Estado</th>
-                            <th className="px-6 py-4 text-xs font-semibold text-neutral-400 uppercase tracking-wider">Métricas</th>
-                            <th className="px-6 py-4 text-xs font-semibold text-neutral-400 uppercase tracking-wider">Registro</th>
-                            <th className="px-6 py-4 text-xs font-semibold text-neutral-400 uppercase tracking-wider">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-neutral-700">
-                        {loading ? (
-                            <tr><td colSpan={6} className="px-6 py-8 text-center text-neutral-500">Cargando...</td></tr>
-                        ) : tenants.map((tenant) => (
-                            <tr key={tenant.id} className="hover:bg-neutral-750 transition-colors">
-                                <td className="px-6 py-4">
-                                    <div className="font-medium text-white">{tenant.name}</div>
-                                    <div className="text-xs text-neutral-500">ID: {tenant.id.substring(0, 8)}...</div>
-                                </td>
-                                <td className="px-6 py-4">
-                                    <div className="text-sm text-neutral-300">{tenant.owner?.name || 'N/A'}</div>
-                                    <div className="text-xs text-neutral-500">{tenant.owner?.email || 'N/A'}</div>
-                                </td>
-                                <td className="px-6 py-4">
-                                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${tenant.status === 'ACTIVE' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'
-                                        }`}>
-                                        {tenant.status === 'ACTIVE' ? 'Activo' : 'Suspendido'}
-                                    </span>
-                                </td>
-                                <td className="px-6 py-4 text-sm text-neutral-400">
-                                    <div className="flex gap-4">
-                                        <span title="Usuarios">👥 {tenant._count.users}</span>
-                                        <span title="Sucursales">🏢 {tenant._count.branches}</span>
-                                    </div>
-                                </td>
-                                <td className="px-6 py-4 text-sm text-neutral-400">
-                                    {new Date(tenant.createdAt).toLocaleDateString()}
-                                </td>
-                                <td className="px-6 py-4">
-                                    <div className="flex items-center gap-2">
-                                        <button
-                                            onClick={() => handleImpersonate(tenant)}
-                                            className="p-1.5 hover:bg-purple-900/30 text-purple-400 rounded-lg transition-colors"
-                                            title="Acceder como este cliente"
-                                        >
-                                            <LogIn size={18} />
-                                        </button>
-                                        <button className="p-1.5 hover:bg-red-900/30 text-red-400 rounded-lg transition-colors" title="Suspender">
-                                            <Ban size={18} />
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-white">Gestión de Clientes</h1>
+          <p className="text-neutral-500 text-sm mt-0.5">{total} empresa{total !== 1 ? 's' : ''} registrada{total !== 1 ? 's' : ''}</p>
         </div>
-    );
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500" size={16} />
+          <input
+            type="text"
+            placeholder="Buscar por nombre o RUT..."
+            value={searchTerm}
+            onChange={e => setSearchTerm(e.target.value)}
+            className="pl-9 pr-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-sm text-white placeholder:text-neutral-500 focus:outline-none focus:border-purple-500 w-72"
+          />
+        </div>
+      </div>
+
+      <div className="bg-neutral-800 border border-neutral-700 rounded-xl overflow-hidden">
+        <table className="w-full text-left">
+          <thead className="bg-neutral-900 border-b border-neutral-700">
+            <tr>
+              <th className="px-5 py-3.5 text-xs font-semibold text-neutral-400 uppercase tracking-wider">Empresa</th>
+              <th className="px-5 py-3.5 text-xs font-semibold text-neutral-400 uppercase tracking-wider">Administrador</th>
+              <th className="px-5 py-3.5 text-xs font-semibold text-neutral-400 uppercase tracking-wider">Plan</th>
+              <th className="px-5 py-3.5 text-xs font-semibold text-neutral-400 uppercase tracking-wider">Recursos</th>
+              <th className="px-5 py-3.5 text-xs font-semibold text-neutral-400 uppercase tracking-wider">Estado</th>
+              <th className="px-5 py-3.5 text-xs font-semibold text-neutral-400 uppercase tracking-wider">Registro</th>
+              <th className="px-5 py-3.5 text-xs font-semibold text-neutral-400 uppercase tracking-wider">Acciones</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-neutral-700/60">
+            {loading ? (
+              <tr>
+                <td colSpan={7} className="px-5 py-10 text-center text-neutral-500">Cargando...</td>
+              </tr>
+            ) : tenants.length === 0 ? (
+              <tr>
+                <td colSpan={7} className="px-5 py-10 text-center text-neutral-500">No se encontraron resultados.</td>
+              </tr>
+            ) : tenants.map(tenant => (
+              <tr
+                key={tenant.id}
+                onClick={() => navigate(`/admin/tenants/${tenant.id}`)}
+                className="hover:bg-neutral-700/30 transition-colors cursor-pointer"
+              >
+                <td className="px-5 py-4">
+                  <div className="font-medium text-white">{tenant.name}</div>
+                  <div className="text-xs text-neutral-500 font-mono mt-0.5">{tenant.id.substring(0, 8)}…</div>
+                </td>
+                <td className="px-5 py-4">
+                  <div className="text-sm text-neutral-300">{tenant.owner?.name || '—'}</div>
+                  <div className="text-xs text-neutral-500">{tenant.owner?.email || '—'}</div>
+                </td>
+                <td className="px-5 py-4">
+                  {tenant.plan ? (
+                    <div>
+                      <div className="text-sm text-neutral-300">{tenant.plan.name}</div>
+                      <div className="text-xs text-neutral-500">${tenant.plan.price.toLocaleString('es-CL')}/mes</div>
+                    </div>
+                  ) : (
+                    <span className="text-xs text-neutral-600">Sin plan</span>
+                  )}
+                </td>
+                <td className="px-5 py-4">
+                  <div className="flex items-center gap-3 text-xs text-neutral-400">
+                    <span className="flex items-center gap-1"><Users size={12} />{tenant._count.users}</span>
+                    <span className="flex items-center gap-1"><GitBranch size={12} />{tenant._count.branches}</span>
+                    <span className="flex items-center gap-1"><Package size={12} />{tenant._count.products}</span>
+                  </div>
+                </td>
+                <td className="px-5 py-4">
+                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                    tenant.status === 'ACTIVE'
+                      ? 'bg-emerald-500/10 text-emerald-400'
+                      : 'bg-red-500/10 text-red-400'
+                  }`}>
+                    {tenant.status === 'ACTIVE' ? 'Activo' : 'Suspendido'}
+                  </span>
+                </td>
+                <td className="px-5 py-4 text-sm text-neutral-500">
+                  {new Date(tenant.createdAt).toLocaleDateString('es-CL')}
+                </td>
+                <td className="px-5 py-4">
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      onClick={e => handleImpersonate(tenant, e)}
+                      className="p-1.5 hover:bg-purple-900/40 text-purple-400 rounded-lg transition-colors"
+                      title="Acceder como este cliente"
+                    >
+                      <LogIn size={16} />
+                    </button>
+                    <button
+                      onClick={e => handleToggleStatus(tenant, e)}
+                      className={`p-1.5 rounded-lg transition-colors ${
+                        tenant.status === 'ACTIVE'
+                          ? 'hover:bg-red-900/40 text-red-400'
+                          : 'hover:bg-emerald-900/40 text-emerald-400'
+                      }`}
+                      title={tenant.status === 'ACTIVE' ? 'Suspender' : 'Activar'}
+                    >
+                      {tenant.status === 'ACTIVE' ? <Ban size={16} /> : <CheckCircle size={16} />}
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+
+        {lastPage > 1 && (
+          <div className="flex items-center justify-between px-5 py-3 border-t border-neutral-700 bg-neutral-900/40">
+            <span className="text-xs text-neutral-500">Página {page} de {lastPage}</span>
+            <div className="flex items-center gap-2">
+              <button
+                disabled={page <= 1}
+                onClick={() => setPage(p => p - 1)}
+                className="p-1.5 rounded-lg text-neutral-400 hover:text-white hover:bg-neutral-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              >
+                <ChevronLeft size={16} />
+              </button>
+              <button
+                disabled={page >= lastPage}
+                onClick={() => setPage(p => p + 1)}
+                className="p-1.5 rounded-lg text-neutral-400 hover:text-white hover:bg-neutral-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              >
+                <ChevronRight size={16} />
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
 }

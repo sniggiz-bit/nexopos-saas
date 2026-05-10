@@ -38,4 +38,17 @@ export class UpdateTenantSettingsDto {
   @IsOptional()
   @IsBoolean()
   canHardDelete?: boolean;
+
+  // --- Feature Flags ---
+  @IsOptional()
+  @IsBoolean()
+  enableEcommerce?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  enableTransbank?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  enableIntegrations?: boolean;
 }
