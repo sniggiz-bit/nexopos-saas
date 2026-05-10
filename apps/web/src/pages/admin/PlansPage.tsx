@@ -2,9 +2,22 @@ import { useState, useEffect } from 'react';
 import api from '../../lib/api';
 import toast from 'react-hot-toast';
 import {
-  Plus, Edit2, Trash2, Check, X, Star, Users, Package, HardDrive,
-  DollarSign, Loader2, CheckCheck, Tag, Info, Settings2, ListChecks, RefreshCw,
+  Plus, Edit2, Trash2, Check, X, Star, Users,
+  DollarSign, Loader2, CheckCheck, Tag, Info, Zap, ListChecks,
+  Store, CreditCard, Plug, FileText, RefreshCw,
 } from 'lucide-react';
+
+// ── Types ──────────────────────────────────────────────────────────────────────
+
+interface PlanFeatures {
+  enableEcommerce: boolean;
+  enableTransbank: boolean;
+  enableIntegrations: boolean;
+  enableBoletaDte: boolean;
+  enableFacturaDte: boolean;
+  enableGuiaDespachoDte: boolean;
+  enableNotaCreditoDte: boolean;
+}
 
 interface Plan {
   id: string;
@@ -16,21 +29,33 @@ interface Plan {
   maxProducts: number;
   maxStorage: number;
   isRecommended?: boolean;
+  enabledFeatures?: PlanFeatures | null;
 }
 
-type Tab = 'identity' | 'price' | 'limits' | 'features';
+type Tab = 'identity' | 'price' | 'functions' | 'features';
 
 const TABS: { key: Tab; label: string; Icon: React.ElementType }[] = [
   { key: 'identity', label: 'Identidad', Icon: Info },
   { key: 'price', label: 'Precio', Icon: DollarSign },
-  { key: 'limits', label: 'Límites', Icon: Settings2 },
+  { key: 'functions', label: 'Funciones', Icon: Zap },
   { key: 'features', label: 'Características', Icon: ListChecks },
 ];
 
+const DEFAULT_FEATURES: PlanFeatures = {
+  enableEcommerce: false,
+  enableTransbank: false,
+  enableIntegrations: false,
+  enableBoletaDte: false,
+  enableFacturaDte: false,
+  enableGuiaDespachoDte: false,
+  enableNotaCreditoDte: false,
+};
+
 const EMPTY_FORM: Partial<Plan> = {
   name: '', description: '', price: 0,
-  maxUsers: 5, maxProducts: 100, maxStorage: 512,
+  maxUsers: 5, maxProducts: 500, maxStorage: 512,
   isRecommended: false, features: [],
+  enabledFeatures: { ...DEFAULT_FEATURES },
 };
 
 // ── Primitives ─────────────────────────────────────────────────────────────────
@@ -42,19 +67,35 @@ const Toggle = ({ checked, onChange }: { checked: boolean; onChange: (v: boolean
   </button>
 );
 
-const NumInput = ({ label, desc, value, onChange, min = 0, step = 1 }: {
-  label: string; desc: string; value: number; onChange: (v: number) => void; min?: number; step?: number;
+const ToggleRow = ({ icon: Icon, label, desc, checked, onChange, color = 'text-purple-400' }: {
+  icon: React.ElementType; label: string; desc: string;
+  checked: boolean; onChange: (v: boolean) => void; color?: string;
 }) => (
-  <div className="flex items-center justify-between py-4 border-b border-neutral-700/50 last:border-0">
+  <div className="flex items-center justify-between py-3.5 border-b border-neutral-700/50 last:border-0">
+    <div className="flex items-center gap-3 flex-1 mr-4">
+      <div className="p-2 rounded-lg bg-neutral-900/60"><Icon size={15} className={color} /></div>
+      <div>
+        <p className="text-sm font-medium text-neutral-200">{label}</p>
+        <p className="text-xs text-neutral-500 mt-0.5">{desc}</p>
+      </div>
+    </div>
+    <Toggle checked={checked} onChange={onChange} />
+  </div>
+);
+
+const NumInput = ({ label, desc, value, onChange, min = 1 }: {
+  label: string; desc: string; value: number; onChange: (v: number) => void; min?: number;
+}) => (
+  <div className="flex items-center justify-between py-4">
     <div className="flex-1 mr-4">
       <p className="text-sm font-medium text-neutral-200">{label}</p>
       <p className="text-xs text-neutral-500 mt-0.5">{desc}</p>
     </div>
     <div className="flex items-center gap-2">
-      <button type="button" onClick={() => onChange(Math.max(min, value - step))}
+      <button type="button" onClick={() => onChange(Math.max(min, value - 1))}
         className="w-7 h-7 rounded-lg bg-neutral-700 hover:bg-neutral-600 text-white flex items-center justify-center text-sm font-bold transition-colors">−</button>
-      <span className="w-14 text-center text-sm font-bold text-white tabular-nums">{value.toLocaleString()}</span>
-      <button type="button" onClick={() => onChange(value + step)}
+      <span className="w-10 text-center text-sm font-bold text-white tabular-nums">{value}</span>
+      <button type="button" onClick={() => onChange(value + 1)}
         className="w-7 h-7 rounded-lg bg-neutral-700 hover:bg-neutral-600 text-white flex items-center justify-center text-sm font-bold transition-colors">+</button>
     </div>
   </div>
@@ -62,16 +103,19 @@ const NumInput = ({ label, desc, value, onChange, min = 0, step = 1 }: {
 
 // ── Plan Card ──────────────────────────────────────────────────────────────────
 
-const PlanCard = ({ plan, onEdit, onDelete }: { plan: Plan; onEdit: () => void; onDelete: () => void }) => {
-  const storageLabel = plan.maxStorage >= 1024
-    ? `${(plan.maxStorage / 1024).toFixed(plan.maxStorage % 1024 === 0 ? 0 : 1)} GB`
-    : `${plan.maxStorage} MB`;
+const FEATURE_LABELS: { key: keyof PlanFeatures; label: string }[] = [
+  { key: 'enableBoletaDte', label: 'Boleta DTE' },
+  { key: 'enableFacturaDte', label: 'Factura DTE' },
+  { key: 'enableGuiaDespachoDte', label: 'Guía despacho' },
+  { key: 'enableNotaCreditoDte', label: 'Nota crédito' },
+  { key: 'enableEcommerce', label: 'E-commerce' },
+  { key: 'enableTransbank', label: 'Transbank' },
+  { key: 'enableIntegrations', label: 'Integraciones' },
+];
 
-  const chips = [
-    { icon: Users, label: `${plan.maxUsers} usuarios` },
-    { icon: Package, label: `${plan.maxProducts.toLocaleString()} productos` },
-    { icon: HardDrive, label: storageLabel },
-  ];
+const PlanCard = ({ plan, onEdit, onDelete }: { plan: Plan; onEdit: () => void; onDelete: () => void }) => {
+  const feats = plan.enabledFeatures ?? DEFAULT_FEATURES;
+  const activeFeats = FEATURE_LABELS.filter(f => feats[f.key]);
 
   return (
     <div className={`bg-neutral-800 border ${plan.isRecommended ? 'border-purple-500/50 shadow-lg shadow-purple-500/10' : 'border-neutral-700'} rounded-xl p-5 relative`}>
@@ -91,22 +135,25 @@ const PlanCard = ({ plan, onEdit, onDelete }: { plan: Plan; onEdit: () => void; 
           )}
 
           <div className="flex flex-wrap gap-2 mb-3">
-            {chips.map(({ icon: Icon, label }) => (
-              <span key={label} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-neutral-700/60 text-neutral-300 text-xs">
-                <Icon size={11} className="text-neutral-400" />{label}
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-neutral-700/60 text-neutral-300 text-xs">
+              <Users size={11} className="text-neutral-400" />{plan.maxUsers} usuarios
+            </span>
+            {activeFeats.length > 0 && (
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-purple-500/10 text-purple-300 text-xs border border-purple-500/20">
+                <Zap size={11} />{activeFeats.length} módulo{activeFeats.length !== 1 ? 's' : ''}
               </span>
-            ))}
+            )}
           </div>
 
-          {plan.features && plan.features.length > 0 && (
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
-              {plan.features.slice(0, 3).map((f, i) => (
-                <span key={i} className="inline-flex items-center gap-1 text-xs text-neutral-400">
-                  <Check size={10} className="text-purple-400 flex-shrink-0" />{f}
+          {activeFeats.length > 0 && (
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+              {activeFeats.slice(0, 4).map(f => (
+                <span key={f.key} className="inline-flex items-center gap-1 text-xs text-neutral-400">
+                  <Check size={10} className="text-purple-400 flex-shrink-0" />{f.label}
                 </span>
               ))}
-              {plan.features.length > 3 && (
-                <span className="text-xs text-neutral-600">+{plan.features.length - 3} más</span>
+              {activeFeats.length > 4 && (
+                <span className="text-xs text-neutral-600">+{activeFeats.length - 4} más</span>
               )}
             </div>
           )}
@@ -118,16 +165,12 @@ const PlanCard = ({ plan, onEdit, onDelete }: { plan: Plan; onEdit: () => void; 
             <p className="text-xs text-neutral-500">/mes</p>
           </div>
           <div className="flex items-center gap-2">
-            <button
-              onClick={onEdit}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-neutral-700 hover:bg-neutral-600 text-neutral-300 hover:text-white text-xs font-medium transition-colors"
-            >
+            <button onClick={onEdit}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-neutral-700 hover:bg-neutral-600 text-neutral-300 hover:text-white text-xs font-medium transition-colors">
               <Edit2 size={12} />Editar
             </button>
-            <button
-              onClick={onDelete}
-              className="p-1.5 rounded-lg bg-red-900/20 hover:bg-red-900/40 text-red-400 hover:text-red-300 transition-colors"
-            >
+            <button onClick={onDelete}
+              className="p-1.5 rounded-lg bg-red-900/20 hover:bg-red-900/40 text-red-400 hover:text-red-300 transition-colors">
               <Trash2 size={14} />
             </button>
           </div>
@@ -142,11 +185,18 @@ const PlanCard = ({ plan, onEdit, onDelete }: { plan: Plan; onEdit: () => void; 
 function PlanDrawer({ plan, onClose, onSaved }: { plan: Partial<Plan>; onClose: () => void; onSaved: () => void }) {
   const isEdit = !!plan.id;
   const [activeTab, setActiveTab] = useState<Tab>('identity');
-  const [form, setForm] = useState<Partial<Plan>>({ ...EMPTY_FORM, ...plan });
+  const [form, setForm] = useState<Partial<Plan>>({
+    ...EMPTY_FORM,
+    ...plan,
+    enabledFeatures: { ...DEFAULT_FEATURES, ...(plan.enabledFeatures ?? {}) },
+  });
   const [newFeature, setNewFeature] = useState('');
   const [saving, setSaving] = useState(false);
 
   const set = (p: Partial<Plan>) => setForm(prev => ({ ...prev, ...p }));
+  const feats = form.enabledFeatures ?? DEFAULT_FEATURES;
+  const setFeat = (key: keyof PlanFeatures, val: boolean) =>
+    set({ enabledFeatures: { ...feats, [key]: val } });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -161,8 +211,8 @@ function PlanDrawer({ plan, onClose, onSaved }: { plan: Partial<Plan>; onClose: 
       }
       onSaved();
       onClose();
-    } catch {
-      toast.error('Error al guardar el plan');
+    } catch (err: any) {
+      toast.error(`Error al guardar el plan${err?.response?.status ? ` (${err.response.status})` : ''}`);
     } finally {
       setSaving(false);
     }
@@ -221,30 +271,18 @@ function PlanDrawer({ plan, onClose, onSaved }: { plan: Partial<Plan>; onClose: 
             {activeTab === 'identity' && (
               <div className="space-y-5">
                 <div>
-                  <label className="block text-xs font-semibold text-neutral-400 uppercase tracking-wider mb-2">
-                    Nombre del plan
-                  </label>
-                  <input
-                    type="text" required
-                    value={form.name ?? ''}
+                  <label className="block text-xs font-semibold text-neutral-400 uppercase tracking-wider mb-2">Nombre del plan</label>
+                  <input type="text" required value={form.name ?? ''}
                     onChange={e => set({ name: e.target.value })}
                     className="w-full bg-neutral-800 border border-neutral-700 rounded-xl px-4 py-3 text-white placeholder-neutral-600 focus:outline-none focus:border-purple-500 transition-colors font-medium"
-                    placeholder="Ej. Plan Profesional"
-                  />
+                    placeholder="Ej. Plan Profesional" />
                 </div>
-
                 <div>
-                  <label className="block text-xs font-semibold text-neutral-400 uppercase tracking-wider mb-2">
-                    Descripción corta
-                  </label>
-                  <textarea
-                    value={form.description ?? ''}
-                    onChange={e => set({ description: e.target.value })}
+                  <label className="block text-xs font-semibold text-neutral-400 uppercase tracking-wider mb-2">Descripción corta</label>
+                  <textarea value={form.description ?? ''} onChange={e => set({ description: e.target.value })}
                     className="w-full bg-neutral-800 border border-neutral-700 rounded-xl px-4 py-3 text-white placeholder-neutral-600 focus:outline-none focus:border-purple-500 transition-colors resize-none h-24"
-                    placeholder="Descripción visible en la landing page..."
-                  />
+                    placeholder="Descripción visible en la landing page..." />
                 </div>
-
                 <div className="bg-neutral-800 border border-neutral-700 rounded-xl p-4 flex items-center justify-between gap-4">
                   <div>
                     <p className="text-sm font-semibold text-white">Plan destacado</p>
@@ -259,68 +297,71 @@ function PlanDrawer({ plan, onClose, onSaved }: { plan: Partial<Plan>; onClose: 
             {activeTab === 'price' && (
               <div className="space-y-5">
                 <div>
-                  <label className="block text-xs font-semibold text-neutral-400 uppercase tracking-wider mb-2">
-                    Precio mensual (CLP)
-                  </label>
+                  <label className="block text-xs font-semibold text-neutral-400 uppercase tracking-wider mb-2">Precio mensual (CLP)</label>
                   <div className="relative">
                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400 text-sm font-medium">$</span>
-                    <input
-                      type="number" required min={0}
-                      value={form.price ?? ''}
+                    <input type="number" required min={0} value={form.price ?? ''}
                       onChange={e => set({ price: Number(e.target.value) })}
                       className="w-full bg-neutral-800 border border-neutral-700 rounded-xl pl-8 pr-16 py-3.5 text-white text-xl font-bold focus:outline-none focus:border-purple-500 transition-colors tabular-nums"
-                      placeholder="0"
-                    />
+                      placeholder="0" />
                     <span className="absolute right-4 top-1/2 -translate-y-1/2 text-neutral-500 text-xs font-medium">CLP</span>
                   </div>
                 </div>
-
                 {(form.price ?? 0) > 0 && (
                   <div className="bg-purple-500/10 border border-purple-500/20 rounded-xl p-5 space-y-2">
                     <p className="text-[10px] font-bold text-purple-300 uppercase tracking-widest">Vista previa</p>
-                    <p className="text-3xl font-bold text-purple-400">
-                      ${(form.price ?? 0).toLocaleString('es-CL')}
-                    </p>
+                    <p className="text-3xl font-bold text-purple-400">${(form.price ?? 0).toLocaleString('es-CL')}</p>
                     <p className="text-xs text-purple-300/60">por mes · por empresa</p>
-                    <div className="pt-3 border-t border-purple-500/20">
-                      <div className="flex justify-between text-xs text-purple-300/50">
-                        <span>Anual estimado</span>
-                        <span>${((form.price ?? 0) * 12).toLocaleString('es-CL')}/año</span>
-                      </div>
+                    <div className="pt-3 border-t border-purple-500/20 flex justify-between text-xs text-purple-300/50">
+                      <span>Anual estimado</span>
+                      <span>${((form.price ?? 0) * 12).toLocaleString('es-CL')}/año</span>
                     </div>
                   </div>
                 )}
               </div>
             )}
 
-            {/* Tab: Límites */}
-            {activeTab === 'limits' && (
-              <div className="bg-neutral-800 border border-neutral-700 rounded-xl p-5">
-                <p className="text-sm font-bold text-white mb-1">Recursos incluidos</p>
-                <p className="text-xs text-neutral-500 mb-4">Define los límites de uso para clientes de este plan</p>
-                <NumInput
-                  label="Usuarios"
-                  desc="Máximo de usuarios en el equipo"
-                  value={form.maxUsers ?? 1}
-                  onChange={v => set({ maxUsers: v })}
-                  min={1}
-                />
-                <NumInput
-                  label="Productos"
-                  desc="Máximo de productos en catálogo"
-                  value={form.maxProducts ?? 10}
-                  onChange={v => set({ maxProducts: v })}
-                  min={10}
-                  step={10}
-                />
-                <NumInput
-                  label="Almacenamiento (MB)"
-                  desc="Espacio de almacenamiento asignado"
-                  value={form.maxStorage ?? 512}
-                  onChange={v => set({ maxStorage: v })}
-                  min={256}
-                  step={256}
-                />
+            {/* Tab: Funciones */}
+            {activeTab === 'functions' && (
+              <div className="space-y-5">
+                {/* Límite de usuarios */}
+                <div className="bg-neutral-800 border border-neutral-700 rounded-xl p-5">
+                  <p className="text-sm font-bold text-white mb-1">Límite de usuarios</p>
+                  <p className="text-xs text-neutral-500 mb-3">Máximo de usuarios incluidos en el plan</p>
+                  <NumInput
+                    label="Usuarios"
+                    desc="Cuentas de usuario permitidas"
+                    value={form.maxUsers ?? 1}
+                    onChange={v => set({ maxUsers: v })}
+                    min={1}
+                  />
+                </div>
+
+                {/* Módulos principales */}
+                <div className="bg-neutral-800 border border-neutral-700 rounded-xl p-5">
+                  <p className="text-sm font-bold text-white mb-0.5">Módulos principales</p>
+                  <p className="text-xs text-neutral-500 mb-4">Funcionalidades incluidas en este plan</p>
+                  <ToggleRow icon={Store} label="Tienda Online (E-commerce)" desc="Panel admin de tienda y carrito público"
+                    checked={feats.enableEcommerce} onChange={v => setFeat('enableEcommerce', v)} color="text-blue-400" />
+                  <ToggleRow icon={CreditCard} label="Transbank / Pago electrónico" desc="Integración Webpay para cobros con tarjeta"
+                    checked={feats.enableTransbank} onChange={v => setFeat('enableTransbank', v)} color="text-emerald-400" />
+                  <ToggleRow icon={Plug} label="Integraciones externas" desc="Shopify, WooCommerce y otras plataformas"
+                    checked={feats.enableIntegrations} onChange={v => setFeat('enableIntegrations', v)} color="text-amber-400" />
+                </div>
+
+                {/* DTE */}
+                <div className="bg-neutral-800 border border-neutral-700 rounded-xl p-5">
+                  <p className="text-sm font-bold text-white mb-0.5">Documentos tributarios electrónicos (DTE)</p>
+                  <p className="text-xs text-neutral-500 mb-4">Módulos SII Chile habilitados en el plan</p>
+                  <ToggleRow icon={FileText} label="Boleta electrónica" desc="Emisión de boletas al SII"
+                    checked={feats.enableBoletaDte} onChange={v => setFeat('enableBoletaDte', v)} color="text-purple-400" />
+                  <ToggleRow icon={FileText} label="Factura electrónica" desc="Emisión de facturas al SII"
+                    checked={feats.enableFacturaDte} onChange={v => setFeat('enableFacturaDte', v)} color="text-purple-400" />
+                  <ToggleRow icon={FileText} label="Guía de despacho" desc="Guías de despacho electrónicas al SII"
+                    checked={feats.enableGuiaDespachoDte} onChange={v => setFeat('enableGuiaDespachoDte', v)} color="text-purple-400" />
+                  <ToggleRow icon={FileText} label="Nota de crédito" desc="Notas de crédito electrónicas al SII"
+                    checked={feats.enableNotaCreditoDte} onChange={v => setFeat('enableNotaCreditoDte', v)} color="text-purple-400" />
+                </div>
               </div>
             )}
 
@@ -328,23 +369,16 @@ function PlanDrawer({ plan, onClose, onSaved }: { plan: Partial<Plan>; onClose: 
             {activeTab === 'features' && (
               <div className="space-y-4">
                 <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={newFeature}
+                  <input type="text" value={newFeature}
                     onChange={e => setNewFeature(e.target.value)}
                     onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addFeature(); } }}
                     placeholder="Ej. Soporte prioritario 24/7"
-                    className="flex-1 bg-neutral-800 border border-neutral-700 rounded-xl px-4 py-2.5 text-white text-sm placeholder-neutral-600 focus:outline-none focus:border-purple-500 transition-colors"
-                  />
-                  <button
-                    type="button" onClick={addFeature}
-                    disabled={!newFeature.trim()}
-                    className="px-4 py-2.5 bg-purple-600 hover:bg-purple-700 disabled:opacity-40 text-white rounded-xl transition-colors flex items-center gap-1.5 text-sm font-medium flex-shrink-0"
-                  >
+                    className="flex-1 bg-neutral-800 border border-neutral-700 rounded-xl px-4 py-2.5 text-white text-sm placeholder-neutral-600 focus:outline-none focus:border-purple-500 transition-colors" />
+                  <button type="button" onClick={addFeature} disabled={!newFeature.trim()}
+                    className="px-4 py-2.5 bg-purple-600 hover:bg-purple-700 disabled:opacity-40 text-white rounded-xl transition-colors flex items-center gap-1.5 text-sm font-medium flex-shrink-0">
                     <Plus size={15} />Añadir
                   </button>
                 </div>
-
                 {(!form.features || form.features.length === 0) ? (
                   <div className="flex flex-col items-center justify-center py-12 text-neutral-500 border border-dashed border-neutral-700 rounded-xl">
                     <ListChecks size={30} className="mb-2 opacity-30" />
@@ -357,8 +391,7 @@ function PlanDrawer({ plan, onClose, onSaved }: { plan: Partial<Plan>; onClose: 
                       <div key={i} className="flex items-center gap-3 bg-neutral-800 border border-neutral-700 rounded-xl px-4 py-3 group">
                         <Check size={14} className="text-purple-400 flex-shrink-0" />
                         <span className="text-sm text-neutral-200 flex-1">{feature}</span>
-                        <button
-                          type="button" onClick={() => removeFeature(i)}
+                        <button type="button" onClick={() => removeFeature(i)}
                           className="text-neutral-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all p-1 rounded-lg hover:bg-red-500/10">
                           <X size={14} />
                         </button>
@@ -372,17 +405,13 @@ function PlanDrawer({ plan, onClose, onSaved }: { plan: Partial<Plan>; onClose: 
 
           {/* Footer */}
           <div className="p-6 border-t border-neutral-800 space-y-2">
-            <button
-              type="submit" disabled={saving}
-              className="w-full py-3 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-sm transition-colors disabled:opacity-60 flex items-center justify-center gap-2 shadow-lg shadow-purple-600/20"
-            >
+            <button type="submit" disabled={saving}
+              className="w-full py-3 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-sm transition-colors disabled:opacity-60 flex items-center justify-center gap-2 shadow-lg shadow-purple-600/20">
               {saving ? <Loader2 size={16} className="animate-spin" /> : <CheckCheck size={16} />}
               {saving ? 'Guardando...' : isEdit ? 'Guardar cambios' : 'Crear Plan'}
             </button>
-            <button
-              type="button" onClick={onClose}
-              className="w-full py-2.5 rounded-xl text-neutral-400 hover:text-white text-sm font-medium transition-colors hover:bg-neutral-800"
-            >
+            <button type="button" onClick={onClose}
+              className="w-full py-2.5 rounded-xl text-neutral-400 hover:text-white text-sm font-medium transition-colors hover:bg-neutral-800">
               Cancelar
             </button>
           </div>
@@ -406,11 +435,12 @@ export default function PlansPage() {
       setPlans(Array.isArray(data) ? data : []);
     } catch (err: any) {
       const status = err?.response?.status;
-      const msg = status === 403 ? 'Sin permisos para ver planes (403)'
-        : status === 401 ? 'Sesión expirada, por favor recarga'
-        : `Error cargando planes${status ? ` (${status})` : ''}`;
-      toast.error(msg, { duration: 5000 });
-      console.error('[PlansPage] fetchPlans error:', err?.response?.status, err?.response?.data);
+      toast.error(
+        status === 403 ? 'Sin permisos para ver planes (403)'
+          : status === 401 ? 'Sesión expirada, por favor recarga'
+          : `Error cargando planes${status ? ` (${status})` : ''}`,
+        { duration: 5000 }
+      );
     } finally {
       setLoading(false);
     }
@@ -450,17 +480,13 @@ export default function PlansPage() {
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <button
-              onClick={fetchPlans}
+            <button onClick={fetchPlans}
               className="p-2.5 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-400 hover:text-white transition-colors border border-neutral-700"
-              title="Recargar"
-            >
+              title="Recargar">
               <RefreshCw size={15} />
             </button>
-            <button
-              onClick={openCreate}
-              className="flex items-center gap-2 px-4 py-2.5 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-xl transition-colors shadow-lg shadow-purple-600/20 text-sm"
-            >
+            <button onClick={openCreate}
+              className="flex items-center gap-2 px-4 py-2.5 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-xl transition-colors shadow-lg shadow-purple-600/20 text-sm">
               <Plus size={17} />Nuevo Plan
             </button>
           </div>
@@ -471,22 +497,17 @@ export default function PlansPage() {
             <Tag size={36} className="mb-3 opacity-25" />
             <p className="font-semibold text-neutral-400">Sin planes configurados</p>
             <p className="text-sm mt-1">Crea el primer plan de suscripción</p>
-            <button
-              onClick={openCreate}
-              className="mt-5 flex items-center gap-1.5 text-purple-400 hover:text-purple-300 text-sm font-medium transition-colors"
-            >
+            <button onClick={openCreate}
+              className="mt-5 flex items-center gap-1.5 text-purple-400 hover:text-purple-300 text-sm font-medium transition-colors">
               <Plus size={15} />Crear primer plan
             </button>
           </div>
         ) : (
           <div className="space-y-3">
             {plans.map(plan => (
-              <PlanCard
-                key={plan.id}
-                plan={plan}
+              <PlanCard key={plan.id} plan={plan}
                 onEdit={() => openEdit(plan)}
-                onDelete={() => handleDelete(plan.id, plan.name)}
-              />
+                onDelete={() => handleDelete(plan.id, plan.name)} />
             ))}
           </div>
         )}
