@@ -720,6 +720,11 @@ model TenantSettings {
   // --- Permisos Especiales ---
   canHardDelete Boolean @default(false)
 
+  // --- Feature Flags (control por SuperAdmin) ---
+  enableEcommerce    Boolean @default(true)
+  enableTransbank    Boolean @default(false)
+  enableIntegrations Boolean @default(false)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }

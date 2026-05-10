@@ -30,6 +30,11 @@ export class AdminController {
     return this.adminService.getTenants(Number(page), Number(limit), search);
   }
 
+  @Get('tenants/:id/metrics')
+  async getTenantMetrics(@Param('id') id: string) {
+    return this.adminService.getTenantMetrics(id);
+  }
+
   @Patch('tenants/:id/status')
   async toggleStatus(@Param('id') id: string, @Body('status') status: string) {
     return this.adminService.toggleTenantStatus(id, status);
