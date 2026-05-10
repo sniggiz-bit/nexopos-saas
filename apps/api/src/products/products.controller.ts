@@ -89,6 +89,19 @@ export class ProductsController {
    * @returns Updated product
    */
   @UseGuards(JwtAuthGuard)
+  @Patch('bulk-public')
+  async bulkUpdatePublic(
+    @Body() body: { ids: string[]; isPublic: boolean },
+    @Request() req: any,
+  ) {
+    return this.productsService.bulkUpdatePublicStatus(
+      req.user.tenantId,
+      body.ids,
+      body.isPublic,
+    );
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Patch(':id')
   async update(
     @Param('id') id: string,
@@ -98,25 +111,8 @@ export class ProductsController {
     return this.productsService.update(id, updateProductDto, req.user?.userId);
   }
 
-  /**
-   * DELETE /products/:id
-   * Soft deletes a product
-   *
-   * @param id - Product ID
-   */
   @Delete(':id')
   async remove(@Param('id') id: string): Promise<void> {
     return this.productsService.remove(id);
-  }
-  @Patch('bulk-public')
-  async bulkUpdatePublic(
-    @Body() body: { ids: string[]; isPublic: boolean },
-    @Query('tenantId') tenantId: string = 'tenant-1',
-  ) {
-    return this.productsService.bulkUpdatePublicStatus(
-      tenantId,
-      body.ids,
-      body.isPublic,
-    );
   }
 }
