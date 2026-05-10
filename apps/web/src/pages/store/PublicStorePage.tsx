@@ -2,7 +2,8 @@ import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import {
   ShoppingCart, Plus, Minus, X, Search, SlidersHorizontal,
-  ChevronRight, Tag, Package, MessageCircle, ArrowUpDown, XCircle,
+  ChevronLeft, ChevronRight, Tag, Package, MessageCircle,
+  ArrowUpDown, XCircle, Star,
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { api } from '../../lib/api';
@@ -37,6 +38,15 @@ interface StoreFilters {
   brands: { id: string; name: string; _count: { products: number } }[];
 }
 
+interface Slide {
+  id: string;
+  imageUrl: string;
+  title?: string;
+  subtitle?: string;
+  buttonText?: string;
+  buttonLink?: string;
+}
+
 interface StoreData {
   id: string;
   name: string;
@@ -47,6 +57,11 @@ interface StoreData {
     brandColor?: string;
     bannerUrl?: string;
     isActive: boolean;
+    announcementEnabled?: boolean;
+    announcementText?: string;
+    announcementColor?: string;
+    sliders?: Slide[];
+    featuredProductIds?: string[];
   };
 }
 
@@ -619,6 +634,95 @@ const FilterPanel = ({
   );
 };
 
+// ── Slider Carousel ───────────────────────────────────────────────────────────
+
+const SliderCarousel = ({ slides, brandColor }: { slides: Slide[]; brandColor: string }) => {
+  const [current, setCurrent] = useState(0);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const goTo = (idx: number) => setCurrent(((idx % slides.length) + slides.length) % slides.length);
+
+  useEffect(() => {
+    if (slides.length <= 1) return;
+    timerRef.current = setTimeout(() => setCurrent(c => (c + 1) % slides.length), 5000);
+    return () => { if (timerRef.current) clearTimeout(timerRef.current); };
+  }, [current, slides.length]);
+
+  if (!slides.length) return null;
+  const slide = slides[current];
+
+  return (
+    <div className="relative w-full overflow-hidden bg-gray-900 h-52 sm:h-72 md:h-80">
+      {/* Image */}
+      {slide.imageUrl && (
+        <img
+          key={current}
+          src={slide.imageUrl}
+          alt={slide.title || ''}
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+      )}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/20 to-transparent" />
+
+      {/* Content */}
+      {(slide.title || slide.subtitle || slide.buttonText) && (
+        <div className="absolute bottom-0 left-0 right-0 p-5 pb-10 sm:p-8 sm:pb-12">
+          {slide.title && (
+            <h2 className="text-xl sm:text-3xl font-black text-white drop-shadow-lg leading-tight">
+              {slide.title}
+            </h2>
+          )}
+          {slide.subtitle && (
+            <p className="text-sm sm:text-base text-white/80 mt-1 drop-shadow">{slide.subtitle}</p>
+          )}
+          {slide.buttonText && slide.buttonLink && (
+            <a
+              href={slide.buttonLink}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-block mt-3 px-5 py-2.5 rounded-xl text-sm font-bold text-white shadow-lg hover:brightness-90 transition-all active:scale-95"
+              style={{ backgroundColor: brandColor }}
+            >
+              {slide.buttonText}
+            </a>
+          )}
+        </div>
+      )}
+
+      {/* Arrows */}
+      {slides.length > 1 && (
+        <>
+          <button
+            onClick={() => goTo(current - 1)}
+            className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 bg-black/30 hover:bg-black/50 backdrop-blur-sm rounded-full flex items-center justify-center text-white transition-colors"
+          >
+            <ChevronLeft className="w-5 h-5" />
+          </button>
+          <button
+            onClick={() => goTo(current + 1)}
+            className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 bg-black/30 hover:bg-black/50 backdrop-blur-sm rounded-full flex items-center justify-center text-white transition-colors"
+          >
+            <ChevronRight className="w-5 h-5" />
+          </button>
+
+          {/* Dots */}
+          <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-1.5">
+            {slides.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => goTo(i)}
+                className={`rounded-full transition-all duration-300 ${
+                  i === current ? 'w-5 h-2 bg-white' : 'w-2 h-2 bg-white/50 hover:bg-white/80'
+                }`}
+              />
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+};
+
 // ── Main Page ─────────────────────────────────────────────────────────────────
 
 export const PublicStorePage = () => {
@@ -718,6 +822,16 @@ export const PublicStorePage = () => {
   const activeFiltersCount = [activeCategory, activeBrand].filter(Boolean).length;
   const hasSidebar = storeFilters.categories.length > 0 || storeFilters.brands.length > 0;
 
+  const featuredProducts = useMemo(() => {
+    const ids = store?.storeSettings.featuredProductIds;
+    if (!ids?.length || searchInput || activeCategory || activeBrand) return [];
+    const idSet = new Set(ids);
+    return products.filter(p => idSet.has(p.id));
+  }, [products, store, searchInput, activeCategory, activeBrand]);
+
+  const sliders = store?.storeSettings.sliders ?? [];
+  const hasSliders = sliders.length > 0;
+
   if (storeError) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-8">
@@ -735,17 +849,35 @@ export const PublicStorePage = () => {
 
       {/* ── Sticky Header ─────────────────────────────────────────────────── */}
       <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-sm">
+        {/* Announcement Bar */}
+        {store?.storeSettings.announcementEnabled && store.storeSettings.announcementText && (
+          <div
+            className="w-full py-2 px-4 text-center text-xs font-semibold text-white tracking-wide"
+            style={{ backgroundColor: store.storeSettings.announcementColor || '#10b981' }}
+          >
+            {store.storeSettings.announcementText}
+          </div>
+        )}
+
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="flex items-center h-14 gap-3">
 
-            {/* Store name */}
+            {/* Store name / logo */}
             <div className="flex-shrink-0 min-w-0">
-              <span
-                className="text-base font-black tracking-tight truncate block"
-                style={{ color: brandColor }}
-              >
-                {loadingStore ? '···' : store?.name}
-              </span>
+              {store?.storeSettings.logoUrl ? (
+                <img
+                  src={store.storeSettings.logoUrl}
+                  alt={store.name}
+                  className="h-8 w-auto object-contain"
+                />
+              ) : (
+                <span
+                  className="text-base font-black tracking-tight truncate block"
+                  style={{ color: brandColor }}
+                >
+                  {loadingStore ? '···' : store?.name}
+                </span>
+              )}
             </div>
 
             {/* Search */}
@@ -789,26 +921,31 @@ export const PublicStorePage = () => {
         </div>
       </header>
 
-      {/* ── Hero Banner ────────────────────────────────────────────────────── */}
-      {store?.storeSettings.bannerUrl ? (
-        <div
-          className="w-full h-44 sm:h-60 bg-cover bg-center relative"
-          style={{ backgroundImage: `url(${store.storeSettings.bannerUrl})` }}
-        >
-          <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-black/10 flex items-end pb-6 px-6">
-            <h2 className="text-white text-2xl sm:text-3xl font-black drop-shadow-lg">
-              {store.name}
-            </h2>
+      {/* ── Slider Carousel ─────────────────────────────────────────────────── */}
+      {hasSliders && <SliderCarousel slides={sliders} brandColor={brandColor} />}
+
+      {/* ── Hero Banner (solo si no hay sliders) ─────────────────────────── */}
+      {!hasSliders && (
+        store?.storeSettings.bannerUrl ? (
+          <div
+            className="w-full h-44 sm:h-60 bg-cover bg-center relative"
+            style={{ backgroundImage: `url(${store.storeSettings.bannerUrl})` }}
+          >
+            <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-black/10 flex items-end pb-6 px-6">
+              <h2 className="text-white text-2xl sm:text-3xl font-black drop-shadow-lg">
+                {store.name}
+              </h2>
+            </div>
           </div>
-        </div>
-      ) : !loadingStore && store ? (
-        <div
-          className="w-full py-8 px-6 flex items-center justify-center"
-          style={{ background: `linear-gradient(135deg, ${brandColor}15 0%, ${brandColor}08 100%)` }}
-        >
-          <h2 className="text-2xl font-black" style={{ color: brandColor }}>{store.name}</h2>
-        </div>
-      ) : null}
+        ) : !loadingStore && store ? (
+          <div
+            className="w-full py-8 px-6 flex items-center justify-center"
+            style={{ background: `linear-gradient(135deg, ${brandColor}15 0%, ${brandColor}08 100%)` }}
+          >
+            <h2 className="text-2xl font-black" style={{ color: brandColor }}>{store.name}</h2>
+          </div>
+        ) : null
+      )}
 
       {/* ── Category pills (quick nav) ──────────────────────────────────────── */}
       {storeFilters.categories.length > 0 && (
@@ -837,6 +974,32 @@ export const PublicStorePage = () => {
                 >
                   {cat.name}
                 </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Featured Products ───────────────────────────────────────────────── */}
+      {!loadingProducts && featuredProducts.length > 0 && (
+        <div className="bg-white border-b border-gray-100">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 py-5">
+            <div className="flex items-center gap-2 mb-4">
+              <Star className="w-4 h-4 text-amber-500" fill="currentColor" />
+              <h2 className="text-sm font-bold text-gray-800 uppercase tracking-widest">
+                Destacados
+              </h2>
+            </div>
+            <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+              {featuredProducts.map(product => (
+                <div key={product.id} className="flex-shrink-0 w-36 sm:w-44">
+                  <ProductCard
+                    product={product}
+                    brandColor={brandColor}
+                    onAddToCart={p => addToCart(p)}
+                    onViewDetail={setSelectedProduct}
+                  />
+                </div>
               ))}
             </div>
           </div>

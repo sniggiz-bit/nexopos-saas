@@ -163,7 +163,7 @@ export class StoreService {
   async getSettings(tenantId: string) {
     const tenant = await this.prisma.tenant.findUnique({
       where: { id: tenantId },
-      select: { id: true, storeSlug: true, storeSettings: true },
+      select: { id: true, name: true, storeSlug: true, storeSettings: true },
     });
 
     if (!tenant) throw new NotFoundException('Tenant not found');
