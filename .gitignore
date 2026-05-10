@@ -10,6 +10,9 @@ node_modules
 # Datos PostgreSQL locales
 pgdata/
 
+# Compiled output — built inside Docker, not committed
+apps/api/dist/
+
 # Logs y archivos temporales
 *.log
 *.sql
