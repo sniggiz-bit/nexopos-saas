@@ -9,4 +9,9 @@ export class AppController {
   getHello(): string {
     return this.appService.getHello();
   }
+
+  @Get('landing-config')
+  async getLandingConfig() {
+    return this.appService.getLandingConfig();
+  }
 }

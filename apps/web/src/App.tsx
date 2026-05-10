@@ -5,6 +5,7 @@ import AdminDashboardPage from './pages/admin/AdminDashboardPage';
 import TenantsPage from './pages/admin/TenantsPage';
 import TenantDetailPage from './pages/admin/TenantDetailPage';
 import PlansPage from './pages/admin/PlansPage';
+import LandingEditorPage from './pages/admin/LandingEditorPage';
 import SystemHealthPage from './pages/admin/SystemHealthPage';
 import AnnouncementsPage from './pages/admin/AnnouncementsPage';
 import { PosPage } from './pages/PosPage';
@@ -110,6 +111,7 @@ function App() {
                   <Route path="branches" element={<SuperAdminBranchesPage />} />
                   <Route path="system-health" element={<SystemHealthPage />} />
                   <Route path="announcements" element={<AnnouncementsPage />} />
+                  <Route path="landing" element={<LandingEditorPage />} />
                 </Route>
               </Route>
 

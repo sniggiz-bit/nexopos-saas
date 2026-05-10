@@ -6,6 +6,7 @@ import {
   Query,
   UseGuards,
   Body,
+  Put,
 } from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -38,5 +39,15 @@ export class AdminController {
   @Patch('tenants/:id/status')
   async toggleStatus(@Param('id') id: string, @Body('status') status: string) {
     return this.adminService.toggleTenantStatus(id, status);
+  }
+
+  @Get('landing')
+  async getLanding() {
+    return this.adminService.getLandingConfig();
+  }
+
+  @Put('landing')
+  async updateLanding(@Body() body: Record<string, any>) {
+    return this.adminService.updateLandingConfig(body);
   }
 }

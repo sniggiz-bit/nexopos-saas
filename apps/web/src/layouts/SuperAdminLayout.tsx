@@ -10,7 +10,8 @@ import {
     CreditCard,
     Activity,
     Megaphone,
-    GitBranch
+    GitBranch,
+    Globe,
 } from 'lucide-react';
 import { Logo } from '../components/ui/Logo';
 
@@ -33,6 +34,7 @@ export default function SuperAdminLayout() {
         { icon: GitBranch, label: 'Sucursales', path: '/admin/branches' },
         { icon: Activity, label: 'System Health', path: '/admin/system-health' },
         { icon: Megaphone, label: 'Comunicados', path: '/admin/announcements' },
+        { icon: Globe, label: 'Landing Page', path: '/admin/landing' },
     ];
 
     const handleLogout = () => {

@@ -103,4 +103,17 @@ export class AdminService {
       data: { status: status as any },
     });
   }
+
+  async getLandingConfig() {
+    const record = await this.prisma.landingConfig.findUnique({ where: { id: 'singleton' } });
+    return record?.data ?? null;
+  }
+
+  async updateLandingConfig(data: Record<string, any>) {
+    return this.prisma.landingConfig.upsert({
+      where: { id: 'singleton' },
+      create: { id: 'singleton', data },
+      update: { data },
+    });
+  }
 }
