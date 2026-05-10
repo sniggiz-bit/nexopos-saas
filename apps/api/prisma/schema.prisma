@@ -464,19 +464,20 @@ enum MovementType {
 }
 
 model Plan {
-  id          String   @id @default(uuid())
-  name        String
-  description String?
-  price       Int
-  features    Json?    // Array of benefit strings
-  maxUsers    Int
-  maxProducts Int
-  maxStorage  Int      @default(0) // In MB
-  isRecommended Boolean @default(false)
-  isVisible   Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  tenants     Tenant[]
+  id               String   @id @default(uuid())
+  name             String
+  description      String?
+  price            Int
+  features         Json?    // Array of benefit strings
+  maxUsers         Int
+  maxProducts      Int      @default(500)
+  maxStorage       Int      @default(0)
+  isRecommended    Boolean  @default(false)
+  isVisible        Boolean  @default(true)
+  enabledFeatures  Json?    // Feature flags: enableEcommerce, enableTransbank, etc.
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  tenants          Tenant[]
 }
 
 model SystemLog {
