@@ -28,42 +28,11 @@ export default defineConfig({
       workbox: {
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        navigateFallbackDenylist: [/^\/api\//],
         runtimeCaching: [
           {
-            urlPattern: /\/api\/products/,
-            handler: 'NetworkFirst',
-            options: {
-              cacheName: 'nexopos-products',
-              expiration: { maxEntries: 500, maxAgeSeconds: 86400 },
-              networkTimeoutSeconds: 5,
-            },
-          },
-          {
-            urlPattern: /\/api\/categories/,
-            handler: 'NetworkFirst',
-            options: {
-              cacheName: 'nexopos-categories',
-              expiration: { maxEntries: 100, maxAgeSeconds: 86400 },
-              networkTimeoutSeconds: 5,
-            },
-          },
-          {
-            urlPattern: /\/api\/branches/,
-            handler: 'NetworkFirst',
-            options: {
-              cacheName: 'nexopos-branches',
-              expiration: { maxEntries: 50, maxAgeSeconds: 86400 },
-              networkTimeoutSeconds: 5,
-            },
-          },
-          {
-            urlPattern: /\/api\/shifts/,
-            handler: 'NetworkFirst',
-            options: {
-              cacheName: 'nexopos-shifts',
-              expiration: { maxEntries: 10, maxAgeSeconds: 3600 },
-              networkTimeoutSeconds: 3,
-            },
+            urlPattern: /\/api\/.*/,
+            handler: 'NetworkOnly',
           },
         ],
       },
