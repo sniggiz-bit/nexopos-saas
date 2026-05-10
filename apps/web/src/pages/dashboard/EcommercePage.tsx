@@ -25,6 +25,7 @@ interface Slider {
 }
 
 interface StoreConfig {
+    storeName: string;
     storeSlug: string;
     isActive: boolean;
     whatsappNumber: string;
@@ -43,6 +44,7 @@ interface StoreConfig {
 }
 
 const DEFAULT_CONFIG: StoreConfig = {
+    storeName: '',
     storeSlug: '',
     isActive: false,
     whatsappNumber: '',
@@ -195,6 +197,14 @@ const GeneralTab = ({ cfg, onChange, storeLink, onCopyLink }: {
             </div>
             <Toggle value={cfg.isActive} onChange={v => onChange({ isActive: v })} />
         </div>
+
+        <Field label="Nombre de la tienda" hint="Visible en el header y en Google">
+            <Input
+                value={cfg.storeName}
+                onChange={v => onChange({ storeName: v })}
+                placeholder="Mi Negocio"
+            />
+        </Field>
 
         <Field label="URL de tu tienda">
             <div className="flex rounded-xl overflow-hidden border border-gray-200 focus-within:border-indigo-400 focus-within:ring-2 focus-within:ring-indigo-100 transition-all bg-white">
@@ -509,6 +519,16 @@ const CatalogoTab = ({ cfg, onChange, products }: {
                 </div>
             </div>
 
+            {/* Hidden products warning */}
+            {publicCount < localProducts.length && (
+                <div className="flex items-center gap-2 p-3 bg-amber-50 border border-amber-100 rounded-xl text-xs text-amber-700">
+                    <EyeOff className="w-3.5 h-3.5 flex-shrink-0" />
+                    <span>
+                        <strong>{localProducts.length - publicCount}</strong> producto{localProducts.length - publicCount !== 1 ? 's' : ''} oculto{localProducts.length - publicCount !== 1 ? 's' : ''} en la tienda — usa el ícono <Eye className="w-3 h-3 inline" /> para publicarlos
+                    </span>
+                </div>
+            )}
+
             {/* Controls */}
             <div className="flex gap-2 flex-wrap">
                 <div className="relative flex-1 min-w-44">
@@ -721,6 +741,7 @@ export const EcommercePage = () => {
                 const ss = (data.storeSettings as any) || {};
                 setStoreName(data.name || '');
                 setCfg({
+                    storeName: data.name || '',
                     storeSlug: data.storeSlug || '',
                     isActive: ss.isActive || false,
                     whatsappNumber: ss.whatsappNumber || '',
@@ -749,6 +770,7 @@ export const EcommercePage = () => {
 
     const handleChange = useCallback((patch: Partial<StoreConfig>) => {
         setCfg(prev => ({ ...prev, ...patch }));
+        if (patch.storeName !== undefined) setStoreName(patch.storeName);
         setDirty(true);
     }, []);
 
@@ -760,8 +782,9 @@ export const EcommercePage = () => {
         }
         setSaving(true);
         try {
-            const { storeSlug, ...rest } = cfg;
-            await api.patch('/store/settings', { storeSlug, storeSettings: rest });
+            const { storeName: name, storeSlug, ...rest } = cfg;
+            await api.patch('/store/settings', { name, storeSlug, storeSettings: rest });
+            setStoreName(name);
             toast.success('Cambios guardados', { style: { borderRadius: '12px' } });
             setDirty(false);
             if (storeSlug) setStoreLink(`${window.location.origin}/store/${storeSlug}`);
