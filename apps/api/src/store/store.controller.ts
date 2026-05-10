@@ -27,16 +27,33 @@ export class StoreController {
     return this.storeService.updateStoreSettings(req.user.tenantId, body);
   }
 
-  @Get(':slug')
-  async getStore(@Param('slug') slug: string) {
-    return this.storeService.findBySlug(slug);
+  @Get(':slug/filters')
+  async getFilters(@Param('slug') slug: string) {
+    return this.storeService.findFiltersBySlug(slug);
   }
 
   @Get(':slug/products')
   async getProducts(
     @Param('slug') slug: string,
     @Query('search') search?: string,
+    @Query('categoryId') categoryId?: string,
+    @Query('brandId') brandId?: string,
+    @Query('minPrice') minPrice?: string,
+    @Query('maxPrice') maxPrice?: string,
+    @Query('sort') sort?: string,
   ) {
-    return this.storeService.findProductsBySlug(slug, search);
+    return this.storeService.findProductsBySlug(slug, {
+      search,
+      categoryId,
+      brandId,
+      minPrice: minPrice ? Number(minPrice) : undefined,
+      maxPrice: maxPrice ? Number(maxPrice) : undefined,
+      sort,
+    });
+  }
+
+  @Get(':slug')
+  async getStore(@Param('slug') slug: string) {
+    return this.storeService.findBySlug(slug);
   }
 }

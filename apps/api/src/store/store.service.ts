@@ -36,37 +36,112 @@ export class StoreService {
     };
   }
 
-  async findProductsBySlug(slug: string, search?: string) {
+  async findFiltersBySlug(slug: string) {
+    const tenant = await this.findBySlug(slug);
+    const publicFilter = { isPublic: true, isActive: true, tenantId: tenant.id };
+
+    const [categories, brands] = await Promise.all([
+      this.prisma.category.findMany({
+        where: { tenantId: tenant.id, products: { some: publicFilter } },
+        select: {
+          id: true,
+          name: true,
+          _count: { select: { products: { where: publicFilter } } },
+        },
+        orderBy: { name: 'asc' },
+      }),
+      this.prisma.brand.findMany({
+        where: { tenantId: tenant.id, products: { some: publicFilter } },
+        select: {
+          id: true,
+          name: true,
+          _count: { select: { products: { where: publicFilter } } },
+        },
+        orderBy: { name: 'asc' },
+      }),
+    ]);
+
+    return { categories, brands };
+  }
+
+  async findProductsBySlug(
+    slug: string,
+    filters?: {
+      search?: string;
+      categoryId?: string;
+      brandId?: string;
+      minPrice?: number;
+      maxPrice?: number;
+      sort?: string;
+    },
+  ) {
     const tenant = await this.findBySlug(slug);
 
-    return this.prisma.product.findMany({
-      where: {
-        tenantId: tenant.id,
-        isPublic: true,
-        isActive: true,
-        OR: search
-          ? [
-              { name: { contains: search, mode: 'insensitive' } },
-              { description: { contains: search, mode: 'insensitive' } },
-            ]
-          : undefined,
-      },
+    const where: any = {
+      tenantId: tenant.id,
+      isPublic: true,
+      isActive: true,
+    };
+
+    if (filters?.search) {
+      where.OR = [
+        { name: { contains: filters.search, mode: 'insensitive' } },
+        { description: { contains: filters.search, mode: 'insensitive' } },
+        { sku: { contains: filters.search, mode: 'insensitive' } },
+      ];
+    }
+
+    if (filters?.categoryId) where.categoryId = filters.categoryId;
+    if (filters?.brandId) where.brandId = filters.brandId;
+
+    if (filters?.minPrice || filters?.maxPrice) {
+      where.price = {};
+      if (filters.minPrice) where.price.gte = Number(filters.minPrice);
+      if (filters.maxPrice) where.price.lte = Number(filters.maxPrice);
+    }
+
+    let orderBy: any = { name: 'asc' };
+    if (filters?.sort === 'price_asc') orderBy = { price: 'asc' };
+    else if (filters?.sort === 'price_desc') orderBy = { price: 'desc' };
+    else if (filters?.sort === 'newest') orderBy = { createdAt: 'desc' };
+
+    const products = await this.prisma.product.findMany({
+      where,
+      orderBy,
       select: {
         id: true,
         name: true,
+        sku: true,
         price: true,
         description: true,
         image: true,
-
-        category: {
-          select: { name: true },
+        unitType: true,
+        category: { select: { id: true, name: true } },
+        brand: { select: { id: true, name: true } },
+        inventory: { select: { quantity: true } },
+        priceTiers: {
+          select: { minQuantity: true, unitPrice: true },
+          orderBy: { minQuantity: 'asc' },
         },
       },
     });
+
+    return products.map((p) => ({
+      id: p.id,
+      name: p.name,
+      sku: p.sku,
+      price: p.price,
+      description: p.description,
+      image: p.image,
+      unitType: p.unitType,
+      category: p.category,
+      brand: p.brand,
+      priceTiers: p.priceTiers,
+      stock: p.inventory.reduce((sum, inv) => sum + Number(inv.quantity), 0),
+    }));
   }
 
   async updateStoreSettings(tenantId: string, settings: any) {
-    // Validate slug uniqueness if changing
     if (settings.storeSlug) {
       const existing = await this.prisma.tenant.findUnique({
         where: { storeSlug: settings.storeSlug },
@@ -88,16 +163,10 @@ export class StoreService {
   async getSettings(tenantId: string) {
     const tenant = await this.prisma.tenant.findUnique({
       where: { id: tenantId },
-      select: {
-        id: true,
-        storeSlug: true,
-        storeSettings: true,
-      },
+      select: { id: true, storeSlug: true, storeSettings: true },
     });
 
-    if (!tenant) {
-      throw new NotFoundException('Tenant not found');
-    }
+    if (!tenant) throw new NotFoundException('Tenant not found');
 
     return tenant;
   }
