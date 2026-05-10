@@ -12,7 +12,7 @@ export default defineConfig({
       manifest: {
         name: 'NexoPOS',
         short_name: 'NexoPOS',
-        description: 'Sistema de Punto de Venta para Chile',
+        description: 'Sistema de Gestión Integral para PYMES chilenas',
         theme_color: '#4f46e5',
         background_color: '#ffffff',
         display: 'standalone',
