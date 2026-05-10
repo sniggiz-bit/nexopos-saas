@@ -7,7 +7,8 @@ export class PlansService {
   constructor(private prisma: PrismaService) {}
 
   async create(data: any): Promise<Plan> {
-    return this.prisma.plan.create({ data });
+    const { id: _id, createdAt: _ca, updatedAt: _ua, tenants: _t, ...createData } = data;
+    return this.prisma.plan.create({ data: createData });
   }
 
   async findAll(): Promise<Plan[]> {
@@ -19,7 +20,8 @@ export class PlansService {
   }
 
   async update(id: string, data: any): Promise<Plan> {
-    return this.prisma.plan.update({ where: { id }, data });
+    const { id: _id, createdAt: _ca, updatedAt: _ua, tenants: _t, ...updateData } = data;
+    return this.prisma.plan.update({ where: { id }, data: updateData });
   }
 
   async remove(id: string): Promise<Plan> {
