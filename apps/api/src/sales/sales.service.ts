@@ -10,6 +10,7 @@ import { InternalReceiptService } from '../dte/internal-receipt.service';
 import { CreateSaleDto, CreatePaymentDto } from './dto/create-sale.dto';
 import { CreditsService } from '../credits/credits.service';
 import { InventoryService } from '../inventory/inventory.service';
+import { EventsService } from '../events/events.service';
 import { MovementType } from '@prisma/client';
 
 interface GetSalesFilters {
@@ -29,6 +30,7 @@ export class SalesService {
     private internalReceiptService: InternalReceiptService,
     private creditsService: CreditsService,
     private inventoryService: InventoryService,
+    private eventsService: EventsService,
   ) {}
 
   /**
@@ -263,6 +265,14 @@ export class SalesService {
       });
 
       return createdSale;
+    });
+
+    // Notify all connected clients for this tenant so their UI refetches stock
+    this.eventsService.emit({
+      type: 'sale.created',
+      tenantId,
+      branchId,
+      payload: { saleId: sale.id },
     });
 
     // Post-Sale Actions (DTE, etc)

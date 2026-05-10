@@ -1,11 +1,24 @@
-import { Controller, Get, Post, Param, Query, Body, UseGuards, Request } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Param,
+  Query,
+  Body,
+  UseGuards,
+  Request,
+} from '@nestjs/common';
 import { InventoryService } from './inventory.service';
+import { EventsService } from '../events/events.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { MovementType } from '@prisma/client';
 
 @Controller('inventory')
 export class InventoryController {
-  constructor(private readonly inventoryService: InventoryService) {}
+  constructor(
+    private readonly inventoryService: InventoryService,
+    private readonly eventsService: EventsService,
+  ) {}
 
   @Get('kardex/:productId')
   async getKardex(
@@ -19,7 +32,8 @@ export class InventoryController {
   @Post('adjust')
   async adjustStock(@Body() body: any, @Request() req: any) {
     const { productId, branchId, quantity, note } = body;
-    return this.inventoryService.logMovement({
+
+    const result = await this.inventoryService.logMovement({
       productId,
       branchId,
       quantity: Number(quantity),
@@ -27,5 +41,17 @@ export class InventoryController {
       reference: note || 'Ajuste manual',
       userId: req.user?.userId,
     });
+
+    const tenantId = req.user?.tenantId;
+    if (tenantId) {
+      this.eventsService.emit({
+        type: 'inventory.adjusted',
+        tenantId,
+        branchId,
+        payload: { productId, newBalance: result.newBalance },
+      });
+    }
+
+    return result;
   }
 }

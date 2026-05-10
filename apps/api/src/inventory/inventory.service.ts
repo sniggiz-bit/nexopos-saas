@@ -1,70 +1,83 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateMovementDto } from './dto/create-movement.dto';
-import { Prisma } from '@prisma/client';
+import { Prisma, MovementType } from '@prisma/client';
 
 @Injectable()
 export class InventoryService {
-  private readonly logger = new Logger(InventoryService.name);
-
   constructor(private readonly prisma: PrismaService) {}
 
   /**
-   * Records a stock movement and updates the inventory level.
-   * MUST be called within a transaction if part of a larger operation (like a sale).
+   * Records a stock movement and updates the inventory level atomically.
+   *
+   * For OUT movements (qty < 0): uses Prisma's atomic `{ decrement }` which maps
+   * to a single SQL `UPDATE ... SET quantity = quantity - N` statement. After the
+   * update we check whether the resulting balance is negative and throw if so —
+   * the enclosing transaction rolls back automatically, preventing overselling.
+   *
+   * For IN movements (qty > 0): uses atomic `upsert` with `{ increment }`.
+   *
+   * This approach eliminates the read-then-write race condition that existed
+   * when two concurrent transactions both read the same stock level and then
+   * each wrote a locally-calculated new balance.
+   *
+   * ADJUSTMENT movements are allowed to produce negative balances because they
+   * represent manual stock corrections (e.g. confirming a theft write-off).
    */
   async logMovement(data: CreateMovementDto, tx?: Prisma.TransactionClient) {
     const prisma = tx || this.prisma;
+    const qty = Number(data.quantity);
 
-    // 1. Get current stock to calculate new balance
-    const currentInventory = await prisma.inventory.findUnique({
-      where: {
-        productId_branchId: {
+    let newBalance: number;
+
+    if (qty < 0) {
+      // OUT movement: atomic decrement, then validate
+      const updated = await prisma.inventory.update({
+        where: {
+          productId_branchId: {
+            productId: data.productId,
+            branchId: data.branchId,
+          },
+        },
+        data: { quantity: { decrement: Math.abs(qty) } },
+      });
+
+      newBalance = Number(updated.quantity);
+
+      // Negative stock is only permitted for manual adjustments
+      if (newBalance < 0 && data.type !== MovementType.ADJUSTMENT) {
+        throw new BadRequestException(
+          `Stock insuficiente para el producto ${data.productId}`,
+        );
+      }
+    } else {
+      // IN movement: atomic increment or create
+      const updated = await prisma.inventory.upsert({
+        where: {
+          productId_branchId: {
+            productId: data.productId,
+            branchId: data.branchId,
+          },
+        },
+        update: { quantity: { increment: qty } },
+        create: {
           productId: data.productId,
           branchId: data.branchId,
+          quantity: qty,
         },
-      },
-    });
+      });
+      newBalance = Number(updated.quantity);
+    }
 
-    const currentQty = currentInventory ? Number(currentInventory.quantity) : 0;
-    const newBalance = currentQty + Number(data.quantity); // Quantity is signed (+ for IN, - for OUT)
-
-    // 2. Create Movement Record
     await prisma.stockMovement.create({
       data: {
         productId: data.productId,
         branchId: data.branchId,
-        quantity: data.quantity,
+        quantity: qty,
         type: data.type,
-        reference: data.reference,
+        reference: data.reference ?? 'manual',
         balance: newBalance,
         userId: data.userId,
-      },
-    });
-
-    // 3. InventoryLevel update is handled by the caller (SalesService) OR we do it here?
-    // Ideally, we do it here to ensure consistency between Movement and Level.
-    // But SalesService already updates InventoryLevel.
-    // Let's UPDATE it here to be safe and centralized, but we need to handle the case where
-    // SalesService might have already decremented it if we are not careful.
-    // For now, let's assume SalesService DELEGATES the update to this service,
-    // OR we just log the movement here and trust the caller to update the level.
-    // BETTER APPROACH: The caller (SalesService) should call this method, and THIS method updates both.
-
-    await prisma.inventory.upsert({
-      where: {
-        productId_branchId: {
-          productId: data.productId,
-          branchId: data.branchId,
-        },
-      },
-      create: {
-        productId: data.productId,
-        branchId: data.branchId,
-        quantity: newBalance,
-      },
-      update: {
-        quantity: newBalance,
       },
     });
 

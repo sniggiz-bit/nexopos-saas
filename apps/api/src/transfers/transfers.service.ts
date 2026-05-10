@@ -1,5 +1,6 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { EventsService } from '../events/events.service';
 
 interface CreateTransferItemDto {
   productId: string;
@@ -16,7 +17,10 @@ interface CreateTransferDto {
 
 @Injectable()
 export class TransfersService {
-  constructor(private prisma: PrismaService) { }
+  constructor(
+    private prisma: PrismaService,
+    private eventsService: EventsService,
+  ) { }
 
   async create(data: CreateTransferDto) {
     const { originBranchId, destBranchId, items, note, userId } = data;
@@ -140,6 +144,20 @@ export class TransfersService {
         // Update balance on stockmovements (optional polish, skipping for speed/simplicity unless critical)
       }
 
+      return transfer;
+    }).then((transfer) => {
+      // Get tenantId from origin branch (both branches belong to the same tenant)
+      this.prisma.branch.findUnique({ where: { id: originBranchId }, select: { tenantId: true } })
+        .then((branch) => {
+          if (branch) {
+            this.eventsService.emit({
+              type: 'transfer.created',
+              tenantId: branch.tenantId,
+              payload: { transferId: transfer.id, originBranchId, destBranchId },
+            });
+          }
+        })
+        .catch(() => { /* non-critical */ });
       return transfer;
     });
   }
