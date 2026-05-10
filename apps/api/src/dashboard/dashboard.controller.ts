@@ -12,4 +12,12 @@ export class DashboardController {
   ) {
     return this.dashboardService.getStats(tenantId, branchId);
   }
+
+  @Get('analytics')
+  async getAnalytics(
+    @Query('tenantId') tenantId: string,
+    @Query('branchId') branchId?: string,
+  ) {
+    return this.dashboardService.getAnalytics(tenantId, branchId);
+  }
 }

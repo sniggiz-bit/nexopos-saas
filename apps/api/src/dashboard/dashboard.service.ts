@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { startOfDay, endOfDay, startOfMonth } from 'date-fns';
+import { startOfDay, endOfDay, startOfMonth, subMonths } from 'date-fns';
 
 @Injectable()
 export class DashboardService {
@@ -104,6 +104,87 @@ export class DashboardService {
       salesToday,
       monthRevenue,
       lowStockCount,
+    };
+  }
+
+  async getAnalytics(tenantId: string, branchId?: string) {
+    const now = new Date();
+    const todayStart = startOfDay(now);
+    const todayEnd = endOfDay(now);
+    const currentMonthStart = startOfMonth(now);
+    const prevMonthStart = startOfMonth(subMonths(now, 1));
+    const prevMonthEnd = new Date(currentMonthStart.getTime() - 1);
+
+    const branchFilter = branchId && branchId !== 'branch-1' ? { branchId } : {};
+
+    // Sales by hour for today (raw query for grouping)
+    const hourlySales = await this.prisma.sale.findMany({
+      where: {
+        tenantId,
+        ...branchFilter,
+        status: 'COMPLETED',
+        createdAt: { gte: todayStart, lte: todayEnd },
+      },
+      select: { createdAt: true, total: true },
+    });
+
+    const salesByHour: { hour: number; total: number }[] = Array.from({ length: 24 }, (_, i) => ({ hour: i, total: 0 }));
+    for (const sale of hourlySales) {
+      const h = new Date(sale.createdAt).getHours();
+      salesByHour[h].total += Number(sale.total);
+    }
+
+    // Top 5 products this month by quantity sold
+    const saleItems = await this.prisma.saleItem.findMany({
+      where: {
+        sale: {
+          tenantId,
+          ...branchFilter,
+          status: 'COMPLETED',
+          createdAt: { gte: currentMonthStart },
+        },
+      },
+      select: {
+        quantity: true,
+        subtotal: true,
+        product: { select: { id: true, name: true } },
+      },
+    });
+
+    const productMap = new Map<string, { name: string; qty: number; revenue: number }>();
+    for (const item of saleItems) {
+      if (!item.product) continue;
+      const existing = productMap.get(item.product.id) ?? { name: item.product.name, qty: 0, revenue: 0 };
+      existing.qty += item.quantity;
+      existing.revenue += Number(item.subtotal);
+      productMap.set(item.product.id, existing);
+    }
+
+    const topProducts = [...productMap.entries()]
+      .map(([id, v]) => ({ id, ...v }))
+      .sort((a, b) => b.qty - a.qty)
+      .slice(0, 5);
+
+    // Month comparison
+    const [currentRevResult, prevRevResult] = await Promise.all([
+      this.prisma.sale.aggregate({
+        where: { tenantId, ...branchFilter, status: 'COMPLETED', createdAt: { gte: currentMonthStart } },
+        _sum: { total: true },
+      }),
+      this.prisma.sale.aggregate({
+        where: { tenantId, ...branchFilter, status: 'COMPLETED', createdAt: { gte: prevMonthStart, lte: prevMonthEnd } },
+        _sum: { total: true },
+      }),
+    ]);
+
+    const currentRevenue = Number(currentRevResult._sum.total ?? 0);
+    const prevRevenue = Number(prevRevResult._sum.total ?? 0);
+    const pctChange = prevRevenue > 0 ? ((currentRevenue - prevRevenue) / prevRevenue) * 100 : null;
+
+    return {
+      salesByHour,
+      topProducts,
+      monthComparison: { currentRevenue, prevRevenue, pctChange },
     };
   }
 }
