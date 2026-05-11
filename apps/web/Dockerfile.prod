@@ -29,31 +29,50 @@ FROM nginx:alpine AS runner
 # Copy build artifacts to nginx public directory
 COPY --from=builder /app/apps/web/dist /usr/share/nginx/html
 
-# Custom nginx configuration for SPA routing and Gzip
-RUN echo 'server { \
-    listen 80; \
-    server_name localhost; \
-    root /usr/share/nginx/html; \
-    index index.html; \
-    gzip on; \
-    gzip_types text/plain text/css application/json application/javascript text/xml application/xml application/xml+rss text/javascript; \
-    location / { \
-    try_files $uri $uri/ /index.html; \
-    } \
-    location = /index.html { \
-    add_header Cache-Control "no-store, no-cache, must-revalidate"; \
-    } \
-    resolver 127.0.0.11 valid=30s ipv6=off; \
-    location /api { \
-    set $api_upstream api; \
-    proxy_pass http://$api_upstream:3000; \
-    proxy_http_version 1.1; \
-    proxy_set_header Upgrade $http_upgrade; \
-    proxy_set_header Connection "upgrade"; \
-    proxy_set_header Host $host; \
-    proxy_cache_bypass $http_upgrade; \
-    } \
-    }' > /etc/nginx/conf.d/default.conf
+# Nginx config: SPA routing + API proxy with SSE support
+RUN printf 'server {\n\
+    listen 80;\n\
+    server_name localhost;\n\
+    root /usr/share/nginx/html;\n\
+    index index.html;\n\
+\n\
+    gzip on;\n\
+    gzip_types text/plain text/css application/json application/javascript text/xml application/xml application/xml+rss text/javascript;\n\
+\n\
+    location / {\n\
+        try_files $uri $uri/ /index.html;\n\
+    }\n\
+\n\
+    location = /index.html {\n\
+        add_header Cache-Control "no-store, no-cache, must-revalidate";\n\
+    }\n\
+\n\
+    resolver 127.0.0.11 valid=30s ipv6=off;\n\
+\n\
+    # SSE endpoint: disable buffering so events stream immediately to the browser\n\
+    location /api/events/stream {\n\
+        set $api_upstream api;\n\
+        proxy_pass http://$api_upstream:3000;\n\
+        proxy_http_version 1.1;\n\
+        proxy_set_header Host $host;\n\
+        proxy_set_header Connection "";\n\
+        proxy_buffering off;\n\
+        proxy_cache off;\n\
+        proxy_read_timeout 86400s;\n\
+        chunked_transfer_encoding on;\n\
+    }\n\
+\n\
+    # General API proxy (WebSocket + REST)\n\
+    location /api {\n\
+        set $api_upstream api;\n\
+        proxy_pass http://$api_upstream:3000;\n\
+        proxy_http_version 1.1;\n\
+        proxy_set_header Upgrade $http_upgrade;\n\
+        proxy_set_header Connection "upgrade";\n\
+        proxy_set_header Host $host;\n\
+        proxy_cache_bypass $http_upgrade;\n\
+    }\n\
+}\n' > /etc/nginx/conf.d/default.conf
 
 EXPOSE 80
 

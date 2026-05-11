@@ -1,6 +1,7 @@
-import React, { createContext, useContext, useState, useCallback, useMemo } from 'react';
+import React, { createContext, useContext, useState, useCallback, useMemo, useEffect } from 'react';
 import { Product } from '@/api/products';
 import { resolveUnitPrice, PriceTier } from '@nexopos/shared';
+import { useSocket } from '@/hooks/useSocket';
 
 export type DiscountType = 'PERCENTAGE' | 'FIXED';
 
@@ -14,6 +15,7 @@ export interface CartItemData {
     discountType?: DiscountType;
     discountValue?: number | '';
     priceTiers?: PriceTier[];
+    stock?: number;
 }
 
 interface CartContextType {
@@ -36,6 +38,51 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
     const [items, setItems] = useState<CartItemData[]>([]);
+    const socket = useSocket();
+
+    useEffect(() => {
+        if (!socket) return;
+
+        const handleStockUpdated = (data: { productId: string; stock: number }) => {
+            setItems((prev) => {
+                const updated = prev.map((item) => {
+                    if (item.productId === data.productId) {
+                        const numericQty = Number(item.quantity) || 0;
+                        if (numericQty > data.stock) {
+                            const newQty = data.stock;
+                            const newPrice = resolveUnitPrice(item.basePrice, item.priceTiers, newQty);
+                            return { ...item, stock: data.stock, quantity: newQty, price: newPrice };
+                        }
+                        return { ...item, stock: data.stock };
+                    }
+                    return item;
+                });
+                return updated.filter((item) => (Number(item.quantity) || 0) > 0);
+            });
+        };
+
+        const handlePriceUpdated = (data: { productId: string; price: number; priceTiers?: PriceTier[] }) => {
+            setItems((prev) =>
+                prev.map((item) => {
+                    if (item.productId === data.productId) {
+                        const numericQty = Number(item.quantity) || 0;
+                        const newTiers = data.priceTiers || item.priceTiers;
+                        const newPrice = resolveUnitPrice(data.price, newTiers, numericQty);
+                        return { ...item, basePrice: data.price, priceTiers: newTiers, price: newPrice };
+                    }
+                    return item;
+                })
+            );
+        };
+
+        socket.on('product.stock.updated', handleStockUpdated);
+        socket.on('product.price.updated', handlePriceUpdated);
+
+        return () => {
+            socket.off('product.stock.updated', handleStockUpdated);
+            socket.off('product.price.updated', handlePriceUpdated);
+        };
+    }, [socket]);
 
     const addItem = useCallback((product: Product, quantity: number = 1) => {
         setItems((prev) => {
