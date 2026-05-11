@@ -1,0 +1,302 @@
+
+
+[GLOBAL ERROR] Date: 2026-03-09T01:35:45.728Z
+Path: /api/admin/dashboard
+Status: 404
+Message: Cannot GET /api/admin/dashboard
+Exception: NotFoundException: Cannot GET /api/admin/dashboard
+    at callback (C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\@nestjs\core\router\routes-resolver.js:77:19)
+    at C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\@nestjs\core\router\router-proxy.js:9:23
+    at Layer.handleRequest (C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\router\index.js:342:13)
+    at C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\router\index.js:297:9
+    at processParams (C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\router\index.js:582:12)
+    at next (C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\router\index.js:291:5)
+    at read (C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\body-parser\lib\read.js:53:5)
+    at urlencodedParser (C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\body-parser\lib\types\urlencoded.js:57:5)
+    at Layer.handleRequest (C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\router\lib\layer.js:152:17)
+
+
+[GLOBAL ERROR] Date: 2026-03-09T01:35:46.067Z
+Path: /api/admin/dashboard
+Status: 404
+Message: Cannot GET /api/admin/dashboard
+Exception: NotFoundException: Cannot GET /api/admin/dashboard
+    at callback (C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\@nestjs\core\router\routes-resolver.js:77:19)
+    at C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\@nestjs\core\router\router-proxy.js:9:23
+    at Layer.handleRequest (C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\router\index.js:342:13)
+    at C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\router\index.js:297:9
+    at processParams (C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\router\index.js:582:12)
+    at next (C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\router\index.js:291:5)
+    at read (C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\body-parser\lib\read.js:53:5)
+    at urlencodedParser (C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\body-parser\lib\types\urlencoded.js:57:5)
+    at Layer.handleRequest (C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\router\lib\layer.js:152:17)
+
+
+[GLOBAL ERROR] Date: 2026-03-09T01:36:39.947Z
+Path: /api/admin/dashboard
+Status: 404
+Message: Cannot GET /api/admin/dashboard
+Exception: NotFoundException: Cannot GET /api/admin/dashboard
+    at callback (C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\@nestjs\core\router\routes-resolver.js:77:19)
+    at C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\@nestjs\core\router\router-proxy.js:9:23
+    at Layer.handleRequest (C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\router\index.js:342:13)
+    at C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\router\index.js:297:9
+    at processParams (C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\router\index.js:582:12)
+    at next (C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\router\index.js:291:5)
+    at read (C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\body-parser\lib\read.js:53:5)
+    at urlencodedParser (C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\body-parser\lib\types\urlencoded.js:57:5)
+    at Layer.handleRequest (C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\router\lib\layer.js:152:17)
+
+
+[GLOBAL ERROR] Date: 2026-03-09T01:36:40.754Z
+Path: /api/admin/dashboard
+Status: 404
+Message: Cannot GET /api/admin/dashboard
+Exception: NotFoundException: Cannot GET /api/admin/dashboard
+    at callback (C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\@nestjs\core\router\routes-resolver.js:77:19)
+    at C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\@nestjs\core\router\router-proxy.js:9:23
+    at Layer.handleRequest (C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\router\index.js:342:13)
+    at C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\router\index.js:297:9
+    at processParams (C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\router\index.js:582:12)
+    at next (C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\router\index.js:291:5)
+    at read (C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\body-parser\lib\read.js:53:5)
+    at urlencodedParser (C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\body-parser\lib\types\urlencoded.js:57:5)
+    at Layer.handleRequest (C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\router\lib\layer.js:152:17)
+
+
+[GLOBAL ERROR] Date: 2026-03-09T01:36:43.485Z
+Path: /api/tenants?search=
+Status: 403
+Message: Access denied. Super Admin role required.
+Exception: ForbiddenException: Access denied. Super Admin role required.
+    at SuperAdminGuard.canActivate (C:\Users\user\OneDrive\Escritorio\nexopos.cl\apps\api\src\auth\super-admin.guard.ts:19:13)
+    at GuardsConsumer.tryActivate (C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\@nestjs\core\guards\guards-consumer.js:15:34)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async canActivateFn (C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\@nestjs\core\router\router-execution-context.js:135:33)
+    at async C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\@nestjs\core\router\router-execution-context.js:42:31
+    at async C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\@nestjs\core\router\router-proxy.js:9:17
+
+
+[GLOBAL ERROR] Date: 2026-03-09T01:36:43.533Z
+Path: /api/tenants?search=
+Status: 403
+Message: Access denied. Super Admin role required.
+Exception: ForbiddenException: Access denied. Super Admin role required.
+    at SuperAdminGuard.canActivate (C:\Users\user\OneDrive\Escritorio\nexopos.cl\apps\api\src\auth\super-admin.guard.ts:19:13)
+    at GuardsConsumer.tryActivate (C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\@nestjs\core\guards\guards-consumer.js:15:34)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async canActivateFn (C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\@nestjs\core\router\router-execution-context.js:135:33)
+    at async C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\@nestjs\core\router\router-execution-context.js:42:31
+    at async C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\@nestjs\core\router\router-proxy.js:9:17
+
+
+[GLOBAL ERROR] Date: 2026-03-09T01:36:57.223Z
+Path: /api/tenants?search=
+Status: 403
+Message: Access denied. Super Admin role required.
+Exception: ForbiddenException: Access denied. Super Admin role required.
+    at SuperAdminGuard.canActivate (C:\Users\user\OneDrive\Escritorio\nexopos.cl\apps\api\src\auth\super-admin.guard.ts:19:13)
+    at GuardsConsumer.tryActivate (C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\@nestjs\core\guards\guards-consumer.js:15:34)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async canActivateFn (C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\@nestjs\core\router\router-execution-context.js:135:33)
+    at async C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\@nestjs\core\router\router-execution-context.js:42:31
+    at async C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\@nestjs\core\router\router-proxy.js:9:17
+
+
+[GLOBAL ERROR] Date: 2026-03-09T01:36:57.267Z
+Path: /api/tenants?search=
+Status: 403
+Message: Access denied. Super Admin role required.
+Exception: ForbiddenException: Access denied. Super Admin role required.
+    at SuperAdminGuard.canActivate (C:\Users\user\OneDrive\Escritorio\nexopos.cl\apps\api\src\auth\super-admin.guard.ts:19:13)
+    at GuardsConsumer.tryActivate (C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\@nestjs\core\guards\guards-consumer.js:15:34)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async canActivateFn (C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\@nestjs\core\router\router-execution-context.js:135:33)
+    at async C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\@nestjs\core\router\router-execution-context.js:42:31
+    at async C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\@nestjs\core\router\router-proxy.js:9:17
+
+
+[GLOBAL ERROR] Date: 2026-03-09T01:37:03.715Z
+Path: /api/admin/dashboard
+Status: 404
+Message: Cannot GET /api/admin/dashboard
+Exception: NotFoundException: Cannot GET /api/admin/dashboard
+    at callback (C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\@nestjs\core\router\routes-resolver.js:77:19)
+    at C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\@nestjs\core\router\router-proxy.js:9:23
+    at Layer.handleRequest (C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\router\index.js:342:13)
+    at C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\router\index.js:297:9
+    at processParams (C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\router\index.js:582:12)
+    at next (C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\router\index.js:291:5)
+    at read (C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\body-parser\lib\read.js:53:5)
+    at urlencodedParser (C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\body-parser\lib\types\urlencoded.js:57:5)
+    at Layer.handleRequest (C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\router\lib\layer.js:152:17)
+
+
+[GLOBAL ERROR] Date: 2026-03-09T01:37:03.729Z
+Path: /api/admin/dashboard
+Status: 404
+Message: Cannot GET /api/admin/dashboard
+Exception: NotFoundException: Cannot GET /api/admin/dashboard
+    at callback (C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\@nestjs\core\router\routes-resolver.js:77:19)
+    at C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\@nestjs\core\router\router-proxy.js:9:23
+    at Layer.handleRequest (C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\router\index.js:342:13)
+    at C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\router\index.js:297:9
+    at processParams (C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\router\index.js:582:12)
+    at next (C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\router\index.js:291:5)
+    at read (C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\body-parser\lib\read.js:53:5)
+    at urlencodedParser (C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\body-parser\lib\types\urlencoded.js:57:5)
+    at Layer.handleRequest (C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\router\lib\layer.js:152:17)
+
+
+[GLOBAL ERROR] Date: 2026-03-09T01:37:05.388Z
+Path: /api/tenants?search=
+Status: 403
+Message: Access denied. Super Admin role required.
+Exception: ForbiddenException: Access denied. Super Admin role required.
+    at SuperAdminGuard.canActivate (C:\Users\user\OneDrive\Escritorio\nexopos.cl\apps\api\src\auth\super-admin.guard.ts:19:13)
+    at GuardsConsumer.tryActivate (C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\@nestjs\core\guards\guards-consumer.js:15:34)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async canActivateFn (C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\@nestjs\core\router\router-execution-context.js:135:33)
+    at async C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\@nestjs\core\router\router-execution-context.js:42:31
+    at async C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\@nestjs\core\router\router-proxy.js:9:17
+
+
+[GLOBAL ERROR] Date: 2026-03-09T01:37:05.416Z
+Path: /api/tenants?search=
+Status: 403
+Message: Access denied. Super Admin role required.
+Exception: ForbiddenException: Access denied. Super Admin role required.
+    at SuperAdminGuard.canActivate (C:\Users\user\OneDrive\Escritorio\nexopos.cl\apps\api\src\auth\super-admin.guard.ts:19:13)
+    at GuardsConsumer.tryActivate (C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\@nestjs\core\guards\guards-consumer.js:15:34)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async canActivateFn (C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\@nestjs\core\router\router-execution-context.js:135:33)
+    at async C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\@nestjs\core\router\router-execution-context.js:42:31
+    at async C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\@nestjs\core\router\router-proxy.js:9:17
+
+
+[GLOBAL ERROR] Date: 2026-03-09T01:37:08.390Z
+Path: /api/admin/dashboard
+Status: 404
+Message: Cannot GET /api/admin/dashboard
+Exception: NotFoundException: Cannot GET /api/admin/dashboard
+    at callback (C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\@nestjs\core\router\routes-resolver.js:77:19)
+    at C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\@nestjs\core\router\router-proxy.js:9:23
+    at Layer.handleRequest (C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\router\index.js:342:13)
+    at C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\router\index.js:297:9
+    at processParams (C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\router\index.js:582:12)
+    at next (C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\router\index.js:291:5)
+    at read (C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\body-parser\lib\read.js:53:5)
+    at urlencodedParser (C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\body-parser\lib\types\urlencoded.js:57:5)
+    at Layer.handleRequest (C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\router\lib\layer.js:152:17)
+
+
+[GLOBAL ERROR] Date: 2026-03-09T01:37:08.482Z
+Path: /api/admin/dashboard
+Status: 404
+Message: Cannot GET /api/admin/dashboard
+Exception: NotFoundException: Cannot GET /api/admin/dashboard
+    at callback (C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\@nestjs\core\router\routes-resolver.js:77:19)
+    at C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\@nestjs\core\router\router-proxy.js:9:23
+    at Layer.handleRequest (C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\router\index.js:342:13)
+    at C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\router\index.js:297:9
+    at processParams (C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\router\index.js:582:12)
+    at next (C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\router\index.js:291:5)
+    at read (C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\body-parser\lib\read.js:53:5)
+    at urlencodedParser (C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\body-parser\lib\types\urlencoded.js:57:5)
+    at Layer.handleRequest (C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\router\lib\layer.js:152:17)
+
+
+[GLOBAL ERROR] Date: 2026-03-09T03:50:59.354Z
+Path: /api/brands?tenantId=tenant-1
+Status: 401
+Message: Unauthorized
+Exception: UnauthorizedException: Unauthorized
+    at JwtAuthGuard.canActivate (C:\Users\user\OneDrive\Escritorio\nexopos.cl\apps\api\src\auth\jwt-auth.guard.ts:37:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async GuardsConsumer.tryActivate (C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\@nestjs\core\guards\guards-consumer.js:22:17)
+    at async canActivateFn (C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\@nestjs\core\router\router-execution-context.js:135:33)
+    at async C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\@nestjs\core\router\router-execution-context.js:42:31
+    at async C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\@nestjs\core\router\router-proxy.js:9:17
+
+
+[GLOBAL ERROR] Date: 2026-03-09T03:51:00.467Z
+Path: /api/brands?tenantId=tenant-1
+Status: 401
+Message: Unauthorized
+Exception: UnauthorizedException: Unauthorized
+    at JwtAuthGuard.canActivate (C:\Users\user\OneDrive\Escritorio\nexopos.cl\apps\api\src\auth\jwt-auth.guard.ts:37:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async GuardsConsumer.tryActivate (C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\@nestjs\core\guards\guards-consumer.js:22:17)
+    at async canActivateFn (C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\@nestjs\core\router\router-execution-context.js:135:33)
+    at async C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\@nestjs\core\router\router-execution-context.js:42:31
+    at async C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\@nestjs\core\router\router-proxy.js:9:17
+
+
+[GLOBAL ERROR] Date: 2026-03-09T04:00:52.876Z
+Path: /api/store/settings?tenantId=78a08935-797b-4123-90ab-a4b32709cad7
+Status: 401
+Message: Unauthorized
+Exception: UnauthorizedException: Unauthorized
+    at JwtAuthGuard.canActivate (C:\Users\user\OneDrive\Escritorio\nexopos.cl\apps\api\src\auth\jwt-auth.guard.ts:37:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async GuardsConsumer.tryActivate (C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\@nestjs\core\guards\guards-consumer.js:22:17)
+    at async canActivateFn (C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\@nestjs\core\router\router-execution-context.js:135:33)
+    at async C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\@nestjs\core\router\router-execution-context.js:42:31
+    at async C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\@nestjs\core\router\router-proxy.js:9:17
+
+
+[GLOBAL ERROR] Date: 2026-03-09T04:00:52.896Z
+Path: /api/store/settings?tenantId=78a08935-797b-4123-90ab-a4b32709cad7
+Status: 401
+Message: Unauthorized
+Exception: UnauthorizedException: Unauthorized
+    at JwtAuthGuard.canActivate (C:\Users\user\OneDrive\Escritorio\nexopos.cl\apps\api\src\auth\jwt-auth.guard.ts:37:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async GuardsConsumer.tryActivate (C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\@nestjs\core\guards\guards-consumer.js:22:17)
+    at async canActivateFn (C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\@nestjs\core\router\router-execution-context.js:135:33)
+    at async C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\@nestjs\core\router\router-execution-context.js:42:31
+    at async C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\@nestjs\core\router\router-proxy.js:9:17
+
+
+[GLOBAL ERROR] Date: 2026-03-09T14:14:54.301Z
+Path: /api/auth/login
+Status: 401
+Message: Invalid credentials
+Exception: UnauthorizedException: Invalid credentials
+    at AuthController.login (C:\Users\user\OneDrive\Escritorio\nexopos.cl\apps\api\src\auth\auth.controller.ts:44:15)
+    at async C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\@nestjs\core\router\router-execution-context.js:46:28
+    at async C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\@nestjs\core\router\router-proxy.js:9:17
+
+
+[GLOBAL ERROR] Date: 2026-03-09T15:17:41.804Z
+Path: /api/tenants?search=
+Status: 403
+Message: Access denied. Super Admin role required.
+Exception: ForbiddenException: Access denied. Super Admin role required.
+    at SuperAdminGuard.canActivate (C:\Users\user\OneDrive\Escritorio\nexopos.cl\apps\api\src\auth\super-admin.guard.ts:19:13)
+    at GuardsConsumer.tryActivate (C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\@nestjs\core\guards\guards-consumer.js:15:34)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async canActivateFn (C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\@nestjs\core\router\router-execution-context.js:135:33)
+    at async C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\@nestjs\core\router\router-execution-context.js:42:31
+    at async C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\@nestjs\core\router\router-proxy.js:9:17
+
+
+[GLOBAL ERROR] Date: 2026-03-09T15:17:41.975Z
+Path: /api/tenants?search=
+Status: 403
+Message: Access denied. Super Admin role required.
+Exception: ForbiddenException: Access denied. Super Admin role required.
+    at SuperAdminGuard.canActivate (C:\Users\user\OneDrive\Escritorio\nexopos.cl\apps\api\src\auth\super-admin.guard.ts:19:13)
+    at GuardsConsumer.tryActivate (C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\@nestjs\core\guards\guards-consumer.js:15:34)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async canActivateFn (C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\@nestjs\core\router\router-execution-context.js:135:33)
+    at async C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\@nestjs\core\router\router-execution-context.js:42:31
+    at async C:\Users\user\OneDrive\Escritorio\nexopos.cl\node_modules\@nestjs\core\router\router-proxy.js:9:17

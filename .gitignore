@@ -1,20 +1,5 @@
-node_modules
-*.tar
-*.tar.gz
-
-# Entorno — nunca subir al repo
+node_modules/
+dist/
 .env
 .env.local
-.env.*.local
-
-# Datos PostgreSQL locales
-pgdata/
-
-# Compiled output — built inside Docker, not committed
-apps/api/dist/
-
-# Logs y archivos temporales
-*.log
-*.sql
-!seed-demo.sql
-!apps/api/prisma/migrations/**/*.sql
+.DS_Store
