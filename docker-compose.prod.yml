@@ -52,5 +52,3 @@ services:
 networks:
   nexopos_network:
     driver: bridge
-volumes:
-  nexopos_db_prod:
