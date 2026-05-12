@@ -1,13 +1,11 @@
 import { Module } from '@nestjs/common';
 import { TransfersService } from './transfers.service';
 import { TransfersController } from './transfers.controller';
-import { PrismaModule } from '../prisma/prisma.module';
-import { AuthModule } from '../auth/auth.module';
+import { EventsModule } from '../events/events.module'; // <-- Asegura la ruta relativa
 
 @Module({
-  imports: [PrismaModule, AuthModule],
+  imports: [EventsModule], // <-- AGREGA EL MODULE AQUÍ
   controllers: [TransfersController],
   providers: [TransfersService],
-  exports: [TransfersService],
 })
-export class TransfersModule {}
+export class TransfersModule { }
