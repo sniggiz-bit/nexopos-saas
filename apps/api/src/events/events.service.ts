@@ -8,20 +8,26 @@ export class EventsService {
         private readonly eventsGateway: EventsGateway,
     ) { }
 
-    // Método genérico de emisión por si sales/transfers usan .emit()
-    emit(event: string, data: any) {
-        if (this.eventsGateway?.server) {
+    // Firma ultra-flexible para aceptar 1 o 2 argumentos de cualquier tipo
+    emit(event: any, data?: any) {
+        if (!this.eventsGateway?.server) return;
+
+        if (typeof event === 'string') {
+            // Patrón clásico: emit('evento', datos)
             this.eventsGateway.server.emit(event, data);
+        } else if (event && typeof event === 'object') {
+            // Patrón monorepo: emit({ event: 'nombre', data: {} }) o simplemente emit(objeto)
+            const eventName = event.event || event.name || 'websocket_event';
+            const eventData = event.data || event.payload || event;
+            this.eventsGateway.server.emit(eventName, eventData);
         }
     }
 
-    // Por si acaso usan .emitToAll()
-    emitToAll(event: string, data: any) {
+    emitToAll(event: any, data?: any) {
         this.emit(event, data);
     }
 
-    // Por si acaso usan .broadcast()
-    broadcast(event: string, data: any) {
+    broadcast(event: any, data?: any) {
         this.emit(event, data);
     }
 }
