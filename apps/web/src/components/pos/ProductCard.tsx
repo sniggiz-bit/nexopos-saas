@@ -91,14 +91,14 @@ export function ProductCard({ product, onAddToCart, viewMode = 'grid' }: Product
 
                 {/* Add button */}
                 <div className={[
-                    'w-9 h-9 rounded-lg flex items-center justify-center shrink-0 transition-all duration-150',
+                    'rounded-lg flex items-center justify-center shrink-0 transition-all duration-150',
                     added
-                        ? 'bg-success text-white'
+                        ? 'w-9 h-9 bg-success text-white'
                         : isOutOfStock
-                        ? 'bg-muted text-muted-foreground/40'
-                        : 'bg-muted text-muted-foreground group-hover:bg-primary group-hover:text-white',
+                        ? 'h-9 px-2 bg-muted text-muted-foreground/50 font-bold text-[10px]'
+                        : 'w-9 h-9 bg-muted text-muted-foreground group-hover:bg-primary group-hover:text-white',
                 ].join(' ')}>
-                    {added ? <Check className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+                    {added ? <Check className="w-4 h-4" /> : isOutOfStock ? 'AGOTADO' : <Plus className="w-4 h-4" />}
                 </div>
             </div>
         );
@@ -179,15 +179,15 @@ export function ProductCard({ product, onAddToCart, viewMode = 'grid' }: Product
                         disabled={isOutOfStock}
                         aria-label={`Agregar ${product.name} al carrito`}
                         className={[
-                            'w-11 h-11 rounded-xl flex items-center justify-center transition-all duration-150 shrink-0',
+                            'h-11 rounded-xl flex items-center justify-center transition-all duration-150 shrink-0',
                             added
-                                ? 'bg-success text-white scale-95'
+                                ? 'w-11 bg-success text-white scale-95'
                                 : isOutOfStock
-                                ? 'bg-muted text-muted-foreground/30 cursor-not-allowed'
-                                : 'bg-muted text-muted-foreground group-hover:bg-primary group-hover:text-white active:scale-90',
+                                ? 'px-3 bg-muted text-muted-foreground/60 cursor-not-allowed text-[11px] font-bold uppercase tracking-wider'
+                                : 'w-11 bg-muted text-muted-foreground group-hover:bg-primary group-hover:text-white active:scale-90',
                         ].join(' ')}
                     >
-                        {added ? <Check className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+                        {added ? <Check className="w-4 h-4" /> : isOutOfStock ? 'AGOTADO' : <Plus className="w-4 h-4" />}
                     </button>
                 </div>
             </div>

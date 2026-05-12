@@ -1,11 +1,17 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable, BadRequestException, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateMovementDto } from './dto/create-movement.dto';
 import { Prisma, MovementType } from '@prisma/client';
+import { EventsGateway } from '../events/events.gateway';
 
 @Injectable()
 export class InventoryService {
-  constructor(private readonly prisma: PrismaService) {}
+  private readonly logger = new Logger(InventoryService.name);
+
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly eventsGateway: EventsGateway,
+  ) {}
 
   /**
    * Records a stock movement and updates the inventory level atomically.
@@ -80,6 +86,16 @@ export class InventoryService {
         userId: data.userId,
       },
     });
+
+    if (!tx) {
+      try {
+        this.eventsGateway.emitInventoryUpdated([
+          { productId: data.productId, newStock: newBalance },
+        ]);
+      } catch (error) {
+        this.logger.error(`Failed to emit inventory_updated WebSocket event: ${error.message}`);
+      }
+    }
 
     return { newBalance };
   }

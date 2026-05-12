@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { api } from '../../lib/api';
+import { useSocket } from '../../hooks/useSocket';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -203,7 +204,7 @@ const ProductCard = ({ product, brandColor, onAddToCart, onViewDetail }: Product
             style={{ backgroundColor: stock.available ? brandColor : '#9ca3af' }}
           >
             <Plus className="w-3.5 h-3.5" />
-            Agregar
+            {stock.available ? 'Agregar' : 'Agotado'}
           </button>
         </div>
       </div>
@@ -753,6 +754,41 @@ export const PublicStorePage = () => {
   const debouncedSearch = useDebounce(searchInput, 400);
   const searchRef = useRef<HTMLInputElement>(null);
   const brandColor = store?.storeSettings.brandColor || '#3B82F6';
+  
+  const socket = useSocket();
+
+  // Listen to real-time inventory updates
+  useEffect(() => {
+    if (!socket || !store) return;
+    
+    const handleInventoryUpdated = (payload: { productId: string; newStock: number }[]) => {
+      const updatesMap = new Map(payload.map(p => [p.productId, p.newStock]));
+
+      setProducts(prev => {
+        let changed = false;
+        const next = prev.map(p => {
+          if (updatesMap.has(p.id)) {
+            changed = true;
+            return { ...p, stock: updatesMap.get(p.id)! };
+          }
+          return p;
+        });
+        return changed ? next : prev;
+      });
+
+      setSelectedProduct(prev => {
+        if (prev && updatesMap.has(prev.id)) {
+          return { ...prev, stock: updatesMap.get(prev.id)! };
+        }
+        return prev;
+      });
+    };
+
+    socket.on('inventory_updated', handleInventoryUpdated);
+    return () => {
+      socket.off('inventory_updated', handleInventoryUpdated);
+    };
+  }, [socket, store]);
 
   // Restore cart from localStorage (per store)
   useEffect(() => {
