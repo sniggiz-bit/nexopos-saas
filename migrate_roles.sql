@@ -1,1 +1,0 @@
-UPDATE "User" SET role = 'MANAGER' WHERE role = 'TENANT_ADMIN';
