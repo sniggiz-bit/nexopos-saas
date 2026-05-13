@@ -2,12 +2,9 @@ import { useState } from 'react';
 import { DashboardLayout } from '../../components/dashboard/DashboardLayout';
 import { useBrands, useCreateBrand, useUpdateBrand, useDeleteBrand } from '../../hooks/useBrands';
 import { Plus, Edit, Trash2, Loader2, Tag } from 'lucide-react';
-import { useAuth } from '../../context/AuthContext';
 
 export function BrandsPage() {
-    const { user } = useAuth();
-    const tenantId = user?.tenantId ?? '';
-    const { data: brands, isLoading } = useBrands(tenantId);
+    const { data: brands, isLoading } = useBrands();
     const createBrand = useCreateBrand();
     const updateBrand = useUpdateBrand();
     const deleteBrand = useDeleteBrand();
@@ -21,7 +18,7 @@ export function BrandsPage() {
         if (editingBrand) {
             await updateBrand.mutateAsync({ id: editingBrand.id, data: { name } });
         } else {
-            await createBrand.mutateAsync({ name, tenantId });
+            await createBrand.mutateAsync({ name });
         }
         handleClose();
     };

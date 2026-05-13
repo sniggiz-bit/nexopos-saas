@@ -4,16 +4,15 @@ export interface Category {
     id: string;
     name: string;
     productCount?: number;
-    tenantId: string;
+    tenantId?: string;
 }
 
 export interface CreateCategoryData {
     name: string;
-    tenantId: string;
 }
 
-export async function getCategories(tenantId: string = 'tenant-1'): Promise<Category[]> {
-    const response = await apiClient.get<Category[]>('/categories', { params: { tenantId } });
+export async function getCategories(): Promise<Category[]> {
+    const response = await apiClient.get<Category[]>('/categories');
     return response.data;
 }
 

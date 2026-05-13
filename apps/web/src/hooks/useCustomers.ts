@@ -1,45 +1,55 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getCustomers, createCustomer, updateCustomer, deleteCustomer, CreateCustomerData } from '../api/customers';
-import { useAuth } from '@/context/AuthContext';
+import { toast } from 'react-hot-toast';
 
-export function useCustomers(tenantId?: string) {
+export function useCustomers() {
     return useQuery({
-        queryKey: ['customers', tenantId],
-        queryFn: () => getCustomers(tenantId!),
-        enabled: !!tenantId,
+        queryKey: ['customers'],
+        queryFn: () => getCustomers(),
     });
 }
 
 export function useCreateCustomer() {
     const queryClient = useQueryClient();
-    const { user } = useAuth();
     return useMutation({
         mutationFn: createCustomer,
         onSuccess: () => {
-            queryClient.refetchQueries({ queryKey: ['customers', user?.tenantId] });
+            queryClient.invalidateQueries({ queryKey: ['customers'] });
+            toast.success('Cliente creado exitosamente');
         },
+        onError: (error: any) => {
+            const message = error.response?.data?.message || 'Error al crear el cliente';
+            toast.error(message);
+        }
     });
 }
 
 export function useUpdateCustomer() {
     const queryClient = useQueryClient();
-    const { user } = useAuth();
     return useMutation({
         mutationFn: ({ id, data }: { id: string; data: Partial<CreateCustomerData> }) => updateCustomer(id, data),
         onSuccess: () => {
-            queryClient.refetchQueries({ queryKey: ['customers', user?.tenantId] });
+            queryClient.invalidateQueries({ queryKey: ['customers'] });
+            toast.success('Cliente actualizado exitosamente');
         },
+        onError: (error: any) => {
+            const message = error.response?.data?.message || 'Error al actualizar el cliente';
+            toast.error(message);
+        }
     });
 }
 
 export function useDeleteCustomer() {
     const queryClient = useQueryClient();
-    const { user } = useAuth();
     return useMutation({
         mutationFn: deleteCustomer,
         onSuccess: () => {
-            queryClient.refetchQueries({ queryKey: ['customers', user?.tenantId] });
+            queryClient.invalidateQueries({ queryKey: ['customers'] });
+            toast.success('Cliente eliminado exitosamente');
         },
+        onError: (error: any) => {
+            const message = error.response?.data?.message || 'Error al eliminar el cliente';
+            toast.error(message);
+        }
     });
 }

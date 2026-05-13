@@ -4,16 +4,15 @@ export interface Brand {
     id: string;
     name: string;
     productCount?: number;
-    tenantId: string;
+    tenantId?: string;
 }
 
 export interface CreateBrandData {
     name: string;
-    tenantId: string;
 }
 
-export async function getBrands(tenantId: string = 'tenant-1'): Promise<Brand[]> {
-    const response = await apiClient.get<Brand[]>('/brands', { params: { tenantId } });
+export async function getBrands(): Promise<Brand[]> {
+    const response = await apiClient.get<Brand[]>('/brands');
     return response.data;
 }
 

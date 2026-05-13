@@ -6,32 +6,38 @@ import {
   Patch,
   Param,
   Delete,
-  Query,
+  UseGuards,
 } from '@nestjs/common';
 import { CustomersService } from './customers.service';
 import { CreateCustomerDto } from './dto/create-customer.dto';
 import { UpdateCustomerDto } from './dto/update-customer.dto';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { CurrentUser } from '../auth/user.decorator';
 
 @Controller('customers')
+@UseGuards(JwtAuthGuard)
 export class CustomersController {
   constructor(private readonly customersService: CustomersService) {}
 
   @Post()
-  create(@Body() createCustomerDto: CreateCustomerDto) {
-    console.log(
-      'API POST /customers - Payload:',
-      JSON.stringify(createCustomerDto, null, 2),
-    );
+  create(
+    @Body() createCustomerDto: CreateCustomerDto,
+    @CurrentUser() user: any,
+  ) {
+    createCustomerDto.tenantId = user.tenantId;
     return this.customersService.create(createCustomerDto);
   }
 
   @Get()
-  findAll(@Query('tenantId') tenantId: string = 'tenant-1') {
-    return this.customersService.findAll(tenantId);
+  findAll(@CurrentUser() user: any) {
+    return this.customersService.findAll(user.tenantId);
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
+  findOne(
+    @Param('id') id: string,
+    @CurrentUser() user: any,
+  ) {
     return this.customersService.findOne(id);
   }
 
@@ -39,12 +45,16 @@ export class CustomersController {
   update(
     @Param('id') id: string,
     @Body() updateCustomerDto: UpdateCustomerDto,
+    @CurrentUser() user: any,
   ) {
     return this.customersService.update(id, updateCustomerDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
+  remove(
+    @Param('id') id: string,
+    @CurrentUser() user: any,
+  ) {
     return this.customersService.remove(id);
   }
 }

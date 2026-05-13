@@ -1,4 +1,3 @@
-
 import { apiClient } from './client';
 import type { Customer } from './types';
 
@@ -10,11 +9,10 @@ export interface CreateCustomerData {
     comuna?: string;
     email?: string;
     phone?: string;
-    tenantId: string;
 }
 
-export async function getCustomers(tenantId: string): Promise<Customer[]> {
-    const response = await apiClient.get<Customer[]>('/customers', { params: { tenantId } });
+export async function getCustomers(): Promise<Customer[]> {
+    const response = await apiClient.get<Customer[]>('/customers');
     return response.data;
 }
 
