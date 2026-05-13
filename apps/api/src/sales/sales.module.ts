@@ -17,5 +17,6 @@ import { InventoryService } from '../inventory/inventory.service'; // <--- AGREG
     DteService, // <--- INYECTADO CON COMA
     InventoryService // <--- INYECTADO
   ],
+  exports: [SalesService]
 })
 export class SalesModule { }
