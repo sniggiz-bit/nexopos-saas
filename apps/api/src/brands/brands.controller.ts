@@ -20,7 +20,7 @@ export class CreateBrandDto {
 
   @IsString()
   @IsOptional()
-  tenantId: string;
+  tenantId?: string;
 }
 
 export class UpdateBrandDto {

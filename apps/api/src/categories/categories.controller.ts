@@ -20,7 +20,7 @@ export class CreateCategoryDto {
 
   @IsString()
   @IsOptional()
-  tenantId: string;
+  tenantId?: string;
 }
 
 export class UpdateCategoryDto {

@@ -29,6 +29,7 @@ export class CreateCustomerDto {
   @IsString()
   phone?: string;
 
+  @IsOptional()
   @IsString()
-  tenantId: string;
+  tenantId?: string;
 }
