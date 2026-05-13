@@ -58,7 +58,10 @@ export class BrandsService {
     }
 
     const brand = await this.prisma.brand.create({
-      data: createBrandDto,
+      data: {
+        ...createBrandDto,
+        tenantId: createBrandDto.tenantId as string,
+      },
     });
 
     return {

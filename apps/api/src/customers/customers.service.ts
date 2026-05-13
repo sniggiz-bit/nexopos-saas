@@ -18,6 +18,7 @@ export class CustomersService {
       return await this.prisma.customer.create({
         data: {
           ...createCustomerDto,
+          tenantId: createCustomerDto.tenantId as string,
           rut: formatRut(createCustomerDto.rut),
         },
       });

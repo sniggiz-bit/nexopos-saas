@@ -60,7 +60,10 @@ export class CategoriesService {
     }
 
     const category = await this.prisma.category.create({
-      data: createCategoryDto,
+      data: {
+        ...createCategoryDto,
+        tenantId: createCategoryDto.tenantId as string,
+      },
     });
 
     return {
