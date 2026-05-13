@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
 import { InventoryService } from './inventory.service';
 import { InventoryController } from './inventory.controller';
-import { EventsModule } from '../events/events.module'; // <-- Ajusta la ruta relativa si es necesario
+import { EventsModule } from '../events/events.module';
 
 @Module({
-  imports: [EventsModule], // <-- AGREGA EL MODULE AQUÍ
+  imports: [EventsModule],
   controllers: [InventoryController],
   providers: [InventoryService],
 })

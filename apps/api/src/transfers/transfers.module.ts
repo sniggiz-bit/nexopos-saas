@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
 import { TransfersService } from './transfers.service';
 import { TransfersController } from './transfers.controller';
-import { EventsModule } from '../events/events.module'; // <-- Asegura la ruta relativa
+import { EventsModule } from '../events/events.module';
 
 @Module({
-  imports: [EventsModule], // <-- AGREGA EL MODULE AQUÍ
+  imports: [EventsModule],
   controllers: [TransfersController],
   providers: [TransfersService],
 })
