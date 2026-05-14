@@ -30,7 +30,9 @@ export class JwtAuthGuard implements CanActivate {
       const payload = await this.jwtService.verifyAsync(token, {
         secret: process.env.JWT_SECRET || 'secretKey',
       });
-      console.log(`[JwtAuthGuard] Payload:`, payload);
+      console.log(`[JwtAuthGuard] Full payload extracted:`, JSON.stringify(payload));
+      console.log(`[JwtAuthGuard] tenantId from token: ${payload.tenantId}`);
+      console.log(`[JwtAuthGuard] branchId from token: ${payload.branchId}`);
       request.user = payload;
     } catch (error) {
       console.error(`[JwtAuthGuard] Verification failed:`, error.message);
