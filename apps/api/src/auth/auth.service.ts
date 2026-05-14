@@ -211,7 +211,11 @@ export class AuthService {
         },
       };
     } catch (error) {
-      console.error('[AuthService] Error registering tenant DETAILS:', error);
+      console.error('🔴 ERROR REAL DE PRISMA AL REGISTRAR TENANT:', error);
+      console.error('🔴 Código:', (error as any)?.code);
+      console.error('🔴 Mensaje:', (error as any)?.message);
+      console.error('🔴 Meta:', (error as any)?.meta);
+      console.error('🔴 Stack:', (error as any)?.stack);
       // Re-throw generic or specific error
       if (
         error instanceof ConflictException ||
