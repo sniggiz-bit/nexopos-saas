@@ -51,7 +51,7 @@ export class BrandsController {
     @CurrentUser() user: any,
   ): Promise<BrandResponseDto> {
     createBrandDto.tenantId = user.tenantId;
-    return this.brandsService.create(createBrandDto);
+    return this.brandsService.create(createBrandDto as any);
   }
 
   @Patch(':id')

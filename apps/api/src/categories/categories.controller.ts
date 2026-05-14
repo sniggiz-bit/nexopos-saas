@@ -52,7 +52,7 @@ export class CategoriesController {
     @CurrentUser() user: any,
   ): Promise<CategoryResponseDto> {
     createCategoryDto.tenantId = user.tenantId;
-    return this.categoriesService.create(createCategoryDto);
+    return this.categoriesService.create(createCategoryDto as any);
   }
 
   @Patch(':id')
