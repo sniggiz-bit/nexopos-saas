@@ -73,25 +73,19 @@ export class AuthService {
   async login(user: any) {
     try {
       console.log(
-        `[AuthService] Logging in user: ${user.id}, Role: ${user.role}`,
+        `[AuthService] Logging in user: ${user.id}, Role: ${user.role}, tenantId: ${user.tenantId}, branchId: ${user.branchId}`,
       );
 
-      // Build payload conditionally to avoid null values
+      // Always include tenantId and branchId so controllers can trust they exist
       const payload: any = {
         sub: user.id,
         email: user.email,
         role: user.role,
+        tenantId: user.tenantId ?? null,
+        branchId: user.branchId ?? null,
       };
 
-      // Only add tenantId if it exists
-      if (user.tenantId) {
-        payload.tenantId = user.tenantId;
-      }
-
-      // Only add branchId if it exists
-      if (user.branchId) {
-        payload.branchId = user.branchId;
-      }
+      console.log('[AuthService] JWT payload being signed:', payload);
 
       const token = await this.jwtService.signAsync(payload);
       console.log(`[AuthService] Token generated successfully`);
@@ -103,8 +97,8 @@ export class AuthService {
           email: user.email,
           name: user.name,
           role: user.role,
-          tenantId: user.tenantId || null,
-          branchId: user.branchId || null,
+          tenantId: user.tenantId ?? null,
+          branchId: user.branchId ?? null,
         },
       };
     } catch (error) {
