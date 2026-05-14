@@ -50,7 +50,7 @@ export class BrandsController {
     @Body() createBrandDto: CreateBrandDto,
     @CurrentUser() user: any,
   ): Promise<BrandResponseDto> {
-    return this.brandsService.create(createBrandDto, user.tenantId);
+    return this.brandsService.create(createBrandDto as any, user.tenantId);
   }
 
   @Patch(':id')
