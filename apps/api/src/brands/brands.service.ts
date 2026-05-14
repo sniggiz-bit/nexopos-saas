@@ -25,21 +25,29 @@ export class BrandsService {
   constructor(private prisma: PrismaService) { }
 
   async findAll(tenantId: string): Promise<BrandResponseDto[]> {
-    const brands = await this.prisma.brand.findMany({
-      where: { tenantId },
-      include: {
-        _count: {
-          select: { products: true },
+    console.log(`[BrandsService] findAll called with tenantId: "${tenantId}"`);
+    try {
+      const brands = await this.prisma.brand.findMany({
+        where: { tenantId },
+        include: {
+          _count: {
+            select: { products: true },
+          },
         },
-      },
-      orderBy: { name: 'asc' },
-    });
-
-    return brands.map((brand) => ({
-      id: brand.id,
-      name: brand.name,
-      productCount: brand._count.products,
-    }));
+        orderBy: { name: 'asc' },
+      });
+      console.log(`[BrandsService] findAll result count: ${brands.length}`);
+      console.log(`[BrandsService] brands raw:`, JSON.stringify(brands));
+      return brands.map((brand) => ({
+        id: brand.id,
+        name: brand.name,
+        productCount: brand._count.products,
+      }));
+    } catch (error) {
+      console.error(`[BrandsService] findAll ERROR:`, error.message);
+      console.error(`[BrandsService] findAll STACK:`, error.stack);
+      return [];
+    }
   }
 
   async create(createBrandDto: CreateBrandDto, tenantId: string): Promise<BrandResponseDto> {
