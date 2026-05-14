@@ -14,7 +14,7 @@ export function useCreateBrand() {
     return useMutation({
         mutationFn: (data: CreateBrandData) => createBrand(data),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['brands'] });
+            queryClient.invalidateQueries({ queryKey: ['brands'], refetchType: 'all' });
             toast.success('Marca creada exitosamente');
         },
         onError: (error: any) => {
@@ -29,7 +29,7 @@ export function useUpdateBrand() {
     return useMutation({
         mutationFn: ({ id, data }: { id: string, data: any }) => updateBrand(id, data),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['brands'] });
+            queryClient.invalidateQueries({ queryKey: ['brands'], refetchType: 'all' });
             toast.success('Marca actualizada exitosamente');
         },
         onError: (error: any) => {
@@ -44,7 +44,7 @@ export function useDeleteBrand() {
     return useMutation({
         mutationFn: (id: string) => deleteBrand(id),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['brands'] });
+            queryClient.invalidateQueries({ queryKey: ['brands'], refetchType: 'all' });
             toast.success('Marca eliminada exitosamente');
         },
         onError: (error: any) => {

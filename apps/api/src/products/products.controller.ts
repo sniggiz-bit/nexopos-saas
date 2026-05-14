@@ -15,6 +15,7 @@ import { ProductResponseDto } from './dto/product-response.dto';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { CurrentUser } from '../auth/user.decorator';
 
 @Controller('products')
 export class ProductsController {
@@ -42,11 +43,12 @@ export class ProductsController {
    * @param branchId - Branch ID (optional, defaults to 'branch-1')
    * @returns Array of products with stock information
    */
+  @UseGuards(JwtAuthGuard)
   @Get()
   async findAll(
-    @Query('tenantId') tenantId: string = 'tenant-1', // Default tenant for development
+    @CurrentUser() user: any,
   ): Promise<ProductResponseDto[]> {
-    return this.productsService.findAll(tenantId);
+    return this.productsService.findAll(user.tenantId);
   }
 
   /**
@@ -58,12 +60,13 @@ export class ProductsController {
    * @param branchId - Branch ID
    * @returns Product with stock information
    */
+  @UseGuards(JwtAuthGuard)
   @Get(':id')
   async findOne(
     @Param('id') id: string,
-    @Query('tenantId') tenantId: string = 'tenant-1',
+    @CurrentUser() user: any,
   ): Promise<ProductResponseDto> {
-    return this.productsService.findOne(id, tenantId);
+    return this.productsService.findOne(id, user.tenantId);
   }
 
   /**
@@ -73,10 +76,13 @@ export class ProductsController {
    * @param createProductDto - Product data
    * @returns Created product
    */
+  @UseGuards(JwtAuthGuard)
   @Post()
   async create(
     @Body() createProductDto: CreateProductDto,
+    @CurrentUser() user: any,
   ): Promise<ProductResponseDto> {
+    createProductDto.tenantId = user.tenantId;
     return this.productsService.create(createProductDto);
   }
 

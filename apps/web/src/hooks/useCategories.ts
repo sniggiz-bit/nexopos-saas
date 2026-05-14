@@ -14,7 +14,7 @@ export function useCreateCategory() {
     return useMutation({
         mutationFn: (data: CreateCategoryData) => createCategory(data),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['categories'] });
+            queryClient.invalidateQueries({ queryKey: ['categories'], refetchType: 'all' });
             toast.success('Categoría creada exitosamente');
         },
         onError: (error: any) => {
@@ -29,7 +29,7 @@ export function useUpdateCategory() {
     return useMutation({
         mutationFn: ({ id, data }: { id: string, data: any }) => updateCategory(id, data),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['categories'] });
+            queryClient.invalidateQueries({ queryKey: ['categories'], refetchType: 'all' });
             toast.success('Categoría actualizada exitosamente');
         },
         onError: (error: any) => {
@@ -44,7 +44,7 @@ export function useDeleteCategory() {
     return useMutation({
         mutationFn: (id: string) => deleteCategory(id),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['categories'] });
+            queryClient.invalidateQueries({ queryKey: ['categories'], refetchType: 'all' });
             toast.success('Categoría eliminada exitosamente');
         },
         onError: (error: any) => {
