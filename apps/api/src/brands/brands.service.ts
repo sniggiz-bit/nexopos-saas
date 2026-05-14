@@ -42,12 +42,12 @@ export class BrandsService {
     }));
   }
 
-  async create(createBrandDto: CreateBrandDto): Promise<BrandResponseDto> {
+  async create(createBrandDto: CreateBrandDto, tenantId: string): Promise<BrandResponseDto> {
     // Check for duplicate name in tenant
     const existing = await this.prisma.brand.findFirst({
       where: {
         name: createBrandDto.name,
-        tenantId: createBrandDto.tenantId,
+        tenantId,
       },
     });
 
@@ -59,8 +59,8 @@ export class BrandsService {
 
     const brand = await this.prisma.brand.create({
       data: {
-        ...createBrandDto,
-        tenantId: createBrandDto.tenantId as string,
+        name: createBrandDto.name,
+        tenantId,
       },
     });
 

@@ -44,12 +44,13 @@ export class CategoriesService {
 
   async create(
     createCategoryDto: CreateCategoryDto,
+    tenantId: string,
   ): Promise<CategoryResponseDto> {
     // Check for duplicate name in tenant
     const existing = await this.prisma.category.findFirst({
       where: {
         name: createCategoryDto.name,
-        tenantId: createCategoryDto.tenantId,
+        tenantId,
       },
     });
 
@@ -61,8 +62,8 @@ export class CategoriesService {
 
     const category = await this.prisma.category.create({
       data: {
-        ...createCategoryDto,
-        tenantId: createCategoryDto.tenantId as string,
+        name: createCategoryDto.name,
+        tenantId,
       },
     });
 

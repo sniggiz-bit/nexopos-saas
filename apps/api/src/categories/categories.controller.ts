@@ -51,8 +51,7 @@ export class CategoriesController {
     @Body() createCategoryDto: CreateCategoryDto,
     @CurrentUser() user: any,
   ): Promise<CategoryResponseDto> {
-    createCategoryDto.tenantId = user.tenantId;
-    return this.categoriesService.create(createCategoryDto as any);
+    return this.categoriesService.create(createCategoryDto, user.tenantId);
   }
 
   @Patch(':id')
