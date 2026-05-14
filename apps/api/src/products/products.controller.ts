@@ -47,8 +47,10 @@ export class ProductsController {
   @Get()
   async findAll(
     @CurrentUser() user: any,
+    @Query('tenantId') tenantIdParam?: string,
   ): Promise<ProductResponseDto[]> {
-    return this.productsService.findAll(user.tenantId);
+    const tenantId = user?.tenantId || tenantIdParam || 'tenant-1';
+    return this.productsService.findAll(tenantId);
   }
 
   /**
