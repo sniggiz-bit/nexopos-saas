@@ -29,18 +29,19 @@ export function BrandsPage() {
         loadBrands();
     }, [loadBrands]);
 
-    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    const handleSubmit = async (e: React.SyntheticEvent) => {
         e.preventDefault();
         setIsSaving(true);
         try {
             if (editingBrand) {
-                await updateBrand(editingBrand.id, { name });
+                const updated = await updateBrand(editingBrand.id, { name });
+                setBrands(prev => prev.map(b => b.id === updated.id ? updated : b));
                 toast.success('Marca actualizada exitosamente');
             } else {
-                await createBrand({ name });
+                const created = await createBrand({ name });
+                setBrands(prev => [...prev, created].sort((a, b) => a.name.localeCompare(b.name)));
                 toast.success('Marca creada exitosamente');
             }
-            await loadBrands();
             handleClose();
         } catch (error: any) {
             const message = error.response?.data?.message || 'Error al guardar la marca';
@@ -57,15 +58,14 @@ export function BrandsPage() {
     };
 
     const handleDelete = async (id: string, brandName: string) => {
-        if (window.confirm(`¿Estás seguro de que deseas eliminar la marca "${brandName}"?`)) {
-            try {
-                await deleteBrand(id);
-                toast.success('Marca eliminada exitosamente');
-                await loadBrands();
-            } catch (error: any) {
-                const message = error.response?.data?.message || 'Error al eliminar la marca';
-                toast.error(message);
-            }
+        if (!window.confirm(`¿Eliminar la marca "${brandName}"?`)) return;
+        setBrands(prev => prev.filter(b => b.id !== id));
+        try {
+            await deleteBrand(id);
+            toast.success('Marca eliminada exitosamente');
+        } catch (error: any) {
+            await loadBrands();
+            toast.error(error.response?.data?.message || 'Error al eliminar la marca');
         }
     };
 
@@ -153,7 +153,7 @@ export function BrandsPage() {
 
             {isModalOpen && (
                 <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200">
+                    <div className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden">
                         <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
                             <h3 className="text-lg font-bold text-gray-900">
                                 {editingBrand ? 'Editar Marca' : 'Nueva Marca'}
