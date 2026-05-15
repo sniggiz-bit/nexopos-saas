@@ -1,27 +1,34 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, OnModuleDestroy } from '@nestjs/common';
+import { Subject } from 'rxjs';
+import { filter } from 'rxjs/operators';
 
-export interface AppEvent {
-  type: string;
+export type StoreEventType =
+  | 'sale.created'
+  | 'purchase.created'
+  | 'transfer.created'
+  | 'inventory.adjusted'
+  | 'stock.updated';
+
+export interface StoreEvent {
+  type: StoreEventType;
   tenantId: string;
   branchId?: string;
-  payload?: Record<string, any>;
+  payload?: Record<string, unknown>;
 }
 
-/**
- * EventsService — lightweight in-process event bus.
- * Emits structured events that other services (WebSocket gateway,
- * audit logs, etc.) can consume.  Currently acts as a thin wrapper
- * so that dependent code compiles and runs; extend with an EventEmitter
- * or message broker as needed.
- */
 @Injectable()
-export class EventsService {
-  emit(event: AppEvent): void {
-    // Placeholder: log to console in dev; wire to a real bus in production.
-    console.log(`[EventsService] ${event.type}`, {
-      tenantId: event.tenantId,
-      branchId: event.branchId,
-      payload: event.payload,
-    });
+export class EventsService implements OnModuleDestroy {
+  private readonly events$ = new Subject<StoreEvent>();
+
+  emit(event: StoreEvent): void {
+    this.events$.next(event);
+  }
+
+  getEventsForTenant(tenantId: string) {
+    return this.events$.pipe(filter((e) => e.tenantId === tenantId));
+  }
+
+  onModuleDestroy() {
+    this.events$.complete();
   }
 }

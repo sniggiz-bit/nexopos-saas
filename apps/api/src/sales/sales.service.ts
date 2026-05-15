@@ -11,7 +11,6 @@ import { CreateSaleDto, CreatePaymentDto } from './dto/create-sale.dto';
 import { CreditsService } from '../credits/credits.service';
 import { InventoryService } from '../inventory/inventory.service';
 import { EventsService } from '../events/events.service';
-import { EventsGateway } from '../events/events.gateway';
 import { MovementType } from '@prisma/client';
 
 interface GetSalesFilters {
@@ -32,7 +31,6 @@ export class SalesService {
     private creditsService: CreditsService,
     private inventoryService: InventoryService,
     private eventsService: EventsService,
-    private eventsGateway: EventsGateway,
   ) {}
 
   /**
@@ -276,25 +274,6 @@ export class SalesService {
       branchId,
       payload: { saleId: sale.id },
     });
-
-    try {
-      const productIds = items.map(i => i.productId);
-      const updatedInventories = await this.prisma.inventory.findMany({
-        where: {
-          productId: { in: productIds },
-          branchId,
-        },
-      });
-      
-      const payload = updatedInventories.map(inv => ({
-        productId: inv.productId,
-        newStock: Number(inv.quantity),
-      }));
-      
-      this.eventsGateway.emitInventoryUpdated(payload);
-    } catch (error) {
-      this.logger.error(`Failed to emit inventory_updated WebSocket event: ${error.message}`);
-    }
 
     // Post-Sale Actions (DTE, etc)
     if (sale.status === 'COMPLETED') {

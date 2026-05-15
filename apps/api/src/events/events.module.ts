@@ -1,17 +1,11 @@
-import { Module } from '@nestjs/common';
-import { EventsGateway } from './events.gateway';
+import { Global, Module } from '@nestjs/common';
 import { EventsService } from './events.service';
+import { EventsController } from './events.controller';
 
-/**
- * EventsModule — bundles the WebSocket gateway and the in-process
- * event bus so that any module can import it and use either class.
- *
- * Usage in other modules:
- *   imports: [EventsModule]
- *   providers: auto-resolved via exports below
- */
+@Global()
 @Module({
-  providers: [EventsGateway, EventsService],
-  exports: [EventsGateway, EventsService],
+  controllers: [EventsController],
+  providers: [EventsService],
+  exports: [EventsService],
 })
 export class EventsModule {}

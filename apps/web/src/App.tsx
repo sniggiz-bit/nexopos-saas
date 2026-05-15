@@ -42,6 +42,7 @@ import { PublicStorePage } from './pages/store/PublicStorePage';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
+import { useRealtimeSync } from './hooks/useRealtimeSync';
 
 // Create a client for TanStack Query
 const queryClient = new QueryClient({
@@ -53,7 +54,10 @@ const queryClient = new QueryClient({
   },
 });
 
-
+function RealtimeSync() {
+  useRealtimeSync();
+  return null;
+}
 
 function RoleBasedRedirect() {
   const { user, isLoading } = useAuth();
@@ -91,6 +95,7 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
+        <RealtimeSync />
         <BrowserRouter>
           <Suspense fallback={<LoadingScreen />}>
             <Routes>

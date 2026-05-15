@@ -11,5 +11,6 @@ export function useProducts() {
         queryFn: () => getProducts(),
         staleTime: 0,
         refetchOnWindowFocus: true,
+        refetchInterval: 1000 * 120,
     });
 }
