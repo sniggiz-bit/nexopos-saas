@@ -94,8 +94,7 @@ export class BrandsService {
   }
 
   async remove(id: string, tenantId: string): Promise<void> {
-    // Check if brand has products
-    const brand = await this.prisma.brand.findUnique({
+    const brand = await this.prisma.brand.findFirst({
       where: { id, tenantId },
       include: {
         _count: {
@@ -114,8 +113,6 @@ export class BrandsService {
       );
     }
 
-    await this.prisma.brand.delete({
-      where: { id, tenantId },
-    });
+    await this.prisma.brand.delete({ where: { id } });
   }
 }
