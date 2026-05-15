@@ -12,6 +12,7 @@ export function BrandsPage() {
     const [editingBrand, setEditingBrand] = useState<Brand | null>(null);
     const [name, setName] = useState('');
     const [isSaving, setIsSaving] = useState(false);
+    const [deletingId, setDeletingId] = useState<string | null>(null);
 
     const loadBrands = useCallback(async () => {
         setIsLoading(true);
@@ -57,8 +58,8 @@ export function BrandsPage() {
         setIsModalOpen(true);
     };
 
-    const handleDelete = async (id: string, brandName: string) => {
-        if (!window.confirm(`¿Eliminar la marca "${brandName}"?`)) return;
+    const handleDelete = async (id: string) => {
+        setDeletingId(null);
         setBrands(prev => prev.filter(b => b.id !== id));
         try {
             await deleteBrand(id);
@@ -136,12 +137,19 @@ export function BrandsPage() {
                                             >
                                                 <Edit className="w-4 h-4" />
                                             </button>
-                                            <button
-                                                onClick={() => handleDelete(brand.id, brand.name)}
-                                                className="text-red-600 hover:text-red-900 p-1 hover:bg-red-50 rounded"
-                                            >
-                                                <Trash2 className="w-4 h-4" />
-                                            </button>
+                                            {deletingId === brand.id ? (
+                                                <span className="inline-flex gap-1">
+                                                    <button onClick={() => handleDelete(brand.id)} className="text-xs px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700">Sí</button>
+                                                    <button onClick={() => setDeletingId(null)} className="text-xs px-2 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300">No</button>
+                                                </span>
+                                            ) : (
+                                                <button
+                                                    onClick={() => setDeletingId(brand.id)}
+                                                    className="text-red-600 hover:text-red-900 p-1 hover:bg-red-50 rounded"
+                                                >
+                                                    <Trash2 className="w-4 h-4" />
+                                                </button>
+                                            )}
                                         </td>
                                     </tr>
                                 ))
