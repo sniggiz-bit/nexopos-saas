@@ -43,11 +43,15 @@ async function bootstrap() {
   const uploadsPath = join(process.cwd(), '..', '..', 'uploads');
   app.useStaticAssets(uploadsPath, { prefix: '/api/static' });
 
-  app.enableCors({
-    origin: [
+  const allowedOrigins = process.env.CORS_ORIGINS
+    ? process.env.CORS_ORIGINS.split(',').map(o => o.trim())
+    : [
       'http://localhost:3000',
-      /^http:\/\/localhost:517[0-9]$/,
-    ],
+      'http://localhost:5173',
+    ];
+
+  app.enableCors({
+    origin: allowedOrigins,
     credentials: true,
   });
 
@@ -77,7 +81,7 @@ async function bootstrap() {
     console.log(`📄 Docs: http://localhost:${process.env.PORT ?? 3000}/api/docs`);
   }
 
-  await app.listen(process.env.PORT ?? 3000);
-  console.log(`🚀 Server running on port ${process.env.PORT ?? 3000}`);
+  await app.listen(process.env.PORT ?? 3000, '0.0.0.0');
+  console.log(`🚀 Server running on port ${process.env.PORT ?? 3000} (0.0.0.0)`);
 }
 bootstrap();
