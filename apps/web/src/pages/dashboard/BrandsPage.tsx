@@ -1,39 +1,71 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { DashboardLayout } from '../../components/dashboard/DashboardLayout';
-import { useBrands, useCreateBrand, useUpdateBrand, useDeleteBrand } from '../../hooks/useBrands';
+import { getBrands, createBrand, updateBrand, deleteBrand } from '../../api/brands';
+import type { Brand } from '../../api/brands';
 import { Plus, Edit, Trash2, Loader2, Tag } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 
 export function BrandsPage() {
-    const { data: brands, isLoading, refetch } = useBrands();
-    const createBrand = useCreateBrand();
-    const updateBrand = useUpdateBrand();
-    const deleteBrand = useDeleteBrand();
-
+    const [brands, setBrands] = useState<Brand[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [editingBrand, setEditingBrand] = useState<any>(null);
+    const [editingBrand, setEditingBrand] = useState<Brand | null>(null);
     const [name, setName] = useState('');
+    const [isSaving, setIsSaving] = useState(false);
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (editingBrand) {
-            await updateBrand.mutateAsync({ id: editingBrand.id, data: { name } });
-        } else {
-            await createBrand.mutateAsync({ name });
+    const loadBrands = useCallback(async () => {
+        setIsLoading(true);
+        try {
+            const data = await getBrands();
+            setBrands(data);
+        } catch {
+            toast.error('Error al cargar las marcas');
+        } finally {
+            setIsLoading(false);
         }
-        await refetch();
-        handleClose();
+    }, []);
+
+    useEffect(() => {
+        loadBrands();
+    }, [loadBrands]);
+
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        setIsSaving(true);
+        try {
+            if (editingBrand) {
+                await updateBrand(editingBrand.id, { name });
+                toast.success('Marca actualizada exitosamente');
+            } else {
+                await createBrand({ name });
+                toast.success('Marca creada exitosamente');
+            }
+            await loadBrands();
+            handleClose();
+        } catch (error: any) {
+            const message = error.response?.data?.message || 'Error al guardar la marca';
+            toast.error(message);
+        } finally {
+            setIsSaving(false);
+        }
     };
 
-    const handleEdit = (brand: any) => {
+    const handleEdit = (brand: Brand) => {
         setEditingBrand(brand);
         setName(brand.name);
         setIsModalOpen(true);
     };
 
-    const handleDelete = async (id: string, name: string) => {
-        if (window.confirm(`¿Estás seguro de que deseas eliminar la marca "${name}"?`)) {
-            await deleteBrand.mutateAsync(id);
-            await refetch();
+    const handleDelete = async (id: string, brandName: string) => {
+        if (window.confirm(`¿Estás seguro de que deseas eliminar la marca "${brandName}"?`)) {
+            try {
+                await deleteBrand(id);
+                toast.success('Marca eliminada exitosamente');
+                await loadBrands();
+            } catch (error: any) {
+                const message = error.response?.data?.message || 'Error al eliminar la marca';
+                toast.error(message);
+            }
         }
     };
 
@@ -76,7 +108,7 @@ export function BrandsPage() {
                                         <p className="mt-2 text-gray-500">Cargando marcas...</p>
                                     </td>
                                 </tr>
-                            ) : !brands || brands.length === 0 ? (
+                            ) : brands.length === 0 ? (
                                 <tr>
                                     <td colSpan={3} className="px-6 py-12 text-center text-gray-500">
                                         <Tag className="w-12 h-12 text-gray-200 mx-auto mb-3" />
@@ -119,7 +151,6 @@ export function BrandsPage() {
                 </div>
             </div>
 
-            {/* Modal de Creación/Edición */}
             {isModalOpen && (
                 <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
                     <div className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200">
@@ -158,12 +189,10 @@ export function BrandsPage() {
                                 </button>
                                 <button
                                     type="submit"
-                                    disabled={createBrand.isPending || updateBrand.isPending}
+                                    disabled={isSaving}
                                     className="px-6 py-2 bg-indigo-600 text-white rounded-lg font-bold hover:bg-indigo-700 transition-colors disabled:opacity-50 flex items-center shadow-lg shadow-indigo-200"
                                 >
-                                    {(createBrand.isPending || updateBrand.isPending) && (
-                                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                    )}
+                                    {isSaving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                                     {editingBrand ? 'Guardar Cambios' : 'Crear Marca'}
                                 </button>
                             </div>
