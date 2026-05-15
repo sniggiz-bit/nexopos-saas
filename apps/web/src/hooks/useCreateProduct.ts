@@ -30,8 +30,10 @@ export function useCreateProduct() {
 
     return useMutation({
         mutationFn: createProduct,
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['products'], refetchType: 'all' });
+        onSuccess: (newProduct) => {
+            queryClient.setQueryData<Product[]>(['products'], (old = []) =>
+                [...old, newProduct]
+            );
         },
     });
 }

@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getCategories, createCategory, updateCategory, deleteCategory, CreateCategoryData } from '../api/categories';
+import { getCategories, createCategory, updateCategory, deleteCategory, CreateCategoryData, Category } from '../api/categories';
 import { toast } from 'react-hot-toast';
 
 export function useCategories() {
@@ -13,8 +13,10 @@ export function useCreateCategory() {
     const queryClient = useQueryClient();
     return useMutation({
         mutationFn: (data: CreateCategoryData) => createCategory(data),
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['categories'], refetchType: 'all' });
+        onSuccess: (newCategory) => {
+            queryClient.setQueryData<Category[]>(['categories'], (old = []) =>
+                [...old, newCategory].sort((a, b) => a.name.localeCompare(b.name))
+            );
             toast.success('Categoría creada exitosamente');
         },
         onError: (error: any) => {
@@ -28,8 +30,10 @@ export function useUpdateCategory() {
     const queryClient = useQueryClient();
     return useMutation({
         mutationFn: ({ id, data }: { id: string, data: any }) => updateCategory(id, data),
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['categories'], refetchType: 'all' });
+        onSuccess: (updatedCategory) => {
+            queryClient.setQueryData<Category[]>(['categories'], (old = []) =>
+                old.map(c => c.id === updatedCategory.id ? updatedCategory : c)
+            );
             toast.success('Categoría actualizada exitosamente');
         },
         onError: (error: any) => {
@@ -43,8 +47,10 @@ export function useDeleteCategory() {
     const queryClient = useQueryClient();
     return useMutation({
         mutationFn: (id: string) => deleteCategory(id),
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['categories'], refetchType: 'all' });
+        onSuccess: (_, id) => {
+            queryClient.setQueryData<Category[]>(['categories'], (old = []) =>
+                old.filter(c => c.id !== id)
+            );
             toast.success('Categoría eliminada exitosamente');
         },
         onError: (error: any) => {

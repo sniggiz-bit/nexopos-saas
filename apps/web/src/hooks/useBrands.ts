@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getBrands, createBrand, updateBrand, deleteBrand, CreateBrandData } from '../api/brands';
+import { getBrands, createBrand, updateBrand, deleteBrand, CreateBrandData, Brand } from '../api/brands';
 import { toast } from 'react-hot-toast';
 
 export function useBrands() {
@@ -13,8 +13,10 @@ export function useCreateBrand() {
     const queryClient = useQueryClient();
     return useMutation({
         mutationFn: (data: CreateBrandData) => createBrand(data),
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['brands'], refetchType: 'all' });
+        onSuccess: (newBrand) => {
+            queryClient.setQueryData<Brand[]>(['brands'], (old = []) =>
+                [...old, newBrand].sort((a, b) => a.name.localeCompare(b.name))
+            );
             toast.success('Marca creada exitosamente');
         },
         onError: (error: any) => {
@@ -28,8 +30,10 @@ export function useUpdateBrand() {
     const queryClient = useQueryClient();
     return useMutation({
         mutationFn: ({ id, data }: { id: string, data: any }) => updateBrand(id, data),
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['brands'], refetchType: 'all' });
+        onSuccess: (updatedBrand) => {
+            queryClient.setQueryData<Brand[]>(['brands'], (old = []) =>
+                old.map(b => b.id === updatedBrand.id ? updatedBrand : b)
+            );
             toast.success('Marca actualizada exitosamente');
         },
         onError: (error: any) => {
@@ -43,8 +47,10 @@ export function useDeleteBrand() {
     const queryClient = useQueryClient();
     return useMutation({
         mutationFn: (id: string) => deleteBrand(id),
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['brands'], refetchType: 'all' });
+        onSuccess: (_, id) => {
+            queryClient.setQueryData<Brand[]>(['brands'], (old = []) =>
+                old.filter(b => b.id !== id)
+            );
             toast.success('Marca eliminada exitosamente');
         },
         onError: (error: any) => {
