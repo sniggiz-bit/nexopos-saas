@@ -14,9 +14,14 @@ export function useCreateBrand() {
     return useMutation({
         mutationFn: (data: CreateBrandData) => createBrand(data),
         onSuccess: (newBrand) => {
-            queryClient.setQueryData<Brand[]>(['brands'], (old = []) =>
-                [...old, newBrand].sort((a, b) => a.name.localeCompare(b.name))
-            );
+            console.log('[useBrands] onSuccess - newBrand:', newBrand);
+            console.log('[useBrands] cache before:', queryClient.getQueryData(['brands']));
+            queryClient.setQueryData<Brand[]>(['brands'], (old = []) => {
+                const updated = [...old, newBrand].sort((a, b) => a.name.localeCompare(b.name));
+                console.log('[useBrands] cache updated to:', updated);
+                return updated;
+            });
+            console.log('[useBrands] cache after:', queryClient.getQueryData(['brands']));
             toast.success('Marca creada exitosamente');
         },
         onError: (error: any) => {
