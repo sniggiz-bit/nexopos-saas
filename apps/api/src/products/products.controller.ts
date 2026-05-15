@@ -6,7 +6,6 @@ import {
   Delete,
   Body,
   Param,
-  Query,
   UseGuards,
   Request,
 } from '@nestjs/common';
@@ -18,51 +17,32 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CurrentUser } from '../auth/user.decorator';
 
 @Controller('products')
+@UseGuards(JwtAuthGuard)
 export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
 
   /**
    * GET /products/critical
-   * Returns products with stock <= minStock
-   *
-   * @param tenantId - Tenant ID
-   * @param branchId - Branch ID
+   * Returns products with stock <= minStock for the authenticated tenant
    */
   @Get('critical')
-  async findCritical(
-    @Query('tenantId') tenantId: string = 'tenant-1',
-  ) {
-    return this.productsService.findCritical(tenantId);
+  async findCritical(@CurrentUser() user: any) {
+    return this.productsService.findCritical(user.tenantId);
   }
 
   /**
    * GET /products
-   * Returns all products with calculated stock
-   *
-   * @param tenantId - Tenant ID (required for multi-tenancy)
-   * @param branchId - Branch ID (optional, defaults to 'branch-1')
-   * @returns Array of products with stock information
+   * Returns all products for the authenticated tenant
    */
-  @UseGuards(JwtAuthGuard)
   @Get()
-  async findAll(
-    @CurrentUser() user: any,
-    @Query('tenantId') tenantIdParam?: string,
-  ): Promise<ProductResponseDto[]> {
-    const tenantId = user?.tenantId || tenantIdParam || 'tenant-1';
-    return this.productsService.findAll(tenantId);
+  async findAll(@CurrentUser() user: any): Promise<ProductResponseDto[]> {
+    return this.productsService.findAll(user.tenantId);
   }
 
   /**
    * GET /products/:id
-   * Returns a single product by ID
-   *
-   * @param id - Product ID
-   * @param tenantId - Tenant ID
-   * @param branchId - Branch ID
-   * @returns Product with stock information
+   * Returns a single product by ID for the authenticated tenant
    */
-  @UseGuards(JwtAuthGuard)
   @Get(':id')
   async findOne(
     @Param('id') id: string,
@@ -73,12 +53,8 @@ export class ProductsController {
 
   /**
    * POST /products
-   * Creates a new product
-   *
-   * @param createProductDto - Product data
-   * @returns Created product
+   * Creates a new product for the authenticated tenant
    */
-  @UseGuards(JwtAuthGuard)
   @Post()
   async create(
     @Body() createProductDto: CreateProductDto,
@@ -89,14 +65,9 @@ export class ProductsController {
   }
 
   /**
-   * PATCH /products/:id
-   * Updates an existing product
-   *
-   * @param id - Product ID
-   * @param updateProductDto - Updated product data
-   * @returns Updated product
+   * PATCH /products/bulk-public
+   * Bulk update public status for products
    */
-  @UseGuards(JwtAuthGuard)
   @Patch('bulk-public')
   async bulkUpdatePublic(
     @Body() body: { ids: string[]; isPublic: boolean },
@@ -109,18 +80,28 @@ export class ProductsController {
     );
   }
 
-  @UseGuards(JwtAuthGuard)
+  /**
+   * PATCH /products/:id
+   * Updates an existing product
+   */
   @Patch(':id')
   async update(
     @Param('id') id: string,
     @Body() updateProductDto: UpdateProductDto,
     @Request() req: any,
   ): Promise<ProductResponseDto> {
-    return this.productsService.update(id, updateProductDto, req.user?.userId);
+    return this.productsService.update(id, updateProductDto, req.user?.sub);
   }
 
+  /**
+   * DELETE /products/:id
+   * Deletes a product for the authenticated tenant
+   */
   @Delete(':id')
-  async remove(@Param('id') id: string): Promise<void> {
-    return this.productsService.remove(id);
+  async remove(
+    @Param('id') id: string,
+    @CurrentUser() user: any,
+  ): Promise<void> {
+    return this.productsService.remove(id, user.tenantId);
   }
 }

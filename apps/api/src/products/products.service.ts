@@ -419,12 +419,11 @@ export class ProductsService {
    * Soft delete a product
    * @param id - Product ID
    */
-  async remove(id: string): Promise<void> {
-    await this.prisma.product.update({
-      where: { id },
-      data: {
-        isActive: false,
-      },
+  async remove(id: string, tenantId?: string): Promise<void> {
+    // Scope the soft delete to the tenant for security
+    await this.prisma.product.updateMany({
+      where: { id, ...(tenantId ? { tenantId } : {}) },
+      data: { isActive: false },
     });
   }
   /**

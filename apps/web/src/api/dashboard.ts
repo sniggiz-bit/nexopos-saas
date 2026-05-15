@@ -17,16 +17,16 @@ export interface DashboardAnalytics {
     monthComparison: { currentRevenue: number; prevRevenue: number; pctChange: number | null };
 }
 
-export async function getDashboardStats(tenantId: string, branchId: string = 'branch-1'): Promise<DashboardStats> {
+export async function getDashboardStats(branchId?: string): Promise<DashboardStats> {
     const response = await apiClient.get<DashboardStats>('/dashboard/stats', {
-        params: { tenantId, branchId },
+        params: { branchId },
     });
     return response.data;
 }
 
-export async function getDashboardAnalytics(tenantId: string, branchId?: string): Promise<DashboardAnalytics> {
+export async function getDashboardAnalytics(branchId?: string): Promise<DashboardAnalytics> {
     const response = await apiClient.get<DashboardAnalytics>('/dashboard/analytics', {
-        params: { tenantId, branchId },
+        params: { branchId },
     });
     return response.data;
 }

@@ -28,24 +28,23 @@ ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend)
 
 export function DashboardOverviewPage() {
     const { user } = useAuth();
-    const { data: stats, isLoading } = useDashboardStats(user?.tenantId || '', user?.branchId || 'branch-1');
-    const { data: products } = useProducts(user?.tenantId);
+    const { data: stats, isLoading } = useDashboardStats(user?.branchId || undefined);
+    const { data: products } = useProducts();
 
     const todayStr = new Date().toLocaleDateString('en-CA');
     const { data: todaySales } = useQuery({
-        queryKey: ['sales', 'today', user?.tenantId, todayStr],
+        queryKey: ['sales', 'today', todayStr],
         queryFn: () => getSales({
             startDate: `${todayStr}T00:00:00`,
             endDate: `${todayStr}T23:59:59`,
-            tenantId: user?.tenantId,
         }),
-        enabled: !!user?.tenantId,
+        enabled: !!user,
     });
 
     const { data: analytics } = useQuery({
-        queryKey: ['dashboard', 'analytics', user?.tenantId],
-        queryFn: () => getDashboardAnalytics(user!.tenantId, user?.branchId),
-        enabled: !!user?.tenantId,
+        queryKey: ['dashboard', 'analytics'],
+        queryFn: () => getDashboardAnalytics(user?.branchId || undefined),
+        enabled: !!user,
         staleTime: 5 * 60 * 1000,
     });
 

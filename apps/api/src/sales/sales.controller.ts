@@ -34,12 +34,12 @@ export class SalesController {
    */
   @Get()
   async findAll(
+    @CurrentUser() user: any,
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
     @Query('branchId') branchId?: string,
-    @Query('tenantId') tenantId?: string,
   ) {
-    return this.salesService.getSales({ startDate, endDate, branchId, tenantId });
+    return this.salesService.getSales({ startDate, endDate, branchId, tenantId: user.tenantId });
   }
 
   /**
