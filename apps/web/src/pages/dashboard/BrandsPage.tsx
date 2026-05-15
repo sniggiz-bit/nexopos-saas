@@ -35,15 +35,14 @@ export function BrandsPage() {
         setIsSaving(true);
         try {
             if (editingBrand) {
-                const updated = await updateBrand(editingBrand.id, { name });
-                setBrands(prev => prev.map(b => b.id === updated.id ? updated : b));
+                await updateBrand(editingBrand.id, { name });
                 toast.success('Marca actualizada exitosamente');
             } else {
-                const created = await createBrand({ name });
-                setBrands(prev => [...prev, created].sort((a, b) => a.name.localeCompare(b.name)));
+                await createBrand({ name });
                 toast.success('Marca creada exitosamente');
             }
             handleClose();
+            await loadBrands();
         } catch (error: any) {
             const message = error.response?.data?.message || 'Error al guardar la marca';
             toast.error(message);
@@ -60,13 +59,13 @@ export function BrandsPage() {
 
     const handleDelete = async (id: string) => {
         setDeletingId(null);
-        setBrands(prev => prev.filter(b => b.id !== id));
         try {
             await deleteBrand(id);
             toast.success('Marca eliminada exitosamente');
         } catch (error: any) {
-            await loadBrands();
             toast.error(error.response?.data?.message || 'Error al eliminar la marca');
+        } finally {
+            await loadBrands();
         }
     };
 
