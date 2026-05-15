@@ -12,7 +12,7 @@ export interface CreateBrandData {
 }
 
 export async function getBrands(): Promise<Brand[]> {
-    const response = await apiClient.get<Brand[]>('/brands');
+    const response = await apiClient.get<Brand[]>(`/brands?_t=${Date.now()}`);
     return response.data;
 }
 
