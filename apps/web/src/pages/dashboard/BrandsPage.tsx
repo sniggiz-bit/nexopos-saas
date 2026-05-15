@@ -4,7 +4,7 @@ import { useBrands, useCreateBrand, useUpdateBrand, useDeleteBrand } from '../..
 import { Plus, Edit, Trash2, Loader2, Tag } from 'lucide-react';
 
 export function BrandsPage() {
-    const { data: brands, isLoading } = useBrands();
+    const { data: brands, isLoading, refetch } = useBrands();
     const createBrand = useCreateBrand();
     const updateBrand = useUpdateBrand();
     const deleteBrand = useDeleteBrand();
@@ -20,6 +20,7 @@ export function BrandsPage() {
         } else {
             await createBrand.mutateAsync({ name });
         }
+        await refetch();
         handleClose();
     };
 
@@ -32,6 +33,7 @@ export function BrandsPage() {
     const handleDelete = async (id: string, name: string) => {
         if (window.confirm(`¿Estás seguro de que deseas eliminar la marca "${name}"?`)) {
             await deleteBrand.mutateAsync(id);
+            await refetch();
         }
     };
 

@@ -4,7 +4,7 @@ import { useCategories, useCreateCategory, useUpdateCategory, useDeleteCategory 
 import { Plus, Edit, Trash2, Loader2 } from 'lucide-react';
 
 export function CategoriesPage() {
-    const { data: categories, isLoading } = useCategories();
+    const { data: categories, isLoading, refetch } = useCategories();
     const createCategory = useCreateCategory();
     const updateCategory = useUpdateCategory();
     const deleteCategory = useDeleteCategory();
@@ -20,6 +20,7 @@ export function CategoriesPage() {
         } else {
             await createCategory.mutateAsync({ name });
         }
+        await refetch();
         handleClose();
     };
 
@@ -32,6 +33,7 @@ export function CategoriesPage() {
     const handleDelete = async (id: string, name: string) => {
         if (window.confirm(`¿Estás seguro de que deseas eliminar la categoría "${name}"?`)) {
             await deleteCategory.mutateAsync(id);
+            await refetch();
         }
     };
 
