@@ -1,7 +1,8 @@
-import { useState, useMemo, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Product } from '@/api/products';
-import { useProducts } from '@/hooks/useProducts';
+import { useProductsPOS } from '@/hooks/useProducts';
+import { useDebounce } from '@/hooks/useDebounce';
 import { useCategories } from '@/hooks/useCategories';
 import { useSale } from '@/hooks/useSale';
 import { ProductGrid } from '@/components/pos/ProductGrid';
@@ -29,6 +30,7 @@ export function PosPage() {
     const [isCloseShiftModalOpen, setIsCloseShiftModalOpen] = useState(false);
     const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
     const [viewMode, setViewMode]                   = useState<'grid' | 'list'>('grid');
+    const [page, setPage]                           = useState(1);
     const { toast }        = useToast();
     const queryClient      = useQueryClient();
     const { user }         = useAuth();
@@ -44,43 +46,44 @@ export function PosPage() {
     });
     const branchName = branches.find(b => b.id === user?.branchId)?.name;
 
-    const { data: products = [], isLoading } = useProducts(user?.tenantId);
-    const { data: categories = [] }          = useCategories(user?.tenantId);
+    const [searchQuery, setSearchQuery] = useState('');
+    const debouncedSearch = useDebounce(searchQuery, 300);
 
-    const { mutate: createSale, isPending, isSuccess, isError, reset } = useSale({
-        onSuccess: (data) => {
-            setSaleResult(data);
-            toast({
-                variant: 'success',
-                title: '¡Venta Exitosa!',
-                description: data.dteFolio ? `Folio: #${data.dteFolio}` : `ID: ${data.id.slice(0, 8)}`,
-            });
-            clearCart();
-            queryClient.invalidateQueries({ queryKey: ['products'] });
-            queryClient.invalidateQueries({ queryKey: ['quotes'] });
-        },
-        onError: (error) => {
-            toast({
-                variant: 'destructive',
-                title: 'Error en la Venta',
-                description: error.message || 'Ocurrió un error al procesar la venta',
-            });
-        },
+    const { data: categories = [] }    = useCategories();
+
+    // Server-side paginated product query — re-runs after 300ms debounce
+    const { data: productPage, isLoading } = useProductsPOS({
+        search:     debouncedSearch || undefined,
+        categoryId: selectedCategoryId || undefined,
+        page,
+        limit: 50,
     });
+    const products    = productPage?.data       ?? [];
+    const totalPages  = productPage?.totalPages ?? 1;
+    const totalItems  = productPage?.total      ?? 0;
+
+    // Reset to page 1 when search or category changes
+    useEffect(() => {
+        setPage(1);
+    }, [debouncedSearch, selectedCategoryId]);
 
     const handleAddToCart = (product: Product) => addItem(product);
 
+    // Barcode scanner — search server-side when scanned code is not in current page
     const addToCartByBarcode = (barcode: string) => {
-        const product = products.find(p => p.barcode === barcode || p.sku === barcode);
-        if (product) {
-            addItem(product);
-            toast({ title: 'Producto Agregado', description: product.name, duration: 1200 });
-        } else {
-            toast({ variant: 'destructive', title: 'Código no encontrado', description: barcode });
+        const local = products.find(p => p.barcode === barcode || p.sku === barcode);
+        if (local) {
+            addItem(local);
+            toast({ title: 'Producto Agregado', description: local.name, duration: 1200 });
+            return;
         }
+        // Fallback: trigger a server search for the barcode
+        setSearchQuery(barcode);
+        toast({ description: `Buscando: ${barcode}…`, duration: 1200 });
     };
 
     useBarcodeScanner({ onScan: addToCartByBarcode, enabled: !isCloseShiftModalOpen });
+
 
     const handleConfirmPayment = (payments: PaymentRequestData[], dteType?: number, customerId?: string) => {
         if (!user?.tenantId || !user?.branchId) {
@@ -107,21 +110,28 @@ export function PosPage() {
         createSale(saleData);
     };
 
-    const [searchQuery, setSearchQuery] = useState('');
-    const inputRef = useRef<HTMLInputElement>(null);
-
-    const filteredProducts = useMemo(() => {
-        let result = products;
-        if (selectedCategoryId) result = result.filter(p => p.category?.id === selectedCategoryId);
-        if (searchQuery) {
-            const q = searchQuery.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
-            result = result.filter(p => {
-                const name = p.name.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
-                return name.includes(q) || (p.barcode || '').toLowerCase().includes(q) || (p.sku || '').toLowerCase().includes(q);
+    const { mutate: createSale, isPending, isSuccess, isError, reset } = useSale({
+        onSuccess: (data) => {
+            setSaleResult(data);
+            toast({
+                variant: 'success',
+                title: '¡Venta Exitosa!',
+                description: data.dteFolio ? `Folio: #${data.dteFolio}` : `ID: ${data.id.slice(0, 8)}`,
             });
-        }
-        return result;
-    }, [products, searchQuery, selectedCategoryId]);
+            clearCart();
+            queryClient.invalidateQueries({ queryKey: ['products'] });
+            queryClient.invalidateQueries({ queryKey: ['quotes'] });
+        },
+        onError: (error) => {
+            toast({
+                variant: 'destructive',
+                title: 'Error en la Venta',
+                description: error.message || 'Ocurrió un error al procesar la venta',
+            });
+        },
+    });
+
+    const inputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -142,8 +152,8 @@ export function PosPage() {
     }, [cartItems, isCloseShiftModalOpen, clearCart, toast]);
 
     const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-        if (e.key === 'Enter' && filteredProducts.length === 1) {
-            handleAddToCart(filteredProducts[0]);
+        if (e.key === 'Enter' && products.length === 1) {
+            handleAddToCart(products[0]);
             setSearchQuery('');
         }
     };
@@ -248,7 +258,7 @@ export function PosPage() {
                             </div>
                             {!isLoading && (
                                 <span className="text-xs text-muted-foreground shrink-0 font-medium tabular-nums">
-                                    {filteredProducts.length} producto{filteredProducts.length !== 1 ? 's' : ''}
+                                    {totalItems} producto{totalItems !== 1 ? 's' : ''}
                                 </span>
                             )}
                         </div>
@@ -257,10 +267,14 @@ export function PosPage() {
                     {/* Product Grid */}
                     <div className="flex-1 overflow-y-auto p-4 bg-surface-raised dark:bg-background scrollbar-thin">
                         <ProductGrid
-                            products={filteredProducts}
+                            products={products}
                             isLoading={isLoading}
                             onAddToCart={handleAddToCart}
                             viewMode={viewMode}
+                            currentPage={page}
+                            totalPages={totalPages}
+                            totalItems={totalItems}
+                            onPageChange={setPage}
                         />
                     </div>
                 </div>

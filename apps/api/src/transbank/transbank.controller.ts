@@ -2,6 +2,7 @@ import { Controller, Post, Get, Patch, Body, Param, UseGuards } from '@nestjs/co
 import { TransbankService } from './transbank.service';
 import { RecordTransactionDto } from './dto/record-transaction.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { CurrentUser } from '../auth/user.decorator';
 import type { TransbankBranchSettings } from './transbank.types';
 
 @Controller('transbank')
@@ -22,9 +23,9 @@ export class TransbankController {
   }
 
   // Historial de transacciones del tenant
-  @Get('tenant/:tenantId')
-  findByTenant(@Param('tenantId') tenantId: string) {
-    return this.transbankService.findByTenant(tenantId);
+  @Get('history')
+  findByTenant(@CurrentUser() user: any) {
+    return this.transbankService.findByTenant(user.tenantId);
   }
 
   // Vincular transacción a venta (se llama al completar la venta)
@@ -35,15 +36,16 @@ export class TransbankController {
 
   // Configuración del terminal por sucursal
   @Get('config/:branchId')
-  getConfig(@Param('branchId') branchId: string) {
-    return this.transbankService.getConfig(branchId);
+  getConfig(@Param('branchId') branchId: string, @CurrentUser() user: any) {
+    return this.transbankService.getConfig(branchId, user.tenantId);
   }
 
   @Patch('config/:branchId')
   saveConfig(
     @Param('branchId') branchId: string,
     @Body() body: TransbankBranchSettings,
+    @CurrentUser() user: any,
   ) {
-    return this.transbankService.saveConfig(branchId, body);
+    return this.transbankService.saveConfig(branchId, body, user.tenantId);
   }
 }

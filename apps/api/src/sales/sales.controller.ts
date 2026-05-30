@@ -96,13 +96,14 @@ export class SalesController {
   async complete(
     @Param('id') id: string,
     @Body() payments: CreatePaymentDto[],
+    @CurrentUser() user: any,
   ) {
-    return this.salesService.completePreSale(id, payments);
+    return this.salesService.completePreSale(id, user.tenantId, payments);
   }
 
   @Post(':id/nota-credito')
   @HttpCode(HttpStatus.OK)
-  async emitNotaCredito(@Param('id') id: string) {
-    return this.salesService.emitirNotaCreditoForSale(id);
+  async emitNotaCredito(@Param('id') id: string, @CurrentUser() user: any) {
+    return this.salesService.emitirNotaCreditoForSale(id, user.tenantId);
   }
 }

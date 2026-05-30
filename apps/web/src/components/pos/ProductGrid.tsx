@@ -1,12 +1,17 @@
 import { Product } from '@/api/products';
 import { ProductCard } from './ProductCard';
-import { Package2 } from 'lucide-react';
+import { Package2, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface ProductGridProps {
     products: Product[];
     isLoading: boolean;
     onAddToCart: (product: Product) => void;
     viewMode?: 'grid' | 'list';
+    // Pagination
+    currentPage?: number;
+    totalPages?: number;
+    totalItems?: number;
+    onPageChange?: (page: number) => void;
 }
 
 function ProductSkeleton({ viewMode = 'grid' }: { viewMode?: 'grid' | 'list' }) {
@@ -44,7 +49,18 @@ function ProductSkeleton({ viewMode = 'grid' }: { viewMode?: 'grid' | 'list' }) 
     );
 }
 
-export function ProductGrid({ products, isLoading, onAddToCart, viewMode = 'grid' }: ProductGridProps) {
+export function ProductGrid({
+    products,
+    isLoading,
+    onAddToCart,
+    viewMode = 'grid',
+    currentPage,
+    totalPages,
+    totalItems,
+    onPageChange,
+}: ProductGridProps) {
+    const showPagination = totalPages !== undefined && totalPages > 1 && onPageChange;
+
     if (isLoading) {
         return (
             <div className={viewMode === 'grid'
@@ -70,22 +86,18 @@ export function ProductGrid({ products, isLoading, onAddToCart, viewMode = 'grid
         );
     }
 
-    if (viewMode === 'list') {
-        return (
-            <div className="flex flex-col gap-2">
-                {products.map((product) => (
-                    <ProductCard
-                        key={product.id}
-                        product={product}
-                        onAddToCart={onAddToCart}
-                        viewMode="list"
-                    />
-                ))}
-            </div>
-        );
-    }
-
-    return (
+    const grid = viewMode === 'list' ? (
+        <div className="flex flex-col gap-2">
+            {products.map((product) => (
+                <ProductCard
+                    key={product.id}
+                    product={product}
+                    onAddToCart={onAddToCart}
+                    viewMode="list"
+                />
+            ))}
+        </div>
+    ) : (
         <div className="grid grid-cols-[repeat(auto-fill,minmax(170px,1fr))] gap-4">
             {products.map((product) => (
                 <ProductCard
@@ -97,4 +109,47 @@ export function ProductGrid({ products, isLoading, onAddToCart, viewMode = 'grid
             ))}
         </div>
     );
+
+    return (
+        <div className="flex flex-col gap-4">
+            {grid}
+
+            {showPagination && (
+                <div className="flex items-center justify-between pt-2 pb-1 px-1 border-t border-border">
+                    <span className="text-xs text-muted-foreground tabular-nums">
+                        {totalItems !== undefined && (
+                            <>Total: <span className="font-medium text-foreground">{totalItems}</span> productos</>
+                        )}
+                    </span>
+
+                    <div className="flex items-center gap-1">
+                        <button
+                            id="pos-products-prev-page"
+                            onClick={() => onPageChange(currentPage! - 1)}
+                            disabled={currentPage === 1}
+                            className="p-1.5 rounded-lg border border-border text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                            title="Página anterior"
+                        >
+                            <ChevronLeft className="w-4 h-4" />
+                        </button>
+
+                        <span className="text-xs font-medium text-foreground px-2 tabular-nums">
+                            {currentPage} / {totalPages}
+                        </span>
+
+                        <button
+                            id="pos-products-next-page"
+                            onClick={() => onPageChange(currentPage! + 1)}
+                            disabled={currentPage === totalPages}
+                            className="p-1.5 rounded-lg border border-border text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                            title="Página siguiente"
+                        >
+                            <ChevronRight className="w-4 h-4" />
+                        </button>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
 }
+

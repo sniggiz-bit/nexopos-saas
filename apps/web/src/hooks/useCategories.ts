@@ -2,7 +2,7 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import { getCategories, createCategory, updateCategory, deleteCategory, CreateCategoryData } from '../api/categories';
 import { toast } from 'react-hot-toast';
 
-export function useCategories() {
+export function useCategories(_tenantId?: string) {
     return useQuery({
         queryKey: ['categories'],
         queryFn: () => getCategories(),

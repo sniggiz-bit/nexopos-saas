@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { RecordTransactionDto } from './dto/record-transaction.dto';
 import { TransbankBranchSettings, defaultTransbankSettings } from './transbank.types';
@@ -80,19 +80,28 @@ export class TransbankService {
     });
   }
 
-  async getConfig(branchId: string) {
-    const branch = await this.prisma.branch.findUnique({
-      where:  { id: branchId },
+  async getConfig(branchId: string, tenantId: string) {
+    const branch = await this.prisma.branch.findFirst({
+      where:  { id: branchId, tenantId },
       select: { id: true, name: true, transbankSettings: true },
     });
+    if (!branch) {
+      throw new NotFoundException('Sucursal no encontrada.');
+    }
     return {
-      branchId: branch?.id,
-      branchName: branch?.name,
-      settings: (branch?.transbankSettings as TransbankBranchSettings | null) ?? defaultTransbankSettings(),
+      branchId: branch.id,
+      branchName: branch.name,
+      settings: (branch.transbankSettings as TransbankBranchSettings | null) ?? defaultTransbankSettings(),
     };
   }
 
-  async saveConfig(branchId: string, settings: TransbankBranchSettings) {
+  async saveConfig(branchId: string, settings: TransbankBranchSettings, tenantId: string) {
+    const branch = await this.prisma.branch.findFirst({
+      where: { id: branchId, tenantId },
+    });
+    if (!branch) {
+      throw new NotFoundException('Sucursal no encontrada.');
+    }
     await this.prisma.branch.update({
       where: { id: branchId },
       data:  { transbankSettings: settings as any },

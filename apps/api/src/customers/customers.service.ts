@@ -3,6 +3,7 @@ import {
   ConflictException,
   BadRequestException,
   InternalServerErrorException,
+  NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateCustomerDto } from './dto/create-customer.dto';
@@ -64,18 +65,32 @@ export class CustomersService {
     });
   }
 
-  async findOne(id: string) {
-    return this.prisma.customer.findUnique({
-      where: { id },
+  async findOne(id: string, tenantId: string) {
+    const customer = await this.prisma.customer.findFirst({
+      where: { id, tenantId },
       include: {
         _count: {
           select: { sales: true, quotes: true, credits: true },
         },
       },
     });
+
+    if (!customer) {
+      throw new NotFoundException('Cliente no encontrado.');
+    }
+
+    return customer;
   }
 
-  async update(id: string, updateCustomerDto: UpdateCustomerDto) {
+  async update(id: string, updateCustomerDto: UpdateCustomerDto, tenantId: string) {
+    const existing = await this.prisma.customer.findFirst({
+      where: { id, tenantId },
+    });
+
+    if (!existing) {
+      throw new NotFoundException('Cliente no encontrado.');
+    }
+
     const data = { ...updateCustomerDto };
     if (data.rut) data.rut = formatRut(data.rut);
 
@@ -103,7 +118,15 @@ export class CustomersService {
     }
   }
 
-  async remove(id: string) {
+  async remove(id: string, tenantId: string) {
+    const existing = await this.prisma.customer.findFirst({
+      where: { id, tenantId },
+    });
+
+    if (!existing) {
+      throw new NotFoundException('Cliente no encontrado.');
+    }
+
     return this.prisma.customer.delete({
       where: { id },
     });

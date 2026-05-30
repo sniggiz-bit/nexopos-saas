@@ -3,6 +3,7 @@ import {
   ExecutionContext,
   ForbiddenException,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
@@ -36,6 +37,8 @@ const RESOURCE_MAP: Record<
  */
 @Injectable()
 export class ResourceLimitGuard implements CanActivate {
+  private readonly logger = new Logger(ResourceLimitGuard.name);
+
   constructor(
     private readonly reflector: Reflector,
     private readonly prisma: PrismaService,
@@ -79,6 +82,13 @@ export class ResourceLimitGuard implements CanActivate {
     }
 
     const prismaDelegate = (this.prisma as any)[resource.model];
+    if (!prismaDelegate) {
+      this.logger.warn(
+        `Resource model '${resource.model}' does not exist on PrismaService. Fail-safe active, letting request pass.`,
+      );
+      return true;
+    }
+
     const currentCount: number = await prismaDelegate.count({
       where: { [resource.field]: tenantId },
     });

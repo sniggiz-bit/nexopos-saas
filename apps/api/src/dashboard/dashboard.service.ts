@@ -53,27 +53,15 @@ export class DashboardService {
     const monthRevenue = Number(monthRevenueResult._sum.total || 0);
 
     // 4. Low Stock Count
-    // We need to check products where calculated stock <= minStock
-    // This is a bit complex for a single query with Prisma's current state since stock is derived from InventoryLevel
-    const products = await this.prisma.product.findMany({
-      where: {
-        tenantId,
-        isActive: true,
-      },
-      include: {
-        inventory: {
-          where: { branchId },
-        },
-      },
-    });
-
-    const lowStockCount = products.filter((product) => {
-      const stock = product.inventory.reduce(
-        (total, inv) => total + Number(inv.quantity),
-        0,
-      );
-      return stock <= product.minStock;
-    }).length;
+    const lowStockResult = await this.prisma.$queryRaw<[{ count: number }]>`
+      SELECT COUNT(*)::int AS count
+      FROM "Product" p
+      LEFT JOIN "InventoryLevel" i ON p.id = i."productId" AND i."branchId" = ${branchId}
+      WHERE p."tenantId" = ${tenantId}
+        AND p."isActive" = true
+        AND COALESCE(i.quantity, 0) <= p."minStock"
+    `;
+    const lowStockCount = Number(lowStockResult[0]?.count || 0);
 
     // 5. Total Suppliers
     const totalSuppliers = await this.prisma.supplier.count({
@@ -130,30 +118,25 @@ export class DashboardService {
     }
 
     // Top 5 products this month by quantity sold
-    const saleItems = await this.prisma.saleItem.findMany({
-      where: {
-        sale: { tenantId, branchId: bid, status: 'COMPLETED', createdAt: { gte: currentMonthStart } },
-      },
-      select: {
-        quantity: true,
-        price: true,
-        discountAmount: true,
-        product: { select: { id: true, name: true } },
-      },
-    });
-
-    const productMap = new Map<string, { name: string; qty: number; revenue: number }>();
-    for (const item of saleItems) {
-      const existing = productMap.get(item.product.id) ?? { name: item.product.name, qty: 0, revenue: 0 };
-      existing.qty += Number(item.quantity);
-      existing.revenue += item.price * Number(item.quantity) - item.discountAmount;
-      productMap.set(item.product.id, existing);
-    }
-
-    const topProducts = [...productMap.entries()]
-      .map(([id, v]) => ({ id, ...v }))
-      .sort((a, b) => b.qty - a.qty)
-      .slice(0, 5);
+    const topProducts = await this.prisma.$queryRaw<
+      { id: string; name: string; qty: number; revenue: number }[]
+    >`
+      SELECT 
+        si."productId" AS id,
+        p.name AS name,
+        SUM(si.quantity)::float AS qty,
+        SUM(si.price * si.quantity::float - si."discountAmount")::float AS revenue
+      FROM "SaleItem" si
+      JOIN "Sale" s ON si."saleId" = s.id
+      JOIN "Product" p ON si."productId" = p.id
+      WHERE s."tenantId" = ${tenantId}
+        AND (${bid ? bid : null}::text IS NULL OR s."branchId" = ${bid ? bid : null})
+        AND s.status = 'COMPLETED'
+        AND s."createdAt" >= ${currentMonthStart}
+      GROUP BY si."productId", p.name
+      ORDER BY qty DESC
+      LIMIT 5
+    `;
 
     // Month comparison
     const [currentRevResult, prevRevResult] = await Promise.all([

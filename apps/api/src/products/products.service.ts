@@ -37,35 +37,64 @@ export class ProductsService {
   }
 
   /**
-   * Get all products with calculated stock from InventoryLevel
-   * @param tenantId - Tenant ID for multi-tenancy
-   * @param branchId - Branch ID to calculate stock (defaults to 'branch-1')
-   * @returns Array of products with stock information
+   * Get all products with optional server-side filtering and pagination.
+   * @param tenantId  - Tenant ID for multi-tenancy
+   * @param filters   - Optional search / category / pagination params
+   * @returns Paginated response { data, total, page, limit, totalPages }
    */
-  async findAll(tenantId: string): Promise<ProductResponseDto[]> {
-    // Fetch products with their inventory levels for the specified branch
-    const products = await this.prisma.product.findMany({
-      where: {
-        tenantId,
-        isActive: true, // Only return active products
-      },
-      include: {
-        inventory: {
-          include: {
-            branch: true,
-          },
-        },
-        category: true,
-        brand: true,
-        priceTiers: {
-          orderBy: { minQuantity: 'asc' },
-        },
-      },
+  async findAll(
+    tenantId: string,
+    filters: {
+      search?: string;
+      categoryId?: string;
+      page?: number;
+      limit?: number;
+    } = {},
+  ): Promise<{
+    data: ProductResponseDto[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  }> {
+    const page  = Math.max(1, filters.page  ?? 1);
+    const limit = Math.min(200, Math.max(1, filters.limit ?? 50));
+    const skip  = (page - 1) * limit;
 
-    });
+    const where: Prisma.ProductWhereInput = {
+      tenantId,
+      isActive: true,
+      ...(filters.categoryId ? { categoryId: filters.categoryId } : {}),
+      ...(filters.search
+        ? {
+            OR: [
+              { name:    { contains: filters.search, mode: 'insensitive' } },
+              { sku:     { contains: filters.search, mode: 'insensitive' } },
+              { barcode: { contains: filters.search, mode: 'insensitive' } },
+            ],
+          }
+        : {}),
+    };
 
-    // Transform to response DTO with calculated stock
-    return products.map((product) => ({
+    const include = {
+      inventory: { include: { branch: true } },
+      category: true,
+      brand: true,
+      priceTiers: { orderBy: { minQuantity: 'asc' as const } },
+    };
+
+    const [products, total] = await Promise.all([
+      this.prisma.product.findMany({
+        where,
+        include,
+        skip,
+        take: limit,
+        orderBy: { name: 'asc' },
+      }),
+      this.prisma.product.count({ where }),
+    ]);
+
+    const data = products.map((product) => ({
       id: product.id,
       name: product.name,
       sku: product.sku || undefined,
@@ -86,19 +115,21 @@ export class ProductsService {
         quantity: Number(inv.quantity),
       })),
       category: product.category
-        ? {
-          id: product.category.id,
-          name: product.category.name,
-        }
+        ? { id: product.category.id, name: product.category.name }
         : undefined,
       brand: product.brand
-        ? {
-          id: product.brand.id,
-          name: product.brand.name,
-        }
+        ? { id: product.brand.id, name: product.brand.name }
         : undefined,
       priceTiers: product.priceTiers || [],
     }));
+
+    return {
+      data,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    };
   }
 
   /**
@@ -182,6 +213,24 @@ export class ProductsService {
     );
     const { tenantId, barcode, initialStock, priceTiers, branchId, ...productData } =
       createProductDto;
+
+    if (productData.categoryId) {
+      const category = await this.prisma.category.findFirst({
+        where: { id: productData.categoryId, tenantId },
+      });
+      if (!category) {
+        throw new NotFoundException('Categoría no encontrada o no pertenece al inquilino');
+      }
+    }
+
+    if (productData.brandId) {
+      const brand = await this.prisma.brand.findFirst({
+        where: { id: productData.brandId, tenantId },
+      });
+      if (!brand) {
+        throw new NotFoundException('Marca no encontrada o no pertenece al inquilino');
+      }
+    }
 
     // Validate barcode uniqueness per tenant if provided
     if (barcode) {
@@ -283,20 +332,40 @@ export class ProductsService {
   /**
    * Update an existing product
    * @param id - Product ID
+   * @param tenantId - Tenant ID for multi-tenancy
    * @param updateProductDto - Updated product data
    * @returns Updated product
    */
   async update(
     id: string,
+    tenantId: string,
     updateProductDto: UpdateProductDto,
     userId?: string,
   ): Promise<ProductResponseDto> {
-    const existingProductForValidation = await this.prisma.product.findUnique({
-      where: { id },
+    const existingProductForValidation = await this.prisma.product.findFirst({
+      where: { id, tenantId },
     });
 
     if (!existingProductForValidation) {
       throw new NotFoundException(`Product with ID ${id} not found`);
+    }
+
+    if (updateProductDto.categoryId) {
+      const category = await this.prisma.category.findFirst({
+        where: { id: updateProductDto.categoryId, tenantId },
+      });
+      if (!category) {
+        throw new NotFoundException('Categoría no encontrada o no pertenece al inquilino');
+      }
+    }
+
+    if (updateProductDto.brandId) {
+      const brand = await this.prisma.brand.findFirst({
+        where: { id: updateProductDto.brandId, tenantId },
+      });
+      if (!brand) {
+        throw new NotFoundException('Marca no encontrada o no pertenece al inquilino');
+      }
     }
 
     // Validar tramos de precio si existen
@@ -306,7 +375,10 @@ export class ProductsService {
         this.validatePriceTiers(newPrice, updateProductDto.priceTiers);
       } else {
         // Obtenmos tiers actuales solo si cambiamos el precio y no actualizamos tiers para asegurar regla negocio
-        const productWithTiers = await this.prisma.product.findUnique({ where: { id }, include: { priceTiers: true } });
+        const productWithTiers = await this.prisma.product.findFirst({
+          where: { id, tenantId },
+          include: { priceTiers: true },
+        });
         const currentTiers = productWithTiers?.priceTiers || [];
         if (currentTiers.length > 0) {
           this.validatePriceTiers(newPrice, currentTiers.map(t => ({ minQuantity: t.minQuantity, unitPrice: t.unitPrice })));
@@ -315,11 +387,11 @@ export class ProductsService {
     }
 
     // Validate barcode uniqueness if barcode is being updated
-    if (updateProductDto.barcode && updateProductDto.tenantId) {
+    if (updateProductDto.barcode) {
       const existingProduct = await this.prisma.product.findFirst({
         where: {
           barcode: updateProductDto.barcode,
-          tenantId: updateProductDto.tenantId,
+          tenantId,
           NOT: {
             id,
           },

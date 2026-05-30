@@ -11,7 +11,7 @@ export interface CreateCustomerData {
     phone?: string;
 }
 
-export async function getCustomers(): Promise<Customer[]> {
+export async function getCustomers(_tenantId?: string): Promise<Customer[]> {
     const response = await apiClient.get<Customer[]>('/customers');
     return response.data;
 }

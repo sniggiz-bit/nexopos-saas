@@ -2,7 +2,7 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import { getBrands, createBrand, updateBrand, deleteBrand, CreateBrandData } from '../api/brands';
 import { toast } from 'react-hot-toast';
 
-export function useBrands() {
+export function useBrands(_tenantId?: string) {
     return useQuery({
         queryKey: ['brands'],
         queryFn: () => getBrands(),

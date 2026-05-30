@@ -38,7 +38,7 @@ export class CustomersController {
     @Param('id') id: string,
     @CurrentUser() user: any,
   ) {
-    return this.customersService.findOne(id);
+    return this.customersService.findOne(id, user.tenantId);
   }
 
   @Patch(':id')
@@ -47,7 +47,7 @@ export class CustomersController {
     @Body() updateCustomerDto: UpdateCustomerDto,
     @CurrentUser() user: any,
   ) {
-    return this.customersService.update(id, updateCustomerDto);
+    return this.customersService.update(id, updateCustomerDto, user.tenantId);
   }
 
   @Delete(':id')
@@ -55,6 +55,6 @@ export class CustomersController {
     @Param('id') id: string,
     @CurrentUser() user: any,
   ) {
-    return this.customersService.remove(id);
+    return this.customersService.remove(id, user.tenantId);
   }
 }

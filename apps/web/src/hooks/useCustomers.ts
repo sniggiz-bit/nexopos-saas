@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getCustomers, createCustomer, updateCustomer, deleteCustomer, CreateCustomerData } from '../api/customers';
 import { toast } from 'react-hot-toast';
 
-export function useCustomers() {
+export function useCustomers(_tenantId?: string) {
     return useQuery({
         queryKey: ['customers'],
         queryFn: () => getCustomers(),

@@ -13,13 +13,10 @@ import { EventsService } from './events.service';
 
 @Controller('events')
 export class EventsController {
-  private readonly jwtService: JwtService;
-
-  constructor(private readonly eventsService: EventsService) {
-    this.jwtService = new JwtService({
-      secret: process.env.JWT_SECRET || 'secretKey',
-    });
-  }
+  constructor(
+    private readonly eventsService: EventsService,
+    private readonly jwtService: JwtService,
+  ) {}
 
   /**
    * SSE stream endpoint. EventSource cannot set Authorization headers,

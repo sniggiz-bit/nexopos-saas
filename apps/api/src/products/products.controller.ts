@@ -6,6 +6,7 @@ import {
   Delete,
   Body,
   Param,
+  Query,
   UseGuards,
   Request,
 } from '@nestjs/common';
@@ -32,11 +33,27 @@ export class ProductsController {
 
   /**
    * GET /products
-   * Returns all products for the authenticated tenant
+   * Returns paginated products for the authenticated tenant.
+   *
+   * @param search     - Optional text search (name, SKU, barcode)
+   * @param categoryId - Optional category filter
+   * @param page       - Page number (default: 1)
+   * @param limit      - Items per page (default: 50, max: 200)
    */
   @Get()
-  async findAll(@CurrentUser() user: any): Promise<ProductResponseDto[]> {
-    return this.productsService.findAll(user.tenantId);
+  async findAll(
+    @CurrentUser() user: any,
+    @Query('search')     search?: string,
+    @Query('categoryId') categoryId?: string,
+    @Query('page')       page?: string,
+    @Query('limit')      limit?: string,
+  ) {
+    return this.productsService.findAll(user.tenantId, {
+      search,
+      categoryId,
+      page:  page  ? parseInt(page,  10) : undefined,
+      limit: limit ? parseInt(limit, 10) : undefined,
+    });
   }
 
   /**
@@ -90,7 +107,12 @@ export class ProductsController {
     @Body() updateProductDto: UpdateProductDto,
     @Request() req: any,
   ): Promise<ProductResponseDto> {
-    return this.productsService.update(id, updateProductDto, req.user?.sub);
+    return this.productsService.update(
+      id,
+      req.user.tenantId,
+      updateProductDto,
+      req.user?.sub,
+    );
   }
 
   /**

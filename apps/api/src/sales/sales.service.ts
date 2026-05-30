@@ -112,7 +112,27 @@ export class SalesService {
     }
 
     const sale = await this.prisma.$transaction(async (prisma) => {
-      // 1. Validate products
+      // 1.1. Validate customer if provided
+      if (customerId) {
+        const customer = await prisma.customer.findFirst({
+          where: { id: customerId, tenantId },
+        });
+        if (!customer) {
+          throw new BadRequestException('El cliente especificado no pertenece a este inquilino');
+        }
+      }
+
+      // 1.2. Validate quote if provided
+      if (quoteId) {
+        const quote = await prisma.quote.findFirst({
+          where: { id: quoteId, tenantId },
+        });
+        if (!quote) {
+          throw new BadRequestException('La cotización especificada no pertenece a este inquilino');
+        }
+      }
+
+      // 1.3. Validate products
       const productIds = items.map((item) => item.productId);
       console.log(`[SalesService] Creating sale for tenant: ${tenantId}, branch: ${branchId}`);
       console.log(`[SalesService] Requested product IDs:`, productIds);
@@ -283,9 +303,9 @@ export class SalesService {
     return sale;
   }
 
-  async completePreSale(id: string, payments: CreatePaymentDto[]) {
-    const sale = await this.prisma.sale.findUnique({
-      where: { id },
+  async completePreSale(id: string, tenantId: string, payments: CreatePaymentDto[]) {
+    const sale = await this.prisma.sale.findFirst({
+      where: { id, tenantId },
       include: { items: true },
     });
 
@@ -347,14 +367,14 @@ export class SalesService {
     // Emit DTE/Receipt
     this.emitDteAndReceipt(id);
 
-    return this.prisma.sale.findUnique({
-      where: { id },
+    return this.prisma.sale.findFirst({
+      where: { id, tenantId },
       include: { items: true, payments: true, customer: true, credit: true },
     });
   }
 
-  async emitirNotaCreditoForSale(saleId: string) {
-    const sale = await this.prisma.sale.findUnique({ where: { id: saleId } });
+  async emitirNotaCreditoForSale(saleId: string, tenantId: string) {
+    const sale = await this.prisma.sale.findFirst({ where: { id: saleId, tenantId } });
     if (!sale) throw new NotFoundException('Sale not found');
     if (sale.status !== 'COMPLETED') {
       throw new BadRequestException(

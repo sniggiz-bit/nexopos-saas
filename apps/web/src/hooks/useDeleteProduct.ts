@@ -11,10 +11,10 @@ export function useDeleteProduct() {
 
     return useMutation({
         mutationFn: deleteProduct,
-        onSuccess: (_, id) => {
-            queryClient.setQueryData<Product[]>(['products'], (old = []) =>
-                old.filter(p => p.id !== id)
-            );
+        onSuccess: () => {
+            // Invalidate both cache keys so any consumer refetches
+            queryClient.invalidateQueries({ queryKey: ['products-all'] });
+            queryClient.invalidateQueries({ queryKey: ['products'] });
             toast.success('Producto eliminado exitosamente');
         },
         onError: (error: any) => {
@@ -22,3 +22,4 @@ export function useDeleteProduct() {
         },
     });
 }
+

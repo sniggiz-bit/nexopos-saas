@@ -46,8 +46,29 @@ export class QuotesService {
 
   async create(createQuoteDto: CreateQuoteDto) {
     const { items, issueDate, validUntil, ...quoteData } = createQuoteDto;
+    const tenantId = createQuoteDto.tenantId;
+
+    if (quoteData.customerId) {
+      const customer = await this.prisma.customer.findFirst({
+        where: { id: quoteData.customerId, tenantId },
+      });
+      if (!customer) {
+        throw new BadRequestException('El cliente especificado no pertenece a este inquilino');
+      }
+    }
+
+    if (items && items.length > 0) {
+      const productIds = items.map((i) => i.productId);
+      const dbProducts = await this.prisma.product.findMany({
+        where: { id: { in: productIds }, tenantId },
+      });
+      if (dbProducts.length !== productIds.length) {
+        throw new BadRequestException('Algunos productos no existen o no pertenecen al inquilino');
+      }
+    }
+
     const { subtotal, tax, total } = this.calculateTotals(items);
-    const number = await this.generateQuoteNumber(createQuoteDto.tenantId);
+    const number = await this.generateQuoteNumber(tenantId);
 
     return this.prisma.quote.create({
       data: {
@@ -117,6 +138,33 @@ export class QuotesService {
 
   async update(id: string, updateQuoteDto: UpdateQuoteDto) {
     const { items, ...quoteData } = updateQuoteDto;
+
+    const existingQuote = await this.prisma.quote.findUnique({
+      where: { id },
+    });
+    if (!existingQuote) {
+      throw new NotFoundException(`Cotización con ID ${id} no encontrada`);
+    }
+    const tenantId = existingQuote.tenantId;
+
+    if (quoteData.customerId) {
+      const customer = await this.prisma.customer.findFirst({
+        where: { id: quoteData.customerId, tenantId },
+      });
+      if (!customer) {
+        throw new BadRequestException('El cliente especificado no pertenece a este inquilino');
+      }
+    }
+
+    if (items && items.length > 0) {
+      const productIds = items.map((i) => i.productId);
+      const dbProducts = await this.prisma.product.findMany({
+        where: { id: { in: productIds }, tenantId },
+      });
+      if (dbProducts.length !== productIds.length) {
+        throw new BadRequestException('Algunos productos no existen o no pertenecen al inquilino');
+      }
+    }
 
     const updateData: any = { ...quoteData };
 

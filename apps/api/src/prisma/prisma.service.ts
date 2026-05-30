@@ -33,6 +33,14 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
     return this.prisma.$transaction.bind(this.prisma);
   }
 
+  get $queryRaw() {
+    return this.prisma.$queryRaw.bind(this.prisma);
+  }
+
+  get $executeRaw() {
+    return this.prisma.$executeRaw.bind(this.prisma);
+  }
+
   get product() {
     return this.prisma.product;
   }
