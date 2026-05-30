@@ -5,6 +5,10 @@
 
 set -e  # Detener si hay errores
 
+# Cargar rutas de Node.js en cPanel y binarios locales de npm del usuario
+export PATH=$(ls -d /opt/cpanel/ea-nodejs*/bin 2>/dev/null | head -n 1):$PATH
+export PATH=$HOME/.npm-global/bin:$PATH
+
 echo "🚀 Iniciando despliegue de NexoPOS (sin Docker)..."
 
 # Colores para output
