@@ -55,8 +55,10 @@ export default defineConfig({
         target: 'http://localhost:4000',
         changeOrigin: true,
         // Keep SSE connections alive through the proxy
-        configure: (proxy) => {
-          proxy.on('proxyReq', (proxyReq) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        configure: (proxy: any) => {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          proxy.on('proxyReq', (proxyReq: any) => {
             proxyReq.setHeader('Connection', 'keep-alive');
           });
         },
