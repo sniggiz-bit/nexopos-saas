@@ -48,6 +48,7 @@ export interface Sale {
     status: 'COMPLETED' | 'PRE_SALE' | 'CANCELLED';
     dteFolio?: number;
     dteStatus?: string;
+    dteType?: number;        // 39=Boleta, 33=Factura, 61=NotaCredito, 52=GuiaDespacho
     dtePdfUrl?: string;
     internalReceiptUrl?: string;
     createdAt: string;

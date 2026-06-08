@@ -16,9 +16,10 @@ import { createQuote } from '@/api/quotes';
 import { useAuth } from '@/context/AuthContext';
 import { CheckoutPanel } from './CheckoutPanel';
 import { type PaymentRequestData } from '@/api/sales';
+import { cn } from '@/lib/utils';
 
 interface CartProps {
-    onConfirm: (payments: PaymentRequestData[], dteType: number, customerId?: string) => void;
+    onConfirm: (payments: PaymentRequestData[], dteType: number, customerId?: string) => Promise<any>;
     onCheckoutClose?: () => void;
     isProcessing?: boolean;
     isSuccess?: boolean;
@@ -164,7 +165,10 @@ export function Cart({ onConfirm, onCheckoutClose, isProcessing, isSuccess, isEr
             <div className="flex-1 overflow-hidden relative">
                 {activeTab === 'cart' ? (
                     <ScrollArea className="h-full bg-background">
-                        <div className="p-3 space-y-2 pb-52">
+                        <div className={cn(
+                            "p-3 pb-52",
+                            items.length > 5 ? "space-y-1" : items.length > 3 ? "space-y-1.5" : "space-y-2"
+                        )}>
                             {isEmpty ? <CartEmpty /> : items.map(item => (
                                 <CartItem key={item.productId} item={item} />
                             ))}

@@ -54,15 +54,15 @@ export function UsersPage() {
     const getRoleBadge = (role: string) => {
         switch (role) {
             case 'TENANT_ADMIN':
-                return <span className="px-2 py-1 bg-red-100 text-red-700 rounded-md text-xs font-medium">Administrador</span>;
+                return <span className="px-2 py-1 bg-[rgba(239,68,68,0.06)] text-red-400 border border-[rgba(239,68,68,0.15)] rounded-md text-xs font-semibold">Administrador</span>;
             case 'MANAGER':
-                return <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded-md text-xs font-medium">Supervisor</span>;
+                return <span className="px-2 py-1 bg-[rgba(0,212,255,0.06)] text-[#00D4FF] border border-[rgba(0,212,255,0.15)] rounded-md text-xs font-semibold">Supervisor</span>;
             case 'CASHIER':
-                return <span className="px-2 py-1 bg-emerald-100 text-emerald-700 rounded-md text-xs font-medium">Cajero</span>;
+                return <span className="px-2 py-1 bg-[rgba(16,185,129,0.06)] text-[#10B981] border border-[rgba(16,185,129,0.15)] rounded-md text-xs font-semibold">Cajero</span>;
             case 'SUPER_ADMIN':
-                return <span className="px-2 py-1 bg-purple-100 text-purple-700 rounded-md text-xs font-medium">Soporte Nexo</span>;
+                return <span className="px-2 py-1 bg-[rgba(168,85,247,0.06)] text-purple-400 border border-[rgba(168,85,247,0.15)] rounded-md text-xs font-semibold">Soporte Nexo</span>;
             default:
-                return <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded-md text-xs font-medium">{role}</span>;
+                return <span className="px-2 py-1 bg-[rgba(156,163,175,0.06)] text-gray-400 border border-[rgba(156,163,175,0.15)] rounded-md text-xs font-semibold">{role}</span>;
         }
     };
 
@@ -71,15 +71,15 @@ export function UsersPage() {
             <div className="space-y-6">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <div>
-                        <h1 className="text-2xl font-bold text-gray-900">Personal y Usuarios</h1>
-                        <p className="text-sm text-gray-500 mt-1">Gestiona los accesos y roles de tu equipo.</p>
+                        <h1 className="text-2xl font-bold text-white">Personal y Usuarios</h1>
+                        <p className="text-sm text-gray-400 mt-1">Gestiona los accesos y roles de tu equipo.</p>
                     </div>
                     <button
                         onClick={() => {
                             setUserToEdit(null);
                             setIsModalOpen(true);
                         }}
-                        className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
+                        className="flex items-center gap-2 px-4 py-2 bg-[#00D4FF] hover:bg-[#00BCE0] text-[#0B0F1A] hover:shadow-[0_0_15px_rgba(0,212,255,0.3)] transition-all rounded-lg font-semibold shadow-sm"
                     >
                         <Plus size={20} />
                         Registrar Empleado
@@ -88,67 +88,67 @@ export function UsersPage() {
 
                 <div className="flex flex-col sm:flex-row gap-4">
                     <div className="relative flex-1">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={20} />
                         <input
                             type="text"
                             placeholder="Buscar por nombre o correo..."
-                            className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
+                            className="w-full pl-10 pr-4 py-2 bg-[rgba(15,22,36,0.8)] border border-[rgba(0,212,255,0.15)] text-white placeholder-slate-500 rounded-lg focus:outline-none focus:border-[#00D4FF] focus:ring-1 focus:ring-[#00D4FF] transition-all"
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
                     </div>
                 </div>
 
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                <div className="bg-[rgba(15,22,36,0.5)] border border-[rgba(0,212,255,0.08)] backdrop-blur-md rounded-xl overflow-hidden">
                     {isLoading ? (
-                        <div className="p-8 text-center text-gray-500">Cargando personal...</div>
+                        <div className="p-8 text-center text-gray-400">Cargando personal...</div>
                     ) : filteredUsers.length === 0 ? (
                         <div className="p-12 text-center flex flex-col items-center">
-                            <UserCircle size={48} className="text-gray-300 mb-4" />
-                            <h3 className="text-lg font-medium text-gray-900">No hay usuarios</h3>
-                            <p className="text-gray-500 text-sm mt-1">No se encontraron empleados registrados.</p>
+                            <UserCircle size={48} className="text-gray-600 mb-4" />
+                            <h3 className="text-lg font-medium text-white">No hay usuarios</h3>
+                            <p className="text-gray-400 text-sm mt-1">No se encontraron empleados registrados.</p>
                         </div>
                     ) : (
                         <div className="overflow-x-auto">
                             <table className="w-full text-left border-collapse">
                                 <thead>
-                                    <tr className="bg-gray-50 border-b border-gray-200">
-                                        <th className="px-6 py-4 text-sm font-semibold text-gray-600">Empleado</th>
-                                        <th className="px-6 py-4 text-sm font-semibold text-gray-600">Rol</th>
-                                        <th className="px-6 py-4 text-sm font-semibold text-gray-600">Sucursal</th>
-                                        <th className="px-6 py-4 text-sm font-semibold text-gray-600">Registro</th>
-                                        <th className="px-6 py-4 text-sm font-semibold text-gray-600 text-right">Acciones</th>
+                                    <tr className="bg-[rgba(0,212,255,0.02)] border-b border-[rgba(0,212,255,0.08)]">
+                                        <th className="px-6 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Empleado</th>
+                                        <th className="px-6 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Rol</th>
+                                        <th className="px-6 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Sucursal</th>
+                                        <th className="px-6 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Registro</th>
+                                        <th className="px-6 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider text-right">Acciones</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-gray-100">
+                                <tbody className="divide-y divide-[rgba(0,212,255,0.05)]">
                                     {filteredUsers.map((u) => (
-                                        <tr key={u.id} className="hover:bg-gray-50/50 transition-colors">
+                                        <tr key={u.id} className="hover:bg-[rgba(0,212,255,0.02)] transition-colors border-b border-[rgba(0,212,255,0.05)]">
                                             <td className="px-6 py-4">
                                                 <div className="flex items-center gap-3">
-                                                    <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold">
+                                                    <div className="w-10 h-10 rounded-full bg-[rgba(0,212,255,0.08)] border border-[rgba(0,212,255,0.15)] text-[#00D4FF] flex items-center justify-center font-bold">
                                                         {u.name ? u.name.charAt(0).toUpperCase() : u.email.charAt(0).toUpperCase()}
                                                     </div>
                                                     <div>
-                                                        <div className="font-medium text-gray-900">{u.name || 'Sin nombre'}</div>
-                                                        <div className="flex items-center gap-1 text-sm text-gray-500">
-                                                            <Mail size={12} /> {u.email}
+                                                        <div className="font-semibold text-white">{u.name || 'Sin nombre'}</div>
+                                                        <div className="flex items-center gap-1 text-sm text-gray-400">
+                                                            <Mail size={12} className="text-gray-500" /> {u.email}
                                                         </div>
                                                     </div>
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4">
                                                 <div className="flex items-center gap-1.5">
-                                                    <Shield size={14} className="text-gray-400" />
+                                                    <Shield size={14} className="text-gray-500" />
                                                     {getRoleBadge(u.role)}
                                                 </div>
                                             </td>
-                                            <td className="px-6 py-4 text-sm text-gray-600">
+                                            <td className="px-6 py-4 text-sm text-gray-300">
                                                 <div className="flex items-center gap-1.5">
-                                                    <Building2 size={14} className="text-gray-400" />
+                                                    <Building2 size={14} className="text-gray-500" />
                                                     {u.branch?.name || 'Todas (Global)'}
                                                 </div>
                                             </td>
-                                            <td className="px-6 py-4 text-sm text-gray-500">
+                                            <td className="px-6 py-4 text-sm text-gray-400">
                                                 {new Date(u.createdAt).toLocaleDateString()}
                                             </td>
                                             <td className="px-6 py-4 text-right">
@@ -159,7 +159,7 @@ export function UsersPage() {
                                                                 setUserToEdit(u);
                                                                 setIsModalOpen(true);
                                                             }}
-                                                            className="text-sm text-blue-600 hover:text-blue-700 font-medium mr-4"
+                                                            className="text-sm text-[#00D4FF] hover:text-[#00BCE0] font-semibold mr-4 transition-colors"
                                                         >
                                                             Editar
                                                         </button>
@@ -169,7 +169,7 @@ export function UsersPage() {
                                                                     deleteMutation.mutate(u.id);
                                                                 }
                                                             }}
-                                                            className="text-sm text-red-600 hover:text-red-700 font-medium"
+                                                            className="text-sm text-red-400 hover:text-red-300 font-semibold transition-colors"
                                                         >
                                                             Eliminar
                                                         </button>

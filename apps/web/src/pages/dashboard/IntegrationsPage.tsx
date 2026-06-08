@@ -51,13 +51,13 @@ const fetchOrders = async (connectionId?: string): Promise<ExternalOrder[]> => {
 function PlatformBadge({ platform }: { platform: 'SHOPIFY' | 'WOOCOMMERCE' }) {
     if (platform === 'SHOPIFY') {
         return (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-semibold bg-green-100 text-green-800">
+            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shadow-sm shadow-emerald-500/5">
                 <ShoppingBag className="w-3 h-3" /> Shopify
             </span>
         );
     }
     return (
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-semibold bg-purple-100 text-purple-800">
+        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-purple-500/10 text-purple-400 border border-purple-500/20 shadow-sm shadow-purple-500/5">
             <ShoppingBag className="w-3 h-3" /> WooCommerce
         </span>
     );
@@ -65,11 +65,11 @@ function PlatformBadge({ platform }: { platform: 'SHOPIFY' | 'WOOCOMMERCE' }) {
 
 function StatusBadge({ isActive }: { isActive: boolean }) {
     return isActive ? (
-        <span className="inline-flex items-center gap-1 text-xs text-green-700">
+        <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-400 bg-emerald-500/5 border border-emerald-500/20 px-2.5 py-0.5 rounded-full">
             <CheckCircle className="w-3.5 h-3.5" /> Activa
         </span>
     ) : (
-        <span className="inline-flex items-center gap-1 text-xs text-red-600">
+        <span className="inline-flex items-center gap-1 text-xs font-bold text-red-400 bg-red-500/5 border border-red-500/20 px-2.5 py-0.5 rounded-full">
             <XCircle className="w-3.5 h-3.5" /> Inactiva
         </span>
     );
@@ -115,26 +115,26 @@ function CreateConnectionModal({ onClose, onCreated }: CreateModalProps) {
     };
 
     return (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
-                <div className="flex items-center justify-between p-5 border-b">
-                    <h2 className="text-lg font-semibold">Nueva Integración</h2>
-                    <button onClick={onClose} className="text-gray-400 hover:text-gray-600">✕</button>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="rounded-xl shadow-2xl w-full max-w-md overflow-hidden border border-[rgba(0,212,255,0.15)] bg-[hsl(220,25%,9%)]">
+                <div className="flex items-center justify-between p-5 border-b border-[rgba(0,212,255,0.08)] bg-[rgba(0,212,255,0.02)]">
+                    <h2 className="text-lg font-bold text-white">Nueva Integración</h2>
+                    <button onClick={onClose} className="text-[rgba(180,195,220,0.6)] hover:text-white transition-colors">✕</button>
                 </div>
 
                 <form onSubmit={handleSubmit} className="p-5 space-y-4">
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Plataforma</label>
+                        <label className="block text-sm font-semibold text-[rgba(210,225,245,0.85)] mb-1.5">Plataforma</label>
                         <div className="flex gap-3">
                             {(['SHOPIFY', 'WOOCOMMERCE'] as const).map(p => (
                                 <button
                                     key={p}
                                     type="button"
                                     onClick={() => setPlatform(p)}
-                                    className={`flex-1 py-2 rounded-lg border-2 text-sm font-medium transition-colors ${
+                                    className={`flex-1 py-2 rounded-lg border-2 text-sm font-bold transition-all ${
                                         platform === p
-                                            ? 'border-blue-500 bg-blue-50 text-blue-700'
-                                            : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                                            ? 'border-[#00D4FF] bg-[#00D4FF]/10 text-[#00D4FF]'
+                                            : 'border-[rgba(0,212,255,0.15)] text-[rgba(180,195,220,0.6)] hover:border-[rgba(0,212,255,0.3)] bg-[rgba(255,255,255,0.01)]'
                                     }`}
                                 >
                                     {p === 'SHOPIFY' ? 'Shopify' : 'WooCommerce'}
@@ -144,102 +144,102 @@ function CreateConnectionModal({ onClose, onCreated }: CreateModalProps) {
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Nombre de la conexión</label>
+                        <label className="block text-sm font-semibold text-[rgba(210,225,245,0.85)] mb-1">Nombre de la conexión</label>
                         <input
                             type="text"
                             required
                             value={name}
                             onChange={e => setName(e.target.value)}
                             placeholder="Ej: Mi tienda Shopify"
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            className="w-full px-3 py-2 bg-[rgba(255,255,255,0.02)] border border-[rgba(0,212,255,0.15)] text-white rounded-lg text-sm focus:ring-2 focus:ring-[#00D4FF] focus:border-transparent outline-none transition-all placeholder:text-[rgba(180,195,220,0.3)]"
                         />
                     </div>
 
                     {platform === 'SHOPIFY' ? (
                         <>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Dominio de tienda</label>
+                                <label className="block text-sm font-semibold text-[rgba(210,225,245,0.85)] mb-1">Dominio de tienda</label>
                                 <input
                                     type="text"
                                     required
                                     value={shopDomain}
                                     onChange={e => setShopDomain(e.target.value)}
                                     placeholder="mi-tienda.myshopify.com"
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                    className="w-full px-3 py-2 bg-[rgba(255,255,255,0.02)] border border-[rgba(0,212,255,0.15)] text-white rounded-lg text-sm focus:ring-2 focus:ring-[#00D4FF] focus:border-transparent outline-none transition-all placeholder:text-[rgba(180,195,220,0.3)]"
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Access Token</label>
+                                <label className="block text-sm font-semibold text-[rgba(210,225,245,0.85)] mb-1">Access Token</label>
                                 <input
                                     type="password"
                                     required
                                     value={accessToken}
                                     onChange={e => setAccessToken(e.target.value)}
                                     placeholder="shpat_xxxxxxxxxxxxxxxxxxxxxxxx"
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                    className="w-full px-3 py-2 bg-[rgba(255,255,255,0.02)] border border-[rgba(0,212,255,0.15)] text-white rounded-lg text-sm focus:ring-2 focus:ring-[#00D4FF] focus:border-transparent outline-none transition-all placeholder:text-[rgba(180,195,220,0.3)]"
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Location ID <span className="text-gray-400">(opcional)</span></label>
+                                <label className="block text-sm font-semibold text-[rgba(210,225,245,0.85)] mb-1">Location ID <span className="text-[rgba(180,195,220,0.4)] font-normal">(opcional)</span></label>
                                 <input
                                     type="text"
                                     value={locationId}
                                     onChange={e => setLocationId(e.target.value)}
                                     placeholder="ID de ubicación de inventario"
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                    className="w-full px-3 py-2 bg-[rgba(255,255,255,0.02)] border border-[rgba(0,212,255,0.15)] text-white rounded-lg text-sm focus:ring-2 focus:ring-[#00D4FF] focus:border-transparent outline-none transition-all placeholder:text-[rgba(180,195,220,0.3)]"
                                 />
                             </div>
                         </>
                     ) : (
                         <>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">URL del sitio</label>
+                                <label className="block text-sm font-semibold text-[rgba(210,225,245,0.85)] mb-1">URL del sitio</label>
                                 <input
                                     type="url"
                                     required
                                     value={siteUrl}
                                     onChange={e => setSiteUrl(e.target.value)}
                                     placeholder="https://mi-tienda.com"
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                    className="w-full px-3 py-2 bg-[rgba(255,255,255,0.02)] border border-[rgba(0,212,255,0.15)] text-white rounded-lg text-sm focus:ring-2 focus:ring-[#00D4FF] focus:border-transparent outline-none transition-all placeholder:text-[rgba(180,195,220,0.3)]"
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Consumer Key</label>
+                                <label className="block text-sm font-semibold text-[rgba(210,225,245,0.85)] mb-1">Consumer Key</label>
                                 <input
                                     type="text"
                                     required
                                     value={consumerKey}
                                     onChange={e => setConsumerKey(e.target.value)}
                                     placeholder="ck_xxxxxxxxxxxxxxxx"
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                    className="w-full px-3 py-2 bg-[rgba(255,255,255,0.02)] border border-[rgba(0,212,255,0.15)] text-white rounded-lg text-sm focus:ring-2 focus:ring-[#00D4FF] focus:border-transparent outline-none transition-all placeholder:text-[rgba(180,195,220,0.3)]"
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Consumer Secret</label>
+                                <label className="block text-sm font-semibold text-[rgba(210,225,245,0.85)] mb-1">Consumer Secret</label>
                                 <input
                                     type="password"
                                     required
                                     value={consumerSecret}
                                     onChange={e => setConsumerSecret(e.target.value)}
                                     placeholder="cs_xxxxxxxxxxxxxxxx"
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                    className="w-full px-3 py-2 bg-[rgba(255,255,255,0.02)] border border-[rgba(0,212,255,0.15)] text-white rounded-lg text-sm focus:ring-2 focus:ring-[#00D4FF] focus:border-transparent outline-none transition-all placeholder:text-[rgba(180,195,220,0.3)]"
                                 />
                             </div>
                         </>
                     )}
 
-                    <div className="flex gap-3 pt-2">
+                    <div className="flex gap-3 pt-4">
                         <button
                             type="button"
                             onClick={onClose}
-                            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50"
+                            className="flex-1 px-4 py-2 border border-[rgba(0,212,255,0.15)] text-[rgba(210,225,245,0.85)] hover:bg-[#00D4FF]/5 rounded-lg text-sm transition-colors"
                         >
                             Cancelar
                         </button>
                         <button
                             type="submit"
                             disabled={loading}
-                            className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
+                            className="flex-1 px-4 py-2 bg-[#00D4FF] hover:bg-[#00BCE0] text-[#0B0F1A] font-bold rounded-lg text-sm transition-all disabled:opacity-50"
                         >
                             {loading ? 'Guardando...' : 'Crear conexión'}
                         </button>
@@ -315,35 +315,35 @@ function ConnectionCard({ connection, onRefresh }: ConnectionCardProps) {
     ];
 
     return (
-        <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-4">
+        <div className="rounded-xl border border-[rgba(0,212,255,0.08)] p-5 space-y-4 hover:border-[rgba(0,212,255,0.2)] transition-all duration-300 shadow-[0_0_20px_rgba(0,212,255,0.02)]" style={{ background: 'rgba(255,255,255,0.02)' }}>
             <div className="flex items-start justify-between">
                 <div>
-                    <div className="flex items-center gap-2 mb-1">
+                    <div className="flex items-center gap-2 mb-1.5">
                         <PlatformBadge platform={connection.platform} />
                         <StatusBadge isActive={connection.isActive} />
                     </div>
-                    <h3 className="font-semibold text-gray-900">{connection.name}</h3>
+                    <h3 className="font-bold text-white text-[15px]">{connection.name}</h3>
                     {connection.lastSyncAt && (
-                        <p className="text-xs text-gray-400 mt-0.5">
-                            <Clock className="w-3 h-3 inline mr-1" />
+                        <p className="text-xs text-[rgba(180,195,220,0.4)] mt-1.5 flex items-center">
+                            <Clock className="w-3.5 h-3.5 inline mr-1 text-[#00D4FF]" />
                             Última sync: {new Date(connection.lastSyncAt).toLocaleString('es-CL')}
                         </p>
                     )}
                 </div>
                 <button
                     onClick={handleDelete}
-                    className="text-gray-400 hover:text-red-500 transition-colors p-1"
+                    className="text-[rgba(180,195,220,0.4)] hover:text-red-400 hover:bg-red-500/10 p-1.5 rounded-lg transition-colors"
                     title="Eliminar conexión"
                 >
                     <Trash2 className="w-4 h-4" />
                 </button>
             </div>
 
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2 pt-2">
                 <button
                     onClick={handleTest}
                     disabled={testLoading}
-                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50"
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs border border-[rgba(0,212,255,0.15)] rounded-lg hover:bg-[#00D4FF]/5 text-[rgba(210,225,245,0.85)] font-medium transition-colors disabled:opacity-50"
                 >
                     <Plug className="w-3.5 h-3.5" />
                     {testLoading ? 'Probando...' : 'Probar'}
@@ -354,7 +354,7 @@ function ConnectionCard({ connection, onRefresh }: ConnectionCardProps) {
                         key={type}
                         onClick={() => handleSync(type)}
                         disabled={syncLoading !== null}
-                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-blue-50 text-blue-700 border border-blue-200 rounded-lg hover:bg-blue-100 disabled:opacity-50"
+                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-[#00D4FF]/5 text-[#00D4FF] border border-[#00D4FF]/20 rounded-lg hover:bg-[#00D4FF]/10 transition-colors disabled:opacity-50 font-semibold"
                     >
                         {syncLoading === type ? (
                             <RefreshCw className="w-3.5 h-3.5 animate-spin" />
@@ -367,7 +367,7 @@ function ConnectionCard({ connection, onRefresh }: ConnectionCardProps) {
 
                 <button
                     onClick={handleRegisterWebhooks}
-                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-orange-50 text-orange-700 border border-orange-200 rounded-lg hover:bg-orange-100"
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-amber-500/5 text-amber-400 border border-amber-500/20 rounded-lg hover:bg-amber-500/10 transition-colors font-semibold"
                 >
                     <Zap className="w-3.5 h-3.5" />
                     Webhooks
@@ -409,46 +409,46 @@ function OrdersTable({ connectionId }: { connectionId?: string }) {
 
     return (
         <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
+            <table className="min-w-full divide-y divide-[rgba(0,212,255,0.06)]">
+                <thead style={{ background: 'rgba(0,212,255,0.04)' }}>
                     <tr>
                         {['ID Externo', 'Plataforma', 'Cliente', 'Total', 'Estado', 'Fecha', 'Acciones'].map(h => (
-                            <th key={h} className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th key={h} className="px-4 py-3 text-left text-xs font-bold text-[rgba(0,212,255,0.6)] uppercase tracking-wider">
                                 {h}
                             </th>
                         ))}
                     </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-100">
+                <tbody className="divide-y divide-[rgba(0,212,255,0.06)]">
                     {orders.map(order => (
-                        <tr key={order.id} className="hover:bg-gray-50">
-                            <td className="px-4 py-3 text-sm font-mono text-gray-700">#{order.externalId}</td>
+                        <tr key={order.id} className="hover:bg-[rgba(0,212,255,0.02)] transition-colors">
+                            <td className="px-4 py-3 text-sm font-mono text-[rgba(210,225,245,0.9)]">#{order.externalId}</td>
                             <td className="px-4 py-3">
                                 {order.connection && <PlatformBadge platform={order.connection.platform as any} />}
                             </td>
-                            <td className="px-4 py-3 text-sm text-gray-600">{order.customerEmail ?? '—'}</td>
-                            <td className="px-4 py-3 text-sm font-medium text-gray-900">
+                            <td className="px-4 py-3 text-sm text-[rgba(210,225,245,0.7)]">{order.customerEmail ?? '—'}</td>
+                            <td className="px-4 py-3 text-sm font-bold text-white tabular-nums">
                                 {order.currency} {(order.totalAmount / 100).toLocaleString('es-CL')}
                             </td>
                             <td className="px-4 py-3">
-                                <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${
+                                <span className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold border ${
                                     order.status === 'PROCESSED'
-                                        ? 'bg-green-100 text-green-700'
+                                        ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
                                         : order.status === 'FAILED'
-                                        ? 'bg-red-100 text-red-700'
-                                        : 'bg-yellow-100 text-yellow-700'
+                                        ? 'bg-red-500/10 text-red-400 border-red-500/20'
+                                        : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
                                 }`}>
-                                    {order.status}
+                                    {order.status === 'PROCESSED' ? 'Procesado' : order.status === 'FAILED' ? 'Fallido' : 'Pendiente'}
                                 </span>
                             </td>
-                            <td className="px-4 py-3 text-sm text-gray-500">
+                            <td className="px-4 py-3 text-sm text-[rgba(180,195,220,0.4)] tabular-nums">
                                 {new Date(order.createdAt).toLocaleDateString('es-CL')}
                             </td>
                             <td className="px-4 py-3">
                                 {order.processedAt === null && order.status !== 'PROCESSED' && (
                                     <button
                                         onClick={() => handleProcess(order.id)}
-                                        className="text-xs text-blue-600 hover:text-blue-800 font-medium"
+                                        className="text-xs text-[#00D4FF] hover:text-white font-bold hover:bg-[#00D4FF]/10 px-2.5 py-1 rounded-md transition-colors border border-[#00D4FF]/25"
                                     >
                                         Procesar
                                     </button>
@@ -481,26 +481,26 @@ export function IntegrationsPage() {
 
     return (
         <DashboardLayout>
-            <div className="space-y-6">
+            <div className="space-y-6 animate-fade-up">
                 {/* Header */}
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-2xl font-bold text-gray-900">Integraciones E-commerce</h1>
-                        <p className="text-sm text-gray-500 mt-1">
+                        <h1 className="text-2xl font-bold text-white">Integraciones E-commerce</h1>
+                        <p className="text-[13px] text-[rgba(180,195,220,0.5)] mt-1">
                             Sincroniza productos, inventario y pedidos con Shopify o WooCommerce
                         </p>
                     </div>
                     <button
                         onClick={() => setShowCreateModal(true)}
-                        className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium"
+                        className="flex items-center gap-2 px-4 py-2 bg-[#00D4FF] hover:bg-[#00BCE0] text-[#0B0F1A] rounded-lg text-sm font-bold shadow-[0_0_15px_rgba(0,212,255,0.2)] transition-all"
                     >
-                        <Plus className="w-4 h-4" />
+                        <Plus className="w-4 h-4 stroke-[3]" />
                         Nueva conexión
                     </button>
                 </div>
 
                 {/* Tabs */}
-                <div className="flex gap-1 bg-gray-100 p-1 rounded-lg w-fit">
+                <div className="flex gap-1 p-1 rounded-lg w-fit border border-[rgba(0,212,255,0.08)]" style={{ background: 'rgba(255,255,255,0.02)' }}>
                     {[
                         { key: 'connections', label: 'Conexiones' },
                         { key: 'orders', label: 'Pedidos externos' },
@@ -508,10 +508,10 @@ export function IntegrationsPage() {
                         <button
                             key={tab.key}
                             onClick={() => setActiveTab(tab.key as any)}
-                            className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                            className={`px-4 py-1.5 text-sm font-semibold rounded-md transition-all ${
                                 activeTab === tab.key
-                                    ? 'bg-white text-gray-900 shadow-sm'
-                                    : 'text-gray-600 hover:text-gray-900'
+                                    ? 'bg-[#00D4FF] text-[#0B0F1A] shadow-[0_0_10px_rgba(0,212,255,0.25)]'
+                                    : 'text-[rgba(180,195,220,0.6)] hover:text-white'
                             }`}
                         >
                             {tab.label}
@@ -523,19 +523,22 @@ export function IntegrationsPage() {
                 {activeTab === 'connections' && (
                     <>
                         {isLoading ? (
-                            <div className="text-center py-12 text-gray-400">Cargando conexiones...</div>
+                            <div className="text-center py-12 text-[rgba(180,195,220,0.5)]">
+                                <div className="w-6 h-6 border-2 border-[#00D4FF] border-t-transparent rounded-full animate-spin mx-auto mb-2" />
+                                <span>Cargando conexiones...</span>
+                            </div>
                         ) : connections.length === 0 ? (
-                            <div className="text-center py-16 bg-white rounded-xl border border-dashed border-gray-300">
-                                <Plug className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                                <h3 className="text-gray-700 font-medium mb-1">Sin conexiones activas</h3>
-                                <p className="text-sm text-gray-400 mb-4">
+                            <div className="text-center py-16 rounded-xl border border-dashed border-[rgba(0,212,255,0.15)] bg-[rgba(255,255,255,0.01)] max-w-2xl mx-auto">
+                                <Plug className="w-12 h-12 mx-auto mb-3 text-[rgba(0,212,255,0.15)]" />
+                                <h3 className="text-white font-bold mb-1">Sin conexiones activas</h3>
+                                <p className="text-sm text-[rgba(180,195,220,0.5)] mb-4">
                                     Crea tu primera conexión con Shopify o WooCommerce
                                 </p>
                                 <button
                                     onClick={() => setShowCreateModal(true)}
-                                    className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700"
+                                    className="px-4 py-2 bg-[#00D4FF] hover:bg-[#00BCE0] text-[#0B0F1A] font-bold rounded-lg text-sm transition-all"
                                 >
-                                    <Plus className="w-4 h-4 inline mr-1" />
+                                    <Plus className="w-4 h-4 inline mr-1 stroke-[3]" />
                                     Nueva conexión
                                 </button>
                             </div>
@@ -555,18 +558,18 @@ export function IntegrationsPage() {
 
                 {/* Orders tab */}
                 {activeTab === 'orders' && (
-                    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                    <div className="rounded-xl border border-[rgba(0,212,255,0.08)] overflow-hidden" style={{ background: 'rgba(255,255,255,0.02)' }}>
                         {connections.length > 0 && (
-                            <div className="p-4 border-b flex items-center gap-3">
-                                <label className="text-sm text-gray-600 font-medium">Filtrar por conexión:</label>
+                            <div className="p-4 border-b border-[rgba(0,212,255,0.06)] bg-[rgba(0,212,255,0.01)] flex items-center gap-3">
+                                <label className="text-sm text-[rgba(210,225,245,0.85)] font-semibold">Filtrar por conexión:</label>
                                 <select
                                     value={selectedConnectionId ?? ''}
                                     onChange={e => setSelectedConnectionId(e.target.value || undefined)}
-                                    className="text-sm border border-gray-300 rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-blue-500"
+                                    className="text-sm border border-[rgba(0,212,255,0.15)] bg-[hsl(220,25%,9%)] text-[rgba(210,225,245,0.85)] rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-[#00D4FF] outline-none"
                                 >
-                                    <option value="">Todas las conexiones</option>
+                                    <option value="" className="bg-[hsl(220,25%,9%)]">Todas las conexiones</option>
                                     {connections.map(c => (
-                                        <option key={c.id} value={c.id}>{c.name}</option>
+                                        <option key={c.id} value={c.id} className="bg-[hsl(220,25%,9%)]">{c.name}</option>
                                     ))}
                                 </select>
                             </div>

@@ -22,7 +22,7 @@ interface CheckoutPanelProps {
     totalDiscount: number;
     tax: number;
     total: number;
-    onConfirm: (payments: PaymentRequestData[], dteType: number, customerId?: string) => void;
+    onConfirm: (payments: PaymentRequestData[], dteType: number, customerId?: string) => Promise<any>;
     onBack: () => void;
     isProcessing: boolean;
     isSuccess: boolean;
@@ -37,9 +37,9 @@ export function CheckoutPanel({
     onConfirm, onBack,
     isProcessing, isSuccess, isError, saleResult,
 }: CheckoutPanelProps) {
-    const { autoPrint, defaultFormat, setDefaultFormat } = usePrintSettings();
-    const [hasAttemptedAutoPrint, setHasAttemptedAutoPrint] = useState(false);
+    const { autoPrint, defaultFormat, setDefaultFormat, printerName, useQzTray } = usePrintSettings();
     const [countdown, setCountdown] = useState(4);
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const { user } = useAuth();
     const { data: tenant } = useTenant(user?.tenantId);
 
@@ -84,12 +84,9 @@ export function CheckoutPanel({
         ).slice(0, 8);
     }, [customers, customerSearch]);
 
-    useEffect(() => {
-        if (isSuccess && saleResult && autoPrint && !hasAttemptedAutoPrint) {
-            setHasAttemptedAutoPrint(true);
-            printSaleAction(saleResult, defaultFormat, tenant);
-        }
-    }, [isSuccess, saleResult, autoPrint, defaultFormat, hasAttemptedAutoPrint, tenant]);
+    // La impresión auto se dispara UNA SOLA VEZ desde handleConfirm, justo después
+    // de recibir el resultado de la venta. El useEffect redundante fue eliminado
+    // para evitar doble llamada al diálogo de impresión.
 
     useEffect(() => {
         if (!isSuccess) { setCountdown(4); return; }
@@ -115,17 +112,30 @@ export function CheckoutPanel({
 
     const canConfirm = dteType === 33 ? !!selectedCustomer : true;
 
-    const handleConfirm = useCallback(() => {
+    const handleConfirm = useCallback(async () => {
         const customerId = selectedCustomer?.id;
+        let payments: PaymentRequestData[];
         if (paymentType === 'SINGLE') {
-            onConfirm([{ paymentMethod: singleMethod, amount: total }], dteType, customerId);
+            payments = [{ paymentMethod: singleMethod, amount: total }];
         } else {
-            const payments = Object.entries(mixedPayments)
+            payments = Object.entries(mixedPayments)
                 .filter(([, amount]) => (Number(amount) || 0) > 0)
                 .map(([method, amount]) => ({ paymentMethod: method, amount: Number(amount) || 0 }));
-            onConfirm(payments, dteType, customerId);
         }
-    }, [selectedCustomer, paymentType, singleMethod, total, dteType, mixedPayments, onConfirm]);
+
+        try {
+            setIsSubmitting(true);
+            const result = await onConfirm(payments, dteType, customerId);
+            if (autoPrint && result) {
+                // Impresión silenciosa con QZ Tray si está disponible, fallback iframe
+                printSaleAction(result, defaultFormat, tenant, printerName || undefined, useQzTray);
+            }
+        } catch (err) {
+            // Handled in mutation/toast
+        } finally {
+            setIsSubmitting(false);
+        }
+    }, [selectedCustomer, paymentType, singleMethod, total, dteType, mixedPayments, onConfirm, autoPrint, defaultFormat, tenant, printerName, useQzTray]);
 
     useEffect(() => {
         if (isSuccess || isError) return;
@@ -135,7 +145,7 @@ export function CheckoutPanel({
             const tag = (e.target as HTMLElement).tagName;
             const inInput = (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') && !isInCashStep;
 
-            if (e.key === 'Escape') { e.preventDefault(); if (!isProcessing) onBack(); return; }
+            if (e.key === 'Escape') { e.preventDefault(); if (!isProcessing && !isSubmitting) onBack(); return; }
 
             // DTE type — always active → advances to payment step
             if (e.key === 'F1') { e.preventDefault(); setDteType(39); setSelectedCustomer(null); setCustomerSearch(''); setActiveStep('payment'); return; }
@@ -153,14 +163,15 @@ export function CheckoutPanel({
             // Confirm — F12 from anywhere, Enter only from cash step
             if (e.key === 'F12' || (e.key === 'Enter' && isInCashStep)) {
                 e.preventDefault();
-                if (isProcessing) return;
-                if (paymentType === 'MIXED' && !isTotalCovered) return;
-                if (!canConfirm) {
-                    // Factura sin cliente: volver al paso DTE para que el usuario lo corrija
-                    setActiveStep('dte');
-                    return;
+                if (!isProcessing && !isSubmitting) {
+                    if (paymentType === 'MIXED' && !isTotalCovered) return;
+                    if (!canConfirm) {
+                        // Factura sin cliente: volver al paso DTE para que el usuario lo corrija
+                        setActiveStep('dte');
+                        return;
+                    }
+                    handleConfirm();
                 }
-                handleConfirm();
             }
         };
         window.addEventListener('keydown', onKey);
@@ -168,6 +179,8 @@ export function CheckoutPanel({
     }, [isSuccess, isError, isProcessing, canConfirm, activeStep, paymentType, isTotalCovered, onBack, handleConfirm]);
 
     // ── Success state ─────────────────────────────────────────────────────────
+    const hasRealDtePdf = saleResult?.dtePdfUrl && !saleResult.dtePdfUrl.includes('ejemplo-mock');
+
     if (isSuccess) {
         return (
             <div className="flex flex-col h-full bg-white dark:bg-slate-800">
@@ -178,7 +191,11 @@ export function CheckoutPanel({
                     <div className="text-center">
                         <h3 className="text-lg font-black text-slate-900 dark:text-white">¡Venta exitosa!</h3>
                         <p className="text-sm text-slate-400 mt-1">
-                            {autoPrint ? 'Imprimiendo ticket...' : 'Procesada correctamente'}
+                            {autoPrint
+                                ? hasRealDtePdf
+                                    ? 'Abriendo PDF con Timbre Electrónico (TED)...'
+                                    : 'Imprimiendo ticket...'
+                                : 'Procesada correctamente'}
                         </p>
                     </div>
 
@@ -189,10 +206,10 @@ export function CheckoutPanel({
                         </div>
                     )}
 
-                    {saleResult?.dtePdfUrl && !saleResult.dtePdfUrl.includes('ejemplo-mock') && (
+                    {hasRealDtePdf && (
                         <Button className="w-full" variant="outline"
-                            onClick={() => window.open(saleResult.dtePdfUrl, '_blank')}>
-                            Ver DTE (PDF)
+                            onClick={() => window.open(saleResult!.dtePdfUrl!, '_blank')}>
+                            📄 Abrir / Imprimir PDF oficial (con TED)
                         </Button>
                     )}
 
@@ -200,26 +217,31 @@ export function CheckoutPanel({
                         <Button className="w-full" variant="outline"
                             onClick={() => {
                                 const apiUrl = import.meta.env.VITE_API_URL || '';
-                                window.open(`${apiUrl}${saleResult.internalReceiptUrl}`, '_blank');
+                                window.open(`${apiUrl}${saleResult!.internalReceiptUrl}`, '_blank');
                             }}>
                             Ver Ticket Interno
                         </Button>
                     )}
 
                     <div className="flex gap-2 w-full">
-                        <Button className="flex-1" variant="secondary"
-                            onClick={() => printSaleAction(saleResult, defaultFormat, tenant)}>
-                            Reimprimir
-                        </Button>
-                        <select
-                            value={defaultFormat}
-                            onChange={(e) => setDefaultFormat(e.target.value as '80mm' | '50mm' | 'A4')}
-                            className="px-2 py-1 text-xs border border-slate-200 rounded-lg bg-white text-slate-600 focus:outline-none"
+                        <Button
+                            className="flex-1"
+                            variant="secondary"
+                            onClick={() => printSaleAction(saleResult, defaultFormat, tenant, printerName || undefined, useQzTray)}
                         >
-                            <option value="80mm">80mm</option>
-                            <option value="50mm">50mm</option>
-                            <option value="A4">A4</option>
-                        </select>
+                            {hasRealDtePdf ? '🖨 Reimprimir PDF DTE' : 'Reimprimir Ticket'}
+                        </Button>
+                        {!hasRealDtePdf && (
+                            <select
+                                value={defaultFormat}
+                                onChange={(e) => setDefaultFormat(e.target.value as '80mm' | '58mm' | 'A4')}
+                                className="px-2 py-1 text-xs border border-slate-200 rounded-lg bg-white text-slate-600 focus:outline-none"
+                            >
+                                <option value="80mm">80mm</option>
+                                <option value="58mm">58mm</option>
+                                <option value="A4">A4</option>
+                            </select>
+                        )}
                     </div>
                 </div>
 

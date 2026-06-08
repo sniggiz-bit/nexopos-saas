@@ -13,7 +13,6 @@ function isMockToken(token: string) {
 export class LiorenService {
   private readonly logger = new Logger(LiorenService.name);
   private readonly apiUrl = 'https://lioren.cl/api/dte';
-  private readonly apiKey = process.env.LIOREN_API_KEY;
   private readonly defaultToken = process.env.LIOREN_TOKEN;
 
   constructor(private prisma: PrismaService) {}
@@ -55,7 +54,8 @@ export class LiorenService {
 
       if (!sale) throw new Error(`Venta ${saleId} no encontrada`);
 
-      const token = sale.tenant?.dteConfig?.liorenToken || this.defaultToken || 'TEST_TOKEN_MOCK';
+      const token = sale.tenant?.dteConfig?.liorenToken || this.defaultToken;
+      if (!token) throw new Error('Token de Lioren no configurado');
 
       const detalles = sale.items.map((item) => ({
         nombre: item.product.name,
@@ -63,88 +63,159 @@ export class LiorenService {
           ? Number(item.quantity)
           : Math.floor(Number(item.quantity)),
         precio: Math.round(item.price),
+        exento: false
       }));
 
       const mainPayment = sale.payments[0];
       const liorenPayment = LiorenHelper.mapPaymentMethod(mainPayment?.paymentMethod as any);
 
+      // Construct flat payload
       const payload: any = {
-        token,
-        apikey: this.apiKey,
-        dte: {
-          tipodoc,
-          detalles,
-          pago: {
-            formapago: liorenPayment.formapago,
-            mediopago: liorenPayment.mediopago,
-            montopago: Math.round(sale.total),
-          },
+        emisor: {
+          tipodoc: String(tipodoc),
+          servicio: 1,
+        },
+        detalles,
+        pago: {
+          formapago: liorenPayment.formapago,
+          mediopago: liorenPayment.mediopago,
+          montopago: Math.round(sale.total),
         },
       };
 
-      // Factura Electrónica (33) and Nota de Crédito (61) require receptor
-      if ((tipodoc === 33 || tipodoc === 61) && sale.customer) {
-        payload.dte.receptor = {
+      // emisor.fecha is required for non-boletas (33, 52, 61)
+      if (tipodoc !== 39) {
+        payload.emisor.fecha = new Date().toLocaleDateString('sv-SE'); // YYYY-MM-DD
+      }
+
+      // Factura (33) and Nota de Crédito (61) require receptor
+      if (tipodoc === 33 || tipodoc === 61) {
+        if (!sale.customer) throw new Error(`Venta ${saleId} requiere receptor para ${docLabel}`);
+        
+        let comunaId = 295; // Default: Santiago Comuna ID 295
+        let ciudadId = 176; // Default: Santiago Ciudad ID 176
+
+        if (!isMockToken(token)) {
+          try {
+            // Fetch comunas list from Lioren
+            const comunasRes = await axios.get('https://www.lioren.cl/api/comunas', {
+              headers: { 'Authorization': `Bearer ${token}` },
+              timeout: 5000
+            });
+            const comunas = Array.isArray(comunasRes.data) ? comunasRes.data : [];
+            const normalize = (s: string) => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+
+            if (sale.customer.comuna) {
+              const customerComunaNorm = normalize(sale.customer.comuna);
+              const matchedComuna = comunas.find(c => normalize(c.nombre) === customerComunaNorm);
+              if (matchedComuna) comunaId = matchedComuna.id;
+            }
+
+            // Fetch ciudades list from Lioren
+            const ciudadesRes = await axios.get('https://www.lioren.cl/api/ciudades', {
+              headers: { 'Authorization': `Bearer ${token}` },
+              timeout: 5000
+            });
+            const ciudades = Array.isArray(ciudadesRes.data) ? ciudadesRes.data : [];
+
+            if (sale.customer.comuna) {
+              const customerCityNorm = normalize(sale.customer.comuna);
+              const matchedCiudad = ciudades.find(c => normalize(c.nombre) === customerCityNorm);
+              if (matchedCiudad) ciudadId = matchedCiudad.id;
+            }
+          } catch (geoErr: any) {
+            this.logger.warn(`[Lioren] Error mapping comuna/ciudad IDs, using defaults: ${geoErr.message}`);
+          }
+        }
+
+        payload.receptor = {
           rut: sale.customer.rut,
           rs: sale.customer.name,
           giro: sale.customer.giro || 'Sin giro',
-          dir: sale.customer.address || 'Sin dirección',
-          comuna: sale.customer.comuna || 'Santiago',
-          ciudad: 'Santiago',
+          direccion: sale.customer.address || 'Sin dirección',
+          comuna: comunaId,
+          ciudad: ciudadId,
         };
       }
 
-      // Nota de Crédito (61) requires reference to original DTE
+      // ── Referencia (Nota de Crédito 61) ────────────────────────────────────
       if (tipodoc === 61) {
-        const original = await this._findOriginalDte(sale.id);
-        if (original) {
-          payload.dte.referencia = {
-            tipodoc_ref: original.dteType,
-            folio_ref: original.dteFolio,
-            razon: 'Anulación de documento',
-          };
+        const originalId = (sale as any).originalSaleId || saleId;
+        const originalDte = await this.prisma.sale.findUnique({
+          where: { id: originalId },
+          select: { dteType: true, dteFolio: true },
+        });
+
+        if (originalDte?.dteFolio) {
+          payload.referencias = [
+            {
+              tipodoc_ref: String(originalDte.dteType),
+              folio_ref: originalDte.dteFolio,
+              razon: 'Anulación de documento',
+            }
+          ];
+        } else {
+          this.logger.warn(
+            `[Lioren] Nota de Crédito para venta ${saleId}: ` +
+            `no se encontró folio en venta original ${originalId}. Emitiendo sin referencia.`,
+          );
         }
       }
 
       // Guía de Despacho (52) requires transport info
       if (tipodoc === 52) {
-        payload.dte.traslado = {
+        payload.traslado = {
           tipo_traslado: 1,
           tipo_despacho: 2,
         };
       }
 
-      this.logger.log(`[Lioren] Payload ${docLabel}: ${JSON.stringify(payload)}`);
-
       let responseData: any;
-      if (isMockToken(token) || !this.apiKey) {
+      if (isMockToken(token)) {
         this.logger.log(`[Lioren] MOCK MODE — simulando ${docLabel}`);
         responseData = {
           folio: Math.floor(Math.random() * 90000) + 10000,
-          url_pdf: `https://lioren.cl/ver/${this._slugDoc(tipodoc)}/ejemplo-mock`,
+          pdf: `https://lioren.cl/ver/${this._slugDoc(tipodoc)}/ejemplo-mock`,
         };
       } else {
-        const response = await axios.post(this.apiUrl, payload);
+        const url = tipodoc === 39 ? 'https://www.lioren.cl/api/boletas' : 'https://www.lioren.cl/api/dtes';
+        this.logger.log(`[Lioren] Enviando POST a ${url}`);
+        const response = await axios.post(url, payload, {
+          headers: {
+            'Accept': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+          timeout: 20000,
+        });
         responseData = response.data;
       }
 
-      if (responseData?.folio && responseData?.url_pdf) {
-        const { folio, url_pdf } = responseData;
+      if (responseData?.folio) {
+        const folio = responseData.folio;
+        const pdfUrl = responseData.pdf || responseData.url_pdf || `https://lioren.cl/ver/${this._slugDoc(tipodoc)}/ejemplo-mock`;
         this.logger.log(`[Lioren] ✅ ${docLabel} emitida: Folio ${folio}`);
         await this.prisma.sale.update({
           where: { id: saleId },
-          data: { dteFolio: folio, dtePdfUrl: url_pdf, dteStatus: 'ACEPTADO', dteType: tipodoc },
+          data: {
+            dteFolio: Number(folio),
+            dtePdfUrl: pdfUrl,
+            dteStatus: 'ACEPTADO',
+            dteType: tipodoc,
+          },
         });
-        return { success: true, folio, url_pdf };
+        return { success: true, folio: Number(folio), url_pdf: pdfUrl };
       }
 
-      throw new Error(responseData?.message || 'Respuesta inválida de Lioren');
+      throw new Error(responseData?.message || 'Respuesta inválida de Lioren API');
     } catch (error: any) {
-      this.logger.error(`[Lioren] ❌ Error ${docLabel} venta ${saleId}: ${error.message}`);
+      const errMsg = error.response?.data?.message || error.response?.data?.errors 
+        ? JSON.stringify(error.response.data) 
+        : error.message;
+      this.logger.error(`[Lioren] ❌ Error ${docLabel} (Venta ${saleId}): ${errMsg}`);
       await this.prisma.sale
         .update({ where: { id: saleId }, data: { dteStatus: 'ERROR' } })
         .catch(() => null);
-      return { success: false, error: error.message };
+      return { success: false, error: errMsg };
     }
   }
 
@@ -152,10 +223,12 @@ export class LiorenService {
 
   async consultaRut(rut: string) {
     try {
-      this.logger.log(`[Lioren] Consultando RUT: ${rut}...`);
+      const token = this.defaultToken;
+      if (!token) throw new Error('Token no configurado');
+      
       const cleanRut = rut.replace(/\./g, '').replace(/-/g, '');
-      const payload = { token: this.defaultToken, rut: cleanRut };
-      const response = await axios.post('https://lioren.cl/api/rut', payload);
+      const response = await axios.post('https://lioren.cl/api/rut', { token, rut: cleanRut });
+      
       if (response.data) {
         return {
           success: true,
@@ -168,22 +241,90 @@ export class LiorenService {
           },
         };
       }
-      return { success: false, message: 'No se encontraron datos' };
+      return { success: false, message: 'Datos no encontrados' };
     } catch (error: any) {
-      this.logger.error(`[Lioren] Error consultando RUT: ${error.message}`);
-      if (!this.apiKey || isMockToken(this.defaultToken || '')) {
-        return {
-          success: true,
-          data: {
-            reasonSocial: 'Empresa de Prueba S.A.',
-            giro: 'Venta de software',
-            address: 'Av. Providencia 1234',
-            comuna: 'Providencia',
-            city: 'Santiago',
-          },
-        };
-      }
       return { success: false, error: error.message };
+    }
+  }
+
+  // ─── Consulta folios disponibles (CAF) ────────────────────────────────────
+
+  async consultarFolios(tenantId: string): Promise<{ tipodoc: number; label: string; disponibles: number; ultimoFolio: number }[]> {
+    const docLabels: Record<number, string> = {
+      39: 'Boleta Electrónica',
+      33: 'Factura Electrónica',
+      61: 'Nota de Crédito',
+      52: 'Guía de Despacho',
+    };
+    try {
+      const config = await this.prisma.dteConfig.findUnique({ where: { tenantId } });
+      const token = config?.liorenToken || this.defaultToken;
+      if (!token || isMockToken(token)) {
+        // Datos de prueba en modo mock
+        return [
+          { tipodoc: 39, label: 'Boleta Electrónica', disponibles: 500, ultimoFolio: 1000 },
+          { tipodoc: 33, label: 'Factura Electrónica', disponibles: 200, ultimoFolio: 500 },
+          { tipodoc: 61, label: 'Nota de Crédito', disponibles: 100, ultimoFolio: 200 },
+          { tipodoc: 52, label: 'Guía de Despacho', disponibles: 150, ultimoFolio: 300 },
+        ];
+      }
+
+      const docTypes = [39, 33, 61, 52];
+      const results = await Promise.all(
+        docTypes.map(async (tipodoc) => {
+          try {
+            const response = await axios.get('https://www.lioren.cl/api/cafs', {
+              params: { tipodoc },
+              headers: {
+                'Accept': 'application/json',
+                'Authorization': `Bearer ${token}`
+              },
+              timeout: 10000
+            });
+            const cafs = Array.isArray(response.data) ? response.data : [];
+            let disponibles = 0;
+            let maxFolio = 0;
+            let minDesde = Infinity;
+
+            for (const caf of cafs) {
+              disponibles += Number(caf.libres || 0);
+              const desde = Number(caf.desde);
+              const asignados = Number(caf.asignados || 0);
+              if (desde < minDesde) {
+                minDesde = desde;
+              }
+              if (asignados > 0) {
+                const lastInCaf = desde + asignados - 1;
+                if (lastInCaf > maxFolio) {
+                  maxFolio = lastInCaf;
+                }
+              }
+            }
+
+            const ultimoFolio = maxFolio > 0 ? maxFolio : (minDesde !== Infinity ? minDesde - 1 : 0);
+
+            return {
+              tipodoc,
+              label: docLabels[tipodoc],
+              disponibles,
+              ultimoFolio
+            };
+          } catch (err: any) {
+            this.logger.error(`[Lioren] Error consultando CAFs para tipodoc ${tipodoc}: ${err.message}`);
+            return {
+              tipodoc,
+              label: docLabels[tipodoc],
+              disponibles: 0,
+              ultimoFolio: 0
+            };
+          }
+        })
+      );
+
+      return results;
+    } catch (error: any) {
+      this.logger.error(`[Lioren] Error general consultando folios: ${error.message}`);
+      return [];
     }
   }
 

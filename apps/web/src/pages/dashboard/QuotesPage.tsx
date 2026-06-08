@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { DashboardLayout } from '../../components/dashboard/DashboardLayout';
 import { useQuotes } from '../../hooks/useQuotesQuery';
 import { useConvertQuote } from '../../hooks/useQuotes';
-import { Eye, Plus, ShoppingCart } from 'lucide-react';
+import { Eye, Plus, ShoppingCart, FileText } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { formatPrice } from '@/utils/formatters';
@@ -50,49 +50,78 @@ export function QuotesPage() {
         <DashboardLayout>
             <div className="space-y-6">
                 <div className="flex items-center justify-between">
-                    <h1 className="text-2xl font-bold text-gray-900">Cotizaciones</h1>
-                    <Button onClick={() => navigate('/dashboard/quotes/new')} className="bg-blue-600 hover:bg-blue-700">
-                        <Plus className="w-5 h-5 mr-2" />
+                    <div>
+                        <h1 className="text-2xl font-bold tracking-tight text-white">Cotizaciones</h1>
+                        <p className="text-[13px] text-[rgba(180,195,220,0.5)] mt-1">
+                            Gestiona y realiza seguimiento de las cotizaciones emitidas a tus clientes
+                        </p>
+                    </div>
+                    <Button 
+                        onClick={() => navigate('/dashboard/quotes/new')} 
+                        className="bg-[#00D4FF] hover:bg-[#00BCE0] text-[#0B0F1A] font-bold shadow-[0_0_15px_rgba(0,212,255,0.2)] hover:shadow-[0_0_25px_rgba(0,212,255,0.4)] transition-all duration-200"
+                    >
+                        <Plus className="w-4 h-4 mr-2 stroke-[3]" />
                         Nueva Cotización
                     </Button>
                 </div>
 
-                <div className="bg-white rounded-lg shadow overflow-hidden">
-                    <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="bg-gray-50">
+                <div className="rounded-xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(0,212,255,0.08)' }}>
+                    <table className="min-w-full divide-y divide-[rgba(0,212,255,0.06)]">
+                        <thead style={{ background: 'rgba(0,212,255,0.04)' }}>
                             <tr>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cliente</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
-                                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+                                <th className="px-6 py-4 text-left text-xs font-bold text-[rgba(0,212,255,0.6)] uppercase tracking-wider">Fecha</th>
+                                <th className="px-6 py-4 text-left text-xs font-bold text-[rgba(0,212,255,0.6)] uppercase tracking-wider">Cliente</th>
+                                <th className="px-6 py-4 text-left text-xs font-bold text-[rgba(0,212,255,0.6)] uppercase tracking-wider">Total</th>
+                                <th className="px-6 py-4 text-left text-xs font-bold text-[rgba(0,212,255,0.6)] uppercase tracking-wider">Estado</th>
+                                <th className="px-6 py-4 text-right text-xs font-bold text-[rgba(0,212,255,0.6)] uppercase tracking-wider">Acciones</th>
                             </tr>
                         </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
+                        <tbody className="divide-y divide-[rgba(0,212,255,0.06)]">
                             {isLoading ? (
-                                <tr><td colSpan={5} className="px-6 py-4 text-center text-gray-500">Cargando cotizaciones...</td></tr>
+                                <tr>
+                                    <td colSpan={5} className="px-6 py-8 text-center text-[rgba(180,195,220,0.5)]">
+                                        <div className="flex items-center justify-center gap-2">
+                                            <div className="w-4 h-4 border-2 border-[#00D4FF] border-t-transparent rounded-full animate-spin" />
+                                            <span>Cargando cotizaciones...</span>
+                                        </div>
+                                    </td>
+                                </tr>
                             ) : isError ? (
-                                <tr><td colSpan={5} className="px-6 py-4 text-center text-red-500">Error al cargar cotizaciones. <button onClick={() => refetch()} className="underline">Reintentar</button></td></tr>
+                                <tr>
+                                    <td colSpan={5} className="px-6 py-8 text-center text-red-400">
+                                        Error al cargar cotizaciones. <button onClick={() => refetch()} className="underline font-bold hover:text-red-300">Reintentar</button>
+                                    </td>
+                                </tr>
                             ) : !quotes || quotes.length === 0 ? (
-                                <tr><td colSpan={5} className="px-6 py-4 text-center text-gray-500">No se encontraron cotizaciones</td></tr>
+                                <tr>
+                                    <td colSpan={5} className="px-6 py-12 text-center text-[rgba(180,195,220,0.4)]">
+                                        <div className="flex flex-col items-center justify-center gap-2">
+                                            <FileText className="w-8 h-8 text-[rgba(0,212,255,0.15)]" />
+                                            <span>No se encontraron cotizaciones</span>
+                                        </div>
+                                    </td>
+                                </tr>
                             ) : (
                                 quotes.map((quote) => (
-                                    <tr key={quote.id} className="hover:bg-gray-50">
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{formatDate(quote.createdAt)}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{quote.customer?.name || 'Cliente Casual'}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{formatPrice(quote.total)}</td>
+                                    <tr key={quote.id} className="hover:bg-[rgba(0,212,255,0.02)] transition-colors">
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-[rgba(210,225,245,0.85)]">{formatDate(quote.createdAt)}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-[rgba(210,225,245,0.85)]">{quote.customer?.name || 'Cliente Casual'}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-[rgba(210,225,245,0.95)] tabular-nums">{formatPrice(quote.total)}</td>
                                         <td className="px-6 py-4 whitespace-nowrap">
-                                            <span className={`px-2 py-1 text-xs font-medium rounded-full ${quote.status === 'DRAFT' ? 'bg-gray-100 text-gray-800' :
-                                                quote.status === 'SENT' ? 'bg-blue-100 text-blue-800' :
-                                                    'bg-green-100 text-green-800' // ACCEPTED
-                                                }`}>
+                                            <span className={`px-2.5 py-0.5 text-xs font-semibold rounded-full border ${
+                                                quote.status === 'DRAFT'
+                                                    ? 'bg-gray-500/10 text-gray-400 border-gray-500/20'
+                                                    : quote.status === 'SENT'
+                                                    ? 'bg-[#00D4FF]/10 text-[#00D4FF] border-[#00D4FF]/20'
+                                                    : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' // ACCEPTED
+                                            }`}>
                                                 {quote.status === 'DRAFT' ? 'Borrador' : quote.status === 'SENT' ? 'Emitida' : 'Vendida'}
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
                                             <button
                                                 onClick={() => navigate(`/dashboard/quotes/${quote.id}/print`)}
-                                                className="text-blue-600 hover:text-blue-900 inline-flex items-center p-2 rounded-full hover:bg-blue-50"
+                                                className="text-[#00D4FF] hover:text-white inline-flex items-center p-2 rounded-lg hover:bg-[#00D4FF]/10 transition-colors"
                                                 title="Ver Detalles"
                                             >
                                                 <Eye className="w-4 h-4" />
@@ -101,12 +130,12 @@ export function QuotesPage() {
                                             {quote.status !== 'ACCEPTED' && (
                                                 <button
                                                     onClick={() => handleConvert(quote.id)}
-                                                    className="text-green-600 hover:text-green-900 inline-flex items-center p-2 rounded-full hover:bg-green-50 disabled:opacity-40 disabled:cursor-not-allowed"
+                                                    className="text-emerald-400 hover:text-white inline-flex items-center p-2 rounded-lg hover:bg-emerald-500/10 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                                                     title="Convertir a Venta"
                                                     disabled={!!convertingId}
                                                 >
                                                     {convertingId === quote.id
-                                                        ? <div className="w-4 h-4 border-2 border-green-600 border-t-transparent rounded-full animate-spin" />
+                                                        ? <div className="w-4 h-4 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin" />
                                                         : <ShoppingCart className="w-4 h-4" />
                                                     }
                                                 </button>
@@ -114,7 +143,7 @@ export function QuotesPage() {
                                         </td>
                                     </tr>
                                 ))
-                            )}
+                             )}
                         </tbody>
                     </table>
                 </div>

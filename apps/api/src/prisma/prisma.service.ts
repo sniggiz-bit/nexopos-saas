@@ -176,4 +176,16 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
   get landingConfig() {
     return this.prisma.landingConfig;
   }
+
+  get module() {
+    return this.prisma.module;
+  }
+
+  get planModule() {
+    return this.prisma.planModule;
+  }
+
+  get tenantModuleAddon() {
+    return this.prisma.tenantModuleAddon;
+  }
 }

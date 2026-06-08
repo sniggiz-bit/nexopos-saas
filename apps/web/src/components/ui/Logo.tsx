@@ -4,18 +4,19 @@ interface LogoProps {
     mode?: 'light' | 'dark' | 'auto';
 }
 
-export function Logo({ variant = 'full', className = '', mode: _mode = 'light' }: LogoProps) {
+export function Logo({ variant = 'full', className = '', mode = 'light' }: LogoProps) {
     const defaultHeight = variant === 'icon' ? 'h-11' : 'h-11';
     const heightClass = className.includes('h-') ? '' : defaultHeight;
 
     const logoSrc = variant === 'icon' ? '/isotipo.png' : '/logo.png';
+    const filterClass = mode === 'dark' ? 'brightness-0 invert' : '';
 
     return (
         <div className={`flex items-center flex-shrink-0 ${heightClass} ${className}`}>
             <img
                 src={logoSrc}
                 alt="NexoPOS"
-                className={`max-w-full max-h-full object-contain ${variant === 'icon' ? 'w-auto h-full' : 'w-auto h-full'}`}
+                className={`max-w-full max-h-full object-contain ${filterClass} ${variant === 'icon' ? 'w-auto h-full' : 'w-auto h-full'}`}
                 style={{
                     maxHeight: variant === 'icon' ? '44px' : '44px',
                     width: 'auto',

@@ -33,6 +33,16 @@ const DEFAULT_LANDING_CONFIG = {
   footer: {
     description: 'El sistema inteligente para centralizar ventas, sucursales y operaciones B2B.',
   },
+  seo: {
+    title: 'NexoPOS - Sistema de Gestión',
+    description: 'La plataforma B2B para administrar tu negocio.',
+    keywords: 'pos, ventas, inventario'
+  },
+  chatbot: {
+    enabled: true,
+    welcomeMessage: '¡Hola! Soy tu asistente virtual NexoPOS. ¿En qué te puedo ayudar hoy?',
+    options: ['Ventas / Planes', 'Soporte', 'Facturación']
+  }
 };
 
 @Injectable()

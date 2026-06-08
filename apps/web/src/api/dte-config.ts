@@ -10,16 +10,15 @@ export interface DteConfig {
 }
 
 export interface UpsertDteConfigData {
-    tenantId: string;
     liorenToken?: string;
     liorenLogo?: string;
     dteResolution?: string;
     resolutionDate?: string;
 }
 
-export async function getDteConfig(tenantId: string): Promise<DteConfig | null> {
+export async function getDteConfig(_tenantId: string): Promise<DteConfig | null> {
     try {
-        const response = await apiClient.get<DteConfig>('/dte-config', { params: { tenantId } });
+        const response = await apiClient.get<DteConfig>('/dte-config');
         return response.data;
     } catch {
         return null;

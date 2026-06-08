@@ -47,6 +47,7 @@ export class ProductsService {
     filters: {
       search?: string;
       categoryId?: string;
+      branchId?: string;
       page?: number;
       limit?: number;
     } = {},
@@ -94,6 +95,7 @@ export class ProductsService {
       this.prisma.product.count({ where }),
     ]);
 
+    const { branchId } = filters;
     const data = products.map((product) => ({
       id: product.id,
       name: product.name,
@@ -105,10 +107,10 @@ export class ProductsService {
       unitType: product.unitType as 'UNIT' | 'WEIGHT',
       image: product.image || undefined,
       isActive: product.isActive,
-      stock: product.inventory.reduce(
-        (total, inv) => total + Number(inv.quantity),
-        0,
-      ),
+      isPublic: product.isPublic,
+      stock: branchId
+        ? Number(product.inventory.find(inv => inv.branchId === branchId)?.quantity ?? 0)
+        : product.inventory.reduce((total, inv) => total + Number(inv.quantity), 0),
       inventoryLevels: product.inventory.map((inv) => ({
         branchId: inv.branchId,
         branchName: inv.branch?.name || 'Desconocida',
@@ -139,7 +141,7 @@ export class ProductsService {
    * @param branchId - Branch ID to calculate stock
    * @returns Product with stock information
    */
-  async findOne(id: string, tenantId: string): Promise<ProductResponseDto> {
+  async findOne(id: string, tenantId: string, branchId?: string): Promise<ProductResponseDto> {
     const product = await this.prisma.product.findFirst({
       where: {
         id,
@@ -174,10 +176,10 @@ export class ProductsService {
       unitType: product.unitType as 'UNIT' | 'WEIGHT',
       image: product.image || undefined,
       isActive: product.isActive,
-      stock: product.inventory.reduce(
-        (total, inv) => total + Number(inv.quantity),
-        0,
-      ),
+      isPublic: product.isPublic,
+      stock: branchId
+        ? Number(product.inventory.find(inv => inv.branchId === branchId)?.quantity ?? 0)
+        : product.inventory.reduce((total, inv) => total + Number(inv.quantity), 0),
       inventoryLevels: product.inventory.map((inv) => ({
         branchId: inv.branchId,
         branchName: inv.branch?.name || 'Desconocida',
@@ -312,6 +314,7 @@ export class ProductsService {
       unitType: product.unitType as 'UNIT' | 'WEIGHT',
       image: product.image || undefined,
       isActive: product.isActive,
+      isPublic: product.isPublic,
       stock,
       category: product.category
         ? {

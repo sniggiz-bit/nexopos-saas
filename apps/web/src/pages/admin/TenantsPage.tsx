@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, LogIn, Ban, CheckCircle, ChevronLeft, ChevronRight, Package, Users, GitBranch } from 'lucide-react';
+import { Search, LogIn, Ban, CheckCircle, ChevronLeft, ChevronRight, Package, Users, GitBranch, ExternalLink } from 'lucide-react';
 import api from '../../lib/api';
 
 interface Tenant {
@@ -53,11 +53,15 @@ export default function TenantsPage() {
       return;
     }
     try {
-      const prev = localStorage.getItem('token');
-      if (prev) localStorage.setItem('__prev_session', prev);
+      const prevToken = localStorage.getItem('token');
+      const prevUser = localStorage.getItem('user');
+      if (prevToken) localStorage.setItem('__prev_session_token', prevToken);
+      if (prevUser) localStorage.setItem('__prev_session_user', prevUser);
+      
       const res = await api.post(`/auth/impersonate/${tenant.owner.id}`);
       if (res.data.access_token) {
         localStorage.setItem('token', res.data.access_token);
+        localStorage.setItem('user', JSON.stringify(res.data.user));
         localStorage.setItem('impersonating', tenant.name);
         window.location.href = '/dashboard';
       }
@@ -165,6 +169,13 @@ export default function TenantsPage() {
                 </td>
                 <td className="px-5 py-4">
                   <div className="flex items-center gap-1.5">
+                    <button
+                      onClick={() => navigate(`/admin/tenants/${tenant.id}`)}
+                      className="p-1.5 hover:bg-blue-900/40 text-blue-400 rounded-lg transition-colors"
+                      title="Ver detalle / Módulos SaaS"
+                    >
+                      <ExternalLink size={16} />
+                    </button>
                     <button
                       onClick={e => handleImpersonate(tenant, e)}
                       className="p-1.5 hover:bg-purple-900/40 text-purple-400 rounded-lg transition-colors"

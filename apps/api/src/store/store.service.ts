@@ -40,9 +40,11 @@ export class StoreService {
     const tenant = await this.findBySlug(slug);
     const publicFilter = { isPublic: true, isActive: true, tenantId: tenant.id };
 
+    // Return ALL categories and brands defined in the system,
+    // with the count of public products in each (may be 0).
     const [categories, brands] = await Promise.all([
       this.prisma.category.findMany({
-        where: { tenantId: tenant.id, products: { some: publicFilter } },
+        where: { tenantId: tenant.id },
         select: {
           id: true,
           name: true,
@@ -51,7 +53,7 @@ export class StoreService {
         orderBy: { name: 'asc' },
       }),
       this.prisma.brand.findMany({
-        where: { tenantId: tenant.id, products: { some: publicFilter } },
+        where: { tenantId: tenant.id },
         select: {
           id: true,
           name: true,

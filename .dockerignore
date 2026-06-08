@@ -10,3 +10,5 @@ apps/web/dist
 apps/*/node_modules
 apps/*/coverage
 apps/*/.turbo
+apps/api/nest-cli.json
+

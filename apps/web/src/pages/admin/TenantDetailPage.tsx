@@ -32,7 +32,7 @@ interface TenantMetrics {
     usersCount: number; branchesCount: number; lastActivity: string | null;
 }
 
-type Tab = 'info' | 'features' | 'metrics' | 'limits' | 'danger';
+type Tab = 'info' | 'features' | 'saas' | 'metrics' | 'limits' | 'danger';
 const fmt = (n: number) => `$${Math.round(n).toLocaleString('es-CL')}`;
 
 // ── Primitives ────────────────────────────────────────────────────────────────
@@ -117,6 +117,92 @@ function FeaturesTab({ settings, onSave }: { settings: TenantSettings; onSave: (
                 <ToggleRow icon={FileText} label="Factura electrónica" desc="Emisión de facturas al SII" checked={local.enableFacturaDte} onChange={v => set({ enableFacturaDte: v })} color="text-purple-400" />
                 <ToggleRow icon={FileText} label="Guía de despacho" desc="Guías de despacho electrónicas al SII" checked={local.enableGuiaDespachoDte} onChange={v => set({ enableGuiaDespachoDte: v })} color="text-purple-400" />
                 <ToggleRow icon={FileText} label="Nota de crédito" desc="Notas de crédito electrónicas al SII" checked={local.enableNotaCreditoDte} onChange={v => set({ enableNotaCreditoDte: v })} color="text-purple-400" />
+            </div>
+            <SaveBtn saving={saving} onClick={save} />
+        </div>
+    );
+}
+
+// ── Tab: Modules SaaS ─────────────────────────────────────────────────────────
+
+function ModulesSaaSTab({ tenantId }: { tenantId: string }) {
+    const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
+    const [catalog, setCatalog] = useState<{id: string, code: string, name: string, description: string}[]>([]);
+    const [planModules, setPlanModules] = useState<any[]>([]);
+    const [addonModules, setAddonModules] = useState<any[]>([]);
+    const [selectedAddons, setSelectedAddons] = useState<Set<string>>(new Set());
+
+    const load = useCallback(async () => {
+        setLoading(true);
+        try {
+            const [catalogRes, tenantRes] = await Promise.all([
+                api.get('/modules'),
+                api.get(`/modules/tenant/${tenantId}`)
+            ]);
+            setCatalog(catalogRes.data);
+            setPlanModules(tenantRes.data.planModules);
+            setAddonModules(tenantRes.data.addonModules);
+            setSelectedAddons(new Set(tenantRes.data.addonModules.map((m: any) => m.id)));
+        } catch { toast.error('Error cargando módulos SaaS'); }
+        finally { setLoading(false); }
+    }, [tenantId]);
+
+    useEffect(() => { load(); }, [load]);
+
+    const toggleAddon = (id: string) => {
+        const next = new Set(selectedAddons);
+        if (next.has(id)) next.delete(id);
+        else next.add(id);
+        setSelectedAddons(next);
+    };
+
+    const save = async () => {
+        setSaving(true);
+        try {
+            await api.post(`/modules/tenant/${tenantId}/addons`, { moduleIds: Array.from(selectedAddons) });
+            toast.success('Módulos Add-on guardados exitosamente');
+            load();
+        } catch { toast.error('Error al guardar addons'); }
+        finally { setSaving(false); }
+    };
+
+    if (loading) return <div className="flex items-center justify-center py-16 text-neutral-500 gap-2"><Loader2 size={20} className="animate-spin" />Cargando módulos...</div>;
+
+    const planModuleIds = new Set(planModules.map(m => m.id));
+
+    return (
+        <div className="space-y-5">
+            <div className="bg-neutral-800 border border-neutral-700 rounded-xl p-5">
+                <p className="text-sm font-bold text-white mb-0.5">Gestión de Módulos SaaS</p>
+                <p className="text-xs text-neutral-500 mb-4">Habilita módulos adicionales (Add-ons) independientemente del Plan Base del cliente.</p>
+                
+                <div className="space-y-1">
+                    {catalog.map(mod => {
+                        const isIncludedInPlan = planModuleIds.has(mod.id);
+                        const isAddonChecked = selectedAddons.has(mod.id);
+                        
+                        return (
+                            <div key={mod.id} className="flex items-center justify-between py-4 border-b border-neutral-700/50 last:border-0">
+                                <div className="flex items-center gap-3 flex-1 mr-4">
+                                    <div className="p-2 rounded-lg bg-neutral-900/60"><Plug size={16} className="text-blue-400" /></div>
+                                    <div>
+                                        <p className="text-sm font-medium text-neutral-200">
+                                            {mod.name} 
+                                            {isIncludedInPlan && <span className="ml-2 text-[10px] bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full uppercase">Incluido en Plan</span>}
+                                        </p>
+                                        <p className="text-xs text-neutral-500 mt-0.5">{mod.description || 'Sin descripción'} ({mod.code})</p>
+                                    </div>
+                                </div>
+                                {isIncludedInPlan ? (
+                                    <div className="px-3 py-1 bg-neutral-700/50 rounded-full text-xs text-neutral-400">Habilitado por Plan</div>
+                                ) : (
+                                    <Toggle checked={isAddonChecked} onChange={() => toggleAddon(mod.id)} />
+                                )}
+                            </div>
+                        );
+                    })}
+                </div>
             </div>
             <SaveBtn saving={saving} onClick={save} />
         </div>
@@ -210,7 +296,10 @@ function DangerTab({ tenant, onStatusChange }: { tenant: TenantDetail; onStatusC
         try {
             const { data } = await api.post(`/auth/impersonate/${adminUser.id}`);
             if (data.access_token) {
-                localStorage.setItem('__prev_session', JSON.stringify({ token: localStorage.getItem('token'), user: localStorage.getItem('user') }));
+                const prevToken = localStorage.getItem('token');
+                const prevUser = localStorage.getItem('user');
+                if (prevToken) localStorage.setItem('__prev_session_token', prevToken);
+                if (prevUser) localStorage.setItem('__prev_session_user', prevUser);
                 localStorage.setItem('token', data.access_token);
                 localStorage.setItem('user', JSON.stringify(data.user));
                 localStorage.setItem('impersonating', tenant.name);
@@ -311,7 +400,8 @@ export default function TenantDetailPage() {
 
     const TABS: { key: Tab; label: string; Icon: React.ElementType }[] = [
         { key: 'info', label: 'Info', Icon: Info },
-        { key: 'features', label: 'Funciones', Icon: Zap },
+        { key: 'features', label: 'Funciones (Legacy)', Icon: Zap },
+        { key: 'saas', label: 'Módulos SaaS', Icon: Plug },
         { key: 'metrics', label: 'Métricas', Icon: BarChart3 },
         { key: 'limits', label: 'Límites', Icon: Settings2 },
         { key: 'danger', label: 'Acciones', Icon: ShieldAlert },
@@ -390,6 +480,7 @@ export default function TenantDetailPage() {
                     </div>
                 )}
                 {activeTab === 'features' && <FeaturesTab settings={settings} onSave={handleSaveSettings} />}
+                {activeTab === 'saas' && id && <ModulesSaaSTab tenantId={id} />}
                 {activeTab === 'metrics' && id && <MetricsTab tenantId={id} />}
                 {activeTab === 'limits' && <LimitsTab settings={settings} onSave={handleSaveSettings} />}
                 {activeTab === 'danger' && <DangerTab tenant={tenant} onStatusChange={s => setTenant(prev => prev ? { ...prev, status: s } : prev)} />}

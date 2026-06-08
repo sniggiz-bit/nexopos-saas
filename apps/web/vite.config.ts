@@ -52,7 +52,7 @@ export default defineConfig({
     strictPort: true,
     proxy: {
       '/api': {
-        target: 'http://localhost:4000',
+        target: 'http://localhost:3000',
         changeOrigin: true,
         // Keep SSE connections alive through the proxy
         // eslint-disable-next-line @typescript-eslint/no-explicit-any

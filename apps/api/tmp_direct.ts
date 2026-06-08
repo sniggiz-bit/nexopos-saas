@@ -6,7 +6,7 @@ import { TransfersService } from './src/transfers/transfers.service';
 const pool = new Pool({ connectionString: 'postgresql://postgres:postgres@localhost:5434/nexopos?schema=public' });
 const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
-const service = new TransfersService(prisma as any);
+const service = new TransfersService(prisma as any, { emit: () => {} } as any);
 
 async function main() {
     console.log("Fetching branches and products for test...");

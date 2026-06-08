@@ -76,6 +76,32 @@ export class AuthService {
         `[AuthService] Logging in user: ${user.id}, Role: ${user.role}, tenantId: ${user.tenantId}, branchId: ${user.branchId}`,
       );
 
+      let activeModules: string[] = [];
+
+      if (user.tenantId) {
+        const tenant = await this.prisma.tenant.findUnique({
+          where: { id: user.tenantId },
+          include: {
+            plan: {
+              include: {
+                planModules: {
+                  include: { module: true }
+                }
+              }
+            },
+            tenantModuleAddons: {
+              include: { module: true }
+            }
+          }
+        });
+
+        if (tenant) {
+          const planModules = tenant.plan?.planModules.map(pm => pm.module.code) || [];
+          const addonModules = tenant.tenantModuleAddons?.map(addon => addon.module.code) || [];
+          activeModules = [...new Set([...planModules, ...addonModules])];
+        }
+      }
+
       // Always include tenantId and branchId so controllers can trust they exist
       const payload: any = {
         sub: user.id,
@@ -83,6 +109,7 @@ export class AuthService {
         role: user.role,
         tenantId: user.tenantId ?? null,
         branchId: user.branchId ?? null,
+        modules: activeModules,
       };
 
       console.log('[AuthService] JWT payload being signed:', payload);
@@ -99,6 +126,7 @@ export class AuthService {
           role: user.role,
           tenantId: user.tenantId ?? null,
           branchId: user.branchId ?? null,
+          modules: activeModules,
         },
       };
     } catch (error) {

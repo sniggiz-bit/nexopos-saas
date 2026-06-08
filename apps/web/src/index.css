@@ -1,18 +1,26 @@
+/* ── Google Font: Inter ── */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    /* ── Shadcn/Radix tokens (no tocar) ── */
+    /* ── Colores corporativos NexoPOS ── */
+    --cyan: 192 100% 50%;          /* #00D4FF — Celeste eléctrico */
+    --cyan-dim: 192 100% 40%;
+    --cyan-glow: 192 100% 50%;
+
+    /* ── Shadcn/Radix tokens ── */
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
     --card: 0 0% 100%;
     --card-foreground: 222.2 84% 4.9%;
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
-    --primary: 243 75% 59%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 192 100% 50%;
+    --primary-foreground: 220 30% 8%;
     --secondary: 220 14% 96%;
     --secondary-foreground: 222.2 47.4% 11.2%;
     --muted: 220 14% 96%;
@@ -23,21 +31,21 @@
     --destructive-foreground: 210 40% 98%;
     --border: 220 13% 91%;
     --input: 220 13% 91%;
-    --ring: 243 75% 59%;
-    --radius: 0.625rem;
+    --ring: 192 100% 50%;
+    --radius: 0.75rem;
 
     /* ── Chart ── */
-    --chart-1: 243 75% 59%;
-    --chart-2: 142 72% 40%;
+    --chart-1: 192 100% 50%;
+    --chart-2: 160 60% 45%;
     --chart-3: 38 92% 50%;
-    --chart-4: 204 100% 44%;
+    --chart-4: 262 72% 65%;
     --chart-5: 0 84% 58%;
 
     /* ── Semánticos ── */
-    --success: 142 72% 40%;
+    --success: 160 60% 45%;
     --success-foreground: 0 0% 100%;
-    --success-subtle: 142 76% 95%;
-    --success-border: 142 60% 82%;
+    --success-subtle: 160 76% 95%;
+    --success-border: 160 60% 82%;
 
     --warning: 38 92% 50%;
     --warning-foreground: 0 0% 100%;
@@ -49,49 +57,50 @@
     --danger-subtle: 0 86% 96%;
     --danger-border: 0 72% 84%;
 
-    --info: 204 100% 44%;
+    --info: 192 100% 44%;
     --info-foreground: 0 0% 100%;
-    --info-subtle: 204 100% 95%;
+    --info-subtle: 192 100% 95%;
 
     /* ── Superficies ── */
     --surface-raised: 220 14% 97%;
     --surface-sunken: 220 16% 94%;
   }
 
+  /* ── Tema oscuro corporativo (modo por defecto del dashboard) ── */
   .dark {
-    --background: 222 20% 10%;
-    --foreground: 210 40% 96%;
-    --card: 222 18% 13%;
-    --card-foreground: 210 40% 96%;
-    --popover: 222 18% 13%;
-    --popover-foreground: 210 40% 96%;
-    --primary: 245 72% 65%;
-    --primary-foreground: 222 47% 11%;
-    --secondary: 222 16% 18%;
-    --secondary-foreground: 210 40% 96%;
-    --muted: 222 16% 18%;
-    --muted-foreground: 218 10% 58%;
-    --accent: 222 16% 18%;
-    --accent-foreground: 210 40% 96%;
-    --destructive: 0 62% 38%;
+    --background: 220 30% 6%;          /* #0B0F1A */
+    --foreground: 210 30% 92%;
+    --card: 220 25% 9%;                /* #111622 */
+    --card-foreground: 210 30% 92%;
+    --popover: 220 25% 9%;
+    --popover-foreground: 210 30% 92%;
+    --primary: 192 100% 50%;           /* Cyan eléctrico */
+    --primary-foreground: 220 30% 8%;
+    --secondary: 220 22% 14%;
+    --secondary-foreground: 210 30% 92%;
+    --muted: 220 22% 14%;
+    --muted-foreground: 218 12% 52%;
+    --accent: 220 22% 14%;
+    --accent-foreground: 210 30% 92%;
+    --destructive: 0 62% 45%;
     --destructive-foreground: 210 40% 98%;
-    --border: 222 16% 20%;
-    --input: 222 16% 20%;
-    --ring: 245 72% 65%;
+    --border: 220 20% 14%;
+    --input: 220 20% 14%;
+    --ring: 192 100% 50%;
 
-    --chart-1: 245 72% 65%;
-    --chart-2: 142 60% 48%;
+    --chart-1: 192 100% 50%;
+    --chart-2: 160 60% 48%;
     --chart-3: 38 85% 58%;
-    --chart-4: 204 80% 56%;
+    --chart-4: 262 72% 65%;
     --chart-5: 0 72% 60%;
 
-    --success-subtle: 142 30% 18%;
-    --warning-subtle: 38 40% 16%;
-    --danger-subtle: 0 30% 16%;
-    --info-subtle: 204 40% 16%;
+    --success-subtle: 160 30% 12%;
+    --warning-subtle: 38 40% 12%;
+    --danger-subtle: 0 30% 12%;
+    --info-subtle: 192 40% 12%;
 
-    --surface-raised: 222 18% 16%;
-    --surface-sunken: 222 20% 8%;
+    --surface-raised: 220 22% 12%;
+    --surface-sunken: 220 30% 5%;
   }
 }
 
@@ -114,19 +123,22 @@
 }
 
 @layer utilities {
-  /* Scrollbar thin para áreas de contenido */
+  /* Scrollbar ultra-delgado */
   .scrollbar-thin {
     scrollbar-width: thin;
-    scrollbar-color: hsl(var(--border)) transparent;
+    scrollbar-color: rgba(0, 212, 255, 0.15) transparent;
   }
-  .scrollbar-thin::-webkit-scrollbar { width: 5px; height: 5px; }
+  .scrollbar-thin::-webkit-scrollbar { width: 4px; height: 4px; }
   .scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
   .scrollbar-thin::-webkit-scrollbar-thumb {
-    background: hsl(var(--border));
+    background: rgba(0, 212, 255, 0.2);
     border-radius: 999px;
   }
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 212, 255, 0.4);
+  }
 
-  /* Fade overlay para indicar scroll horizontal */
+  /* Fade overlay scroll horizontal */
   .scroll-fade-right::after {
     content: '';
     position: absolute;
@@ -138,13 +150,60 @@
     pointer-events: none;
   }
 
-  /* Números tabulares para precios */
+  /* Números tabulares */
   .tabular-nums {
     font-variant-numeric: tabular-nums;
   }
+
+  /* ── Glow cyan ── */
+  .glow-cyan {
+    box-shadow: 0 0 20px rgba(0, 212, 255, 0.3), 0 0 40px rgba(0, 212, 255, 0.1);
+  }
+  .glow-cyan-sm {
+    box-shadow: 0 0 10px rgba(0, 212, 255, 0.25);
+  }
+  .text-glow-cyan {
+    text-shadow: 0 0 20px rgba(0, 212, 255, 0.5);
+  }
+
+  /* ── Glass cards ── */
+  .glass {
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+  }
+  .glass-cyan {
+    background: rgba(0, 212, 255, 0.05);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(0, 212, 255, 0.15);
+  }
+
+  /* ── Sidebar active indicator ── */
+  .nav-active-bar::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 3px;
+    height: 60%;
+    background: #00D4FF;
+    border-radius: 0 4px 4px 0;
+    box-shadow: 0 0 8px rgba(0, 212, 255, 0.6);
+  }
+
+  /* ── Gradient text ── */
+  .gradient-text-cyan {
+    background: linear-gradient(135deg, #00D4FF 0%, #00A8CC 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
 }
 
-/* Animaciones micro-interacciones POS */
+/* ── Micro-animaciones ── */
 @keyframes pop-add {
   0%   { transform: scale(1); }
   40%  { transform: scale(1.08); }
@@ -153,13 +212,54 @@
 
 @keyframes flash-border {
   0%, 100% { box-shadow: none; }
-  30%       { box-shadow: 0 0 0 3px hsl(142 72% 40% / 0.35); }
+  30%       { box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.35); }
 }
 
-.animate-pop-add {
-  animation: pop-add 220ms cubic-bezier(0.34, 1.56, 0.64, 1);
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 10px rgba(0, 212, 255, 0.2); }
+  50%       { box-shadow: 0 0 25px rgba(0, 212, 255, 0.5); }
 }
 
-.animate-flash-border {
-  animation: flash-border 350ms ease-out;
+@keyframes slide-in-left {
+  from { opacity: 0; transform: translateX(-8px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px) scale(1); }
+  50% { transform: translateY(-10px) scale(1.01); }
+}
+
+@keyframes float-slow {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-15px) rotate(2deg); }
+}
+
+@keyframes float-reverse {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(15px) rotate(-2deg); }
+}
+
+.animate-pop-add    { animation: pop-add 220ms cubic-bezier(0.34, 1.56, 0.64, 1); }
+.animate-flash-border { animation: flash-border 350ms ease-out; }
+.animate-pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
+.animate-slide-in   { animation: slide-in-left 200ms ease-out; }
+.animate-fade-up    { animation: fade-up 300ms ease-out; }
+.animate-float      { animation: float 6s ease-in-out infinite; }
+.animate-float-slow { animation: float-slow 10s ease-in-out infinite; }
+.animate-float-reverse { animation: float-reverse 12s ease-in-out infinite; }
+
+/* Autofill fixes for Chrome dark theme */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-text-fill-color: #e2e8f0 !important;
+  -webkit-box-shadow: 0 0 0px 1000px rgba(15, 23, 42, 0.95) inset !important;
+  transition: background-color 5000s ease-in-out 0s;
 }

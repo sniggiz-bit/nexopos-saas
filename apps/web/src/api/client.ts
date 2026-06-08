@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // In development, we use the '/api' prefix to let Vite proxy handle the requests
 // In production (Docker), VITE_API_URL should be set to '/api' or the full URL
-const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
+const API_BASE_URL = '/api';
 
 export const apiClient = axios.create({
     baseURL: API_BASE_URL,

@@ -25,6 +25,7 @@ export class DashboardService {
         tenantId,
         branchId,
         status: 'COMPLETED',
+        dteType: { not: 61 },
         createdAt: {
           gte: today,
           lte: todayEnd,
@@ -42,6 +43,7 @@ export class DashboardService {
         tenantId,
         branchId,
         status: 'COMPLETED',
+        dteType: { not: 61 },
         createdAt: {
           gte: firstDayOfMonth,
         },
@@ -107,7 +109,13 @@ export class DashboardService {
 
     // Sales by hour for today
     const hourlySales = await this.prisma.sale.findMany({
-      where: { tenantId, branchId: bid, status: 'COMPLETED', createdAt: { gte: todayStart, lte: todayEnd } },
+      where: {
+        tenantId,
+        branchId: bid,
+        status: 'COMPLETED',
+        dteType: { not: 61 },
+        createdAt: { gte: todayStart, lte: todayEnd },
+      },
       select: { createdAt: true, total: true },
     });
 
@@ -132,6 +140,7 @@ export class DashboardService {
       WHERE s."tenantId" = ${tenantId}
         AND (${bid ? bid : null}::text IS NULL OR s."branchId" = ${bid ? bid : null})
         AND s.status = 'COMPLETED'
+        AND s."dteType" <> 61
         AND s."createdAt" >= ${currentMonthStart}
       GROUP BY si."productId", p.name
       ORDER BY qty DESC
@@ -141,11 +150,23 @@ export class DashboardService {
     // Month comparison
     const [currentRevResult, prevRevResult] = await Promise.all([
       this.prisma.sale.aggregate({
-        where: { tenantId, branchId: bid, status: 'COMPLETED', createdAt: { gte: currentMonthStart } },
+        where: {
+          tenantId,
+          branchId: bid,
+          status: 'COMPLETED',
+          dteType: { not: 61 },
+          createdAt: { gte: currentMonthStart },
+        },
         _sum: { total: true },
       }),
       this.prisma.sale.aggregate({
-        where: { tenantId, branchId: bid, status: 'COMPLETED', createdAt: { gte: prevMonthStart, lte: prevMonthEnd } },
+        where: {
+          tenantId,
+          branchId: bid,
+          status: 'COMPLETED',
+          dteType: { not: 61 },
+          createdAt: { gte: prevMonthStart, lte: prevMonthEnd },
+        },
         _sum: { total: true },
       }),
     ]);

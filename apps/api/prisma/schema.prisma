@@ -1,90 +1,116 @@
 generator client {
-  provider = "prisma-client-js"
+  provider   = "prisma-client-js"
   engineType = "library"
 }
-
 
 datasource db {
   provider = "postgresql"
 }
 
-
 model Tenant {
-  id            String          @id @default(uuid())
-  name          String
-  slug          String          @unique
-  phone         String?
-  rut           String?
-  giro          String?
-  address       String?
-  createdAt     DateTime        @default(now())
-  updatedAt     DateTime        @updatedAt
-  branches      Branch[]
-  brands        Brand[]
-  categories    Category[]
-  dteConfig     DteConfig?
-  products      Product[]
-  sales         Sale[]
-  users         User[]
-  customers     Customer[]
-  quotes        Quote[]
-  credits       Credit[]
-  planId        String?
-  plan          Plan?           @relation(fields: [planId], references: [id])
-  status        String          @default("ACTIVE") // ACTIVE, SUSPENDED
-  nextPayment   DateTime?
-  storeSlug     String?         @unique
-  storeSettings Json?
-  systemLogs    SystemLog[]
-  settings      TenantSettings?
-  suppliers               Supplier[]
-  purchases               Purchase[]
-  transbankTransactions   PaymentTransaction[]
-  ecommerceConnections    EcommerceConnection[]
-  ecommerceOrders         EcommerceOrder[]
+  id                    String                @id @default(uuid())
+  name                  String
+  slug                  String                @unique
+  phone                 String?
+  rut                   String?
+  giro                  String?
+  address               String?
+  createdAt             DateTime              @default(now())
+  updatedAt             DateTime              @updatedAt
+  branches              Branch[]
+  brands                Brand[]
+  categories            Category[]
+  dteConfig             DteConfig?
+  products              Product[]
+  sales                 Sale[]
+  users                 User[]
+  customers             Customer[]
+  quotes                Quote[]
+  credits               Credit[]
+  planId                String?
+  plan                  Plan?                 @relation(fields: [planId], references: [id])
+  status                String                @default("ACTIVE") // ACTIVE, SUSPENDED
+  nextPayment           DateTime?
+  storeSlug             String?               @unique
+  storeSettings         Json?
+  systemLogs            SystemLog[]
+  settings              TenantSettings?
+  suppliers             Supplier[]
+  purchases             Purchase[]
+  transbankTransactions PaymentTransaction[]
+  ecommerceConnections  EcommerceConnection[]
+  ecommerceOrders       EcommerceOrder[]
+  tenantModuleAddons    TenantModuleAddon[]
+  billingStatus         BillingStatus         @default(ACTIVE)
+  invoices              Invoice[]
+}
+
+enum BillingStatus {
+  ACTIVE
+  PAST_DUE
+  CANCELED
+}
+
+model Invoice {
+  id        String   @id @default(uuid())
+  tenantId  String
+  amount    Float
+  status    String   @default("PENDING") // PENDING, PAID, FAILED
+  dueDate   DateTime
+  paidAt    DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
 }
 
 model Branch {
-  id                  String           @id @default(uuid())
-  name                String
-  address             String?
-  isMain              Boolean          @default(false)
-  isActive            Boolean          @default(false)
-  tenantId            String
-  transbankSettings   Json?
-  createdAt           DateTime         @default(now())
-  updatedAt           DateTime         @updatedAt @default(now())
-  tenant              Tenant           @relation(fields: [tenantId], references: [id])
-  inventory      Inventory[]
-  sales          Sale[]
-  users          User[]
-  cashShifts     CashShift[]
-  stockMovements StockMovement[]
-  transfersFrom  Transfer[]       @relation("OriginBranch")
-  transfersTo    Transfer[]       @relation("DestinationBranch")
-  purchases               Purchase[]
-  transbankTransactions   PaymentTransaction[]
+  id                    String               @id @default(uuid())
+  name                  String
+  address               String?
+  isMain                Boolean              @default(false)
+  isActive              Boolean              @default(false)
+  tenantId              String
+  transbankSettings     Json?
+  createdAt             DateTime             @default(now())
+  updatedAt             DateTime             @default(now()) @updatedAt
+  tenant                Tenant               @relation(fields: [tenantId], references: [id])
+  inventory             Inventory[]
+  sales                 Sale[]
+  users                 User[]
+  cashShifts            CashShift[]
+  stockMovements        StockMovement[]
+  transfersFrom         Transfer[]           @relation("OriginBranch")
+  transfersTo           Transfer[]           @relation("DestinationBranch")
+  purchases             Purchase[]
+  transbankTransactions PaymentTransaction[]
+
+  @@index([tenantId])
 }
 
 model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  name      String?
-  password  String?
-  role      UserRole @default(MANAGER)
-  tenantId  String
-  branchId  String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  sales     Sale[]
-  branch    Branch?  @relation(fields: [branchId], references: [id])
-  tenant    Tenant   @relation(fields: [tenantId], references: [id])
-  stockMovements StockMovement[]
-  shiftsOpened CashShift[] @relation("OpenedShifts")
-  shiftsClosed CashShift[] @relation("ClosedShifts")
-  requestedTransfers Transfer[] @relation("RequestedBy")
-  processedTransfers Transfer[] @relation("ProcessedBy")
-  quotes    Quote[]
+  id                 String          @id @default(uuid())
+  email              String          @unique
+  name               String?
+  password           String?
+  role               UserRole        @default(MANAGER)
+  tenantId           String
+  branchId           String?
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+  sales              Sale[]
+  branch             Branch?         @relation(fields: [branchId], references: [id])
+  tenant             Tenant          @relation(fields: [tenantId], references: [id])
+  stockMovements     StockMovement[]
+  shiftsOpened       CashShift[]     @relation("OpenedShifts")
+  shiftsClosed       CashShift[]     @relation("ClosedShifts")
+  requestedTransfers Transfer[]      @relation("RequestedBy")
+  processedTransfers Transfer[]      @relation("ProcessedBy")
+  quotes             Quote[]
+
+  @@index([tenantId])
+  @@index([branchId])
 }
 
 enum UserRole {
@@ -104,6 +130,7 @@ model Category {
   products  Product[]
 
   @@unique([name, tenantId])
+  @@index([tenantId])
 }
 
 model Brand {
@@ -116,47 +143,51 @@ model Brand {
   products  Product[]
 
   @@unique([name, tenantId])
+  @@index([tenantId])
 }
 
 model Product {
-  id         String           @id @default(uuid())
-  name       String
-  sku        String?
-  price      Int              @default(0)
-  tenantId   String
-  createdAt  DateTime         @default(now())
-  updatedAt  DateTime         @updatedAt
-  barcode    String?
-  brandId    String?
-  categoryId String?
-  costPrice  Int              @default(0)
-  image      String?
-  description String?
-  isPublic   Boolean          @default(false)
-  isActive   Boolean          @default(true)
-  minStock   Int              @default(0) // Global minStock, deprecated in favor of Inventory.minStock
-  stock      Int?             // @deprecated - Used for migration only
-  unitType   UnitType         @default(UNIT)
-  inventory  Inventory[]
-  brand      Brand?           @relation(fields: [brandId], references: [id])
-  category   Category?        @relation(fields: [categoryId], references: [id])
-  tenant     Tenant           @relation(fields: [tenantId], references: [id])
-  saleItems     SaleItem[]
-  quoteItems    QuoteItem[]
-  stockMovements StockMovement[]
-  transferItems TransferItem[]
-  purchaseItems PurchaseItem[]
-  priceTiers    ProductPriceTier[]
+  id                String             @id @default(uuid())
+  name              String
+  sku               String?
+  price             Int                @default(0)
+  tenantId          String
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  barcode           String?
+  brandId           String?
+  categoryId        String?
+  costPrice         Int                @default(0)
+  image             String?
+  description       String?
+  isPublic          Boolean            @default(false)
+  isActive          Boolean            @default(true)
+  minStock          Int                @default(0) // Global minStock, deprecated in favor of Inventory.minStock
+  stock             Int? // @deprecated - Used for migration only
+  unitType          UnitType           @default(UNIT)
+  inventory         Inventory[]
+  brand             Brand?             @relation(fields: [brandId], references: [id])
+  category          Category?          @relation(fields: [categoryId], references: [id])
+  tenant            Tenant             @relation(fields: [tenantId], references: [id])
+  saleItems         SaleItem[]
+  quoteItems        QuoteItem[]
+  stockMovements    StockMovement[]
+  transferItems     TransferItem[]
+  purchaseItems     PurchaseItem[]
+  priceTiers        ProductPriceTier[]
   ecommerceMappings ProductMapping[]
 
   @@unique([barcode, tenantId])
+  @@index([tenantId])
+  @@index([categoryId])
+  @@index([brandId])
 }
 
 model ProductPriceTier {
   id          String   @id @default(uuid())
   productId   String
-  minQuantity Int      // Cantidad mínima para activar este precio (mínimo 2)
-  unitPrice   Int      // Precio unitario en pesos CLP — debe ser < product.price
+  minQuantity Int // Cantidad mínima para activar este precio (mínimo 2)
+  unitPrice   Int // Precio unitario en pesos CLP — debe ser < product.price
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
@@ -175,35 +206,37 @@ model Inventory {
   product   Product  @relation(fields: [productId], references: [id])
 
   @@unique([productId, branchId])
+  @@index([branchId])
+  @@index([productId])
   @@map("InventoryLevel")
 }
 
 model Transfer {
-  id              String         @id @default(uuid())
-  originBranchId  String
-  destBranchId    String
-  status          TransferStatus @default(PENDING)
-  requestedById   String
-  processedById   String?
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
-  note            String?
+  id             String         @id @default(uuid())
+  originBranchId String
+  destBranchId   String
+  status         TransferStatus @default(PENDING)
+  requestedById  String
+  processedById  String?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  note           String?
 
-  originBranch    Branch         @relation("OriginBranch", fields: [originBranchId], references: [id])
-  destinationBranch Branch       @relation("DestinationBranch", fields: [destBranchId], references: [id])
-  requestedBy     User           @relation("RequestedBy", fields: [requestedById], references: [id])
-  processedBy     User?          @relation("ProcessedBy", fields: [processedById], references: [id])
-  items           TransferItem[]
+  originBranch      Branch         @relation("OriginBranch", fields: [originBranchId], references: [id])
+  destinationBranch Branch         @relation("DestinationBranch", fields: [destBranchId], references: [id])
+  requestedBy       User           @relation("RequestedBy", fields: [requestedById], references: [id])
+  processedBy       User?          @relation("ProcessedBy", fields: [processedById], references: [id])
+  items             TransferItem[]
 }
 
 model TransferItem {
-  id          String   @id @default(uuid())
-  transferId  String
-  productId   String
-  quantity    Decimal  @db.Decimal(10, 3)
-  
-  transfer    Transfer @relation(fields: [transferId], references: [id])
-  product     Product  @relation(fields: [productId], references: [id])
+  id         String  @id @default(uuid())
+  transferId String
+  productId  String
+  quantity   Decimal @db.Decimal(10, 3)
+
+  transfer Transfer @relation(fields: [transferId], references: [id])
+  product  Product  @relation(fields: [productId], references: [id])
 }
 
 enum TransferStatus {
@@ -231,6 +264,7 @@ model Sale {
   dteStatus          String     @default("PENDING")
   dteType            Int        @default(39)
   dtePdfUrl          String?
+  originalSaleId     String? // Para Nota de Crédito: referencia a la venta original que se anula
   internalReceiptUrl String?
   branch             Branch     @relation(fields: [branchId], references: [id])
   tenant             Tenant     @relation(fields: [tenantId], references: [id])
@@ -241,6 +275,10 @@ model Sale {
   credit             Credit?
   items              SaleItem[]
   payments           Payment[]
+
+  @@index([tenantId])
+  @@index([branchId])
+  @@index([createdAt])
 }
 
 model SaleItem {
@@ -299,8 +337,8 @@ model PaymentTransaction {
   createdAt         DateTime        @default(now())
   updatedAt         DateTime        @updatedAt
 
-  tenant  Tenant  @relation(fields: [tenantId], references: [id])
-  branch  Branch  @relation(fields: [branchId], references: [id])
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+  branch Branch @relation(fields: [branchId], references: [id])
 
   @@index([tenantId, createdAt(sort: Desc)])
   @@index([branchId])
@@ -324,25 +362,27 @@ enum UnitType {
 }
 
 model CashShift {
-  id            String    @id @default(uuid())
-  branchId      String
-  branch        Branch    @relation(fields: [branchId], references: [id])
-  openedById    String
-  openedBy      User      @relation("OpenedShifts", fields: [openedById], references: [id])
-  closedById    String?
-  closedBy      User?     @relation("ClosedShifts", fields: [closedById], references: [id])
-  startTime     DateTime  @default(now())
-  endTime       DateTime?
-  initialAmount Decimal   @db.Decimal(10, 2)
-  finalAmount   Decimal?  @db.Decimal(10, 2)
-  expectedAmount Decimal? @db.Decimal(10, 2)
-  difference    Decimal?  @db.Decimal(10, 2)
-  status        String    @default("OPEN")
-  metadata      Json?
+  id             String          @id @default(uuid())
+  branchId       String
+  branch         Branch          @relation(fields: [branchId], references: [id])
+  openedById     String
+  openedBy       User            @relation("OpenedShifts", fields: [openedById], references: [id])
+  closedById     String?
+  closedBy       User?           @relation("ClosedShifts", fields: [closedById], references: [id])
+  startTime      DateTime        @default(now())
+  endTime        DateTime?
+  initialAmount  Decimal         @db.Decimal(10, 2)
+  finalAmount    Decimal?        @db.Decimal(10, 2)
+  expectedAmount Decimal?        @db.Decimal(10, 2)
+  difference     Decimal?        @db.Decimal(10, 2)
+  status         String          @default("OPEN")
+  metadata       Json?
   sales          Sale[]
   creditPayments CreditPayment[]
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
+
+  @@index([branchId])
 }
 
 model Customer {
@@ -361,8 +401,9 @@ model Customer {
   sales     Sale[]
   quotes    Quote[]
   credits   Credit[]
-  
+
   @@unique([rut, tenantId])
+  @@index([tenantId])
 }
 
 enum QuoteStatus {
@@ -374,7 +415,7 @@ enum QuoteStatus {
 
 model Quote {
   id         String      @id @default(uuid())
-  number     String?     // e.g. QT-0001
+  number     String? // e.g. QT-0001
   tenantId   String
   customerId String?
   userId     String?
@@ -387,12 +428,14 @@ model Quote {
   notes      String?     @db.Text
   createdAt  DateTime    @default(now())
   updatedAt  DateTime    @updatedAt
-  
-  items      QuoteItem[]
-  tenant     Tenant      @relation(fields: [tenantId], references: [id])
-  customer   Customer?   @relation(fields: [customerId], references: [id])
-  user       User?       @relation(fields: [userId], references: [id])
-  sales      Sale[]
+
+  items    QuoteItem[]
+  tenant   Tenant      @relation(fields: [tenantId], references: [id])
+  customer Customer?   @relation(fields: [customerId], references: [id])
+  user     User?       @relation(fields: [userId], references: [id])
+  sales    Sale[]
+
+  @@index([tenantId])
 }
 
 model QuoteItem {
@@ -404,9 +447,9 @@ model QuoteItem {
   price       Float
   discount    Float   @default(0)
   total       Float
-  
-  quote       Quote   @relation(fields: [quoteId], references: [id])
-  product     Product @relation(fields: [productId], references: [id])
+
+  quote   Quote   @relation(fields: [quoteId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
 }
 
 model Credit {
@@ -424,16 +467,19 @@ model Credit {
   customer    Customer        @relation(fields: [customerId], references: [id])
   sale        Sale?           @relation(fields: [saleId], references: [id])
   payments    CreditPayment[]
+
+  @@index([tenantId])
+  @@index([customerId])
 }
 
 model CreditPayment {
-  id            String    @id @default(uuid())
+  id            String     @id @default(uuid())
   creditId      String
   amount        Float
   paymentMethod String
   cashShiftId   String?
-  createdAt     DateTime  @default(now())
-  credit        Credit    @relation(fields: [creditId], references: [id])
+  createdAt     DateTime   @default(now())
+  credit        Credit     @relation(fields: [creditId], references: [id])
   cashShift     CashShift? @relation(fields: [cashShiftId], references: [id])
 }
 
@@ -443,14 +489,18 @@ model StockMovement {
   branchId  String
   quantity  Decimal      @db.Decimal(10, 3) // Positive for IN, Negative for OUT
   type      MovementType
-  reference String?      // e.g. "SALE-123" or "Initial Stock"
+  reference String? // e.g. "SALE-123" or "Initial Stock"
   balance   Decimal      @db.Decimal(10, 3) // Calculated balance after this movement
   createdAt DateTime     @default(now())
   userId    String?
 
-  product   Product      @relation(fields: [productId], references: [id])
-  branch    Branch       @relation(fields: [branchId], references: [id])
-  user      User?        @relation(fields: [userId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
+  branch  Branch  @relation(fields: [branchId], references: [id])
+  user    User?   @relation(fields: [userId], references: [id])
+
+  @@index([branchId])
+  @@index([productId])
+  @@index([createdAt])
 }
 
 enum MovementType {
@@ -464,37 +514,40 @@ enum MovementType {
 }
 
 model Plan {
-  id               String   @id @default(uuid())
-  name             String
-  description      String?
-  price            Int
-  features         Json?    // Array of benefit strings
-  maxUsers         Int
-  maxProducts      Int      @default(500)
-  maxStorage       Int      @default(0)
-  isRecommended    Boolean  @default(false)
-  isVisible        Boolean  @default(true)
-  enabledFeatures  Json?    // Feature flags: enableEcommerce, enableTransbank, etc.
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
-  tenants          Tenant[]
+  id              String       @id @default(uuid())
+  name            String
+  description     String?
+  price           Int
+  features        Json? // Array of benefit strings
+  maxUsers        Int
+  maxProducts     Int          @default(500)
+  maxStorage      Int          @default(0)
+  isRecommended   Boolean      @default(false)
+  isVisible       Boolean      @default(true)
+  enabledFeatures Json? // Feature flags: enableEcommerce, enableTransbank, etc.
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  tenants         Tenant[]
+  planModules     PlanModule[]
 }
 
 model SystemLog {
   id        String   @id @default(uuid())
-  level     String   // ERROR, WARNING, INFO
+  level     String // ERROR, WARNING, INFO
   message   String
   context   Json?
   tenantId  String?
   tenant    Tenant?  @relation(fields: [tenantId], references: [id])
   createdAt DateTime @default(now())
+
+  @@index([tenantId])
 }
 
 model Announcement {
   id        String   @id @default(uuid())
   title     String
   content   String
-  type      String   // INFO, WARNING
+  type      String // INFO, WARNING
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -522,6 +575,8 @@ model Supplier {
   updatedAt DateTime   @updatedAt
   tenant    Tenant     @relation(fields: [tenantId], references: [id])
   purchases Purchase[]
+
+  @@index([tenantId])
 }
 
 model Purchase {
@@ -539,6 +594,9 @@ model Purchase {
   branch      Branch         @relation(fields: [branchId], references: [id])
   tenant      Tenant         @relation(fields: [tenantId], references: [id])
   items       PurchaseItem[]
+
+  @@index([tenantId])
+  @@index([branchId])
 }
 
 model PurchaseItem {
@@ -546,7 +604,7 @@ model PurchaseItem {
   purchaseId String
   productId  String
   quantity   Decimal  @db.Decimal(10, 3)
-  costPrice  Float    // precio de costo unitario al momento de la compra
+  costPrice  Float // precio de costo unitario al momento de la compra
   purchase   Purchase @relation(fields: [purchaseId], references: [id], onDelete: Cascade)
   product    Product  @relation(fields: [productId], references: [id])
 }
@@ -596,9 +654,9 @@ model EcommerceConnection {
   name     String
 
   // Shopify
-  shopDomain  String?
-  accessToken String?
-  locationId  String?
+  shopDomain    String?
+  accessToken   String?
+  locationId    String?
   webhookSecret String?
 
   // WooCommerce
@@ -618,7 +676,7 @@ model EcommerceConnection {
   syncStatus SyncStatus @default(IDLE)
   lastError  String?
 
-  tenant   Tenant             @relation(fields: [tenantId], references: [id])
+  tenant   Tenant              @relation(fields: [tenantId], references: [id])
   mappings ProductMapping[]
   webhooks RegisteredWebhook[]
   orders   EcommerceOrder[]
@@ -629,10 +687,10 @@ model EcommerceConnection {
 }
 
 model ProductMapping {
-  id               String @id @default(uuid())
-  connectionId     String
-  nexoposProductId String
-  externalId       String
+  id                String  @id @default(uuid())
+  connectionId      String
+  nexoposProductId  String
+  externalId        String
   externalVariantId String?
 
   lastPushedAt DateTime?
@@ -649,7 +707,7 @@ model ProductMapping {
 }
 
 model RegisteredWebhook {
-  id           String @id @default(uuid())
+  id           String  @id @default(uuid())
   connectionId String
   topic        String
   externalId   String
@@ -730,9 +788,46 @@ model TenantSettings {
   updatedAt DateTime @updatedAt
 }
 
-
 model LandingConfig {
   id        String   @id @default("singleton")
   data      Json
   updatedAt DateTime @updatedAt
+}
+
+// ============================================================
+// MÓDULOS SAAS (APROVISIONAMIENTO)
+// ============================================================
+
+model Module {
+  id          String  @id @default(uuid())
+  code        String  @unique
+  name        String
+  description String?
+  isActive    Boolean @default(true)
+  price       Int     @default(0)
+
+  planModules  PlanModule[]
+  tenantAddons TenantModuleAddon[]
+}
+
+model PlanModule {
+  id       String @id @default(uuid())
+  planId   String
+  moduleId String
+
+  plan   Plan   @relation(fields: [planId], references: [id], onDelete: Cascade)
+  module Module @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+
+  @@unique([planId, moduleId])
+}
+
+model TenantModuleAddon {
+  id       String @id @default(uuid())
+  tenantId String
+  moduleId String
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  module Module @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, moduleId])
 }

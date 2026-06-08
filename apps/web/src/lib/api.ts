@@ -16,10 +16,7 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
  */
 export const api = axios.create({
     baseURL: API_BASE_URL,
-    headers: {
-        'Content-Type': 'application/json',
-    },
-    timeout: 10000, // 10 seconds timeout
+    timeout: 10000,
 });
 
 /**
@@ -31,6 +28,11 @@ api.interceptors.request.use(
         const token = localStorage.getItem('token');
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
+        }
+        // Let axios set Content-Type automatically for FormData (includes boundary).
+        // For all other requests, default to JSON.
+        if (!(config.data instanceof FormData)) {
+            config.headers['Content-Type'] = 'application/json';
         }
         return config;
     },
@@ -56,6 +58,12 @@ api.interceptors.response.use(
                     console.error('Unauthorized - Redirecting to login');
                     localStorage.removeItem('token');
                     window.location.href = '/login';
+                    break;
+                case 402:
+                    console.error('Payment Required - Subscription is past due');
+                    if (!window.location.pathname.includes('/subscription') && !window.location.pathname.includes('/login')) {
+                        window.location.href = '/dashboard/subscription?past_due=true';
+                    }
                     break;
                 case 403:
                     console.error('Forbidden - Insufficient permissions');

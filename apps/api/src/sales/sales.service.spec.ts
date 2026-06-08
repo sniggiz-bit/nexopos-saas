@@ -84,10 +84,10 @@ describe('SalesService (Tenant Isolation on Payments & DTE)', () => {
       mockPrismaService.sale.update.mockResolvedValue({ ...saleMock, status: 'COMPLETED' });
 
       const res = await service.completePreSale('sale-123', 'tenant-1', [
-        { amount: 5000, paymentMethod: 'EFECTIVO' },
+        { amount: 5000, paymentMethod: 'CASH' as any },
       ]);
 
-      expect(res.status).toBe('COMPLETED');
+      expect(res?.status).toBe('COMPLETED');
       expect(mockPrismaService.sale.findFirst).toHaveBeenCalledWith({
         where: { id: 'sale-123', tenantId: 'tenant-1' },
         include: { items: true },

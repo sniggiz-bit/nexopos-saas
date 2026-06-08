@@ -57,7 +57,7 @@ export function PaymentModal({
     isError,
     saleResult,
 }: PaymentModalProps) {
-    const { autoPrint, defaultFormat, setDefaultFormat } = usePrintSettings();
+    const { autoPrint, defaultFormat, setDefaultFormat, printerName, useQzTray } = usePrintSettings();
     const [hasAttemptedAutoPrint, setHasAttemptedAutoPrint] = useState(false);
     const [countdown, setCountdown] = useState(4);
     const { user } = useAuth();
@@ -103,21 +103,24 @@ export function PaymentModal({
         ).slice(0, 8);
     }, [customers, customerSearch]);
 
-    // Auto-print effect
-    useEffect(() => {
-        if (isSuccess && saleResult && autoPrint && !hasAttemptedAutoPrint) {
-            setHasAttemptedAutoPrint(true);
-            printSaleAction(saleResult, defaultFormat, tenant);
-        }
-    }, [isSuccess, saleResult, autoPrint, defaultFormat, hasAttemptedAutoPrint, tenant]);
+    // Auto-print: disparado una sola vez desde onConfirm cuando la venta es exitosa.
+    // El useEffect redundante fue eliminado para evitar doble llamada.
 
-    // Auto-close countdown after success
+    // Auto-print al éxito + countdown de cierre
     useEffect(() => {
-        if (!isSuccess) { setCountdown(4); return; }
+        if (!isSuccess) { setCountdown(4); setHasAttemptedAutoPrint(false); return; }
+
+        // Disparar auto-print UNA SOLA VEZ al éxito
+        if (autoPrint && saleResult && !hasAttemptedAutoPrint) {
+            setHasAttemptedAutoPrint(true);
+            printSaleAction(saleResult, defaultFormat, tenant, printerName || undefined, useQzTray);
+        }
+
         if (countdown <= 0) { onClose(); return; }
         const t = setTimeout(() => setCountdown(c => c - 1), 1000);
         return () => clearTimeout(t);
-    }, [isSuccess, countdown, onClose]);
+    }, [isSuccess, countdown, onClose, autoPrint, saleResult, hasAttemptedAutoPrint, defaultFormat, tenant, printerName, useQzTray]);
+
 
     // Reset all states when modal opens
     useEffect(() => {
@@ -184,6 +187,8 @@ export function PaymentModal({
         }
 
         onConfirm(payments, dteType, customerId);
+        // Auto-print al finalizar la venta
+        // El resultado llega via saleResult prop cuando isSuccess===true
     };
 
     const handleTransbankApproved = (result: TransbankPaymentResult) => {
@@ -209,6 +214,8 @@ export function PaymentModal({
         );
     }
 
+    const hasRealDtePdf = saleResult?.dtePdfUrl && !saleResult.dtePdfUrl.includes('ejemplo-mock');
+
     if (isSuccess) {
         return (
             <Dialog open={isOpen} onOpenChange={onClose}>
@@ -222,7 +229,11 @@ export function PaymentModal({
                             <span className="text-xs text-slate-400">Cerrando en {countdown}s</span>
                         </div>
                         <DialogDescription>
-                            {autoPrint ? 'Imprimiendo ticket automáticamente...' : 'La venta se ha procesado correctamente.'}
+                            {autoPrint
+                                ? hasRealDtePdf
+                                    ? 'Abriendo PDF oficial con Timbre Electrónico (TED)...'
+                                    : 'Imprimiendo ticket automáticamente...'
+                                : 'La venta se ha procesado correctamente.'}
                         </DialogDescription>
                     </DialogHeader>
 
@@ -234,10 +245,10 @@ export function PaymentModal({
                             </div>
                         )}
 
-                        {saleResult?.dtePdfUrl && !saleResult.dtePdfUrl.includes('ejemplo-mock') && (
+                        {hasRealDtePdf && (
                             <Button className="w-full" variant="outline"
-                                onClick={() => window.open(saleResult.dtePdfUrl, '_blank')}>
-                                Ver DTE (PDF)
+                                onClick={() => window.open(saleResult!.dtePdfUrl!, '_blank')}>
+                                📄 Abrir / Imprimir PDF oficial (con TED)
                             </Button>
                         )}
 
@@ -245,7 +256,7 @@ export function PaymentModal({
                             <Button className="w-full" variant="outline"
                                 onClick={() => {
                                     const apiUrl = import.meta.env.VITE_API_URL || '';
-                                    window.open(`${apiUrl}${saleResult.internalReceiptUrl}`, '_blank');
+                                    window.open(`${apiUrl}${saleResult!.internalReceiptUrl}`, '_blank');
                                 }}>
                                 Ver Ticket Interno (PDF)
                             </Button>
@@ -254,18 +265,20 @@ export function PaymentModal({
                         {/* Reprint + format selector */}
                         <div className="flex gap-2">
                             <Button className="flex-1" variant="secondary"
-                                onClick={() => printSaleAction(saleResult, defaultFormat, tenant)}>
-                                Reimprimir Ticket
+                                onClick={() => printSaleAction(saleResult, defaultFormat, tenant, printerName || undefined, useQzTray)}>
+                                {hasRealDtePdf ? '🖨 Reimprimir PDF DTE' : 'Reimprimir Ticket'}
                             </Button>
-                            <select
-                                value={defaultFormat}
-                                onChange={(e) => setDefaultFormat(e.target.value as '80mm' | '50mm' | 'A4')}
-                                className="px-2 py-1 text-xs border border-slate-200 rounded-lg bg-white text-slate-600 focus:outline-none"
-                            >
-                                <option value="80mm">80mm</option>
-                                <option value="50mm">50mm</option>
-                                <option value="A4">A4</option>
-                            </select>
+                            {!hasRealDtePdf && (
+                                <select
+                                    value={defaultFormat}
+                                    onChange={(e) => setDefaultFormat(e.target.value as '80mm' | '58mm' | 'A4')}
+                                    className="px-2 py-1 text-xs border border-slate-200 rounded-lg bg-white text-slate-600 focus:outline-none"
+                                >
+                                    <option value="80mm">80mm</option>
+                                    <option value="58mm">58mm</option>
+                                    <option value="A4">A4</option>
+                                </select>
+                            )}
                         </div>
                     </div>
 

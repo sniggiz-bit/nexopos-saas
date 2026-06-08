@@ -3,15 +3,19 @@ import {
   ExecutionContext,
   Injectable,
   UnauthorizedException,
+  HttpException,
+  HttpStatus,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
+import { PrismaService } from '../prisma/prisma.service';
+import { BillingStatus } from '@prisma/client';
 
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
   private jwtService: JwtService;
 
-  constructor() {
+  constructor(private prisma: PrismaService) {
     this.jwtService = new JwtService({
       secret: process.env.JWT_SECRET || 'secretKey',
     });
@@ -23,21 +27,36 @@ export class JwtAuthGuard implements CanActivate {
     if (!token) {
       throw new UnauthorizedException();
     }
+    
+    let payload;
     try {
-      console.log(
-        `[JwtAuthGuard] Header token: ${token ? 'found' : 'missing'}`,
-      );
-      const payload = await this.jwtService.verifyAsync(token, {
+      payload = await this.jwtService.verifyAsync(token, {
         secret: process.env.JWT_SECRET || 'secretKey',
       });
-      console.log(`[JwtAuthGuard] Full payload extracted:`, JSON.stringify(payload));
-      console.log(`[JwtAuthGuard] tenantId from token: ${payload.tenantId}`);
-      console.log(`[JwtAuthGuard] branchId from token: ${payload.branchId}`);
       request.user = payload;
     } catch (error) {
-      console.error(`[JwtAuthGuard] Verification failed:`, error.message);
       throw new UnauthorizedException();
     }
+
+    // --- Billing Check ---
+    if (payload?.tenantId && payload?.role !== 'SUPER_ADMIN') {
+      const tenant = await this.prisma.tenant.findUnique({
+        where: { id: payload.tenantId },
+        select: { billingStatus: true }
+      });
+
+      if (tenant?.billingStatus === BillingStatus.PAST_DUE) {
+        const url = request.url;
+        // Only allow login/logout, modules API, and maybe billing APIs
+        const allowedPaths = ['/auth', '/modules'];
+        const isAllowedPath = allowedPaths.some(p => url.startsWith(p));
+        
+        if (!isAllowedPath) {
+          throw new HttpException('Tenant subscription is PAST_DUE. Payment required.', HttpStatus.PAYMENT_REQUIRED);
+        }
+      }
+    }
+
     return true;
   }
 

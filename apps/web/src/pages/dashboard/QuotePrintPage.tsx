@@ -56,8 +56,11 @@ export function QuotePrintPage() {
     if (!quote) return <div className="p-8 text-center text-red-500">Cotización no encontrada</div>;
 
     const tenantInitial = (tenant?.name || 'N').charAt(0).toUpperCase();
-    const subtotal = quote.subtotal ?? (quote.total / 1.19);
-    const tax = quote.tax ?? (quote.total - quote.total / 1.19);
+    // Prices are IVA-inclusive. Compute totals from items directly.
+    const total = quote.items.reduce((sum: number, item: any) =>
+        sum + (item.total ?? item.price * Number(item.quantity)), 0);
+    const subtotal = Math.round(total / 1.19);
+    const tax = total - subtotal;
 
     return (
         <div className="min-h-screen bg-gray-100 py-8 px-4 print:p-0 print:bg-white">
@@ -175,7 +178,7 @@ export function QuotePrintPage() {
                             </div>
                             <div className="border-t border-gray-200 pt-3 flex justify-between text-xl font-black text-gray-900">
                                 <span>TOTAL</span>
-                                <span>{formatPrice(quote.total)}</span>
+                                <span>{formatPrice(total)}</span>
                             </div>
                         </div>
                     </div>

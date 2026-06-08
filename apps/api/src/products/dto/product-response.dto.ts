@@ -18,6 +18,7 @@ export class ProductResponseDto {
   unitType: 'UNIT' | 'WEIGHT';
   image?: string;
   isActive: boolean;
+  isPublic: boolean;
   stock: number; // Calculated from InventoryLevel
   category?: {
     id: string;

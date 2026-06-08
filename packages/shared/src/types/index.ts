@@ -38,6 +38,7 @@ export interface Product {
     unitType: 'UNIT' | 'WEIGHT';
     image?: string;
     isActive: boolean;
+    isPublic?: boolean;
     stock: number;
     category?: {
         id: string;

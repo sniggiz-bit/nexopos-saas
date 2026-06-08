@@ -36,6 +36,10 @@ import { CommonModule } from './common/common.module';
 import { AdminModule } from './admin/admin.module';
 import { TransbankModule } from './transbank/transbank.module';
 import { UploadsModule } from './uploads/uploads.module';
+import { ModulesModule } from './modules/modules.module';
+import { BillingModule } from './billing/billing.module';
+import { SupportModule } from './support/support.module';
+import { MercadopagoModule } from './mercadopago/mercadopago.module';
 
 @Module({
   imports: [
@@ -76,6 +80,10 @@ import { UploadsModule } from './uploads/uploads.module';
     AdminModule,
     TransbankModule,
     UploadsModule,
+    ModulesModule,
+    BillingModule,
+    SupportModule,
+    MercadopagoModule,
   ],
   controllers: [AppController, DebugController],
   providers: [AppService],

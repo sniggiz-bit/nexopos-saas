@@ -7,6 +7,8 @@ import TenantDetailPage from './pages/admin/TenantDetailPage';
 import PlansPage from './pages/admin/PlansPage';
 import SystemHealthPage from './pages/admin/SystemHealthPage';
 import AnnouncementsPage from './pages/admin/AnnouncementsPage';
+import AdminLandingPage from './pages/admin/AdminLandingPage';
+import AdminModulesPage from './pages/admin/AdminModulesPage';
 import { PosPage } from './pages/PosPage';
 import { Toaster } from 'react-hot-toast';
 import { Suspense } from 'react';
@@ -39,6 +41,7 @@ import { LoginPage } from './pages/LoginPage';
 import { LandingPage } from './pages/LandingPage';
 import { RegisterPage } from './pages/RegisterPage';
 import { PublicStorePage } from './pages/store/PublicStorePage';
+import { SubscriptionPage } from './pages/dashboard/SubscriptionPage';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
@@ -78,14 +81,14 @@ function RoleBasedRedirect() {
 
 function LoadingScreen() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className="min-h-screen flex items-center justify-center" style={{ background: 'hsl(220,30%,6%)' }}>
       <div className="text-center">
-        <h1 className="text-4xl font-bold text-gray-800 mb-2">
-          NexoPOS
-        </h1>
-        <p className="text-xl text-gray-600">
-          Cargando...
-        </p>
+        <div className="relative w-14 h-14 mx-auto mb-5">
+          <div className="absolute inset-0 rounded-full" style={{ border: '2px solid rgba(0,212,255,0.1)' }} />
+          <div className="absolute inset-0 rounded-full animate-spin" style={{ border: '2px solid transparent', borderTopColor: '#00D4FF' }} />
+          <div className="absolute inset-2 rounded-full" style={{ background: 'rgba(0,212,255,0.05)', border: '1px solid rgba(0,212,255,0.15)' }} />
+        </div>
+        <p className="text-sm font-medium" style={{ color: 'rgba(0,212,255,0.6)' }}>Cargando NexoPOS...</p>
       </div>
     </div>
   );
@@ -117,6 +120,8 @@ function App() {
                   <Route path="branches" element={<SuperAdminBranchesPage />} />
                   <Route path="system-health" element={<SystemHealthPage />} />
                   <Route path="announcements" element={<AnnouncementsPage />} />
+                  <Route path="landing" element={<AdminLandingPage />} />
+                  <Route path="modules" element={<AdminModulesPage />} />
                 </Route>
               </Route>
 
@@ -159,6 +164,7 @@ function App() {
                 <Route path="/dashboard/purchases" element={<PurchasesPage />} />
                 <Route path="/dashboard/transfers" element={<TransfersPage />} />
                 <Route path="/dashboard/transbank" element={<TransbankConfigPage />} />
+                <Route path="/dashboard/subscription" element={<SubscriptionPage />} />
               </Route>
 
               {/* Default Redirect */}
@@ -166,7 +172,25 @@ function App() {
               <Route path="/" element={<RoleBasedRedirect />} />
             </Routes>
           </Suspense>
-          <Toaster />
+          <Toaster
+            position="bottom-right"
+            toastOptions={{
+              style: {
+                background: 'hsl(220,25%,9%)',
+                color: 'rgba(210,225,245,0.9)',
+                border: '1px solid rgba(0,212,255,0.15)',
+                borderRadius: '12px',
+                fontSize: '13px',
+                fontFamily: 'Inter, system-ui, sans-serif',
+              },
+              success: {
+                iconTheme: { primary: '#34D399', secondary: 'hsl(220,25%,9%)' },
+              },
+              error: {
+                iconTheme: { primary: '#F87171', secondary: 'hsl(220,25%,9%)' },
+              },
+            }}
+          />
         </BrowserRouter>
       </AuthProvider>
     </QueryClientProvider>

@@ -30,20 +30,20 @@ function ProductSkeleton({ viewMode = 'grid' }: { viewMode?: 'grid' | 'list' }) 
     }
 
     return (
-        <div className="animate-pulse bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 p-4">
-            <div className="flex justify-between mb-3">
-                <div className="h-5 w-12 bg-slate-200 dark:bg-slate-700 rounded-full" />
-                <div className="h-3 w-14 bg-slate-200 dark:bg-slate-700 rounded" />
+        <div className="animate-pulse bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 p-2">
+            <div className="flex justify-between mb-1.5">
+                <div className="h-4 w-10 bg-slate-200 dark:bg-slate-700 rounded-full" />
+                <div className="h-3 w-10 bg-slate-200 dark:bg-slate-700 rounded" />
             </div>
-            <div className="flex flex-col items-center gap-3 mb-4">
-                <div className="w-12 h-12 bg-slate-200 dark:bg-slate-700 rounded-full" />
-                <div className="h-4 w-3/4 bg-slate-200 dark:bg-slate-700 rounded" />
-                <div className="h-3 w-1/2 bg-slate-200 dark:bg-slate-700 rounded" />
+            <div className="flex flex-col items-center gap-1.5 mb-2">
+                <div className="w-10 h-10 bg-slate-200 dark:bg-slate-700 rounded-lg" />
+                <div className="h-3 w-3/4 bg-slate-200 dark:bg-slate-700 rounded" />
+                <div className="h-2 w-1/2 bg-slate-200 dark:bg-slate-700 rounded" />
             </div>
-            <div className="h-px bg-slate-100 dark:bg-slate-700 mb-3" />
+            <div className="h-px bg-slate-100 dark:bg-slate-700 mb-1.5" />
             <div className="flex justify-between items-center">
-                <div className="h-6 w-20 bg-slate-200 dark:bg-slate-700 rounded" />
-                <div className="w-8 h-8 bg-slate-200 dark:bg-slate-700 rounded-full" />
+                <div className="h-4 w-12 bg-slate-200 dark:bg-slate-700 rounded" />
+                <div className="w-7 h-7 bg-slate-200 dark:bg-slate-700 rounded-lg" />
             </div>
         </div>
     );
@@ -64,7 +64,7 @@ export function ProductGrid({
     if (isLoading) {
         return (
             <div className={viewMode === 'grid'
-                ? 'grid grid-cols-[repeat(auto-fill,minmax(170px,1fr))] gap-4'
+                ? 'grid grid-cols-[repeat(auto-fill,minmax(130px,1fr))] gap-3'
                 : 'flex flex-col gap-2'
             }>
                 {Array.from({ length: viewMode === 'grid' ? 12 : 8 }).map((_, i) => (
@@ -98,7 +98,7 @@ export function ProductGrid({
             ))}
         </div>
     ) : (
-        <div className="grid grid-cols-[repeat(auto-fill,minmax(170px,1fr))] gap-4">
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(130px,1fr))] gap-3">
             {products.map((product) => (
                 <ProductCard
                     key={product.id}

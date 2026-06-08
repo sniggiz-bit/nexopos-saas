@@ -44,7 +44,7 @@ export function StockAdjustModal({ product, onClose, onSuccess }: StockAdjustMod
                     ? `+${qty} ${product.unitType === 'WEIGHT' ? 'kg' : 'uds'} agregados a ${product.name}`
                     : `-${qty} ${product.unitType === 'WEIGHT' ? 'kg' : 'uds'} descontados de ${product.name}`
             );
-            await queryClient.invalidateQueries({ queryKey: ['products'] });
+            await queryClient.invalidateQueries({ queryKey: ['products-all'] });
             onSuccess();
             onClose();
         } catch (error: any) {

@@ -1,54 +1,29 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState } from 'react';
 import { DashboardLayout } from '../../components/dashboard/DashboardLayout';
-import { getBrands, createBrand, updateBrand, deleteBrand } from '../../api/brands';
+import { useBrands, useCreateBrand, useUpdateBrand, useDeleteBrand } from '../../hooks/useBrands';
 import type { Brand } from '../../api/brands';
-import { Plus, Edit, Trash2, Loader2, Tag } from 'lucide-react';
-import { toast } from 'react-hot-toast';
+import { Plus, Edit, Trash2, Loader2, Tag, RefreshCw } from 'lucide-react';
 
 export function BrandsPage() {
-    const [brands, setBrands] = useState<Brand[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingBrand, setEditingBrand] = useState<Brand | null>(null);
     const [name, setName] = useState('');
-    const [isSaving, setIsSaving] = useState(false);
     const [deletingId, setDeletingId] = useState<string | null>(null);
 
-    const loadBrands = useCallback(async () => {
-        setIsLoading(true);
-        try {
-            const data = await getBrands();
-            setBrands(data);
-        } catch {
-            toast.error('Error al cargar las marcas');
-        } finally {
-            setIsLoading(false);
-        }
-    }, []);
+    const { data: brands = [], isLoading, isError, refetch } = useBrands();
+    const createBrand = useCreateBrand();
+    const updateBrand = useUpdateBrand();
+    const deleteBrand = useDeleteBrand();
 
-    useEffect(() => {
-        loadBrands();
-    }, [loadBrands]);
-
-    const handleSubmit = async (e: React.SyntheticEvent) => {
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        setIsSaving(true);
-        try {
-            if (editingBrand) {
-                await updateBrand(editingBrand.id, { name });
-                toast.success('Marca actualizada exitosamente');
-            } else {
-                await createBrand({ name });
-                toast.success('Marca creada exitosamente');
-            }
-            handleClose();
-            await loadBrands();
-        } catch (error: any) {
-            const message = error.response?.data?.message || 'Error al guardar la marca';
-            toast.error(message);
-        } finally {
-            setIsSaving(false);
+        if (editingBrand) {
+            await updateBrand.mutateAsync({ id: editingBrand.id, data: { name } });
+        } else {
+            await createBrand.mutateAsync({ name });
         }
+        refetch();
+        handleClose();
     };
 
     const handleEdit = (brand: Brand) => {
@@ -59,14 +34,8 @@ export function BrandsPage() {
 
     const handleDelete = async (id: string) => {
         setDeletingId(null);
-        try {
-            await deleteBrand(id);
-            toast.success('Marca eliminada exitosamente');
-        } catch (error: any) {
-            toast.error(error.response?.data?.message || 'Error al eliminar la marca');
-        } finally {
-            await loadBrands();
-        }
+        await deleteBrand.mutateAsync(id);
+        refetch();
     };
 
     const handleClose = () => {
@@ -75,76 +44,102 @@ export function BrandsPage() {
         setName('');
     };
 
+    const isSaving = createBrand.isPending || updateBrand.isPending;
+
     return (
         <DashboardLayout>
-            <div className="space-y-6">
+            <div className="space-y-6 animate-fade-up">
                 <div className="flex items-center justify-between">
-                    <p className="text-gray-600">
-                        Gestiona las marcas de tus productos para una mejor clasificación.
-                    </p>
-                    <button
-                        onClick={() => setIsModalOpen(true)}
-                        className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors flex items-center shadow-sm"
-                    >
-                        <Plus className="w-5 h-5 mr-2" />
-                        Nueva Marca
-                    </button>
+                    <div>
+                        <h1 className="text-2xl font-bold tracking-tight text-white">Marcas de Productos</h1>
+                        <p className="text-[13px] text-[rgba(180,195,220,0.5)] mt-1">
+                            Gestiona las marcas de tus productos para una mejor clasificación
+                        </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        {isError && (
+                            <button
+                                onClick={() => refetch()}
+                                className="flex items-center gap-1.5 px-3 py-2 text-sm border border-[rgba(0,212,255,0.15)] text-[rgba(210,225,245,0.85)] rounded-lg hover:bg-[#00D4FF]/5 transition-colors"
+                            >
+                                <RefreshCw className="w-4 h-4" />
+                                Reintentar
+                            </button>
+                        )}
+                        <button
+                            onClick={() => setIsModalOpen(true)}
+                            className="px-4 py-2 bg-[#00D4FF] hover:bg-[#00BCE0] text-[#0B0F1A] font-bold rounded-lg transition-all flex items-center shadow-[0_0_15px_rgba(0,212,255,0.2)] hover:shadow-[0_0_25px_rgba(0,212,255,0.4)]"
+                        >
+                            <Plus className="w-5 h-5 mr-2 stroke-[3]" />
+                            Nueva Marca
+                        </button>
+                    </div>
                 </div>
 
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                    <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="bg-gray-50">
+                <div className="rounded-xl overflow-hidden animate-fade-up" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(0,212,255,0.08)' }}>
+                    <table className="min-w-full divide-y divide-[rgba(0,212,255,0.06)]">
+                        <thead style={{ background: 'rgba(0,212,255,0.04)' }}>
                             <tr>
-                                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Nombre de Marca</th>
-                                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Productos</th>
-                                <th className="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Acciones</th>
+                                <th className="px-6 py-4 text-left text-xs font-bold text-[rgba(0,212,255,0.6)] uppercase tracking-wider">Nombre de Marca</th>
+                                <th className="px-6 py-4 text-left text-xs font-bold text-[rgba(0,212,255,0.6)] uppercase tracking-wider">Productos</th>
+                                <th className="px-6 py-4 text-right text-xs font-bold text-[rgba(0,212,255,0.6)] uppercase tracking-wider">Acciones</th>
                             </tr>
                         </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
+                        <tbody className="divide-y divide-[rgba(0,212,255,0.06)]">
                             {isLoading ? (
                                 <tr>
                                     <td colSpan={3} className="px-6 py-12 text-center">
-                                        <Loader2 className="w-8 h-8 animate-spin text-indigo-600 mx-auto" />
-                                        <p className="mt-2 text-gray-500">Cargando marcas...</p>
+                                        <Loader2 className="w-8 h-8 animate-spin text-[#00D4FF] mx-auto" />
+                                        <p className="mt-2 text-sm text-[rgba(180,195,220,0.5)]">Cargando marcas...</p>
+                                    </td>
+                                </tr>
+                            ) : isError ? (
+                                <tr>
+                                    <td colSpan={3} className="px-6 py-12 text-center text-[rgba(180,195,220,0.5)]">
+                                        <Tag className="w-12 h-12 text-red-400/20 mx-auto mb-3" />
+                                        <p className="text-red-400 font-medium">Error al cargar las marcas</p>
+                                        <button onClick={() => refetch()} className="mt-3 text-sm text-[#00D4FF] hover:underline">
+                                            Intentar nuevamente
+                                        </button>
                                     </td>
                                 </tr>
                             ) : brands.length === 0 ? (
                                 <tr>
-                                    <td colSpan={3} className="px-6 py-12 text-center text-gray-500">
-                                        <Tag className="w-12 h-12 text-gray-200 mx-auto mb-3" />
+                                    <td colSpan={3} className="px-6 py-12 text-center text-[rgba(180,195,220,0.4)]">
+                                        <Tag className="w-12 h-12 text-[rgba(0,212,255,0.1)] mx-auto mb-3" />
                                         No hay marcas registradas en este sistema.
                                     </td>
                                 </tr>
                             ) : (
                                 brands.map((brand) => (
-                                    <tr key={brand.id} className="hover:bg-gray-50 transition-colors">
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 flex items-center">
-                                            <div className="w-8 h-8 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center mr-3 font-bold text-xs">
+                                    <tr key={brand.id} className="hover:bg-[rgba(0,212,255,0.02)] transition-colors">
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-[rgba(210,225,245,0.9)] flex items-center">
+                                            <div className="w-8 h-8 rounded-lg bg-[#00D4FF]/10 text-[#00D4FF] border border-[#00D4FF]/20 flex items-center justify-center mr-3 font-bold text-xs">
                                                 {brand.name.substring(0, 2).toUpperCase()}
                                             </div>
                                             {brand.name}
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                            <span className="bg-indigo-50 text-indigo-700 px-2.5 py-0.5 rounded-full text-xs font-medium border border-indigo-100">
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-50">
+                                            <span className="bg-[#00D4FF]/10 text-[#00D4FF] px-2.5 py-0.5 rounded-full text-xs font-semibold border border-[#00D4FF]/20">
                                                 {brand.productCount || 0} productos
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                             <button
                                                 onClick={() => handleEdit(brand)}
-                                                className="text-indigo-600 hover:text-indigo-900 mr-4 p-1 hover:bg-indigo-50 rounded"
+                                                className="text-[#00D4FF] hover:text-white mr-4 p-2 hover:bg-[#00D4FF]/10 rounded-lg transition-colors"
                                             >
                                                 <Edit className="w-4 h-4" />
                                             </button>
                                             {deletingId === brand.id ? (
                                                 <span className="inline-flex gap-1">
-                                                    <button onClick={() => handleDelete(brand.id)} className="text-xs px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700">Sí</button>
-                                                    <button onClick={() => setDeletingId(null)} className="text-xs px-2 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300">No</button>
+                                                    <button onClick={() => handleDelete(brand.id)} className="text-xs px-2.5 py-1 bg-red-600 text-white rounded-lg hover:bg-red-700 font-bold transition-all">Sí</button>
+                                                    <button onClick={() => setDeletingId(null)} className="text-xs px-2.5 py-1 bg-[rgba(255,255,255,0.05)] border border-[rgba(0,212,255,0.15)] text-[rgba(210,225,245,0.85)] rounded-lg hover:bg-[rgba(255,255,255,0.1)] transition-all">No</button>
                                                 </span>
                                             ) : (
                                                 <button
                                                     onClick={() => setDeletingId(brand.id)}
-                                                    className="text-red-600 hover:text-red-900 p-1 hover:bg-red-50 rounded"
+                                                    className="text-red-400 hover:text-white p-2 hover:bg-red-500/10 rounded-lg transition-colors"
                                                 >
                                                     <Trash2 className="w-4 h-4" />
                                                 </button>
@@ -159,47 +154,45 @@ export function BrandsPage() {
             </div>
 
             {isModalOpen && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden">
-                        <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
-                            <h3 className="text-lg font-bold text-gray-900">
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                    <div className="rounded-xl shadow-2xl w-full max-w-md overflow-hidden border border-[rgba(0,212,255,0.15)] bg-[hsl(220,25%,9%)]">
+                        <div className="px-6 py-4 border-b border-[rgba(0,212,255,0.08)] flex justify-between items-center bg-[rgba(0,212,255,0.02)]">
+                            <h3 className="text-lg font-bold text-white">
                                 {editingBrand ? 'Editar Marca' : 'Nueva Marca'}
                             </h3>
-                            <button onClick={handleClose} className="text-gray-400 hover:text-gray-600">
+                            <button onClick={handleClose} className="text-[rgba(180,195,220,0.6)] hover:text-white">
                                 <Plus className="w-6 h-6 rotate-45" />
                             </button>
                         </div>
                         <form onSubmit={handleSubmit} className="p-6">
-                            <div className="space-y-4">
-                                <div>
-                                    <label className="block text-sm font-semibold text-gray-700 mb-1">
-                                        Nombre de la Marca
-                                    </label>
-                                    <input
-                                        autoFocus
-                                        type="text"
-                                        required
-                                        value={name}
-                                        onChange={(e) => setName(e.target.value)}
-                                        placeholder="Ej: CCU, Nestlé, Evercrisp..."
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
-                                    />
-                                </div>
+                            <div>
+                                <label className="block text-sm font-semibold text-[rgba(210,225,245,0.85)] mb-1">
+                                    Nombre de la Marca
+                                </label>
+                                <input
+                                    autoFocus
+                                    type="text"
+                                    required
+                                    value={name}
+                                    onChange={(e) => setName(e.target.value)}
+                                    placeholder="Ej: CCU, Nestlé, Evercrisp..."
+                                    className="w-full px-4 py-2 bg-[rgba(255,255,255,0.02)] border border-[rgba(0,212,255,0.15)] text-white rounded-lg focus:ring-2 focus:ring-[#00D4FF] focus:border-transparent outline-none transition-all placeholder:text-[rgba(180,195,220,0.3)]"
+                                />
                             </div>
                             <div className="mt-8 flex justify-end gap-3">
                                 <button
                                     type="button"
                                     onClick={handleClose}
-                                    className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg font-medium transition-colors"
+                                    className="px-4 py-2 border border-[rgba(0,212,255,0.15)] text-[rgba(210,225,245,0.85)] hover:bg-[#00D4FF]/5 rounded-lg font-medium transition-colors"
                                 >
                                     Cancelar
                                 </button>
                                 <button
                                     type="submit"
                                     disabled={isSaving}
-                                    className="px-6 py-2 bg-indigo-600 text-white rounded-lg font-bold hover:bg-indigo-700 transition-colors disabled:opacity-50 flex items-center shadow-lg shadow-indigo-200"
+                                    className="px-6 py-2 bg-[#00D4FF] hover:bg-[#00BCE0] text-[#0B0F1A] rounded-lg font-bold transition-all disabled:opacity-50 flex items-center shadow-[0_0_15px_rgba(0,212,255,0.15)]"
                                 >
-                                    {isSaving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                                    {isSaving && <Loader2 className="w-4 h-4 mr-2 animate-spin text-[#0B0F1A]" />}
                                     {editingBrand ? 'Guardar Cambios' : 'Crear Marca'}
                                 </button>
                             </div>

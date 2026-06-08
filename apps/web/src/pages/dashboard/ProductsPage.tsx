@@ -4,206 +4,250 @@ import { useProducts } from '../../hooks/useProducts';
 import { useDeleteProduct } from '../../hooks/useDeleteProduct';
 import { ProductFormModal } from '../../components/dashboard/ProductFormModal';
 import { InventoryKardexModal } from '../../components/dashboard/InventoryKardexModal';
-import { Plus, Search, Edit, Trash2, History } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, History, Package, AlertTriangle } from 'lucide-react';
 import type { Product } from '../../api/types';
 import { useAuth } from '../../context/AuthContext';
 
+// ── Palette ────────────────────────────────────────────────────────────────────
+const C = {
+    cyan:   '#00D4FF',
+    cyanA:  (a: number) => `rgba(0,212,255,${a})`,
+    red:    '#F87171',
+    redA:   (a: number) => `rgba(248,113,113,${a})`,
+    amber:  '#F59E0B',
+    amberA: (a: number) => `rgba(245,158,11,${a})`,
+    violet: '#A78BFA',
+    violetA:(a: number) => `rgba(167,139,250,${a})`,
+    green:  '#34D399',
+    greenA: (a: number) => `rgba(52,211,153,${a})`,
+    text:   'rgba(210,225,245,0.9)',
+    muted:  'rgba(180,195,220,0.45)',
+    subtle: 'rgba(180,195,220,0.25)',
+};
+
+const inputStyle: React.CSSProperties = {
+    background:   'rgba(0,212,255,0.04)',
+    border:       '1px solid rgba(0,212,255,0.12)',
+    borderRadius: '10px',
+    padding:      '7px 12px 7px 36px',
+    fontSize:     '13px',
+    color:        'rgba(210,225,245,0.85)',
+    outline:      'none',
+    width:        '100%',
+};
+
+const COLS = ['Producto', 'Cód. Barras', 'Categoría', 'Precio', 'Stock', 'Tipo', 'Acciones'];
+
 export function ProductsPage() {
-    const [searchTerm, setSearchTerm] = useState('');
-    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [searchTerm,    setSearchTerm]    = useState('');
+    const [isModalOpen,   setIsModalOpen]   = useState(false);
     const [productToEdit, setProductToEdit] = useState<Product | null>(null);
-    const [isKardexOpen, setIsKardexOpen] = useState(false);
+    const [isKardexOpen,  setIsKardexOpen]  = useState(false);
     const [productForKardex, setProductForKardex] = useState<Product | null>(null);
     const { user } = useAuth();
 
     const { data: products, isLoading } = useProducts(user?.tenantId);
     const deleteProduct = useDeleteProduct();
 
-    const filteredProducts = products?.filter(product =>
-        product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        product.barcode?.toLowerCase().includes(searchTerm.toLowerCase())
+    const filtered = products?.filter(p =>
+        p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        p.barcode?.toLowerCase().includes(searchTerm.toLowerCase())
     ) || [];
 
-    const handleEdit = (product: Product) => {
-        setProductToEdit(product);
-        setIsModalOpen(true);
-    };
-
-    const handleDelete = async (product: Product) => {
-        if (window.confirm(`¿Estás seguro de que deseas eliminar "${product.name}"?`)) {
-            await deleteProduct.mutateAsync(product.id);
-        }
-    };
-
-    const handleCloseModal = () => {
-        setIsModalOpen(false);
-        setProductToEdit(null);
-    };
-
-    const handleKardex = (product: Product) => {
-        setProductForKardex(product);
-        setIsKardexOpen(true);
+    const handleEdit   = (p: Product) => { setProductToEdit(p);    setIsModalOpen(true); };
+    const handleKardex = (p: Product) => { setProductForKardex(p); setIsKardexOpen(true); };
+    const handleDelete = async (p: Product) => {
+        if (window.confirm(`¿Eliminar "${p.name}"?`)) await deleteProduct.mutateAsync(p.id);
     };
 
     return (
         <DashboardLayout>
-            <div className="space-y-6">
-                {/* Header Actions */}
-                <div className="flex items-center justify-between">
+            <div className="space-y-5">
+
+                {/* ── Header ── */}
+                <div className="flex items-center justify-between gap-4">
+                    {/* Buscador */}
                     <div className="relative flex-1 max-w-md">
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none"
+                            style={{ color: C.cyanA(0.4) }} />
                         <input
                             type="text"
-                            placeholder="Buscar por nombre o código de barras..."
+                            placeholder="Buscar por nombre o código..."
                             value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            onChange={e => setSearchTerm(e.target.value)}
+                            style={inputStyle}
+                            onFocus={e  => (e.currentTarget.style.borderColor = C.cyanA(0.4))}
+                            onBlur={e   => (e.currentTarget.style.borderColor = 'rgba(0,212,255,0.12)')}
                         />
                     </div>
+
+                    {/* Nuevo Producto */}
                     <button
-                        onClick={() => {
-                            setProductToEdit(null);
-                            setIsModalOpen(true);
-                        }}
-                        className="ml-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center"
-                    >
-                        <Plus className="w-5 h-5 mr-2" />
+                        onClick={() => { setProductToEdit(null); setIsModalOpen(true); }}
+                        className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-[13px] font-bold transition-all duration-150 shrink-0"
+                        style={{ background: 'linear-gradient(135deg,rgba(0,212,255,0.2) 0%,rgba(0,212,255,0.08) 100%)', border: `1px solid ${C.cyanA(0.3)}`, color: C.cyan }}
+                        onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'linear-gradient(135deg,rgba(0,212,255,0.28) 0%,rgba(0,212,255,0.14) 100%)'}
+                        onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'linear-gradient(135deg,rgba(0,212,255,0.2) 0%,rgba(0,212,255,0.08) 100%)'}>
+                        <Plus className="w-4 h-4" style={{ filter: `drop-shadow(0 0 4px ${C.cyan})` }} />
                         Nuevo Producto
                     </button>
                 </div>
 
-                {/* Products Table */}
-                <div className="bg-white rounded-lg shadow overflow-hidden">
-                    <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="bg-gray-50">
-                            <tr>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Producto
-                                </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Código de Barras
-                                </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Categoría
-                                </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Precio
-                                </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Stock
-                                </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Tipo
-                                </th>
-                                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Acciones
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
-                            {isLoading ? (
-                                <tr>
-                                    <td colSpan={7} className="px-6 py-4 text-center text-gray-500">
-                                        Cargando productos...
-                                    </td>
+                {/* ── Table ── */}
+                <div className="rounded-2xl overflow-hidden"
+                    style={{ background: 'rgba(255,255,255,0.02)', border: `1px solid ${C.cyanA(0.1)}` }}>
+                    <div className="overflow-x-auto">
+                        <table className="min-w-full text-[13px]">
+                            <thead>
+                                <tr style={{ borderBottom: '1px solid rgba(0,212,255,0.07)' }}>
+                                    {COLS.map(col => (
+                                        <th key={col}
+                                            className={`px-5 py-3.5 text-[10px] font-bold uppercase tracking-widest whitespace-nowrap ${col === 'Acciones' ? 'text-right' : 'text-left'}`}
+                                            style={{ color: C.cyanA(0.4), background: C.cyanA(0.03) }}>
+                                            {col}
+                                        </th>
+                                    ))}
                                 </tr>
-                            ) : filteredProducts.length === 0 ? (
-                                <tr>
-                                    <td colSpan={7} className="px-6 py-4 text-center text-gray-500">
-                                        No se encontraron productos
-                                    </td>
-                                </tr>
-                            ) : (
-                                filteredProducts.map((product) => (
-                                    <tr key={product.id} className="hover:bg-gray-50">
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className="flex items-center">
-                                                {product.image && (
-                                                    <img
-                                                        src={product.image}
-                                                        alt={product.name}
-                                                        className="w-10 h-10 rounded object-cover mr-3"
-                                                    />
-                                                )}
-                                                <div>
-                                                    <div className="text-sm font-medium text-gray-900">
-                                                        {product.name}
-                                                    </div>
-                                                    {product.sku && (
-                                                        <div className="text-sm text-gray-500">
-                                                            SKU: {product.sku}
-                                                        </div>
-                                                    )}
-                                                </div>
+                            </thead>
+                            <tbody>
+                                {isLoading ? (
+                                    Array.from({ length: 5 }).map((_, i) => (
+                                        <tr key={i} className="animate-pulse" style={{ borderBottom: '1px solid rgba(0,212,255,0.05)' }}>
+                                            {COLS.map(c => (
+                                                <td key={c} className="px-5 py-4">
+                                                    <div className="h-3.5 rounded-lg" style={{ background: C.cyanA(0.06), width: '65%' }} />
+                                                </td>
+                                            ))}
+                                        </tr>
+                                    ))
+                                ) : filtered.length === 0 ? (
+                                    <tr>
+                                        <td colSpan={COLS.length}>
+                                            <div className="py-16 flex flex-col items-center gap-3">
+                                                <Package className="w-10 h-10" style={{ color: C.cyanA(0.2) }} />
+                                                <p className="text-sm font-semibold" style={{ color: C.subtle }}>
+                                                    {searchTerm ? 'No se encontraron productos' : 'No hay productos registrados'}
+                                                </p>
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                            {product.barcode || '-'}
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                            {product.category?.name || '-'}
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                            ${product.price.toLocaleString('es-CL')}
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <span className={`text-sm ${product.stock <= product.minStock ? 'text-red-600 font-semibold' : 'text-gray-900'}`}>
-                                                {product.stock}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <span className={`px-2 py-1 text-xs font-medium rounded-full ${product.unitType === 'WEIGHT'
-                                                ? 'bg-purple-100 text-purple-800'
-                                                : 'bg-gray-100 text-gray-800'
-                                                }`}>
-                                                {product.unitType === 'WEIGHT' ? 'Granel' : 'Unidad'}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                            <button
-                                                onClick={() => handleEdit(product)}
-                                                className="text-blue-600 hover:text-blue-900 mr-3"
-                                            >
-                                                <Edit className="w-4 h-4" />
-                                            </button>
-                                            <button
-                                                onClick={() => handleKardex(product)}
-                                                className="text-gray-600 hover:text-gray-900 mr-3"
-                                                title="Ver Kardex"
-                                            >
-                                                <History className="w-4 h-4" />
-                                            </button>
-                                            <button
-                                                onClick={() => handleDelete(product)}
-                                                disabled={deleteProduct.isPending}
-                                                className="text-red-600 hover:text-red-900 disabled:opacity-50"
-                                            >
-                                                <Trash2 className="w-4 h-4" />
-                                            </button>
-                                        </td>
                                     </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
+                                ) : (
+                                    filtered.map((product, idx) => {
+                                        const isLowStock = product.stock <= product.minStock;
+                                        const isEven     = idx % 2 === 0;
+                                        return (
+                                            <tr key={product.id}
+                                                style={{ borderBottom: '1px solid rgba(0,212,255,0.05)', background: isEven ? 'transparent' : C.cyanA(0.015) }}
+                                                onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = C.cyanA(0.04)}
+                                                onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = isEven ? 'transparent' : C.cyanA(0.015)}>
+
+                                                {/* Producto */}
+                                                <td className="px-5 py-3.5 whitespace-nowrap">
+                                                    <div className="flex items-center gap-3">
+                                                        {product.image ? (
+                                                            <img src={product.image} alt={product.name}
+                                                                className="w-9 h-9 rounded-lg object-cover shrink-0"
+                                                                style={{ border: `1px solid ${C.cyanA(0.15)}` }} />
+                                                        ) : (
+                                                            <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
+                                                                style={{ background: C.cyanA(0.06), border: `1px solid ${C.cyanA(0.12)}` }}>
+                                                                <Package className="w-4 h-4" style={{ color: C.cyanA(0.4) }} />
+                                                            </div>
+                                                        )}
+                                                        <div>
+                                                            <p className="font-semibold" style={{ color: C.text }}>{product.name}</p>
+                                                            {product.sku && <p className="text-[10px]" style={{ color: C.muted }}>SKU: {product.sku}</p>}
+                                                        </div>
+                                                    </div>
+                                                </td>
+
+                                                {/* Barcode */}
+                                                <td className="px-5 py-3.5 whitespace-nowrap font-mono text-[12px]" style={{ color: C.muted }}>
+                                                    {product.barcode || <span style={{ color: C.subtle }}>—</span>}
+                                                </td>
+
+                                                {/* Categoría */}
+                                                <td className="px-5 py-3.5 whitespace-nowrap" style={{ color: C.muted }}>
+                                                    {product.category?.name || <span style={{ color: C.subtle }}>—</span>}
+                                                </td>
+
+                                                {/* Precio */}
+                                                <td className="px-5 py-3.5 whitespace-nowrap font-bold tabular-nums" style={{ color: C.text }}>
+                                                    ${product.price.toLocaleString('es-CL')}
+                                                </td>
+
+                                                {/* Stock */}
+                                                <td className="px-5 py-3.5 whitespace-nowrap">
+                                                    <div className="flex items-center gap-1.5">
+                                                        {isLowStock && <AlertTriangle className="w-3.5 h-3.5" style={{ color: C.amber }} />}
+                                                        <span className="font-bold tabular-nums"
+                                                            style={{ color: product.stock === 0 ? C.red : isLowStock ? C.amber : C.text }}>
+                                                            {product.stock}
+                                                        </span>
+                                                    </div>
+                                                </td>
+
+                                                {/* Tipo */}
+                                                <td className="px-5 py-3.5 whitespace-nowrap">
+                                                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full"
+                                                        style={product.unitType === 'WEIGHT'
+                                                            ? { background: C.violetA(0.12), color: C.violet, border: `1px solid ${C.violetA(0.25)}` }
+                                                            : { background: C.cyanA(0.08),  color: C.cyan,   border: `1px solid ${C.cyanA(0.2)}`   }}>
+                                                        {product.unitType === 'WEIGHT' ? 'Granel' : 'Unidad'}
+                                                    </span>
+                                                </td>
+
+                                                {/* Acciones */}
+                                                <td className="px-5 py-3.5 whitespace-nowrap">
+                                                    <div className="flex items-center gap-1.5 justify-end">
+                                                        <ActionBtn onClick={() => handleEdit(product)} color={C.cyan} alphaFn={C.cyanA} title="Editar">
+                                                            <Edit className="w-3.5 h-3.5" />
+                                                        </ActionBtn>
+                                                        <ActionBtn onClick={() => handleKardex(product)} color={C.violet} alphaFn={C.violetA} title="Ver Kardex">
+                                                            <History className="w-3.5 h-3.5" />
+                                                        </ActionBtn>
+                                                        <ActionBtn onClick={() => handleDelete(product)} color={C.red} alphaFn={C.redA} title="Eliminar" disabled={deleteProduct.isPending}>
+                                                            <Trash2 className="w-3.5 h-3.5" />
+                                                        </ActionBtn>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        );
+                                    })
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {/* Footer */}
+                    {filtered.length > 0 && !isLoading && (
+                        <div className="px-5 py-2.5 text-[11px] text-right"
+                            style={{ borderTop: '1px solid rgba(0,212,255,0.07)', color: C.cyanA(0.35) }}>
+                            {filtered.length} producto{filtered.length !== 1 ? 's' : ''}
+                        </div>
+                    )}
                 </div>
 
-                {/* Product Form Modal */}
-                <ProductFormModal
-                    isOpen={isModalOpen}
-                    onClose={handleCloseModal}
-                    initialData={productToEdit}
-                />
-
-                <InventoryKardexModal
-                    isOpen={isKardexOpen}
-                    onClose={() => {
-                        setIsKardexOpen(false);
-                        setProductForKardex(null);
-                    }}
-                    product={productForKardex}
-                />
+                {/* Modals */}
+                <ProductFormModal isOpen={isModalOpen} onClose={() => { setIsModalOpen(false); setProductToEdit(null); }} initialData={productToEdit} />
+                <InventoryKardexModal isOpen={isKardexOpen} onClose={() => { setIsKardexOpen(false); setProductForKardex(null); }} product={productForKardex} />
             </div>
         </DashboardLayout>
+    );
+}
+
+// ── Reusable icon action button ────────────────────────────────────────────────
+function ActionBtn({ onClick, color, alphaFn, title, disabled, children }: {
+    onClick: () => void; color: string; alphaFn: (a: number) => string;
+    title: string; disabled?: boolean; children: React.ReactNode;
+}) {
+    return (
+        <button onClick={onClick} title={title} disabled={disabled}
+            className="p-2 rounded-lg transition-all duration-150 disabled:opacity-40"
+            style={{ background: alphaFn(0.08), border: `1px solid ${alphaFn(0.2)}`, color }}
+            onMouseEnter={e => !disabled && ((e.currentTarget as HTMLElement).style.background = alphaFn(0.18))}
+            onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = alphaFn(0.08)}>
+            {children}
+        </button>
     );
 }

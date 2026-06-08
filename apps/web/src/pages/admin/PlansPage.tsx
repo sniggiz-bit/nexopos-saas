@@ -4,7 +4,8 @@ import toast from 'react-hot-toast';
 import {
   Plus, Edit2, Trash2, Check, X, Star, Users,
   DollarSign, Loader2, CheckCheck, Tag, Info, Zap, ListChecks,
-  Store, CreditCard, Plug, FileText, RefreshCw,
+  Store, CreditCard, Plug, FileText, RefreshCw, ShoppingCart, 
+  Building, Receipt, FileMinus, Truck, ShoppingBag, Wifi,
 } from 'lucide-react';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
@@ -19,6 +20,14 @@ interface PlanFeatures {
   enableNotaCreditoDte: boolean;
 }
 
+export interface ModuleDef {
+  id: string;
+  code: string;
+  name: string;
+  description: string;
+  isActive: boolean;
+}
+
 interface Plan {
   id: string;
   name: string;
@@ -29,7 +38,9 @@ interface Plan {
   maxProducts: number;
   maxStorage: number;
   isRecommended?: boolean;
-  enabledFeatures?: PlanFeatures | null;
+  enabledFeatures?: PlanFeatures | null; // legacy
+  planModules?: { module: ModuleDef }[];
+  moduleCodes?: string[];
 }
 
 type Tab = 'identity' | 'price' | 'functions' | 'features';
@@ -56,6 +67,7 @@ const EMPTY_FORM: Partial<Plan> = {
   maxUsers: 5, maxProducts: 500, maxStorage: 512,
   isRecommended: false, features: [],
   enabledFeatures: { ...DEFAULT_FEATURES },
+  moduleCodes: [],
 };
 
 // ── Primitives ─────────────────────────────────────────────────────────────────
@@ -103,19 +115,8 @@ const NumInput = ({ label, desc, value, onChange, min = 1 }: {
 
 // ── Plan Card ──────────────────────────────────────────────────────────────────
 
-const FEATURE_LABELS: { key: keyof PlanFeatures; label: string }[] = [
-  { key: 'enableBoletaDte', label: 'Boleta DTE' },
-  { key: 'enableFacturaDte', label: 'Factura DTE' },
-  { key: 'enableGuiaDespachoDte', label: 'Guía despacho' },
-  { key: 'enableNotaCreditoDte', label: 'Nota crédito' },
-  { key: 'enableEcommerce', label: 'E-commerce' },
-  { key: 'enableTransbank', label: 'Transbank' },
-  { key: 'enableIntegrations', label: 'Integraciones' },
-];
-
 const PlanCard = ({ plan, onEdit, onDelete }: { plan: Plan; onEdit: () => void; onDelete: () => void }) => {
-  const feats = plan.enabledFeatures ?? DEFAULT_FEATURES;
-  const activeFeats = FEATURE_LABELS.filter(f => feats[f.key]);
+  const activeFeats = plan.planModules?.map(pm => pm.module) || [];
 
   return (
     <div className={`bg-neutral-800 border ${plan.isRecommended ? 'border-purple-500/50 shadow-lg shadow-purple-500/10' : 'border-neutral-700'} rounded-xl p-5 relative`}>
@@ -148,8 +149,8 @@ const PlanCard = ({ plan, onEdit, onDelete }: { plan: Plan; onEdit: () => void; 
           {activeFeats.length > 0 && (
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
               {activeFeats.slice(0, 4).map(f => (
-                <span key={f.key} className="inline-flex items-center gap-1 text-xs text-neutral-400">
-                  <Check size={10} className="text-purple-400 flex-shrink-0" />{f.label}
+                <span key={f.code} className="inline-flex items-center gap-1 text-xs text-neutral-400">
+                  <Check size={10} className="text-purple-400 flex-shrink-0" />{f.name}
                 </span>
               ))}
               {activeFeats.length > 4 && (
@@ -182,12 +183,13 @@ const PlanCard = ({ plan, onEdit, onDelete }: { plan: Plan; onEdit: () => void; 
 
 // ── Drawer ─────────────────────────────────────────────────────────────────────
 
-function PlanDrawer({ plan, onClose, onSaved }: { plan: Partial<Plan>; onClose: () => void; onSaved: () => void }) {
+function PlanDrawer({ plan, modules, onClose, onSaved }: { plan: Partial<Plan>; modules: ModuleDef[]; onClose: () => void; onSaved: () => void }) {
   const isEdit = !!plan.id;
   const [activeTab, setActiveTab] = useState<Tab>('identity');
   const [form, setForm] = useState<Partial<Plan>>({
     ...EMPTY_FORM,
     ...plan,
+    moduleCodes: plan.planModules ? plan.planModules.map(pm => pm.module.code) : [],
     enabledFeatures: { ...DEFAULT_FEATURES, ...(plan.enabledFeatures ?? {}) },
   });
   const [newFeature, setNewFeature] = useState('');
@@ -197,6 +199,15 @@ function PlanDrawer({ plan, onClose, onSaved }: { plan: Partial<Plan>; onClose: 
   const feats = form.enabledFeatures ?? DEFAULT_FEATURES;
   const setFeat = (key: keyof PlanFeatures, val: boolean) =>
     set({ enabledFeatures: { ...feats, [key]: val } });
+    
+  const toggleModule = (code: string, checked: boolean) => {
+    const current = form.moduleCodes || [];
+    if (checked && !current.includes(code)) {
+      set({ moduleCodes: [...current, code] });
+    } else if (!checked) {
+      set({ moduleCodes: current.filter(c => c !== code) });
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -338,30 +349,46 @@ function PlanDrawer({ plan, onClose, onSaved }: { plan: Partial<Plan>; onClose: 
                   />
                 </div>
 
-                {/* Módulos principales */}
+                {/* Módulos Core */}
                 <div className="bg-neutral-800 border border-neutral-700 rounded-xl p-5">
-                  <p className="text-sm font-bold text-white mb-0.5">Módulos principales</p>
-                  <p className="text-xs text-neutral-500 mb-4">Funcionalidades incluidas en este plan</p>
-                  <ToggleRow icon={Store} label="Tienda Online (E-commerce)" desc="Panel admin de tienda y carrito público"
-                    checked={feats.enableEcommerce} onChange={v => setFeat('enableEcommerce', v)} color="text-blue-400" />
-                  <ToggleRow icon={CreditCard} label="Transbank / Pago electrónico" desc="Integración Webpay para cobros con tarjeta"
-                    checked={feats.enableTransbank} onChange={v => setFeat('enableTransbank', v)} color="text-emerald-400" />
-                  <ToggleRow icon={Plug} label="Integraciones externas" desc="Shopify, WooCommerce y otras plataformas"
-                    checked={feats.enableIntegrations} onChange={v => setFeat('enableIntegrations', v)} color="text-amber-400" />
+                  <p className="text-sm font-bold text-white mb-0.5">Operación Base (Core)</p>
+                  <p className="text-xs text-neutral-500 mb-4">Funciones esenciales de administración y venta</p>
+                  {modules.filter(m => ['POS', 'QUOTES', 'CUSTOMERS', 'EXTRA_BRANCH', 'CREDITS'].includes(m.code)).map(m => {
+                    const iconMap: Record<string, any> = { POS: [ShoppingCart, 'text-blue-400'], QUOTES: [FileText, 'text-sky-400'], CUSTOMERS: [Users, 'text-indigo-400'], EXTRA_BRANCH: [Building, 'text-violet-400'], CREDITS: [CreditCard, 'text-cyan-400'] };
+                    const [IconComp, color] = iconMap[m.code] || [Store, 'text-blue-400'];
+                    return (
+                      <ToggleRow key={m.code} icon={IconComp} label={m.name} desc={m.description}
+                        checked={form.moduleCodes?.includes(m.code) || false} onChange={v => toggleModule(m.code, v)} color={color} />
+                    );
+                  })}
+                </div>
+
+                {/* Integraciones */}
+                <div className="bg-neutral-800 border border-neutral-700 rounded-xl p-5">
+                  <p className="text-sm font-bold text-white mb-0.5">E-commerce e Integraciones</p>
+                  <p className="text-xs text-neutral-500 mb-4">Canales de venta digitales y pagos</p>
+                  {modules.filter(m => ['ECOMMERCE', 'SHOPIFY', 'WOOCOMMERCE', 'TRANSBANK'].includes(m.code)).map(m => {
+                    const iconMap: Record<string, any> = { ECOMMERCE: [ShoppingBag, 'text-amber-400'], SHOPIFY: [ShoppingBag, 'text-orange-400'], WOOCOMMERCE: [ShoppingBag, 'text-yellow-400'], TRANSBANK: [Wifi, 'text-rose-400'] };
+                    const [IconComp, color] = iconMap[m.code] || [Plug, 'text-amber-400'];
+                    return (
+                      <ToggleRow key={m.code} icon={IconComp} label={m.name} desc={m.description}
+                        checked={form.moduleCodes?.includes(m.code) || false} onChange={v => toggleModule(m.code, v)} color={color} />
+                    );
+                  })}
                 </div>
 
                 {/* DTE */}
                 <div className="bg-neutral-800 border border-neutral-700 rounded-xl p-5">
-                  <p className="text-sm font-bold text-white mb-0.5">Documentos tributarios electrónicos (DTE)</p>
+                  <p className="text-sm font-bold text-white mb-0.5">Documentos Tributarios (DTE)</p>
                   <p className="text-xs text-neutral-500 mb-4">Módulos SII Chile habilitados en el plan</p>
-                  <ToggleRow icon={FileText} label="Boleta electrónica" desc="Emisión de boletas al SII"
-                    checked={feats.enableBoletaDte} onChange={v => setFeat('enableBoletaDte', v)} color="text-purple-400" />
-                  <ToggleRow icon={FileText} label="Factura electrónica" desc="Emisión de facturas al SII"
-                    checked={feats.enableFacturaDte} onChange={v => setFeat('enableFacturaDte', v)} color="text-purple-400" />
-                  <ToggleRow icon={FileText} label="Guía de despacho" desc="Guías de despacho electrónicas al SII"
-                    checked={feats.enableGuiaDespachoDte} onChange={v => setFeat('enableGuiaDespachoDte', v)} color="text-purple-400" />
-                  <ToggleRow icon={FileText} label="Nota de crédito" desc="Notas de crédito electrónicas al SII"
-                    checked={feats.enableNotaCreditoDte} onChange={v => setFeat('enableNotaCreditoDte', v)} color="text-purple-400" />
+                  {modules.filter(m => ['DTE_BOLETA', 'DTE_FACTURA', 'DTE_NOTA_CREDITO', 'DTE_GUIA_DESPACHO'].includes(m.code)).map(m => {
+                    const iconMap: Record<string, any> = { DTE_BOLETA: [Receipt, 'text-emerald-400'], DTE_FACTURA: [FileText, 'text-green-400'], DTE_NOTA_CREDITO: [FileMinus, 'text-teal-400'], DTE_GUIA_DESPACHO: [Truck, 'text-lime-400'] };
+                    const [IconComp, color] = iconMap[m.code] || [FileText, 'text-purple-400'];
+                    return (
+                      <ToggleRow key={m.code} icon={IconComp} label={m.name} desc={m.description}
+                        checked={form.moduleCodes?.includes(m.code) || false} onChange={v => toggleModule(m.code, v)} color={color} />
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -426,20 +453,25 @@ function PlanDrawer({ plan, onClose, onSaved }: { plan: Partial<Plan>; onClose: 
 
 export default function PlansPage() {
   const [plans, setPlans] = useState<Plan[]>([]);
+  const [modules, setModules] = useState<ModuleDef[]>([]);
   const [loading, setLoading] = useState(true);
   const [drawerPlan, setDrawerPlan] = useState<Partial<Plan> | null>(null);
 
-  const fetchPlans = async () => {
+  const fetchData = async () => {
     setLoading(true);
     try {
-      const { data } = await api.get('/plans');
-      setPlans(Array.isArray(data) ? data : []);
+      const [plansRes, modulesRes] = await Promise.all([
+        api.get('/plans'),
+        api.get('/modules')
+      ]);
+      setPlans(Array.isArray(plansRes.data) ? plansRes.data : []);
+      setModules(Array.isArray(modulesRes.data) ? modulesRes.data : []);
     } catch (err: any) {
       const status = err?.response?.status;
       toast.error(
         status === 403 ? 'Sin permisos para ver planes (403)'
           : status === 401 ? 'Sesión expirada, por favor recarga'
-          : `Error cargando planes${status ? ` (${status})` : ''}`,
+          : `Error cargando datos${status ? ` (${status})` : ''}`,
         { duration: 5000 }
       );
     } finally {
@@ -447,7 +479,7 @@ export default function PlansPage() {
     }
   };
 
-  useEffect(() => { fetchPlans(); }, []);
+  useEffect(() => { fetchData(); }, []);
 
   const openCreate = () => setDrawerPlan({});
   const openEdit = (plan: Plan) => setDrawerPlan(plan);
@@ -481,7 +513,7 @@ export default function PlansPage() {
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <button onClick={fetchPlans}
+            <button onClick={fetchData}
               className="p-2.5 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-400 hover:text-white transition-colors border border-neutral-700"
               title="Recargar">
               <RefreshCw size={15} />
@@ -515,7 +547,7 @@ export default function PlansPage() {
       </div>
 
       {drawerPlan !== null && (
-        <PlanDrawer plan={drawerPlan} onClose={closeDrawer} onSaved={fetchPlans} />
+        <PlanDrawer plan={drawerPlan} modules={modules} onClose={closeDrawer} onSaved={fetchData} />
       )}
     </>
   );

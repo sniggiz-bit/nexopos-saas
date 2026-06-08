@@ -64,7 +64,27 @@ export const Ticket80mm: React.FC<Ticket80mmProps> = ({
     const iva = sale.total - neto;
     const subtotalBruto = sale.total + (Number(sale.discountAmount) || 0);
     const displayName = tenant?.name || tenantName || '';
-    const folio = sale.id?.split('-')[0]?.toUpperCase() ?? '';
+    
+    // DTE logic
+    const dteType = sale.dteType;
+    const isDte = !!sale.dteFolio;
+    const hasRealPdf = sale.dtePdfUrl && !sale.dtePdfUrl.includes('ejemplo-mock');
+    const folio = sale.dteFolio ? String(sale.dteFolio) : (sale.id?.split('-')[0]?.toUpperCase() ?? '');
+
+    let docTitle = 'Comprobante de Venta';
+    if (isDte) {
+        if (dteType === 39) docTitle = 'Boleta Electrónica';
+        else if (dteType === 33) docTitle = 'Factura Electrónica';
+        else if (dteType === 52) docTitle = 'Guía de Despacho Electrónica';
+        else if (dteType === 61) docTitle = 'Nota de Crédito Electrónica';
+    }
+
+    const dteConfig = (tenant as any)?.dteConfig;
+    const resolutionNum = dteConfig?.dteResolution || '80';
+    const resolutionDateRaw = dteConfig?.resolutionDate;
+    const resolutionDateStr = resolutionDateRaw 
+        ? new Date(resolutionDateRaw).toLocaleDateString('es-CL') 
+        : '22-08-2014';
 
     return (
         <div className="ticket-80mm" style={{
@@ -123,11 +143,13 @@ export const Ticket80mm: React.FC<Ticket80mmProps> = ({
 
             {/* ── TIPO DOCUMENTO ── */}
             <div className="tc bold upper" style={{ fontSize: '13px', margin: '4px 0 1px' }}>
-                Comprobante de Venta
+                {docTitle}
             </div>
-            <div className="tc" style={{ fontSize: '9px', marginBottom: '2px' }}>
-                (No es documento tributario oficial)
-            </div>
+            {!isDte && (
+                <div className="tc" style={{ fontSize: '9px', marginBottom: '2px' }}>
+                    (No es documento tributario oficial)
+                </div>
+            )}
 
             <div className="dash" />
 
@@ -136,6 +158,11 @@ export const Ticket80mm: React.FC<Ticket80mmProps> = ({
                 <span>N° Folio:</span>
                 <span className="bold">{folio}</span>
             </div>
+            {isDte && (
+                <div className="tc small" style={{ fontSize: '8.5px', marginTop: '2px', fontStyle: 'italic', color: '#333' }}>
+                    Resolución SII N° {resolutionNum} del {resolutionDateStr}
+                </div>
+            )}
             <div className="row small" style={{ marginTop: '2px' }}>
                 <span>Fecha:</span>
                 <span className="bold">{formatChileanDate(sale.createdAt)}</span>
@@ -240,6 +267,27 @@ export const Ticket80mm: React.FC<Ticket80mmProps> = ({
                     </div>
                 ) : null;
             })()}
+
+            {isDte && sale.dtePdfUrl && (
+                <>
+                    <div className="dash" />
+                    <div className="tc" style={{ margin: '8px 0' }}>
+                        <p className="bold" style={{ fontSize: '9px', marginBottom: '4px' }}>
+                            DOCUMENTO OFICIAL SII
+                        </p>
+                        <img 
+                            src={`https://api.qrserver.com/v1/create-qr-code/?size=130x130&data=${encodeURIComponent(sale.dtePdfUrl)}`} 
+                            alt="QR DTE" 
+                            style={{ width: '130px', height: '130px', margin: '0 auto', display: 'block' }} 
+                        />
+                        <p className="small" style={{ fontSize: '7.5px', marginTop: '4px', opacity: 0.8, lineHeight: '1.2' }}>
+                            {hasRealPdf 
+                                ? 'Escanee para descargar el PDF oficial con Timbre Electrónico (TED)' 
+                                : 'MOCK DTE — Escanee para ver ejemplo de PDF'}
+                        </p>
+                    </div>
+                </>
+            )}
 
             <div className="dash" />
 

@@ -109,7 +109,7 @@ export function ProductCard({ product, onAddToCart, viewMode = 'grid' }: Product
         <div
             onClick={handleAdd}
             className={[
-                'group relative flex flex-col p-3.5 rounded-2xl border transition-all duration-150 overflow-hidden select-none',
+                'group relative flex flex-col p-2 rounded-xl border transition-all duration-150 overflow-hidden select-none',
                 'bg-white dark:bg-slate-800/80',
                 added
                     ? 'border-success/60 shadow-[0_0_0_2px_hsl(142_72%_40%/0.2)] cursor-pointer'
@@ -120,56 +120,56 @@ export function ProductCard({ product, onAddToCart, viewMode = 'grid' }: Product
         >
             {/* Hover gradient overlay */}
             {!isOutOfStock && (
-                <div className="absolute inset-0 bg-gradient-to-br from-transparent to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none rounded-2xl" />
+                <div className="absolute inset-0 bg-gradient-to-br from-transparent to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none rounded-xl" />
             )}
 
-            <div className="relative z-10 flex flex-col h-full gap-2">
+            <div className="relative z-10 flex flex-col h-full gap-1">
                 {/* Top: stock + brand */}
-                <div className="flex justify-between items-start gap-1">
+                <div className="flex justify-between items-center gap-1">
                     <Badge
                         variant="outline"
-                        className={`${stockInfo.cls} text-[10px] px-1.5 py-0 font-semibold border leading-5`}
+                        className={`${stockInfo.cls} text-[8px] px-1 py-0 font-semibold border leading-3`}
                     >
                         {stockInfo.label}
                     </Badge>
                     {product.brand && (
-                        <span className="text-[9px] font-semibold text-muted-foreground uppercase tracking-widest truncate max-w-[72px] text-right leading-5">
+                        <span className="text-[8px] font-semibold text-muted-foreground uppercase tracking-wider truncate max-w-[55px] text-right leading-3">
                             {product.brand.name}
                         </span>
                     )}
                 </div>
 
                 {/* Center: avatar/image + name + sku */}
-                <div className="flex-1 flex flex-col items-center justify-center gap-1.5 py-1">
+                <div className="flex-1 flex flex-col items-center justify-center gap-1 py-0.5">
                     {product.image ? (
-                        <div className="w-16 h-16 rounded-xl overflow-hidden border border-border shrink-0">
+                        <div className="w-10 h-10 rounded-lg overflow-hidden border border-border shrink-0">
                             <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
                         </div>
                     ) : (
                         <div className={[
-                            'w-9 h-9 rounded-xl border flex items-center justify-center text-sm font-bold transition-all duration-200',
+                            'w-7 h-7 rounded-lg border flex items-center justify-center text-[10px] font-bold transition-all duration-200',
                             added
                                 ? 'bg-success/10 border-success/30 text-success animate-pop-add'
                                 : 'bg-surface-raised border-border text-muted-foreground group-hover:bg-primary/10 group-hover:border-primary/20 group-hover:text-primary',
                         ].join(' ')}>
-                            {added ? <Check className="w-4 h-4" /> : product.name.charAt(0).toUpperCase()}
+                            {added ? <Check className="w-3 h-3" /> : product.name.charAt(0).toUpperCase()}
                         </div>
                     )}
 
-                    <h3 className="font-semibold text-foreground text-center leading-tight line-clamp-2 text-[13px] min-h-[2.25rem] w-full">
+                    <h3 className="font-semibold text-foreground text-center leading-tight line-clamp-2 text-[11px] min-h-[1.5rem] w-full mt-0.5">
                         {product.name}
                     </h3>
 
                     {product.sku && (
-                        <span className="text-[10px] text-muted-foreground font-mono tracking-tight">
+                        <span className="text-[8px] text-muted-foreground font-mono tracking-tight leading-none">
                             {product.sku}
                         </span>
                     )}
                 </div>
 
                 {/* Bottom: price + add button */}
-                <div className="flex items-center justify-between pt-2.5 border-t border-border/60">
-                    <span className="text-lg font-black text-foreground tabular-nums leading-none">
+                <div className="flex items-center justify-between pt-1 border-t border-border/60">
+                    <span className="text-xs font-black text-foreground tabular-nums leading-none">
                         {formatPrice(product.price)}
                     </span>
 
@@ -179,15 +179,15 @@ export function ProductCard({ product, onAddToCart, viewMode = 'grid' }: Product
                         disabled={isOutOfStock}
                         aria-label={`Agregar ${product.name} al carrito`}
                         className={[
-                            'h-11 rounded-xl flex items-center justify-center transition-all duration-150 shrink-0',
+                            'h-7 rounded-lg flex items-center justify-center transition-all duration-150 shrink-0',
                             added
-                                ? 'w-11 bg-success text-white scale-95'
+                                ? 'w-7 bg-success text-white scale-95'
                                 : isOutOfStock
-                                ? 'px-3 bg-muted text-muted-foreground/60 cursor-not-allowed text-[11px] font-bold uppercase tracking-wider'
-                                : 'w-11 bg-muted text-muted-foreground group-hover:bg-primary group-hover:text-white active:scale-90',
+                                ? 'px-1.5 bg-muted text-muted-foreground/60 cursor-not-allowed text-[8px] font-bold uppercase tracking-wider'
+                                : 'w-7 bg-muted text-muted-foreground group-hover:bg-primary group-hover:text-white active:scale-90',
                         ].join(' ')}
                     >
-                        {added ? <Check className="w-4 h-4" /> : isOutOfStock ? 'AGOTADO' : <Plus className="w-4 h-4" />}
+                        {added ? <Check className="w-3 h-3" /> : isOutOfStock ? 'AGOT' : <Plus className="w-3 h-3" />}
                     </button>
                 </div>
             </div>

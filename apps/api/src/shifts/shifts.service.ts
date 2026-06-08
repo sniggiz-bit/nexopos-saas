@@ -79,19 +79,30 @@ export class ShiftsService {
     let ticketCount = 0;
 
     shift.sales.forEach((sale) => {
+      if (sale.status !== 'COMPLETED') return;
+
+      const isRefund = sale.dteType === 61;
+
       // Count documents
-      if (sale.dteFolio) {
-        dteCount++;
-      } else {
-        ticketCount++;
+      if (!isRefund) {
+        if (sale.dteFolio) {
+          dteCount++;
+        } else {
+          ticketCount++;
+        }
       }
 
       sale.payments.forEach((payment) => {
         const method = payment.paymentMethod as keyof typeof totalsByMethod;
         if (method in totalsByMethod) {
-          totalsByMethod[method] += payment.amount;
+          if (isRefund) {
+            totalsByMethod[method] -= payment.amount;
+            totalSales -= payment.amount;
+          } else {
+            totalsByMethod[method] += payment.amount;
+            totalSales += payment.amount;
+          }
         }
-        totalSales += payment.amount;
       });
     });
 
@@ -223,10 +234,21 @@ export class ShiftsService {
     let totalSales = 0;
 
     shift.sales.forEach((sale) => {
+      if (sale.status !== 'COMPLETED') return;
+
+      const isRefund = sale.dteType === 61;
+
       sale.payments.forEach((payment) => {
         const method = payment.paymentMethod as keyof typeof totalsByMethod;
-        if (method in totalsByMethod) totalsByMethod[method] += Number(payment.amount);
-        totalSales += Number(payment.amount);
+        if (method in totalsByMethod) {
+          if (isRefund) {
+            totalsByMethod[method] -= Number(payment.amount);
+            totalSales -= Number(payment.amount);
+          } else {
+            totalsByMethod[method] += Number(payment.amount);
+            totalSales += Number(payment.amount);
+          }
+        }
       });
     });
 

@@ -85,10 +85,12 @@ export function PosPage() {
     useBarcodeScanner({ onScan: addToCartByBarcode, enabled: !isCloseShiftModalOpen });
 
 
-    const handleConfirmPayment = (payments: PaymentRequestData[], dteType?: number, customerId?: string) => {
+    const { mutateAsync: createSaleAsync, isPending, isSuccess, isError, reset } = useSale();
+
+    const handleConfirmPayment = async (payments: PaymentRequestData[], dteType?: number, customerId?: string) => {
         if (!user?.tenantId || !user?.branchId) {
             toast({ variant: 'destructive', title: 'Error de configuración', description: 'No se pudo determinar la sucursal.' });
-            return;
+            throw new Error('Missing branch configuration');
         }
         const saleData: CreateSaleRequest = {
             tenantId: user.tenantId,
@@ -107,11 +109,8 @@ export function PosPage() {
             dteType,
             customerId,
         };
-        createSale(saleData);
-    };
-
-    const { mutate: createSale, isPending, isSuccess, isError, reset } = useSale({
-        onSuccess: (data) => {
+        try {
+            const data = await createSaleAsync(saleData);
             setSaleResult(data);
             toast({
                 variant: 'success',
@@ -121,15 +120,16 @@ export function PosPage() {
             clearCart();
             queryClient.invalidateQueries({ queryKey: ['products'] });
             queryClient.invalidateQueries({ queryKey: ['quotes'] });
-        },
-        onError: (error) => {
+            return data;
+        } catch (error: any) {
             toast({
                 variant: 'destructive',
                 title: 'Error en la Venta',
                 description: error.message || 'Ocurrió un error al procesar la venta',
             });
-        },
-    });
+            throw error;
+        }
+    };
 
     const inputRef = useRef<HTMLInputElement>(null);
 

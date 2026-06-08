@@ -98,6 +98,7 @@ export class TenantsService {
         branches: true,
         users: true,
         settings: true,
+        dteConfig: true,
       } as any,
     });
   }

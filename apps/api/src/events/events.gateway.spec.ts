@@ -37,11 +37,11 @@ describe('EventsGateway', () => {
         handshake: {
           auth: {},
           query: {},
-        },
+        } as any,
         disconnect: jest.fn(),
         join: jest.fn().mockResolvedValue(undefined),
         data: {},
-      };
+      } as any;
     });
 
     it('should reject connection if token is missing', async () => {

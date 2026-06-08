@@ -51,6 +51,7 @@ export class ProductsController {
     return this.productsService.findAll(user.tenantId, {
       search,
       categoryId,
+      branchId: user.branchId,
       page:  page  ? parseInt(page,  10) : undefined,
       limit: limit ? parseInt(limit, 10) : undefined,
     });
@@ -65,7 +66,7 @@ export class ProductsController {
     @Param('id') id: string,
     @CurrentUser() user: any,
   ): Promise<ProductResponseDto> {
-    return this.productsService.findOne(id, user.tenantId);
+    return this.productsService.findOne(id, user.tenantId, user.branchId);
   }
 
   /**

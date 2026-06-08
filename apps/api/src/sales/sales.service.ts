@@ -297,7 +297,15 @@ export class SalesService {
 
     // Post-Sale Actions (DTE, etc)
     if (sale.status === 'COMPLETED') {
-      this.emitDteAndReceipt(sale.id);
+      await this.emitDteAndReceipt(sale.id);
+      return this.prisma.sale.findUnique({
+        where: { id: sale.id },
+        include: {
+          items: { include: { product: true } },
+          payments: true,
+          customer: true,
+        },
+      });
     }
 
     return sale;
@@ -365,27 +373,101 @@ export class SalesService {
     });
 
     // Emit DTE/Receipt
-    this.emitDteAndReceipt(id);
+    await this.emitDteAndReceipt(id);
 
     return this.prisma.sale.findFirst({
       where: { id, tenantId },
-      include: { items: true, payments: true, customer: true, credit: true },
+      include: { items: { include: { product: true } }, payments: true, customer: true, credit: true },
     });
   }
 
   async emitirNotaCreditoForSale(saleId: string, tenantId: string) {
-    const sale = await this.prisma.sale.findFirst({ where: { id: saleId, tenantId } });
-    if (!sale) throw new NotFoundException('Sale not found');
-    if (sale.status !== 'COMPLETED') {
+    const originalSale = await this.prisma.sale.findUnique({
+      where: { id: saleId },
+      include: { items: true, payments: true },
+    });
+
+    if (!originalSale) throw new NotFoundException('Venta no encontrada');
+    if (originalSale.tenantId !== tenantId) {
+      throw new BadRequestException('La venta no pertenece a este tenant');
+    }
+    if (originalSale.status !== 'COMPLETED') {
       throw new BadRequestException(
         'Solo se puede emitir Nota de Crédito para ventas completadas',
       );
     }
-    await this.prisma.sale.update({
-      where: { id: saleId },
-      data: { dteType: 61, dteStatus: 'PENDING' },
+
+    // Verificar si ya existe una nota de crédito emitida para esta venta
+    const existingNc = await this.prisma.sale.findFirst({
+      where: {
+        originalSaleId: saleId,
+        dteType: 61,
+        dteStatus: 'ACEPTADO',
+      },
     });
-    return this.dteService.emitirDte(saleId);
+    if (existingNc) {
+      throw new BadRequestException(
+        `Ya se emitió una Nota de Crédito (Folio #${existingNc.dteFolio}) para esta venta`,
+      );
+    }
+
+    const ncSale = await this.prisma.$transaction(async (prisma) => {
+      // 1. Marcar venta original como ANULADA (CANCELLED)
+      await prisma.sale.update({
+        where: { id: saleId },
+        data: { status: 'CANCELLED' },
+      });
+
+      // 2. Devolver productos al inventario
+      for (const item of originalSale.items) {
+        await this.inventoryService.logMovement(
+          {
+            productId: item.productId,
+            branchId: originalSale.branchId,
+            quantity: Number(item.quantity), // Positivo = Ingreso
+            type: MovementType.RETURN,
+            reference: `Nota de Crédito para venta ${originalSale.dteFolio ?? saleId}`,
+            userId: originalSale.userId || undefined,
+          },
+          prisma,
+        );
+      }
+
+      // 3. Crear nueva venta (tipo 61) con los mismos datos
+      return prisma.sale.create({
+        data: {
+          total: originalSale.total,
+          discountAmount: originalSale.discountAmount,
+          tenantId: originalSale.tenantId,
+          branchId: originalSale.branchId,
+          userId: originalSale.userId,
+          cashShiftId: originalSale.cashShiftId,
+          customerId: originalSale.customerId,
+          quoteId: originalSale.quoteId,
+          status: 'COMPLETED',
+          dteType: 61,
+          dteStatus: 'PENDING',
+          originalSaleId: originalSale.id,
+          items: {
+            create: originalSale.items.map((item) => ({
+              productId: item.productId,
+              quantity: item.quantity,
+              price: item.price,
+              discountAmount: item.discountAmount,
+            })),
+          },
+          payments: {
+            create: originalSale.payments.map((p) => ({
+              amount: p.amount,
+              paymentMethod: p.paymentMethod,
+            })),
+          },
+        },
+      });
+    });
+
+    // 4. Emitir el DTE para la nueva venta (tipo 61)
+    return this.dteService.emitirDte(ncSale.id);
   }
 
   private async emitDteAndReceipt(saleId: string) {

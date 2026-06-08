@@ -4,6 +4,7 @@ import { useCreateProduct } from '../../hooks/useCreateProduct';
 import { useUpdateProduct } from '../../hooks/useUpdateProduct';
 import { useCategories } from '../../hooks/useCategories';
 import { useBrands } from '../../hooks/useBrands';
+import { useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import type { Product } from '../../api/types';
 import { useAuth } from '../../context/AuthContext';
@@ -36,6 +37,7 @@ export function ProductFormModal({ isOpen, onClose, initialData }: ProductFormMo
     const fileInputRef = useRef<HTMLInputElement>(null);
     const wasOpenRef = useRef(false);
 
+    const queryClient = useQueryClient();
     const createProduct = useCreateProduct();
     const updateProduct = useUpdateProduct();
     const { data: categories } = useCategories(user?.tenantId ?? '');
@@ -95,9 +97,7 @@ export function ProductFormModal({ isOpen, onClose, initialData }: ProductFormMo
         try {
             const form = new FormData();
             form.append('file', file);
-            const { data } = await apiClient.post<{ url: string }>('/uploads/image', form, {
-                headers: { 'Content-Type': 'multipart/form-data' },
-            });
+            const { data } = await apiClient.post<{ url: string }>('/uploads/image', form);
             setFormData(prev => ({ ...prev, image: data.url }));
         } catch (err: any) {
             const msg = err?.response?.data?.message || err?.message || 'Error al subir la imagen';
@@ -147,8 +147,8 @@ export function ProductFormModal({ isOpen, onClose, initialData }: ProductFormMo
                     image: formData.image || undefined,
                     isActive: formData.isActive,
                     priceTiers: parsedTiers.length > 0 ? parsedTiers : undefined,
-
                 });
+                queryClient.invalidateQueries({ queryKey: ['products-all'] });
                 onClose();
             } else {
                 await createProduct.mutateAsync({
@@ -170,6 +170,7 @@ export function ProductFormModal({ isOpen, onClose, initialData }: ProductFormMo
                 });
 
                 toast.success('Producto creado exitosamente');
+                queryClient.invalidateQueries({ queryKey: ['products-all'] });
                 onClose();
                 // Reset form
                 setFormData({

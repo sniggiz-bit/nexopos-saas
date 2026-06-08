@@ -20,6 +20,8 @@ import {
 import { Shift } from '@/api/shifts';
 import { formatDistanceToNow, format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { usePrintSettings } from '@/hooks/usePrintSettings';
+import { printThroughIframe, printWithQz, isQzConnected } from '@/utils/print';
 
 interface CloseShiftModalProps {
     isOpen: boolean;
@@ -60,6 +62,7 @@ export function CloseShiftModal({ isOpen, onClose, shiftId, currentShift }: Clos
     const { user } = useAuth();
     const queryClient = useQueryClient();
     const { data: summary, isLoading: isLoadingSummary } = useShiftLiveSummary(isOpen && !!shiftId ? shiftId : null);
+    const { printerName, useQzTray } = usePrintSettings();
 
     const calculatedTotal = useMemo(() => {
         return DENOMINATIONS.reduce((sum, d) => {
@@ -114,24 +117,34 @@ export function CloseShiftModal({ isOpen, onClose, shiftId, currentShift }: Clos
         onClose();
     };
 
-    const handlePrintReport = () => {
+    const handlePrintReport = async () => {
         if (!closedShift?.textReport) return;
-        const printWindow = window.open('', '_blank');
-        if (printWindow) {
-            printWindow.document.write(`
-                <html>
-                    <head>
-                        <title>Reporte Z - NexoPOS</title>
-                        <style>
-                            @page { size: 80mm auto; margin: 0; }
-                            body { font-family: 'Courier New', Courier, monospace; white-space: pre; font-size: 13px; padding: 10px; color: #000; }
-                        </style>
-                    </head>
-                    <body>${closedShift.textReport}<script>window.onload=function(){window.print();window.close();}</script></body>
-                </html>
-            `);
-            printWindow.document.close();
+
+        const reportHtml = `<!DOCTYPE html><html>
+<head>
+    <meta charset="utf-8">
+    <title>Reporte Z - NexoPOS</title>
+    <style>
+        @media print { @page { size: 80mm auto; margin: 0; } body { margin: 0; } }
+        body { font-family: 'Courier New', Courier, monospace; white-space: pre; font-size: 13px;
+               padding: 8px; color: #000; background: #fff; }
+    </style>
+</head>
+<body>${closedShift.textReport}</body>
+</html>`;
+
+        // Impresión silenciosa con QZ Tray si está disponible
+        if (useQzTray && printerName && isQzConnected()) {
+            try {
+                await printWithQz(closedShift.textReport, printerName, '80mm');
+                return;
+            } catch (err) {
+                console.warn('[QZ Tray] Falló la impresión del reporte Z, usando fallback:', err);
+            }
         }
+
+        // Fallback: iframe
+        await printThroughIframe(reportHtml);
     };
 
     // ─── Success state ────────────────────────────────────────────────────────

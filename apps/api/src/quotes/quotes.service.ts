@@ -18,12 +18,12 @@ export class QuotesService {
   ) { }
 
   private calculateTotals(items: any[]) {
-    const subtotal = items.reduce((sum, item) => {
-      const itemTotal = item.price * item.quantity - (item.discount || 0);
-      return sum + itemTotal;
+    // Prices are IVA-inclusive (Chilean standard). Back-calculate neto and IVA.
+    const total = items.reduce((sum, item) => {
+      return sum + item.price * item.quantity - (item.discount || 0);
     }, 0);
-    const tax = subtotal * 0.19; // 19% IVA
-    const total = subtotal + tax;
+    const subtotal = Math.round(total / 1.19); // neto sin IVA
+    const tax = total - subtotal;              // porción IVA 19%
     return { subtotal, tax, total };
   }
 
