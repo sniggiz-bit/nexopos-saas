@@ -2,6 +2,7 @@ import { Controller, Get, Param, BadRequestException } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { LiorenService } from '../dte/lioren.service';
 import { validateRut } from '@nexopos/shared';
+import { Public } from '../auth/decorators/public.decorator';
 
 @ApiTags('común')
 @Controller('common')
@@ -14,6 +15,7 @@ export class CommonController {
     })
     @ApiResponse({ status: 200, description: 'Datos recuperados exitosamente.' })
     @ApiResponse({ status: 400, description: 'RUT inválido.' })
+    @Public()
     @Get('rut-lookup/:rut')
     async lookupRut(@Param('rut') rut: string) {
         if (!validateRut(rut)) {

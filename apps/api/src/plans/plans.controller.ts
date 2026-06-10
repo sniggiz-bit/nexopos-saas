@@ -11,11 +11,13 @@ import {
 import { PlansService } from './plans.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { SuperAdminGuard } from '../auth/super-admin.guard';
+import { Public } from '../auth/decorators/public.decorator';
 
 @Controller('plans')
 export class PlansController {
   constructor(private readonly plansService: PlansService) {}
 
+  @Public()
   @Get('public')
   findPublic() {
     return this.plansService.findPublic();

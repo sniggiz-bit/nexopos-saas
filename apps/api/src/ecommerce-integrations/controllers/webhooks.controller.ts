@@ -12,6 +12,7 @@ import { Request } from 'express';
 
 type RawRequest = Request & { rawBody?: Buffer };
 import { WebhookService } from '../services/webhook.service';
+import { Public } from '../../auth/decorators/public.decorator';
 
 @Controller('webhooks')
 export class WebhooksController {
@@ -19,6 +20,7 @@ export class WebhooksController {
 
   constructor(private readonly webhookService: WebhookService) {}
 
+  @Public()
   @Post('shopify/:connectionId')
   @HttpCode(HttpStatus.OK)
   async shopifyWebhook(
@@ -40,6 +42,7 @@ export class WebhooksController {
     return { received: true };
   }
 
+  @Public()
   @Post('woocommerce/:connectionId')
   @HttpCode(HttpStatus.OK)
   async wooCommerceWebhook(

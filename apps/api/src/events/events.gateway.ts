@@ -52,9 +52,7 @@ export class EventsGateway
         return;
       }
 
-      const payload = this.jwtService.verify(token, {
-        secret: process.env.JWT_SECRET || 'secretKey',
-      }) as { tenantId?: string };
+      const payload = this.jwtService.verify(token) as { tenantId?: string };
 
       if (payload.tenantId !== tenantId) {
         this.logger.warn(

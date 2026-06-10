@@ -10,6 +10,7 @@ import { JwtService } from '@nestjs/jwt';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { EventsService } from './events.service';
+import { Public } from '../auth/decorators/public.decorator';
 
 @Controller('events')
 export class EventsController {
@@ -24,6 +25,7 @@ export class EventsController {
    * The stream only emits event-type notifications (no sensitive data),
    * and all actual data fetches go through authenticated REST endpoints.
    */
+  @Public()
   @Sse('stream')
   stream(
     @Query('tenantId') tenantId: string,
@@ -34,9 +36,7 @@ export class EventsController {
     }
 
     try {
-      const payload = this.jwtService.verify(token, {
-        secret: process.env.JWT_SECRET || 'secretKey',
-      }) as { tenantId?: string };
+      const payload = this.jwtService.verify(token) as { tenantId?: string };
 
       if (payload.tenantId !== tenantId) {
         throw new UnauthorizedException('Tenant mismatch');
@@ -53,6 +53,7 @@ export class EventsController {
   /**
    * Health check — useful for confirming the SSE endpoint is reachable.
    */
+  @Public()
   @Get('ping')
   ping() {
     return { ok: true };

@@ -1,6 +1,7 @@
 import { Controller, Post, Body, Req, UseGuards, UnauthorizedException } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { PrismaService } from '../prisma/prisma.service';
+import { Public } from '../auth/decorators/public.decorator';
 
 @Controller('support')
 export class SupportController {
@@ -57,6 +58,7 @@ export class SupportController {
     };
   }
 
+  @Public()
   @Post('public-chat')
   async publicChat(@Body('message') message: string) {
     const lowercaseMsg = message.toLowerCase();

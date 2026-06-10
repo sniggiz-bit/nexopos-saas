@@ -13,6 +13,7 @@ import { AuthService } from './auth.service';
 import { RegisterTenantDto } from './dto/register-tenant.dto';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { SuperAdminGuard } from './super-admin.guard';
+import { Public } from './decorators/public.decorator';
 
 @ApiTags('autenticación')
 @Controller('auth')
@@ -32,6 +33,7 @@ export class AuthController {
   })
   @ApiResponse({ status: 200, description: 'Login exitoso, devuelve el JWT y datos del usuario.' })
   @ApiResponse({ status: 401, description: 'Credenciales inválidas.' })
+  @Public()
   @HttpCode(HttpStatus.OK)
   @Post('login')
   async login(@Body() signInDto: Record<string, any>) {
@@ -51,6 +53,7 @@ export class AuthController {
   }
 
   @ApiOperation({ summary: 'Generar Token SSO', description: 'Genera un token para Single Sign-On entre aplicaciones del ecosistema.' })
+  @Public()
   @HttpCode(HttpStatus.OK)
   @Post('sso/token')
   signIn(@Body() signInDto: { userId: string; tenantId: string }) {
@@ -58,6 +61,7 @@ export class AuthController {
   }
 
   @ApiOperation({ summary: 'Validar Token SSO' })
+  @Public()
   @HttpCode(HttpStatus.OK)
   @Post('sso/validate')
   async validate(@Body() body: { token: string }) {
@@ -70,6 +74,7 @@ export class AuthController {
 
   @ApiOperation({ summary: 'Registrar nuevo Inquilino (SaaS)', description: 'Permite el registro inicial de una empresa y su administrador.' })
   @ApiResponse({ status: 201, description: 'Inquilino creado exitosamente.' })
+  @Public()
   @HttpCode(HttpStatus.CREATED)
   @Post('register-tenant')
   async registerTenant(@Body() dto: RegisterTenantDto) {

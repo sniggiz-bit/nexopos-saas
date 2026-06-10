@@ -11,6 +11,7 @@ import {
 import { AnnouncementsService } from './announcements.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { SuperAdminGuard } from '../auth/super-admin.guard';
+import { Public } from '../auth/decorators/public.decorator';
 
 @Controller('announcements')
 export class AnnouncementsController {
@@ -28,6 +29,7 @@ export class AnnouncementsController {
     return this.announcementsService.findAll();
   }
 
+  @Public()
   @Get('active')
   findActive() {
     return this.announcementsService.findActive();

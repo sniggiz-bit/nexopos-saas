@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ScheduleModule } from '@nestjs/schedule';
+import { APP_GUARD } from '@nestjs/core';
 import { EventsModule } from './events/events.module';
 import { EcommerceIntegrationsModule } from './ecommerce-integrations/ecommerce-integrations.module';
 import { AppController } from './app.controller';
@@ -40,6 +41,7 @@ import { ModulesModule } from './modules/modules.module';
 import { BillingModule } from './billing/billing.module';
 import { SupportModule } from './support/support.module';
 import { MercadopagoModule } from './mercadopago/mercadopago.module';
+import { JwtAuthGuard } from './auth/jwt-auth.guard';
 
 @Module({
   imports: [
@@ -48,10 +50,12 @@ import { MercadopagoModule } from './mercadopago/mercadopago.module';
       envFilePath: '.env',
     }),
     ScheduleModule.forRoot(),
+    // AuthModule FIRST so JwtModule/JwtService is available globally
+    AuthModule,
+    PrismaModule,
     EventsModule,
     EcommerceIntegrationsModule,
     SalesModule,
-    PrismaModule,
     DteModule,
     ProductsModule,
     CategoriesModule,
@@ -59,7 +63,6 @@ import { MercadopagoModule } from './mercadopago/mercadopago.module';
     DteConfigModule,
     ReceiptsModule,
     ShiftsModule,
-    AuthModule,
     CustomersModule,
     QuotesModule,
     CreditsModule,
@@ -86,6 +89,14 @@ import { MercadopagoModule } from './mercadopago/mercadopago.module';
     MercadopagoModule,
   ],
   controllers: [AppController, DebugController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    // Register JwtAuthGuard globally so all controllers use the same
+    // JwtService instance configured with the correct JWT_SECRET from AuthModule
+    {
+      provide: APP_GUARD,
+      useClass: JwtAuthGuard,
+    },
+  ],
 })
 export class AppModule { }

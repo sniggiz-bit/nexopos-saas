@@ -8,6 +8,7 @@ import { PrismaModule } from '../prisma/prisma.module';
 import { TenantsModule } from '../tenants/tenants.module';
 import { FeatureGuard } from './feature.guard';
 import { ResourceLimitGuard } from './resource-limit.guard';
+import { JwtAuthGuard } from './jwt-auth.guard';
 
 @Module({
   imports: [
@@ -24,7 +25,7 @@ import { ResourceLimitGuard } from './resource-limit.guard';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, FeatureGuard, ResourceLimitGuard],
-  exports: [AuthService, JwtModule, FeatureGuard, ResourceLimitGuard],
+  providers: [AuthService, FeatureGuard, ResourceLimitGuard, JwtAuthGuard],
+  exports: [AuthService, JwtModule, FeatureGuard, ResourceLimitGuard, JwtAuthGuard],
 })
 export class AuthModule {}

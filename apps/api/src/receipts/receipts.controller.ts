@@ -2,6 +2,7 @@ import { Controller, Get, Param, Res, NotFoundException } from '@nestjs/common';
 import type { Response } from 'express';
 import { InternalReceiptService } from '../dte/internal-receipt.service';
 import * as fs from 'fs';
+import { Public } from '../auth/decorators/public.decorator';
 
 @Controller('receipts')
 export class ReceiptsController {
@@ -12,6 +13,7 @@ export class ReceiptsController {
    * @param saleId ID of the sale
    * @param res Express response object
    */
+  @Public()
   @Get(':saleId')
   getReceipt(@Param('saleId') saleId: string, @Res() res: Response) {
     const filepath = this.receiptService.getReceiptPath(saleId);

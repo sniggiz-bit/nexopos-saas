@@ -10,6 +10,7 @@ import {
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { StoreService } from './store.service';
+import { Public } from '../auth/decorators/public.decorator';
 
 @Controller('store')
 export class StoreController {
@@ -27,11 +28,13 @@ export class StoreController {
     return this.storeService.updateStoreSettings(req.user.tenantId, body);
   }
 
+  @Public()
   @Get(':slug/filters')
   async getFilters(@Param('slug') slug: string) {
     return this.storeService.findFiltersBySlug(slug);
   }
 
+  @Public()
   @Get(':slug/products')
   async getProducts(
     @Param('slug') slug: string,
@@ -52,6 +55,7 @@ export class StoreController {
     });
   }
 
+  @Public()
   @Get(':slug')
   async getStore(@Param('slug') slug: string) {
     return this.storeService.findBySlug(slug);

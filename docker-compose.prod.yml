@@ -26,6 +26,7 @@ services:
       PORT: 3000
       JWT_SECRET: ${JWT_SECRET}
       TZ: America/Santiago
+      CORS_ORIGINS: "https://nexopos.cl,https://www.nexopos.cl,http://localhost:3000,http://localhost:5173"
     env_file:
       - .env
     volumes:
