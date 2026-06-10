@@ -39,6 +39,14 @@ async function bootstrap() {
   // Disable ETags so browsers never get 304 on dynamic API data
   app.set('etag', false);
 
+  // Prevent any proxy/cPanel/Cloudflare cache from caching API requests
+  app.use((req, res, next) => {
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    next();
+  });
+
   // Servir archivos subidos como estáticos en /api/static/
   const uploadsPath = join(process.cwd(), '..', '..', 'uploads');
   app.useStaticAssets(uploadsPath, { prefix: '/api/static' });
