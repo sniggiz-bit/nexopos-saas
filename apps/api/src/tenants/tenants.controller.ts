@@ -64,4 +64,11 @@ export class TenantsController {
   activate(@Param('id') id: string) {
     return this.tenantsService.activate(id);
   }
+
+  @UseGuards(JwtAuthGuard, SuperAdminGuard)
+  @ApiOperation({ summary: 'Actualizar plan del inquilino' })
+  @Patch(':id/plan')
+  updatePlan(@Param('id') id: string, @Body('planId') planId: string | null) {
+    return this.tenantsService.updatePlan(id, planId);
+  }
 }

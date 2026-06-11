@@ -134,4 +134,17 @@ export class TenantsService {
       data: { status: 'ACTIVE' },
     });
   }
+
+  async updatePlan(id: string, planId: string | null) {
+    const tenant = await this.prisma.tenant.findUnique({
+      where: { id },
+    });
+    if (!tenant) throw new NotFoundException(`Tenant ${id} not found`);
+
+    return this.prisma.tenant.update({
+      where: { id },
+      data: { planId },
+      include: { plan: true },
+    });
+  }
 }

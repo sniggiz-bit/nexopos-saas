@@ -130,7 +130,6 @@ function ModulesSaaSTab({ tenantId }: { tenantId: string }) {
     const [saving, setSaving] = useState(false);
     const [catalog, setCatalog] = useState<{id: string, code: string, name: string, description: string}[]>([]);
     const [planModules, setPlanModules] = useState<any[]>([]);
-    const [addonModules, setAddonModules] = useState<any[]>([]);
     const [selectedAddons, setSelectedAddons] = useState<Set<string>>(new Set());
 
     const load = useCallback(async () => {
@@ -142,7 +141,6 @@ function ModulesSaaSTab({ tenantId }: { tenantId: string }) {
             ]);
             setCatalog(catalogRes.data);
             setPlanModules(tenantRes.data.planModules);
-            setAddonModules(tenantRes.data.addonModules);
             setSelectedAddons(new Set(tenantRes.data.addonModules.map((m: any) => m.id)));
         } catch { toast.error('Error cargando módulos SaaS'); }
         finally { setLoading(false); }
@@ -366,21 +364,50 @@ export default function TenantDetailPage() {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
     const [tenant, setTenant] = useState<TenantDetail | null>(null);
+    const [plans, setPlans] = useState<any[]>([]);
+    const [selectedPlanId, setSelectedPlanId] = useState<string>('');
+    const [savingPlan, setSavingPlan] = useState(false);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState<Tab>('info');
 
     useEffect(() => {
         if (!id) return;
-        api.get(`/tenants/${id}`)
-            .then(r => setTenant(r.data))
-            .catch(() => toast.error('Error cargando tenant'))
+        setLoading(true);
+        Promise.all([
+            api.get(`/tenants/${id}`),
+            api.get('/plans')
+        ])
+            .then(([tenantRes, plansRes]) => {
+                setTenant(tenantRes.data);
+                setPlans(plansRes.data || []);
+            })
+            .catch(() => toast.error('Error cargando datos del tenant'))
             .finally(() => setLoading(false));
     }, [id]);
+
+    useEffect(() => {
+        if (tenant) {
+            setSelectedPlanId(tenant.plan?.id || '');
+        }
+    }, [tenant]);
 
     const handleSaveSettings = useCallback(async (patch: Partial<TenantSettings>) => {
         await api.patch(`/tenants/${id}/settings`, patch);
         setTenant(prev => prev ? { ...prev, settings: { ...prev.settings!, ...patch } } : prev);
     }, [id]);
+
+    const handleUpdatePlan = async () => {
+        setSavingPlan(true);
+        try {
+            const res = await api.patch(`/tenants/${id}/plan`, { planId: selectedPlanId || null });
+            setTenant(prev => prev ? { ...prev, plan: res.data.plan } : null);
+            toast.success('Plan de suscripción actualizado con éxito');
+        } catch {
+            toast.error('Error al actualizar el plan');
+        } finally {
+            setSavingPlan(false);
+        }
+    };
 
     if (loading) return <div className="flex items-center justify-center h-64 text-neutral-500 gap-2"><Loader2 className="animate-spin" size={20} />Cargando...</div>;
     if (!tenant) return (
@@ -462,19 +489,50 @@ export default function TenantDetailPage() {
                                 </div>
                             ))}
                         </div>
-                        <div className="bg-neutral-800 border border-neutral-700 rounded-xl p-5">
-                            <h3 className="text-sm font-semibold text-white mb-3">Usuarios</h3>
-                            <div className="space-y-2">
-                                {tenant.users?.length ? tenant.users.map(u => (
-                                    <div key={u.id} className="flex items-center gap-3 p-2.5 rounded-lg bg-neutral-900/50">
-                                        <div className="w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center text-xs font-bold text-purple-300 uppercase flex-shrink-0">{u.name.charAt(0)}</div>
-                                        <div className="flex-1 min-w-0">
-                                            <p className="text-sm text-neutral-200 truncate">{u.name}</p>
-                                            <p className="text-xs text-neutral-500 truncate">{u.email}</p>
+                        <div className="space-y-4">
+                            {/* Plan de Suscripción */}
+                            <div className="bg-neutral-800 border border-neutral-700 rounded-xl p-5 space-y-3">
+                                <h3 className="text-sm font-semibold text-white">Plan de Suscripción</h3>
+                                <p className="text-xs text-neutral-500">Cambia el plan de suscripción de este cliente para modificar sus límites y módulos.</p>
+                                <div className="flex gap-2">
+                                    <select
+                                        value={selectedPlanId}
+                                        onChange={e => setSelectedPlanId(e.target.value)}
+                                        className="flex-1 bg-neutral-900 border border-neutral-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500"
+                                    >
+                                        <option value="">Sin plan (Acceso Básico)</option>
+                                        {plans.map(p => (
+                                            <option key={p.id} value={p.id}>
+                                                {p.name} (${p.price.toLocaleString('es-CL')}/mes)
+                                            </option>
+                                        ))}
+                                    </select>
+                                    <button
+                                        onClick={handleUpdatePlan}
+                                        disabled={savingPlan || selectedPlanId === (tenant.plan?.id || '')}
+                                        className="px-4 py-2 bg-purple-600 hover:bg-purple-700 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-semibold rounded-xl transition-colors flex items-center gap-1.5"
+                                    >
+                                        {savingPlan && <Loader2 size={12} className="animate-spin" />}
+                                        Cambiar
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Usuarios */}
+                            <div className="bg-neutral-800 border border-neutral-700 rounded-xl p-5">
+                                <h3 className="text-sm font-semibold text-white mb-3">Usuarios</h3>
+                                <div className="space-y-2">
+                                    {tenant.users?.length ? tenant.users.map(u => (
+                                        <div key={u.id} className="flex items-center gap-3 p-2.5 rounded-lg bg-neutral-900/50">
+                                            <div className="w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center text-xs font-bold text-purple-300 uppercase flex-shrink-0">{u.name.charAt(0)}</div>
+                                            <div className="flex-1 min-w-0">
+                                                <p className="text-sm text-neutral-200 truncate">{u.name}</p>
+                                                <p className="text-xs text-neutral-500 truncate">{u.email}</p>
+                                            </div>
+                                            <span className="text-xs px-2 py-0.5 rounded-full bg-neutral-700 text-neutral-400 flex-shrink-0">{u.role}</span>
                                         </div>
-                                        <span className="text-xs px-2 py-0.5 rounded-full bg-neutral-700 text-neutral-400 flex-shrink-0">{u.role}</span>
-                                    </div>
-                                )) : <p className="text-sm text-neutral-500">Sin usuarios.</p>}
+                                    )) : <p className="text-sm text-neutral-500">Sin usuarios.</p>}
+                                </div>
                             </div>
                         </div>
                     </div>
