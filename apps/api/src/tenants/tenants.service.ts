@@ -141,10 +141,35 @@ export class TenantsService {
     });
     if (!tenant) throw new NotFoundException(`Tenant ${id} not found`);
 
-    return this.prisma.tenant.update({
-      where: { id },
-      data: { planId },
-      include: { plan: true },
+    return this.prisma.$transaction(async (tx) => {
+      const updatedTenant = await tx.tenant.update({
+        where: { id },
+        data: { planId },
+        include: { plan: true },
+      });
+
+      if (planId && updatedTenant.plan) {
+        const plan = updatedTenant.plan;
+        const features = (plan.enabledFeatures as Record<string, any>) || {};
+
+        const dataToUpdate: any = {
+          maxUsers: plan.maxUsers,
+        };
+        if (typeof features.enableEcommerce === 'boolean') dataToUpdate.enableEcommerce = features.enableEcommerce;
+        if (typeof features.enableTransbank === 'boolean') dataToUpdate.enableTransbank = features.enableTransbank;
+        if (typeof features.enableIntegrations === 'boolean') dataToUpdate.enableIntegrations = features.enableIntegrations;
+
+        await (tx as any).tenantSettings.upsert({
+          where: { tenantId: id },
+          create: {
+            tenantId: id,
+            ...dataToUpdate
+          },
+          update: dataToUpdate
+        });
+      }
+
+      return updatedTenant;
     });
   }
 }

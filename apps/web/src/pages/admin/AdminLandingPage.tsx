@@ -1,11 +1,11 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import api from '../../lib/api';
 import toast from 'react-hot-toast';
 import {
   Globe, Loader2, Save, RotateCcw, ExternalLink,
   Sparkles, Layout, Tag, Megaphone, AlignLeft, Plus, Trash2, RefreshCw,
   MessageSquare, Search, Frown, Lightbulb, Briefcase, BarChart3,
-  Users, Scale, HelpCircle
+  Users, Scale, HelpCircle, Upload, Image as ImageIcon2
 } from 'lucide-react';
 
 interface FeatureItem { title: string; description: string }
@@ -19,10 +19,10 @@ interface FaqItem { question: string; answer: string }
 interface LandingConfig {
   hero: {
     badge: string; title: string; titleHighlight: string;
-    description: string; ctaPrimary: string; ctaSecondary: string; dteBanner: string;
+    description: string; ctaPrimary: string; ctaSecondary: string; dteBanner: string; image?: string;
   };
   pain: { title: string; subtitle: string; items: PainItem[] };
-  solution: { title: string; subtitle: string; description: string };
+  solution: { title: string; subtitle: string; description: string; image?: string; };
   features: { sectionTitle: string; sectionSubtitle: string; items: FeatureItem[] };
   useCases: { title: string; subtitle: string; items: UseCaseItem[] };
   stats: { items: StatItem[] };
@@ -58,7 +58,8 @@ const DEFAULT_CFG: LandingConfig = {
   solution: {
     title: 'Toda tu operación comercial en piloto automático.',
     subtitle: 'NEXOPOS AL RESCATE',
-    description: 'NexoPOS centraliza las partes más difíciles de tu negocio en una interfaz limpia, veloz y accesible desde cualquier dispositivo. Deja atrás las planillas de Excel y los sistemas lentos de los años 90.'
+    description: 'NexoPOS centraliza las partes más difíciles de tu negocio en una interfaz limpia, veloz y accesible desde cualquier dispositivo. Deja atrás las planillas de Excel y los sistemas lentos de los años 90.',
+    image: '',
   },
   features: {
     sectionTitle: 'Todo lo necesario para organizar tu empresa',
@@ -178,6 +179,69 @@ const Field = ({ label, value, onChange, multiline = false, placeholder = '' }: 
     )}
   </div>
 );
+
+const ImageUploadField = ({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) => {
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFile = async (file: File) => {
+    if (!file) return;
+    setUploading(true);
+    try {
+      const form = new FormData();
+      form.append('file', file);
+      const { data } = await api.post('/uploads/image', form);
+      onChange(data.url);
+    } catch {
+      toast.error('Error al subir la imagen');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  return (
+    <div>
+      <label className="block text-xs font-semibold text-neutral-400 uppercase tracking-wider mb-2">{label}</label>
+      <div className="flex items-start gap-4">
+        <div className="w-24 h-24 rounded-xl border border-dashed border-neutral-700 bg-neutral-800/50 flex items-center justify-center shrink-0 overflow-hidden relative group">
+          {value ? (
+            <>
+              <img src={value} alt="Preview" className="w-full h-full object-cover" />
+              <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                <button type="button" onClick={() => onChange('')} className="p-1.5 bg-red-500/20 text-red-400 rounded-xl hover:bg-red-500/40 transition-colors"><Trash2 size={16} /></button>
+              </div>
+            </>
+          ) : (
+            <ImageIcon2 size={24} className="text-neutral-600" />
+          )}
+        </div>
+        <div className="flex-1 space-y-2">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={e => {
+              const file = e.target.files?.[0];
+              if (file) handleFile(file);
+              e.target.value = '';
+            }}
+          />
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploading}
+            className="flex items-center gap-2 px-4 py-2.5 bg-neutral-800 border border-neutral-700 text-neutral-300 hover:text-white hover:bg-neutral-700 rounded-xl transition-colors text-sm font-medium disabled:opacity-50"
+          >
+            {uploading ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
+            {uploading ? 'Subiendo...' : 'Subir Imagen'}
+          </button>
+          <p className="text-xs text-neutral-500">Formato recomendado: PNG, JPG, WEBP. Máx: 2MB.</p>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 export default function AdminLandingPage() {
   const [cfg, setCfg] = useState<LandingConfig>(DEFAULT_CFG);
@@ -419,6 +483,9 @@ export default function AdminLandingPage() {
               <Field label="Botón secundario" value={cfg.hero.ctaSecondary} onChange={v => set('hero', { ctaSecondary: v })} placeholder="Ver Planes" />
             </div>
             <Field label="Banner DTE" value={cfg.hero.dteBanner} onChange={v => set('hero', { dteBanner: v })} placeholder="Texto del banner inferior del hero..." />
+            <div className="pt-4 border-t border-neutral-700">
+              <ImageUploadField label="Imagen Principal (Dashboard)" value={cfg.hero.image || ''} onChange={v => set('hero', { image: v })} />
+            </div>
           </div>
         </div>
       )}
@@ -467,10 +534,13 @@ export default function AdminLandingPage() {
       {/* Tab: Solution */}
       {activeTab === 'solution' && (
         <div className="bg-neutral-800 border border-neutral-700 rounded-xl p-5 space-y-4">
-          <p className="text-sm font-bold text-white">Sección de Solución (La Transformación)</p>
+          <p className="text-sm font-bold text-white">Sección de Solución (NexoPOS al rescate)</p>
           <Field label="Subtítulo de sección" value={cfg.solution?.subtitle || ''} onChange={v => set('solution', { subtitle: v })} />
           <Field label="Título de sección" value={cfg.solution?.title || ''} onChange={v => set('solution', { title: v })} />
-          <Field label="Descripción" value={cfg.solution?.description || ''} onChange={v => set('solution', { description: v })} multiline />
+          <Field label="Descripción principal" value={cfg.solution?.description || ''} onChange={v => set('solution', { description: v })} multiline />
+          <div className="pt-4 border-t border-neutral-700">
+            <ImageUploadField label="Imagen Descriptiva (Dashboard)" value={cfg.solution.image || ''} onChange={v => set('solution', { image: v })} />
+          </div>
         </div>
       )}
 

@@ -20,10 +20,10 @@ interface FaqItem { question: string; answer: string }
 interface LandingConfig {
     hero: {
         badge: string; title: string; titleHighlight: string;
-        description: string; ctaPrimary: string; ctaSecondary: string; dteBanner: string;
+        description: string; ctaPrimary: string; ctaSecondary: string; dteBanner: string; image?: string;
     };
     pain: { title: string; subtitle: string; items: PainItem[] };
-    solution: { title: string; subtitle: string; description: string };
+    solution: { title: string; subtitle: string; description: string; image?: string; };
     features: { sectionTitle: string; sectionSubtitle: string; items: { title: string; description: string }[] };
     useCases: { title: string; subtitle: string; items: UseCaseItem[] };
     stats: { items: StatItem[] };
@@ -360,7 +360,7 @@ export function LandingPage() {
                                 </div>
                                 <div className="flex-1 bg-slate-950/20 relative p-4">
                                     <img 
-                                        src="/dashboard-hero-nexopos.png" 
+                                        src={hero.image || "/dashboard-hero-nexopos.png"} 
                                         alt="Dashboard NexoPOS" 
                                         className="w-full h-full object-cover rounded-xl shadow-md border border-white/[0.05]"
                                         onError={e => { 
@@ -381,7 +381,7 @@ export function LandingPage() {
                     <div className="mt-16 sm:mt-28 flex justify-center relative z-10">
                         <div className="absolute -inset-3 bg-gradient-to-r from-cyan-500/10 to-indigo-500/10 rounded-2xl blur-3xl opacity-40"></div>
                         <img 
-                            src="/dashboard-hero-nexopos.png" 
+                            src={hero.image || "/dashboard-hero-nexopos.png"} 
                             alt="Dashboard NexoPOS" 
                             className="w-full max-w-5xl rounded-2xl shadow-[0_30px_70px_rgba(0,0,0,0.6)] border border-white/[0.08] object-cover object-center relative z-10" 
                             loading="eager" 
@@ -438,7 +438,7 @@ export function LandingPage() {
                                     </div>
                                     <div className="flex-1 bg-slate-950/20 relative p-4 flex items-center justify-center">
                                         <img 
-                                            src="/dashboard-hero-nexopos.png" 
+                                            src={solution.image || "/dashboard-hero-nexopos.png"} 
                                             alt="Dashboard NexoPOS" 
                                             className="w-full h-full object-cover rounded-xl border border-white/[0.05]"
                                             onError={e => {
