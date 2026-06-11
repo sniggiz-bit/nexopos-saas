@@ -152,7 +152,7 @@ export function UsersPage() {
                                                 {new Date(u.createdAt).toLocaleDateString()}
                                             </td>
                                             <td className="px-6 py-4 text-right">
-                                                {user?.id !== u.id && u.role !== 'SUPER_ADMIN' && (
+                                                {u.role !== 'SUPER_ADMIN' && (
                                                     <>
                                                         <button
                                                             onClick={() => {
@@ -163,16 +163,18 @@ export function UsersPage() {
                                                         >
                                                             Editar
                                                         </button>
-                                                        <button
-                                                            onClick={() => {
-                                                                if (window.confirm('¿Seguro que deseas eliminar este usuario?')) {
-                                                                    deleteMutation.mutate(u.id);
-                                                                }
-                                                            }}
-                                                            className="text-sm text-red-400 hover:text-red-300 font-semibold transition-colors"
-                                                        >
-                                                            Eliminar
-                                                        </button>
+                                                        {user?.id !== u.id && (
+                                                            <button
+                                                                onClick={() => {
+                                                                    if (window.confirm('¿Seguro que deseas eliminar este usuario?')) {
+                                                                        deleteMutation.mutate(u.id);
+                                                                    }
+                                                                }}
+                                                                className="text-sm text-red-400 hover:text-red-300 font-semibold transition-colors"
+                                                            >
+                                                                Eliminar
+                                                            </button>
+                                                        )}
                                                     </>
                                                 )}
                                             </td>
