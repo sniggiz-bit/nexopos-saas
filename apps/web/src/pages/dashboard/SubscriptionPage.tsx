@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { api } from '@/lib/api';
-import { useAuth } from '@/context/AuthContext';
-import { Award, Zap, CheckCircle2, Crown, Store, Plug, FileText, Loader2, ArrowRight, ShieldCheck, Sparkles } from 'lucide-react';
+import { Zap, CheckCircle2, Crown, Store, Plug, FileText, Loader2, ArrowRight, ShieldCheck, Sparkles } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { DashboardLayout } from '../../components/dashboard/DashboardLayout';
 
@@ -26,7 +25,6 @@ interface TenantModulesResponse {
 }
 
 export function SubscriptionPage() {
-  const { user } = useAuth();
   const [allModules, setAllModules] = useState<ModuleDef[]>([]);
   const [activeModules, setActiveModules] = useState<TenantModulesResponse | null>(null);
   const [loading, setLoading] = useState(true);

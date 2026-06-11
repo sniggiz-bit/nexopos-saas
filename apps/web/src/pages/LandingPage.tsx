@@ -1,19 +1,36 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { CheckCircle, Building2, FileText, Menu, Globe, Truck, ArrowRight, Sparkles } from 'lucide-react';
+import {
+    CheckCircle, Building2, FileText, Menu, Globe, Truck, ArrowRight, Sparkles,
+    AlertTriangle, ChevronDown
+} from 'lucide-react';
 import { Logo } from '../components/ui/Logo';
 import { PublicChatWidget } from '../components/landing/PublicChatWidget';
 import { usePublicPlans } from '../hooks/usePublicPlans';
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '../api/client';
 
+interface PainItem { title: string; description: string }
+interface UseCaseItem { title: string; description: string }
+interface StatItem { label: string; value: string }
+interface TestimonialItem { name: string; role: string; content: string }
+interface ComparisonRow { feature: string; nexopos: string; excel: string; traditional: string }
+interface FaqItem { question: string; answer: string }
+
 interface LandingConfig {
     hero: {
         badge: string; title: string; titleHighlight: string;
         description: string; ctaPrimary: string; ctaSecondary: string; dteBanner: string;
     };
+    pain: { title: string; subtitle: string; items: PainItem[] };
+    solution: { title: string; subtitle: string; description: string };
     features: { sectionTitle: string; sectionSubtitle: string; items: { title: string; description: string }[] };
+    useCases: { title: string; subtitle: string; items: UseCaseItem[] };
+    stats: { items: StatItem[] };
+    testimonials: { items: TestimonialItem[] };
+    comparison: { title: string; subtitle: string; rows: ComparisonRow[] };
     pricing: { title: string; subtitle: string };
+    faqs: { title: string; subtitle: string; items: FaqItem[] };
     cta: { title: string; subtitle: string; button: string };
     footer: { description: string };
     seo?: { title: string; description: string; keywords: string };
@@ -30,6 +47,20 @@ const DEFAULT_CFG: LandingConfig = {
         ctaSecondary: 'Ver Planes',
         dteBanner: 'Además, incluye Facturación Electrónica DTE integrada con el SII.',
     },
+    pain: {
+        title: 'Dirigir un negocio es difícil. Administrarlo a ciegas es peligroso.',
+        subtitle: 'EL CAOS OPERATIVO DIARIO',
+        items: [
+            { title: 'Inventarios Descuadrados', description: 'Nunca sabes con certeza qué hay en bodega. Vendes productos sin stock en tu tienda online y pierdes clientes por quiebres en sala de venta.' },
+            { title: 'El SII consume tu tiempo', description: 'Emitir facturas o boletas a mano o en sistemas lentos te quita horas valiosas al final del día. Un error manual y te expones a multas.' },
+            { title: 'Sucursales Desconectadas', description: 'No sabes cuál local vende más hoy, qué caja está cuadrada o si hay robo hormiga a menos que vayas físicamente a inspeccionar.' }
+        ]
+    },
+    solution: {
+        title: 'Toda tu operación comercial en piloto automático.',
+        subtitle: 'NEXOPOS AL RESCATE',
+        description: 'NexoPOS centraliza las partes más difíciles de tu negocio en una interfaz limpia, veloz y accesible desde cualquier dispositivo. Deja atrás las planillas de Excel y los sistemas lentos de los años 90.'
+    },
     features: {
         sectionTitle: 'Todo lo necesario para organizar tu empresa',
         sectionSubtitle: 'NexoPOS te entrega herramientas profesionales diseñadas específicamente para un control riguroso operativo y comercial.',
@@ -40,9 +71,59 @@ const DEFAULT_CFG: LandingConfig = {
             { title: 'Tienda Online Sincronizada', description: 'Expande tus canales de venta de forma digital. Tu catálogo físico y online comparten el mismo inventario, evitando quiebres de stock y automatizando el flujo completo desde la venta hasta el despacho.' },
         ],
     },
+    useCases: {
+        title: 'Diseñado para el comercio real en Chile.',
+        subtitle: 'SECTORES COMPATIBLES',
+        items: [
+            { title: 'Minimarkets y Almacenes', description: 'Lectura ultra rápida de código de barras, balanzas integradas y control de vencimientos.' },
+            { title: 'Ferreterías y Repuestos', description: 'Gestión de miles de SKUs, equivalencias de productos y ventas mayoristas con cuentas corrientes de clientes.' },
+            { title: 'Tiendas de Mascotas y Retail', description: 'Variantes de productos (talla, color, sabor), control de servicios y promociones dinámicas.' },
+            { title: 'Distribuidoras y Mayoristas', description: 'Módulo de compras robusto, márgenes de ganancia por volumen y rutas de despacho automatizadas.' }
+        ]
+    },
+    stats: {
+        items: [
+            { label: 'Empresas Activas en Chile', value: '+350' },
+            { label: 'Transacciones Procesadas', value: '+15 Millones' },
+            { label: 'Uptime del Servidor (AWS)', value: '99.98%' }
+        ]
+    },
+    testimonials: {
+        items: [
+            { name: 'Francisco Pérez', role: 'Fundador de "Almacén Providencia"', content: 'NexoPOS nos permitió abrir 3 sedes en un año. Antes pasábamos el fin de semana cuadrando inventarios de forma manual; ahora todo se hace en tiempo real desde el celular.' },
+            { name: 'Alejandra Fravéga', role: 'Gerente de Operaciones en "Distribuidora Ponchos del Cachapoal"', content: 'La facturación electrónica con el SII nunca falló. Tuvimos soporte de inmediato por WhatsApp el primer día que abrimos caja. Es un cambio del cielo a la tierra.' }
+        ]
+    },
+    comparison: {
+        title: 'NexoPOS vs Sistemas tradicionales y planillas',
+        subtitle: 'COMPARATIVA CIENTÍFICA',
+        rows: [
+            { feature: 'Sincronización en la nube', nexopos: 'Sí, 100% Tiempo Real', excel: 'No (Archivos locales aislados)', traditional: 'A veces (Servidores locales lentos)' },
+            { feature: 'Facturación DTE / SII', nexopos: 'Integrado Automáticamente', excel: 'No (Requiere doble digitación)', traditional: 'Requiere pago extra por integración' },
+            { feature: 'Velocidad de venta POS', nexopos: 'Menos de 2 segundos', excel: 'Lento e ineficiente', traditional: 'Lento, requiere terminales específicas' },
+            { feature: 'Soporte Técnico en Vivo', nexopos: 'Sí, WhatsApp Directo', excel: 'No (Tú lo resuelves solo)', traditional: 'Soporte telefónico costoso o ausente' },
+            { feature: 'Conexión E-commerce', nexopos: 'Sí (Shopify & WooCommerce)', excel: 'No', traditional: 'No disponible' }
+        ]
+    },
     pricing: {
         title: 'Planes escalables para tu crecimiento',
         subtitle: 'Invierte en la tecnología correcta sin contratos forzosos. Elige el plan que soporte tu operación actual.',
+    },
+    faqs: {
+        title: 'Preguntas Frecuentes',
+        subtitle: 'Respuestas claras para eliminar objeciones antes de comenzar.',
+        items: [
+            { question: '¿Necesito comprar mi propio Certificado Digital para emitir boletas o facturas?', answer: 'No. NexoPOS incluye la gestión de firma digital y folios integrados en el plan. Nosotros nos encargamos de enrolar tu empresa ante el SII sin costo extra.' },
+            { question: '¿Funciona el POS si se cae el internet?', answer: 'Sí. El Punto de Venta cuenta con un modo offline inteligente. Puedes seguir vendiendo y registrando pagos. Tan pronto vuelva la señal, los datos se sincronizan con la nube.' },
+            { question: '¿Puedo importar mis productos desde Excel u otro sistema que ya utilizo?', answer: '¡Por supuesto! Nuestro panel cuenta con un importador masivo en Excel. Si tienes dificultades, nuestro equipo de soporte te asiste para migrar toda tu base de datos en menos de 1 hora.' },
+            { question: '¿Tengo que firmar un contrato de permanencia mínima?', answer: 'No. El servicio se cobra de forma mensual y puedes cancelarlo o cambiar de plan cuando quieras sin multas ni costos extras.' },
+            { question: '¿Qué pasa si excedo el límite de usuarios de mi plan?', answer: 'Puedes contratar usuarios adicionales como add-ons directamente desde tu panel de control a una fracción del costo, o subir al siguiente plan.' },
+            { question: '¿NexoPOS es compatible con lectores de código de barra y gavetas de dinero?', answer: 'Sí, es compatible con el 99% de los hardwares POS USB y Bluetooth del mercado (lectores de barra, impresoras térmicas de 57mm y 80mm, y gavetas electrónicas).' },
+            { question: '¿Cómo funciona la integración con Shopify y WooCommerce?', answer: 'Conectas tu tienda con tus credenciales API en un paso. Cuando vendes online, el stock baja en el POS de tu tienda física. Si vendes en el local, el inventario web se actualiza al instante.' },
+            { question: '¿El soporte técnico está incluido en el precio?', answer: 'Sí, todos los planes incluyen soporte técnico nativo. Los planes intermedio y avanzado incluyen canal de WhatsApp prioritario con respuesta en menos de 15 minutos.' },
+            { question: '¿Puedo manejar distintas tarifas o precios por volumen?', answer: 'Sí, NexoPOS te permite configurar escalas de precios (precios mayoristas, ofertas por cantidad) por producto.' },
+            { question: '¿Los datos de mi negocio están seguros?', answer: 'Sí. Toda la información viaja encriptada vía SSL y se almacena en servidores AWS de alta seguridad con respaldos automatizados cada 6 horas.' }
+        ]
     },
     cta: {
         title: '¿Listo para transformar la gestión de tu empresa?',
@@ -81,6 +162,24 @@ function deepMerge(base: any, override: any): any {
     return result;
 }
 
+function FAQItem({ question, answer }: { question: string; answer: string }) {
+    const [isOpen, setIsOpen] = useState(false);
+    return (
+        <div className="border border-white/[0.06] bg-white/[0.01] rounded-2xl p-6 transition-all hover:bg-white/[0.02]">
+            <button 
+                onClick={() => setIsOpen(!isOpen)} 
+                className="w-full flex justify-between items-center text-left text-slate-100 hover:text-cyan-300 transition-colors"
+            >
+                <span className="text-sm sm:text-base font-bold">{question}</span>
+                <ChevronDown className={`w-5 h-5 text-slate-400 transition-transform duration-300 ${isOpen ? 'transform rotate-180 text-cyan-400' : ''}`} />
+            </button>
+            <div className={`transition-all duration-300 overflow-hidden ${isOpen ? 'max-h-60 opacity-100 mt-4' : 'max-h-0 opacity-0'}`}>
+                <p className="text-slate-400 text-xs sm:text-sm leading-relaxed">{answer}</p>
+            </div>
+        </div>
+    );
+}
+
 export function LandingPage() {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const { data: plans, isLoading: plansLoading } = usePublicPlans();
@@ -92,7 +191,7 @@ export function LandingPage() {
     });
 
     const cfg: LandingConfig = remoteCfg ? deepMerge(DEFAULT_CFG, remoteCfg) : DEFAULT_CFG;
-    const { hero, features, pricing, cta, footer, seo } = cfg as any;
+    const { hero, pain, solution, features, useCases, stats, testimonials, comparison, pricing, faqs, cta, footer, seo } = cfg;
 
     React.useEffect(() => {
         if (seo?.title) {
@@ -130,9 +229,9 @@ export function LandingPage() {
             />
 
             {/* Glowing backdrop orbs */}
-            <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-indigo-600/10 blur-[120px] animate-float-slow pointer-events-none" />
-            <div className="absolute top-[30%] right-[-10%] w-[55%] h-[55%] rounded-full bg-emerald-500/8 blur-[130px] animate-float-reverse pointer-events-none" />
-            <div className="absolute bottom-[-10%] left-[10%] w-[50%] h-[50%] rounded-full bg-purple-500/5 blur-[150px] animate-float pointer-events-none" />
+            <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-indigo-600/10 blur-[120px] pointer-events-none" />
+            <div className="absolute top-[30%] right-[-10%] w-[55%] h-[55%] rounded-full bg-emerald-500/8 blur-[130px] pointer-events-none" />
+            <div className="absolute bottom-[-10%] left-[10%] w-[50%] h-[50%] rounded-full bg-purple-500/5 blur-[150px] pointer-events-none" />
 
             {/* Navigation Header */}
             <nav className="fixed w-full bg-[#070913]/60 backdrop-blur-xl z-50 border-b border-white/[0.06] transition-all">
@@ -143,7 +242,10 @@ export function LandingPage() {
                         </Link>
                         <div className="hidden md:flex items-center space-x-8">
                             <a href="#features" className="text-slate-300 hover:text-cyan-400 font-medium text-sm transition-colors duration-200">Características</a>
+                            <a href="#use-cases" className="text-slate-300 hover:text-cyan-400 font-medium text-sm transition-colors duration-200">Casos</a>
+                            <a href="#comparison" className="text-slate-300 hover:text-cyan-400 font-medium text-sm transition-colors duration-200">Comparativa</a>
                             <a href="#pricing" className="text-slate-300 hover:text-cyan-400 font-medium text-sm transition-colors duration-200">Precios</a>
+                            <a href="#faqs" className="text-slate-300 hover:text-cyan-400 font-medium text-sm transition-colors duration-200">Preguntas</a>
                             <Link to="/login" className="text-slate-300 hover:text-cyan-400 font-medium text-sm transition-colors duration-200">Iniciar Sesión</Link>
                             <Link 
                                 to="/register" 
@@ -169,9 +271,12 @@ export function LandingPage() {
                 </div>
                 {/* Mobile dropdown */}
                 {isMenuOpen && (
-                    <div className="md:hidden bg-[#0d1226]/95 border-b border-white/[0.08] px-4 pt-2 pb-6 space-y-3 shadow-2xl absolute w-full backdrop-blur-xl animate-fade-up">
+                    <div className="md:hidden bg-[#0d1226]/95 border-b border-white/[0.08] px-4 pt-2 pb-6 space-y-3 shadow-2xl absolute w-full backdrop-blur-xl">
                         <a href="#features" onClick={() => setIsMenuOpen(false)} className="block text-slate-300 font-medium py-2 px-3 rounded-lg hover:bg-white/[0.04]">Características</a>
+                        <a href="#use-cases" onClick={() => setIsMenuOpen(false)} className="block text-slate-300 font-medium py-2 px-3 rounded-lg hover:bg-white/[0.04]">Casos</a>
+                        <a href="#comparison" onClick={() => setIsMenuOpen(false)} className="block text-slate-300 font-medium py-2 px-3 rounded-lg hover:bg-white/[0.04]">Comparativa</a>
                         <a href="#pricing" onClick={() => setIsMenuOpen(false)} className="block text-slate-300 font-medium py-2 px-3 rounded-lg hover:bg-white/[0.04]">Precios</a>
+                        <a href="#faqs" onClick={() => setIsMenuOpen(false)} className="block text-slate-300 font-medium py-2 px-3 rounded-lg hover:bg-white/[0.04]">Preguntas</a>
                         <Link to="/login" className="block text-slate-300 font-medium py-2 px-3 rounded-lg hover:bg-white/[0.04]">Iniciar Sesión</Link>
                         <Link 
                             to="/register" 
@@ -193,12 +298,12 @@ export function LandingPage() {
                         {/* Hero Text */}
                         <div className="max-w-2xl text-center lg:text-left space-y-6">
                             {/* Glowing Badge */}
-                            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-xs font-bold tracking-wider uppercase animate-fade-up">
+                            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-xs font-bold tracking-wider uppercase">
                                 <Sparkles className="w-3.5 h-3.5" />
                                 {hero.badge}
                             </div>
                             
-                            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight text-white leading-[1.1] animate-fade-up">
+                            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight text-white leading-[1.1]">
                                 {hero.title}{' '}
                                 <span className="bg-gradient-to-r from-cyan-400 via-indigo-400 to-emerald-400 bg-clip-text text-transparent block mt-2">
                                     {hero.titleHighlight}
@@ -220,7 +325,7 @@ export function LandingPage() {
                                     "
                                 >
                                     {hero.ctaPrimary}
-                                    <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                                    <ArrowRight className="w-4 h-4 ml-2" />
                                 </Link>
                                 <a 
                                     href="#pricing" 
@@ -242,7 +347,7 @@ export function LandingPage() {
                         </div>
 
                         {/* Hero Demo Graphic */}
-                        <div className="relative mt-8 lg:mt-0 hidden lg:block animate-float-slow">
+                        <div className="relative mt-8 lg:mt-0 hidden lg:block">
                             {/* Glowing light background backing */}
                             <div className="absolute -inset-2 bg-gradient-to-r from-cyan-500/20 via-indigo-500/20 to-emerald-500/20 rounded-2xl blur-3xl opacity-30"></div>
                             
@@ -273,7 +378,7 @@ export function LandingPage() {
                     </div>
 
                     {/* Bottom Main Graphic (visible on all) */}
-                    <div className="mt-16 sm:mt-28 flex justify-center relative z-10 animate-fade-up">
+                    <div className="mt-16 sm:mt-28 flex justify-center relative z-10">
                         <div className="absolute -inset-3 bg-gradient-to-r from-cyan-500/10 to-indigo-500/10 rounded-2xl blur-3xl opacity-40"></div>
                         <img 
                             src="/dashboard-hero-nexopos.png" 
@@ -284,6 +389,102 @@ export function LandingPage() {
                     </div>
                 </div>
             </section>
+
+            {/* Pain Points Section */}
+            {pain && (
+                <section id="pain" className="py-24 lg:py-32 relative z-10 border-t border-white/[0.05] bg-gradient-to-b from-[#070913] to-slate-950/20">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <div className="text-center max-w-3xl mx-auto mb-20 space-y-4">
+                            {pain.subtitle && (
+                                <span className="text-xs font-bold tracking-wider uppercase bg-gradient-to-r from-red-500 to-amber-500 bg-clip-text text-transparent">
+                                    {pain.subtitle}
+                                </span>
+                            )}
+                            <h2 className="text-3xl font-black text-white sm:text-4xl tracking-tight leading-tight">
+                                {pain.title}
+                            </h2>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+                            {(pain.items || []).map((item, i) => (
+                                <div 
+                                    key={i} 
+                                    className="p-8 rounded-3xl bg-white/[0.01] border border-white/[0.05] hover:border-red-500/20 hover:bg-red-500/[0.01] backdrop-blur-md transition-all duration-300 group hover:-translate-y-1"
+                                >
+                                    <div className="w-12 h-12 bg-red-500/10 border border-red-500/20 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                                        <AlertTriangle className="w-5 h-5 text-red-400" />
+                                    </div>
+                                    <h3 className="text-lg font-bold text-slate-100 mb-3">{item.title}</h3>
+                                    <p className="text-slate-400 leading-relaxed text-sm">{item.description}</p>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </section>
+            )}
+
+            {/* Solution Section */}
+            {solution && (
+                <section id="solution" className="py-24 lg:py-32 relative z-10 border-t border-white/[0.05] bg-slate-950/40">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+                            {/* Visual Graphic Mockup */}
+                            <div className="relative order-2 lg:order-1">
+                                <div className="absolute -inset-3 bg-gradient-to-r from-cyan-500/10 to-indigo-500/10 rounded-2xl blur-3xl opacity-40"></div>
+                                <div className="relative rounded-2xl bg-slate-900/30 border border-white/[0.08] shadow-[0_24px_50px_rgba(0,0,0,0.5)] overflow-hidden aspect-[4/3] flex flex-col backdrop-blur-xl">
+                                    <div className="h-9 border-b border-white/[0.06] bg-slate-950/40 flex items-center px-4 space-x-2">
+                                        <div className="w-3 h-3 rounded-full bg-red-500/40"></div>
+                                        <div className="w-3 h-3 rounded-full bg-yellow-500/40"></div>
+                                        <div className="w-3 h-3 rounded-full bg-green-500/40"></div>
+                                    </div>
+                                    <div className="flex-1 bg-slate-950/20 relative p-4 flex items-center justify-center">
+                                        <img 
+                                            src="/dashboard-hero-nexopos.png" 
+                                            alt="Dashboard NexoPOS" 
+                                            className="w-full h-full object-cover rounded-xl border border-white/[0.05]"
+                                            onError={e => {
+                                                (e.target as HTMLImageElement).style.display = 'none';
+                                                (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
+                                            }}
+                                        />
+                                        <div className="hidden absolute inset-0 m-4 border border-dashed border-white/[0.1] rounded-xl bg-white/[0.01] flex flex-col items-center justify-center text-slate-400">
+                                            <Building2 className="w-12 h-12 mb-3 opacity-40 text-cyan-400" />
+                                            <p className="font-semibold text-sm text-slate-200">Panel Control Operativo</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Solution Text */}
+                            <div className="space-y-6 order-1 lg:order-2">
+                                {solution.subtitle && (
+                                    <span className="text-xs font-bold tracking-wider uppercase bg-gradient-to-r from-cyan-400 to-indigo-400 bg-clip-text text-transparent">
+                                        {solution.subtitle}
+                                    </span>
+                                )}
+                                <h2 className="text-3xl sm:text-4xl font-black text-white tracking-tight leading-tight">
+                                    {solution.title}
+                                </h2>
+                                <p className="text-slate-400 leading-relaxed text-sm sm:text-base">
+                                    {solution.description}
+                                </p>
+                                <div className="pt-2">
+                                    <Link 
+                                        to="/register" 
+                                        className="
+                                            inline-flex items-center justify-center px-6 py-3 text-sm font-bold text-white 
+                                            bg-gradient-to-r from-cyan-500 to-indigo-500 rounded-xl
+                                            hover:opacity-95 shadow-[0_0_20px_rgba(6,182,212,0.15)] hover:scale-[1.02] transition-all duration-200
+                                        "
+                                    >
+                                        Conocer más funciones
+                                        <ArrowRight className="w-4 h-4 ml-2" />
+                                    </Link>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            )}
 
             {/* Features Section */}
             <section id="features" className="py-24 lg:py-32 relative z-10 border-t border-white/[0.05]">
@@ -297,7 +498,7 @@ export function LandingPage() {
                         </p>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-10">
-                        {features.items.map((item, i) => {
+                        {(features.items || []).map((item, i) => {
                             const { icon: Icon, color, bg, border, hover } = FEATURE_ICONS[i] ?? FEATURE_ICONS[0];
                             return (
                                 <div 
@@ -323,6 +524,127 @@ export function LandingPage() {
                     </div>
                 </div>
             </section>
+
+            {/* Use Cases Section */}
+            {useCases && (
+                <section id="use-cases" className="py-24 lg:py-32 relative z-10 border-t border-white/[0.05] bg-[#070913]/60">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <div className="text-center max-w-3xl mx-auto mb-20 space-y-4">
+                            {useCases.subtitle && (
+                                <span className="text-xs font-bold tracking-wider uppercase bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
+                                    {useCases.subtitle}
+                                </span>
+                            )}
+                            <h2 className="text-3xl font-black text-white sm:text-4xl tracking-tight">
+                                {useCases.title}
+                            </h2>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-stretch">
+                            {(useCases.items || []).map((item, i) => (
+                                <div 
+                                    key={i} 
+                                    className="p-6 rounded-2xl bg-white/[0.02] border border-white/[0.06] hover:border-cyan-500/20 hover:bg-[#0d1226]/20 backdrop-blur-md transition-all duration-300 flex flex-col justify-between"
+                                >
+                                    <div>
+                                        <div className="w-10 h-10 bg-cyan-500/10 border border-cyan-500/20 rounded-xl flex items-center justify-center mb-5">
+                                            <Building2 className="w-5 h-5 text-cyan-400" />
+                                        </div>
+                                        <h3 className="text-lg font-bold text-slate-100 mb-2">{item.title}</h3>
+                                        <p className="text-slate-400 text-xs leading-relaxed">{item.description}</p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </section>
+            )}
+
+            {/* Stats & Testimonials Section */}
+            {((stats && stats.items && stats.items.length > 0) || (testimonials && testimonials.items && testimonials.items.length > 0)) && (
+                <section id="proof" className="py-24 lg:py-32 relative z-10 border-t border-white/[0.05] bg-gradient-to-b from-[#070913] to-slate-950/40">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        {/* Stats grid */}
+                        {stats && stats.items && stats.items.length > 0 && (
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto mb-20">
+                                {stats.items.map((stat, i) => (
+                                    <div key={i} className="p-8 rounded-3xl bg-white/[0.01] border border-white/[0.05] backdrop-blur-md text-center">
+                                        <div className="text-4xl sm:text-5xl font-black bg-gradient-to-r from-cyan-400 via-indigo-400 to-emerald-400 bg-clip-text text-transparent mb-2">
+                                            {stat.value}
+                                        </div>
+                                        <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                                            {stat.label}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+
+                        {/* Testimonials */}
+                        {testimonials && testimonials.items && testimonials.items.length > 0 && (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+                                {testimonials.items.map((testimonial, i) => (
+                                    <div key={i} className="p-8 rounded-3xl bg-white/[0.02] border border-white/[0.06] flex flex-col justify-between relative">
+                                        {/* Quotation icon decoration */}
+                                        <div className="absolute top-6 right-8 text-white/[0.02] text-7xl font-serif pointer-events-none">“</div>
+                                        <p className="text-slate-300 leading-relaxed text-sm italic relative z-10 mb-6">
+                                            "{testimonial.content}"
+                                        </p>
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-cyan-500 to-indigo-500 flex items-center justify-center text-white font-bold text-sm">
+                                                {testimonial.name[0]}
+                                            </div>
+                                            <div>
+                                                <h4 className="text-sm font-bold text-slate-100">{testimonial.name}</h4>
+                                                <p className="text-xs text-slate-500">{testimonial.role}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                </section>
+            )}
+
+            {/* Visual Comparison Section */}
+            {comparison && comparison.rows && comparison.rows.length > 0 && (
+                <section id="comparison" className="py-24 lg:py-32 relative z-10 border-t border-white/[0.05] bg-[#070913]/40">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <div className="text-center max-w-3xl mx-auto mb-20 space-y-4">
+                            {comparison.subtitle && (
+                                <span className="text-xs font-bold tracking-wider uppercase bg-gradient-to-r from-purple-400 to-indigo-400 bg-clip-text text-transparent">
+                                    {comparison.subtitle}
+                                </span>
+                            )}
+                            <h2 className="text-3xl font-black text-white sm:text-4xl tracking-tight">
+                                {comparison.title}
+                            </h2>
+                        </div>
+                        <div className="max-w-4xl mx-auto overflow-x-auto rounded-3xl border border-white/[0.06] bg-white/[0.01] backdrop-blur-md">
+                            <table className="w-full text-left border-collapse text-xs sm:text-sm">
+                                <thead>
+                                    <tr className="border-b border-white/[0.08] bg-slate-950/40">
+                                        <th className="p-5 font-bold text-slate-300 uppercase tracking-wider">Característica</th>
+                                        <th className="p-5 font-bold text-cyan-400 uppercase tracking-wider">NexoPOS Cloud</th>
+                                        <th className="p-5 font-bold text-slate-400 uppercase tracking-wider">Excel / Planillas</th>
+                                        <th className="p-5 font-bold text-slate-400 uppercase tracking-wider">Sistemas Tradicionales</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-white/[0.04]">
+                                    {comparison.rows.map((row, i) => (
+                                        <tr key={i} className="hover:bg-white/[0.01] transition-colors">
+                                            <td className="p-5 font-bold text-slate-200">{row.feature}</td>
+                                            <td className="p-5 font-semibold text-cyan-300">{row.nexopos}</td>
+                                            <td className="p-5 text-slate-400">{row.excel}</td>
+                                            <td className="p-5 text-slate-400">{row.traditional}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+            )}
 
             {/* Pricing Section */}
             <section id="pricing" className="py-24 lg:py-32 relative z-10 border-t border-white/[0.05]">
@@ -396,6 +718,27 @@ export function LandingPage() {
                     )}
                 </div>
             </section>
+
+            {/* FAQ Accordion Section */}
+            {faqs && faqs.items && faqs.items.length > 0 && (
+                <section id="faqs" className="py-24 lg:py-32 relative z-10 border-t border-white/[0.05] bg-gradient-to-b from-[#070913] to-slate-950/30">
+                    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <div className="text-center mb-16 space-y-4">
+                            {faqs.subtitle && (
+                                <span className="text-xs font-bold tracking-wider uppercase bg-gradient-to-r from-cyan-400 to-indigo-400 bg-clip-text text-transparent">
+                                    {faqs.subtitle}
+                                </span>
+                            )}
+                            <h2 className="text-3xl font-black text-white tracking-tight leading-tight">{faqs.title}</h2>
+                        </div>
+                        <div className="space-y-4">
+                            {faqs.items.map((item, i) => (
+                                <FAQItem key={i} question={item.question} answer={item.answer} />
+                            ))}
+                        </div>
+                    </div>
+                </section>
+            )}
 
             {/* CTA Final */}
             <section className="relative z-10 border-t border-b border-white/[0.06] bg-gradient-to-br from-indigo-950/20 via-[#070913] to-emerald-950/20 py-20 sm:py-24">

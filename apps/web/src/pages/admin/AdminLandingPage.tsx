@@ -4,18 +4,32 @@ import toast from 'react-hot-toast';
 import {
   Globe, Loader2, Save, RotateCcw, ExternalLink,
   Sparkles, Layout, Tag, Megaphone, AlignLeft, Plus, Trash2, RefreshCw,
-  Bot, MessageSquare, Search
+  MessageSquare, Search, Frown, Lightbulb, Briefcase, BarChart3,
+  Users, Scale, HelpCircle
 } from 'lucide-react';
 
 interface FeatureItem { title: string; description: string }
+interface PainItem { title: string; description: string }
+interface UseCaseItem { title: string; description: string }
+interface StatItem { label: string; value: string }
+interface TestimonialItem { name: string; role: string; content: string }
+interface ComparisonRow { feature: string; nexopos: string; excel: string; traditional: string }
+interface FaqItem { question: string; answer: string }
 
 interface LandingConfig {
   hero: {
     badge: string; title: string; titleHighlight: string;
     description: string; ctaPrimary: string; ctaSecondary: string; dteBanner: string;
   };
+  pain: { title: string; subtitle: string; items: PainItem[] };
+  solution: { title: string; subtitle: string; description: string };
   features: { sectionTitle: string; sectionSubtitle: string; items: FeatureItem[] };
+  useCases: { title: string; subtitle: string; items: UseCaseItem[] };
+  stats: { items: StatItem[] };
+  testimonials: { items: TestimonialItem[] };
+  comparison: { title: string; subtitle: string; rows: ComparisonRow[] };
   pricing: { title: string; subtitle: string };
+  faqs: { title: string; subtitle: string; items: FaqItem[] };
   cta: { title: string; subtitle: string; button: string };
   footer: { description: string };
   seo: { title: string; description: string; keywords: string };
@@ -32,12 +46,81 @@ const DEFAULT_CFG: LandingConfig = {
     ctaSecondary: 'Ver Planes',
     dteBanner: 'Además, incluye Facturación Electrónica DTE integrada con el SII.',
   },
+  pain: {
+    title: 'Dirigir un negocio es difícil. Administrarlo a ciegas es peligroso.',
+    subtitle: 'EL CAOS OPERATIVO DIARIO',
+    items: [
+      { title: 'Inventarios Descuadrados', description: 'Nunca sabes con certeza qué hay en bodega. Vendes productos sin stock en tu tienda online y pierdes clientes por quiebres en sala de venta.' },
+      { title: 'El SII consume tu tiempo', description: 'Emitir facturas o boletas a mano o en sistemas lentos te quita horas valiosas al final del día. Un error manual y te expones a multas.' },
+      { title: 'Sucursales Desconectadas', description: 'No sabes cuál local vende más hoy, qué caja está cuadrada o si hay robo hormiga a menos que vayas físicamente a inspeccionar.' }
+    ]
+  },
+  solution: {
+    title: 'Toda tu operación comercial en piloto automático.',
+    subtitle: 'NEXOPOS AL RESCATE',
+    description: 'NexoPOS centraliza las partes más difíciles de tu negocio en una interfaz limpia, veloz y accesible desde cualquier dispositivo. Deja atrás las planillas de Excel y los sistemas lentos de los años 90.'
+  },
   features: {
     sectionTitle: 'Todo lo necesario para organizar tu empresa',
     sectionSubtitle: 'NexoPOS te entrega herramientas profesionales diseñadas específicamente para un control riguroso operativo y comercial.',
-    items: [],
+    items: [
+      { title: 'Gestión de Cotizaciones', description: 'Crea cotizaciones profesionales en segundos. Convierte propuestas comerciales en ventas cerradas con un solo clic, manteniendo el historial completo de la negociación con tus clientes.' },
+      { title: 'Control Multisucursal', description: 'Administra múltiples locales desde un panel centralizado. Visualiza el stock de cada bodega en tiempo real, realiza transferencias de inventario e inspecciona reportes consolidados por sede.' },
+      { title: 'Proveedores y Compras', description: 'Abastece tu negocio inteligentemente. Registra órdenes de compra, actualiza tus costos promedio automáticamente y mantén un directorio organizado de todos tus proveedores clave.' },
+      { title: 'Tienda Online Sincronizada', description: 'Expande tus canales de venta de forma digital. Tu catálogo físico y online comparten el mismo inventario, evitando quiebres de stock y automatizando el flujo completo desde la venta hasta el despacho.' },
+    ],
+  },
+  useCases: {
+    title: 'Diseñado para el comercio real en Chile.',
+    subtitle: 'SECTORES COMPATIBLES',
+    items: [
+      { title: 'Minimarkets y Almacenes', description: 'Lectura ultra rápida de código de barras, balanzas integradas y control de vencimientos.' },
+      { title: 'Ferreterías y Repuestos', description: 'Gestión de miles de SKUs, equivalencias de productos y ventas mayoristas con cuentas corrientes de clientes.' },
+      { title: 'Tiendas de Mascotas y Retail', description: 'Variantes de productos (talla, color, sabor), control de servicios y promociones dinámicas.' },
+      { title: 'Distribuidoras y Mayoristas', description: 'Módulo de compras robusto, márgenes de ganancia por volumen y rutas de despacho automatizadas.' }
+    ]
+  },
+  stats: {
+    items: [
+      { label: 'Empresas Activas en Chile', value: '+350' },
+      { label: 'Transacciones Procesadas', value: '+15 Millones' },
+      { label: 'Uptime del Servidor (AWS)', value: '99.98%' }
+    ]
+  },
+  testimonials: {
+    items: [
+      { name: 'Francisco Pérez', role: 'Fundador de "Almacén Providencia"', content: 'NexoPOS nos permitió abrir 3 sedes en un año. Antes pasábamos el fin de semana cuadrando inventarios de forma manual; ahora todo se hace en tiempo real desde el celular.' },
+      { name: 'Alejandra Fravéga', role: 'Gerente de Operaciones en "Distribuidora Ponchos del Cachapoal"', content: 'La facturación electrónica con el SII nunca falló. Tuvimos soporte de inmediato por WhatsApp el primer día que abrimos caja. Es un cambio del cielo a la tierra.' }
+    ]
+  },
+  comparison: {
+    title: 'NexoPOS vs Sistemas tradicionales y planillas',
+    subtitle: 'COMPARATIVA CIENTÍFICA',
+    rows: [
+      { feature: 'Sincronización en la nube', nexopos: 'Sí, 100% Tiempo Real', excel: 'No (Archivos locales aislados)', traditional: 'A veces (Servidores locales lentos)' },
+      { feature: 'Facturación DTE / SII', nexopos: 'Integrado Automáticamente', excel: 'No (Requiere doble digitación)', traditional: 'Requiere pago extra por integración' },
+      { feature: 'Velocidad de venta POS', nexopos: 'Menos de 2 segundos', excel: 'Lento e ineficiente', traditional: 'Lento, requiere terminales específicas' },
+      { feature: 'Soporte Técnico en Vivo', nexopos: 'Sí, WhatsApp Directo', excel: 'No (Tú lo resuelves solo)', traditional: 'Soporte telefónico costoso o ausente' },
+      { feature: 'Conexión E-commerce', nexopos: 'Sí (Shopify & WooCommerce)', excel: 'No', traditional: 'No disponible' }
+    ]
   },
   pricing: { title: 'Planes escalables para tu crecimiento', subtitle: 'Invierte en la tecnología correcta sin contratos forzosos. Elige el plan que soporte tu operación actual.' },
+  faqs: {
+    title: 'Preguntas Frecuentes',
+    subtitle: 'Respuestas claras para eliminar objeciones antes de comenzar.',
+    items: [
+      { question: '¿Necesito comprar mi propio Certificado Digital para emitir boletas o facturas?', answer: 'No. NexoPOS incluye la gestión de firma digital y folios integrados en el plan. Nosotros nos encargamos de enrolar tu empresa ante el SII sin costo extra.' },
+      { question: '¿Funciona el POS si se cae el internet?', answer: 'Sí. El Punto de Venta cuenta con un modo offline inteligente. Puedes seguir vendiendo y registrando pagos. Tan pronto vuelva la señal, los datos se sincronizan con la nube.' },
+      { question: '¿Puedo importar mis productos desde Excel u otro sistema que ya utilizo?', answer: '¡Por supuesto! Nuestro panel cuenta con un importador masivo en Excel. Si tienes dificultades, nuestro equipo de soporte te asiste para migrar toda tu base de datos en menos de 1 hora.' },
+      { question: '¿Tengo que firmar un contrato de permanencia mínima?', answer: 'No. El servicio se cobra de forma mensual y puedes cancelarlo o cambiar de plan cuando quieras sin multas ni costos extras.' },
+      { question: '¿Qué pasa si excedo el límite de usuarios de mi plan?', answer: 'Puedes contratar usuarios adicionales como add-ons directamente desde tu panel de control a una fracción del costo, o subir al siguiente plan.' },
+      { question: '¿NexoPOS es compatible con lectores de código de barra y gavetas de dinero?', answer: 'Sí, es compatible con el 99% de los hardwares POS USB y Bluetooth del mercado (lectores de barra, impresoras térmicas de 57mm y 80mm, y gavetas electrónicas).' },
+      { question: '¿Cómo funciona la integración con Shopify y WooCommerce?', answer: 'Conectas tu tienda con tus credenciales API en un paso. Cuando vendes online, el stock baja en el POS de tu tienda física. Si vendes en el local, el inventario web se actualiza al instante.' },
+      { question: '¿El soporte técnico está incluido en el precio?', answer: 'Sí, todos los planes incluyen soporte técnico nativo. Los planes intermedio y avanzado incluyen canal de WhatsApp prioritario con respuesta en menos de 15 minutos.' },
+      { question: '¿Puedo manejar distintas tarifas o precios por volumen?', answer: 'Sí, NexoPOS te permite configurar escalas de precios (precios mayoristas, ofertas por cantidad) por producto.' },
+      { question: '¿Los datos de mi negocio están seguros?', answer: 'Sí. Toda la información viaja encriptada vía SSL y se almacena en servidores AWS de alta seguridad con respaldos automatizados cada 6 horas.' }
+    ]
+  },
   cta: { title: '¿Listo para transformar la gestión de tu empresa?', subtitle: 'Únete a las empresas que ya digitalizaron sus operaciones con NexoPOS.', button: 'Comenzar 15 Días Gratis' },
   footer: { description: 'El sistema inteligente para centralizar ventas, sucursales y operaciones B2B.' },
   seo: {
@@ -52,12 +135,19 @@ const DEFAULT_CFG: LandingConfig = {
   }
 };
 
-type Tab = 'hero' | 'features' | 'pricing' | 'cta' | 'footer' | 'seo' | 'chatbot';
+type Tab = 'hero' | 'pain' | 'solution' | 'features' | 'useCases' | 'stats' | 'testimonials' | 'comparison' | 'pricing' | 'faqs' | 'cta' | 'footer' | 'seo' | 'chatbot';
 
 const TABS: { key: Tab; label: string; Icon: React.ElementType }[] = [
   { key: 'hero', label: 'Hero', Icon: Sparkles },
+  { key: 'pain', label: 'Dolores', Icon: Frown },
+  { key: 'solution', label: 'Solución', Icon: Lightbulb },
   { key: 'features', label: 'Características', Icon: Layout },
+  { key: 'useCases', label: 'Casos de Uso', Icon: Briefcase },
+  { key: 'stats', label: 'Métricas', Icon: BarChart3 },
+  { key: 'testimonials', label: 'Testimonios', Icon: Users },
+  { key: 'comparison', label: 'Comparativa', Icon: Scale },
   { key: 'pricing', label: 'Precios', Icon: Tag },
+  { key: 'faqs', label: 'Preguntas', Icon: HelpCircle },
   { key: 'cta', label: 'CTA', Icon: Megaphone },
   { key: 'footer', label: 'Footer', Icon: AlignLeft },
   { key: 'seo', label: 'SEO', Icon: Search },
@@ -163,6 +253,84 @@ export default function AdminLandingPage() {
     set('features', { items: cfg.features.items.filter((_, idx) => idx !== i) });
   };
 
+  const addPainItem = () => {
+    set('pain', { items: [...(cfg.pain?.items || []), { title: '', description: '' }] });
+  };
+
+  const updatePainItem = (i: number, patch: Partial<PainItem>) => {
+    const items = (cfg.pain?.items || []).map((item, idx) => idx === i ? { ...item, ...patch } : item);
+    set('pain', { items });
+  };
+
+  const removePainItem = (i: number) => {
+    set('pain', { items: (cfg.pain?.items || []).filter((_, idx) => idx !== i) });
+  };
+
+  const addUseCaseItem = () => {
+    set('useCases', { items: [...(cfg.useCases?.items || []), { title: '', description: '' }] });
+  };
+
+  const updateUseCaseItem = (i: number, patch: Partial<UseCaseItem>) => {
+    const items = (cfg.useCases?.items || []).map((item, idx) => idx === i ? { ...item, ...patch } : item);
+    set('useCases', { items });
+  };
+
+  const removeUseCaseItem = (i: number) => {
+    set('useCases', { items: (cfg.useCases?.items || []).filter((_, idx) => idx !== i) });
+  };
+
+  const addStatItem = () => {
+    set('stats', { items: [...(cfg.stats?.items || []), { label: '', value: '' }] });
+  };
+
+  const updateStatItem = (i: number, patch: Partial<StatItem>) => {
+    const items = (cfg.stats?.items || []).map((item, idx) => idx === i ? { ...item, ...patch } : item);
+    set('stats', { items });
+  };
+
+  const removeStatItem = (i: number) => {
+    set('stats', { items: (cfg.stats?.items || []).filter((_, idx) => idx !== i) });
+  };
+
+  const addTestimonialItem = () => {
+    set('testimonials', { items: [...(cfg.testimonials?.items || []), { name: '', role: '', content: '' }] });
+  };
+
+  const updateTestimonialItem = (i: number, patch: Partial<TestimonialItem>) => {
+    const items = (cfg.testimonials?.items || []).map((item, idx) => idx === i ? { ...item, ...patch } : item);
+    set('testimonials', { items });
+  };
+
+  const removeTestimonialItem = (i: number) => {
+    set('testimonials', { items: (cfg.testimonials?.items || []).filter((_, idx) => idx !== i) });
+  };
+
+  const addComparisonRow = () => {
+    set('comparison', { rows: [...(cfg.comparison?.rows || []), { feature: '', nexopos: '', excel: '', traditional: '' }] });
+  };
+
+  const updateComparisonRow = (i: number, patch: Partial<ComparisonRow>) => {
+    const rows = (cfg.comparison?.rows || []).map((row, idx) => idx === i ? { ...row, ...patch } : row);
+    set('comparison', { rows });
+  };
+
+  const removeComparisonRow = (i: number) => {
+    set('comparison', { rows: (cfg.comparison?.rows || []).filter((_, idx) => idx !== i) });
+  };
+
+  const addFaqItem = () => {
+    set('faqs', { items: [...(cfg.faqs?.items || []), { question: '', answer: '' }] });
+  };
+
+  const updateFaqItem = (i: number, patch: Partial<FaqItem>) => {
+    const items = (cfg.faqs?.items || []).map((item, idx) => idx === i ? { ...item, ...patch } : item);
+    set('faqs', { items });
+  };
+
+  const removeFaqItem = (i: number) => {
+    set('faqs', { items: (cfg.faqs?.items || []).filter((_, idx) => idx !== i) });
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64 gap-2 text-neutral-500">
@@ -223,13 +391,13 @@ export default function AdminLandingPage() {
 
       {/* Tabs */}
       <div className="border-b border-neutral-700">
-        <nav className="flex gap-1">
+        <nav className="flex flex-wrap gap-1 pb-2">
           {TABS.map(({ key, label, Icon }) => (
             <button
               key={key}
               onClick={() => setActiveTab(key)}
-              className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors -mb-px
-                ${activeTab === key ? 'border-purple-500 text-purple-400' : 'border-transparent text-neutral-400 hover:text-neutral-200'}`}
+              className={`flex items-center gap-2 px-3 py-2 text-sm font-medium border-b-2 transition-colors
+                ${activeTab === key ? 'border-purple-500 text-purple-400 bg-neutral-800/40' : 'border-transparent text-neutral-400 hover:text-neutral-200'}`}
             >
               <Icon size={14} />{label}
             </button>
@@ -255,6 +423,57 @@ export default function AdminLandingPage() {
         </div>
       )}
 
+      {/* Tab: Pain */}
+      {activeTab === 'pain' && (
+        <div className="space-y-4">
+          <div className="bg-neutral-800 border border-neutral-700 rounded-xl p-5 space-y-4">
+            <p className="text-sm font-bold text-white">Sección de Puntos de Dolor (El Dolor)</p>
+            <Field label="Subtítulo de sección" value={cfg.pain?.subtitle || ''} onChange={v => set('pain', { subtitle: v })} />
+            <Field label="Título de sección" value={cfg.pain?.title || ''} onChange={v => set('pain', { title: v })} />
+          </div>
+
+          <div className="bg-neutral-800 border border-neutral-700 rounded-xl p-5">
+            <div className="flex items-center justify-between mb-4">
+              <p className="text-sm font-bold text-white">Dolores / Fricciones ({(cfg.pain?.items || []).length})</p>
+              <button
+                onClick={addPainItem}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-700 text-white text-xs font-medium transition-colors"
+              >
+                <Plus size={13} />Añadir
+              </button>
+            </div>
+            <div className="space-y-3">
+              {(cfg.pain?.items || []).length === 0 ? (
+                <div className="text-center py-8 text-neutral-600 text-sm border border-dashed border-neutral-700 rounded-xl">
+                  Sin dolores. Haz clic en "Añadir" para agregar.
+                </div>
+              ) : (cfg.pain?.items || []).map((item, i) => (
+                <div key={i} className="border border-neutral-700 rounded-xl p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-semibold text-neutral-500 uppercase tracking-wide">Dolor {i + 1}</span>
+                    <button onClick={() => removePainItem(i)} className="p-1.5 text-red-400 hover:bg-red-900/30 rounded-lg transition-colors">
+                      <Trash2 size={13} />
+                    </button>
+                  </div>
+                  <Field label="Título" value={item.title} onChange={v => updatePainItem(i, { title: v })} placeholder="Ej. Inventarios Descuadrados" />
+                  <Field label="Descripción" value={item.description} onChange={v => updatePainItem(i, { description: v })} multiline placeholder="Descripción del problema..." />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Tab: Solution */}
+      {activeTab === 'solution' && (
+        <div className="bg-neutral-800 border border-neutral-700 rounded-xl p-5 space-y-4">
+          <p className="text-sm font-bold text-white">Sección de Solución (La Transformación)</p>
+          <Field label="Subtítulo de sección" value={cfg.solution?.subtitle || ''} onChange={v => set('solution', { subtitle: v })} />
+          <Field label="Título de sección" value={cfg.solution?.title || ''} onChange={v => set('solution', { title: v })} />
+          <Field label="Descripción" value={cfg.solution?.description || ''} onChange={v => set('solution', { description: v })} multiline />
+        </div>
+      )}
+
       {/* Tab: Features */}
       {activeTab === 'features' && (
         <div className="space-y-4">
@@ -266,7 +485,7 @@ export default function AdminLandingPage() {
 
           <div className="bg-neutral-800 border border-neutral-700 rounded-xl p-5">
             <div className="flex items-center justify-between mb-4">
-              <p className="text-sm font-bold text-white">Características ({cfg.features.items.length})</p>
+              <p className="text-sm font-bold text-white">Características ({(cfg.features?.items || []).length})</p>
               <button
                 onClick={addFeatureItem}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-700 text-white text-xs font-medium transition-colors"
@@ -275,11 +494,11 @@ export default function AdminLandingPage() {
               </button>
             </div>
             <div className="space-y-3">
-              {cfg.features.items.length === 0 ? (
+              {(cfg.features?.items || []).length === 0 ? (
                 <div className="text-center py-8 text-neutral-600 text-sm border border-dashed border-neutral-700 rounded-xl">
                   Sin características. Haz clic en "Añadir" para agregar.
                 </div>
-              ) : cfg.features.items.map((item, i) => (
+              ) : (cfg.features?.items || []).map((item, i) => (
                 <div key={i} className="border border-neutral-700 rounded-xl p-4 space-y-3">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-semibold text-neutral-500 uppercase tracking-wide">Característica {i + 1}</span>
@@ -296,6 +515,167 @@ export default function AdminLandingPage() {
         </div>
       )}
 
+      {/* Tab: Use Cases */}
+      {activeTab === 'useCases' && (
+        <div className="space-y-4">
+          <div className="bg-neutral-800 border border-neutral-700 rounded-xl p-5 space-y-4">
+            <p className="text-sm font-bold text-white">Sección de Casos de Uso (Sectores)</p>
+            <Field label="Subtítulo de sección" value={cfg.useCases?.subtitle || ''} onChange={v => set('useCases', { subtitle: v })} />
+            <Field label="Título de sección" value={cfg.useCases?.title || ''} onChange={v => set('useCases', { title: v })} />
+          </div>
+
+          <div className="bg-neutral-800 border border-neutral-700 rounded-xl p-5">
+            <div className="flex items-center justify-between mb-4">
+              <p className="text-sm font-bold text-white">Casos de Uso ({(cfg.useCases?.items || []).length})</p>
+              <button
+                onClick={addUseCaseItem}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-700 text-white text-xs font-medium transition-colors"
+              >
+                <Plus size={13} />Añadir
+              </button>
+            </div>
+            <div className="space-y-3">
+              {(cfg.useCases?.items || []).length === 0 ? (
+                <div className="text-center py-8 text-neutral-600 text-sm border border-dashed border-neutral-700 rounded-xl">
+                  Sin casos de uso. Haz clic en "Añadir" para agregar.
+                </div>
+              ) : (cfg.useCases?.items || []).map((item, i) => (
+                <div key={i} className="border border-neutral-700 rounded-xl p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-semibold text-neutral-500 uppercase tracking-wide">Caso de Uso {i + 1}</span>
+                    <button onClick={() => removeUseCaseItem(i)} className="p-1.5 text-red-400 hover:bg-red-900/30 rounded-lg transition-colors">
+                      <Trash2 size={13} />
+                    </button>
+                  </div>
+                  <Field label="Sector / Tipo de Comercio" value={item.title} onChange={v => updateUseCaseItem(i, { title: v })} placeholder="Ej. Minimarkets y Almacenes" />
+                  <Field label="Descripción del Caso" value={item.description} onChange={v => updateUseCaseItem(i, { description: v })} multiline placeholder="Descripción detallada de cómo NexoPOS le ayuda..." />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Tab: Stats */}
+      {activeTab === 'stats' && (
+        <div className="bg-neutral-800 border border-neutral-700 rounded-xl p-5">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <p className="text-sm font-bold text-white">Métricas y Cifras de Éxito</p>
+              <p className="text-xs text-neutral-500">Métricas clave expuestas como prueba social.</p>
+            </div>
+            <button
+              onClick={addStatItem}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-700 text-white text-xs font-medium transition-colors"
+            >
+              <Plus size={13} />Añadir
+            </button>
+          </div>
+          <div className="space-y-3">
+            {(cfg.stats?.items || []).length === 0 ? (
+              <div className="text-center py-8 text-neutral-600 text-sm border border-dashed border-neutral-700 rounded-xl">
+                Sin métricas. Haz clic en "Añadir" para agregar.
+              </div>
+            ) : (cfg.stats?.items || []).map((item, i) => (
+              <div key={i} className="border border-neutral-700 rounded-xl p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold text-neutral-500 uppercase tracking-wide">Métrica {i + 1}</span>
+                  <button onClick={() => removeStatItem(i)} className="p-1.5 text-red-400 hover:bg-red-900/30 rounded-lg transition-colors">
+                    <Trash2 size={13} />
+                  </button>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <Field label="Valor" value={item.value} onChange={v => updateStatItem(i, { value: v })} placeholder="Ej. +350 o 99.98%" />
+                  <Field label="Etiqueta / Descripción" value={item.label} onChange={v => updateStatItem(i, { label: v })} placeholder="Ej. Empresas Activas" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Tab: Testimonials */}
+      {activeTab === 'testimonials' && (
+        <div className="bg-neutral-800 border border-neutral-700 rounded-xl p-5">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <p className="text-sm font-bold text-white">Testimonios de Clientes</p>
+              <p className="text-xs text-neutral-500">Comentarios y pruebas de satisfacción.</p>
+            </div>
+            <button
+              onClick={addTestimonialItem}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-700 text-white text-xs font-medium transition-colors"
+            >
+              <Plus size={13} />Añadir
+            </button>
+          </div>
+          <div className="space-y-3">
+            {(cfg.testimonials?.items || []).length === 0 ? (
+              <div className="text-center py-8 text-neutral-600 text-sm border border-dashed border-neutral-700 rounded-xl">
+                Sin testimonios. Haz clic en "Añadir" para agregar.
+              </div>
+            ) : (cfg.testimonials?.items || []).map((item, i) => (
+              <div key={i} className="border border-neutral-700 rounded-xl p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold text-neutral-500 uppercase tracking-wide">Testimonio {i + 1}</span>
+                  <button onClick={() => removeTestimonialItem(i)} className="p-1.5 text-red-400 hover:bg-red-900/30 rounded-lg transition-colors">
+                    <Trash2 size={13} />
+                  </button>
+                </div>
+                <Field label="Nombre del Cliente" value={item.name} onChange={v => updateTestimonialItem(i, { name: v })} placeholder="Ej. Francisco Pérez" />
+                <Field label="Cargo / Empresa" value={item.role} onChange={v => updateTestimonialItem(i, { role: v })} placeholder="Ej. Fundador de Almacén Providencia" />
+                <Field label="Contenido del testimonio" value={item.content} onChange={v => updateTestimonialItem(i, { content: v })} multiline placeholder="El comentario..." />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Tab: Comparison */}
+      {activeTab === 'comparison' && (
+        <div className="space-y-4">
+          <div className="bg-neutral-800 border border-neutral-700 rounded-xl p-5 space-y-4">
+            <p className="text-sm font-bold text-white">Tabla Comparativa (NexoPOS vs Otros)</p>
+            <Field label="Subtítulo de sección" value={cfg.comparison?.subtitle || ''} onChange={v => set('comparison', { subtitle: v })} />
+            <Field label="Título de sección" value={cfg.comparison?.title || ''} onChange={v => set('comparison', { title: v })} />
+          </div>
+
+          <div className="bg-neutral-800 border border-neutral-700 rounded-xl p-5">
+            <div className="flex items-center justify-between mb-4">
+              <p className="text-sm font-bold text-white">Filas de la Tabla ({(cfg.comparison?.rows || []).length})</p>
+              <button
+                onClick={addComparisonRow}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-700 text-white text-xs font-medium transition-colors"
+              >
+                <Plus size={13} />Añadir
+              </button>
+            </div>
+            <div className="space-y-3">
+              {(cfg.comparison?.rows || []).length === 0 ? (
+                <div className="text-center py-8 text-neutral-600 text-sm border border-dashed border-neutral-700 rounded-xl">
+                  Sin filas comparativas. Haz clic en "Añadir" para agregar.
+                </div>
+              ) : (cfg.comparison?.rows || []).map((row, i) => (
+                <div key={i} className="border border-neutral-700 rounded-xl p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-semibold text-neutral-500 uppercase tracking-wide">Fila {i + 1}</span>
+                    <button onClick={() => removeComparisonRow(i)} className="p-1.5 text-red-400 hover:bg-red-900/30 rounded-lg transition-colors">
+                      <Trash2 size={13} />
+                    </button>
+                  </div>
+                  <Field label="Característica / Funcionalidad" value={row.feature} onChange={v => updateComparisonRow(i, { feature: v })} placeholder="Ej. Sincronización en la nube" />
+                  <div className="grid grid-cols-3 gap-4">
+                    <Field label="NexoPOS" value={row.nexopos} onChange={v => updateComparisonRow(i, { nexopos: v })} placeholder="Ej. Sí, 100% Tiempo Real" />
+                    <Field label="Excel / Planillas" value={row.excel} onChange={v => updateComparisonRow(i, { excel: v })} placeholder="Ej. No" />
+                    <Field label="Tradicionales" value={row.traditional} onChange={v => updateComparisonRow(i, { traditional: v })} placeholder="Ej. A veces" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Tab: Pricing */}
       {activeTab === 'pricing' && (
         <div className="bg-neutral-800 border border-neutral-700 rounded-xl p-5 space-y-4">
@@ -303,6 +683,47 @@ export default function AdminLandingPage() {
           <p className="text-xs text-neutral-500">Los planes se muestran automáticamente desde la configuración de planes.</p>
           <Field label="Título" value={cfg.pricing.title} onChange={v => set('pricing', { title: v })} />
           <Field label="Subtítulo" value={cfg.pricing.subtitle} onChange={v => set('pricing', { subtitle: v })} multiline />
+        </div>
+      )}
+
+      {/* Tab: FAQs */}
+      {activeTab === 'faqs' && (
+        <div className="space-y-4">
+          <div className="bg-neutral-800 border border-neutral-700 rounded-xl p-5 space-y-4">
+            <p className="text-sm font-bold text-white">Preguntas Frecuentes (FAQs)</p>
+            <Field label="Subtítulo de sección" value={cfg.faqs?.subtitle || ''} onChange={v => set('faqs', { subtitle: v })} />
+            <Field label="Título de sección" value={cfg.faqs?.title || ''} onChange={v => set('faqs', { title: v })} />
+          </div>
+
+          <div className="bg-neutral-800 border border-neutral-700 rounded-xl p-5">
+            <div className="flex items-center justify-between mb-4">
+              <p className="text-sm font-bold text-white">Preguntas ({(cfg.faqs?.items || []).length})</p>
+              <button
+                onClick={addFaqItem}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-700 text-white text-xs font-medium transition-colors"
+              >
+                <Plus size={13} />Añadir
+              </button>
+            </div>
+            <div className="space-y-3">
+              {(cfg.faqs?.items || []).length === 0 ? (
+                <div className="text-center py-8 text-neutral-600 text-sm border border-dashed border-neutral-700 rounded-xl">
+                  Sin preguntas. Haz clic en "Añadir" para agregar.
+                </div>
+              ) : (cfg.faqs?.items || []).map((item, i) => (
+                <div key={i} className="border border-neutral-700 rounded-xl p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-semibold text-neutral-500 uppercase tracking-wide">Pregunta {i + 1}</span>
+                    <button onClick={() => removeFaqItem(i)} className="p-1.5 text-red-400 hover:bg-red-900/30 rounded-lg transition-colors">
+                      <Trash2 size={13} />
+                    </button>
+                  </div>
+                  <Field label="Pregunta" value={item.question} onChange={v => updateFaqItem(i, { question: v })} placeholder="¿Cómo funciona...?" />
+                  <Field label="Respuesta" value={item.answer} onChange={v => updateFaqItem(i, { answer: v })} multiline placeholder="La respuesta detallada..." />
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       )}
 

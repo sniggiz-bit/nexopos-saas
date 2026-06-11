@@ -196,10 +196,8 @@ function PlanDrawer({ plan, modules, onClose, onSaved }: { plan: Partial<Plan>; 
   const [saving, setSaving] = useState(false);
 
   const set = (p: Partial<Plan>) => setForm(prev => ({ ...prev, ...p }));
-  const feats = form.enabledFeatures ?? DEFAULT_FEATURES;
-  const setFeat = (key: keyof PlanFeatures, val: boolean) =>
-    set({ enabledFeatures: { ...feats, [key]: val } });
-    
+
+
   const toggleModule = (code: string, checked: boolean) => {
     const current = form.moduleCodes || [];
     if (checked && !current.includes(code)) {
