@@ -106,6 +106,7 @@ export class ProductsService {
       minStock: product.minStock,
       unitType: product.unitType as 'UNIT' | 'WEIGHT',
       image: product.image || undefined,
+      galleryImages: product.galleryImages ?? [],
       isActive: product.isActive,
       isPublic: product.isPublic,
       stock: branchId
@@ -175,6 +176,7 @@ export class ProductsService {
       minStock: product.minStock,
       unitType: product.unitType as 'UNIT' | 'WEIGHT',
       image: product.image || undefined,
+      galleryImages: product.galleryImages ?? [],
       isActive: product.isActive,
       isPublic: product.isPublic,
       stock: branchId
@@ -313,6 +315,7 @@ export class ProductsService {
       minStock: product.minStock,
       unitType: product.unitType as 'UNIT' | 'WEIGHT',
       image: product.image || undefined,
+      galleryImages: product.galleryImages ?? [],
       isActive: product.isActive,
       isPublic: product.isPublic,
       stock,
@@ -419,6 +422,7 @@ export class ProductsService {
         minStock: updateProductDto.minStock,
         unitType: updateProductDto.unitType,
         image: updateProductDto.image,
+        galleryImages: updateProductDto.galleryImages,
         isActive: updateProductDto.isActive,
         categoryId: updateProductDto.categoryId,
         brandId: updateProductDto.brandId,

@@ -17,6 +17,7 @@ export class ProductResponseDto {
   minStock: number;
   unitType: 'UNIT' | 'WEIGHT';
   image?: string;
+  galleryImages: string[];
   isActive: boolean;
   isPublic: boolean;
   stock: number; // Calculated from InventoryLevel

@@ -7,6 +7,7 @@ import {
   Min,
   IsNotEmpty,
   ValidateNested,
+  IsArray,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { PriceTierDto } from './price-tier.dto';
@@ -62,6 +63,11 @@ export class CreateProductDto {
   @IsOptional()
   @IsString()
   image?: string;
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  galleryImages?: string[];
 
   @IsOptional()
   @IsBoolean()
