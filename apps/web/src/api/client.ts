@@ -6,8 +6,11 @@ const API_BASE_URL = '/api';
 
 export const apiClient = axios.create({
     baseURL: API_BASE_URL,
+    // NOTE: Do NOT set Content-Type here globally.
+    // Axios sets it automatically per-request:
+    //  - JSON body → 'application/json'
+    //  - FormData  → 'multipart/form-data; boundary=...' (boundary is required by Multer)
     headers: {
-        'Content-Type': 'application/json',
         'Cache-Control': 'no-cache',
         'Pragma': 'no-cache',
         'Expires': '0',

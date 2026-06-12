@@ -159,6 +159,7 @@ model Product {
   categoryId        String?
   costPrice         Int                @default(0)
   image             String?
+  galleryImages     String[]           @default([])
   description       String?
   isPublic          Boolean            @default(false)
   isActive          Boolean            @default(true)
