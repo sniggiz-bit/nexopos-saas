@@ -46,6 +46,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { useRealtimeSync } from './hooks/useRealtimeSync';
+import { ThemeProvider } from './context/ThemeContext';
 
 // Create a client for TanStack Query
 const queryClient = new QueryClient({
@@ -97,9 +98,10 @@ function LoadingScreen() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <RealtimeSync />
-        <BrowserRouter>
+      <ThemeProvider>
+        <AuthProvider>
+          <RealtimeSync />
+          <BrowserRouter>
           <Suspense fallback={<LoadingScreen />}>
             <Routes>
               {/* Public Routes */}
@@ -192,7 +194,8 @@ function App() {
             }}
           />
         </BrowserRouter>
-      </AuthProvider>
+        </AuthProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 }

@@ -6,6 +6,7 @@ import toast from 'react-hot-toast';
 import type { Customer } from '../../api/types';
 import { formatRut, validateRut } from '@nexopos/shared';
 import { apiClient } from '../../api/client';
+import { useTheme } from '../../context/ThemeContext';
 
 interface CustomerFormModalProps {
     isOpen: boolean;
@@ -13,59 +14,69 @@ interface CustomerFormModalProps {
     initialData?: Customer | null;
 }
 
-// ── Palette (Alineado con el Tema Oscuro del Dashboard) ─────────────────────────
-const C = {
-    bg:      'rgba(8,12,24,0.98)',
-    surface: 'rgba(16,24,44,0.95)',
-    card:    'rgba(20,30,58,0.8)',
-    border:  'rgba(0,212,255,0.12)',
-    borderH: 'rgba(0,212,255,0.28)',
-    cyan:    '#00D4FF',
-    cyanA:   (a: number) => `rgba(0,212,255,${a})`,
-    text:    'rgba(210,225,245,0.92)',
-    muted:   'rgba(180,195,220,0.5)',
-    subtle:  'rgba(180,195,220,0.2)',
-    green:   '#34D399',
-    greenA:  (a: number) => `rgba(52,211,153,${a})`,
-    red:     '#F87171',
-    redA:    (a: number) => `rgba(248,113,113,${a})`,
+// ── Palette Dinámica (Alineado con el Modo Claro/Oscuro) ─────────────────────────
+const getPalette = (theme: string) => {
+    const isDark = theme === 'dark';
+    return {
+        bg:      isDark ? 'rgba(8,12,24,0.98)' : 'rgba(255,255,255,0.98)',
+        surface: isDark ? 'rgba(16,24,44,0.95)' : 'rgba(245,247,250,0.95)',
+        card:    isDark ? 'rgba(20,30,58,0.8)' : 'rgba(235,240,248,0.8)',
+        border:  isDark ? 'rgba(0,212,255,0.12)' : 'rgba(0,212,255,0.22)',
+        borderH: isDark ? 'rgba(0,212,255,0.28)' : 'rgba(0,212,255,0.48)',
+        cyan:    '#00D4FF',
+        cyanA:   (a: number) => `rgba(0,212,255,${a})`,
+        text:    isDark ? 'rgba(210,225,245,0.92)' : 'rgba(15,23,42,0.92)',
+        muted:   isDark ? 'rgba(180,195,220,0.5)' : 'rgba(75,85,99,0.7)',
+        subtle:  isDark ? 'rgba(180,195,220,0.2)' : 'rgba(75,85,99,0.2)',
+        green:   '#34D399',
+        greenA:  (a: number) => `rgba(52,211,153,${a})`,
+        red:     '#F87171',
+        redA:    (a: number) => `rgba(248,113,113,${a})`,
+    };
 };
 
 const inputCls = `
     w-full px-3 py-2 rounded-lg text-sm outline-none transition-all duration-150
 `.trim();
 
-const inputStyle = (focused: boolean = false): React.CSSProperties => ({
-    background: focused ? C.cyanA(0.07) : C.cyanA(0.04),
-    border: `1px solid ${focused ? C.borderH : C.border}`,
-    color: C.text,
-    fontSize: '13px',
-    borderRadius: '8px',
-    padding: '8px 12px',
-    width: '100%',
-    outline: 'none',
-    transition: 'all 0.15s',
-});
+const inputStyle = (theme: string, focused: boolean = false): React.CSSProperties => {
+    const C = getPalette(theme);
+    return {
+        background: focused ? C.cyanA(0.07) : C.cyanA(0.04),
+        border: `1px solid ${focused ? C.borderH : C.border}`,
+        color: C.text,
+        fontSize: '13px',
+        borderRadius: '8px',
+        padding: '8px 12px',
+        width: '100%',
+        outline: 'none',
+        transition: 'all 0.15s',
+    };
+};
 
-const labelStyle: React.CSSProperties = {
-    display: 'block',
-    fontSize: '11px',
-    fontWeight: 700,
-    textTransform: 'uppercase',
-    letterSpacing: '0.07em',
-    color: C.muted,
-    marginBottom: '6px',
+const getLabelStyle = (theme: string): React.CSSProperties => {
+    const C = getPalette(theme);
+    return {
+        display: 'block',
+        fontSize: '11px',
+        fontWeight: 700,
+        textTransform: 'uppercase',
+        letterSpacing: '0.07em',
+        color: C.muted,
+        marginBottom: '6px',
+    };
 };
 
 // ── Input Enfocable ──────────────────────────────────────────────────────────
 function FocusInput(props: React.InputHTMLAttributes<HTMLInputElement>) {
     const [focused, setFocused] = useState(false);
+    const { theme } = useTheme();
     return (
         <input
             {...props}
             className={inputCls}
             style={{
-                ...inputStyle(focused),
+                ...inputStyle(theme, focused),
                 ...props.style,
             }}
             onFocus={e => { setFocused(true); props.onFocus?.(e); }}
@@ -75,6 +86,10 @@ function FocusInput(props: React.InputHTMLAttributes<HTMLInputElement>) {
 }
 
 export function CustomerFormModal({ isOpen, onClose, initialData }: CustomerFormModalProps) {
+    const { theme } = useTheme();
+    const C = getPalette(theme);
+    const labelStyle = getLabelStyle(theme);
+
     const [formData, setFormData] = useState({
         name: '',
         rut: '',

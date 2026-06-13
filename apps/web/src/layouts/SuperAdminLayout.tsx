@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Outlet, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import {
     Users,
     LayoutDashboard,
@@ -13,11 +14,14 @@ import {
     ChevronRight,
     Bell,
     Search,
+    Sun,
+    Moon,
 } from 'lucide-react';
 import { Logo } from '../components/ui/Logo';
 
 export default function SuperAdminLayout() {
     const { user, logout } = useAuth();
+    const { theme, toggleTheme } = useTheme();
     const location = useLocation();
     const [searchQuery, setSearchQuery] = useState('');
 
@@ -52,21 +56,17 @@ export default function SuperAdminLayout() {
     const CurrentIcon = currentPage ? currentPage.icon : LayoutDashboard;
 
     return (
-        <div className="min-h-screen dark" style={{ background: 'hsl(220,30%,6%)' }}>
+        <div className="min-h-screen bg-background text-foreground transition-colors duration-200">
             {/* ──────────────────────────────────────────────────────
                 SIDEBAR
             ────────────────────────────────────────────────────── */}
             <aside
-                className="fixed inset-y-0 left-0 w-60 flex flex-col z-20"
-                style={{
-                    background: 'linear-gradient(180deg, hsl(220,30%,7%) 0%, hsl(220,28%,6%) 100%)',
-                    borderRight: '1px solid rgba(0,212,255,0.08)',
-                }}
+                className="fixed inset-y-0 left-0 w-60 flex flex-col z-20 bg-card border-r border-border transition-colors duration-200"
             >
                 {/* ── Logo area ── */}
                 <div className="flex items-center gap-2.5 h-16 px-5 shrink-0"
-                    style={{ borderBottom: '1px solid rgba(0,212,255,0.08)' }}>
-                    <Logo variant="full" mode="dark" />
+                    style={{ borderBottom: theme === 'dark' ? '1px solid rgba(0,212,255,0.08)' : '1px solid rgba(0,0,0,0.06)' }}>
+                    <Logo variant="full" mode={theme} />
                     <span className="ml-auto text-[9px] font-bold px-1.5 py-0.5 rounded tracking-widest uppercase"
                         style={{ background: 'rgba(0,212,255,0.1)', color: '#00D4FF', border: '1px solid rgba(0,212,255,0.2)' }}>
                         SUPERADMIN
@@ -97,18 +97,18 @@ export default function SuperAdminLayout() {
                                                 background: 'linear-gradient(90deg, rgba(0,212,255,0.12) 0%, rgba(0,212,255,0.04) 100%)',
                                                 color: '#00D4FF',
                                             } : {
-                                                color: 'rgba(180,195,220,0.6)',
+                                                color: theme === 'dark' ? 'rgba(180,195,220,0.6)' : 'rgba(75,85,99,0.85)',
                                             }}
                                             onMouseEnter={e => {
                                                 if (!isActive) {
-                                                    (e.currentTarget as HTMLElement).style.background = 'rgba(0,212,255,0.05)';
-                                                    (e.currentTarget as HTMLElement).style.color = 'rgba(180,195,220,0.9)';
+                                                    (e.currentTarget as HTMLElement).style.background = theme === 'dark' ? 'rgba(0,212,255,0.05)' : 'rgba(0,212,255,0.08)';
+                                                    (e.currentTarget as HTMLElement).style.color = theme === 'dark' ? 'rgba(210,225,245,0.95)' : 'rgba(15,23,42,0.95)';
                                                 }
                                             }}
                                             onMouseLeave={e => {
                                                 if (!isActive) {
                                                     (e.currentTarget as HTMLElement).style.background = '';
-                                                    (e.currentTarget as HTMLElement).style.color = 'rgba(180,195,220,0.6)';
+                                                    (e.currentTarget as HTMLElement).style.color = theme === 'dark' ? 'rgba(180,195,220,0.6)' : 'rgba(75,85,99,0.85)';
                                                 }
                                             }}
                                         >
@@ -130,19 +130,22 @@ export default function SuperAdminLayout() {
 
                 {/* ── User footer ── */}
                 <div className="p-3 shrink-0"
-                    style={{ borderTop: '1px solid rgba(0,212,255,0.08)' }}>
+                    style={{ borderTop: theme === 'dark' ? '1px solid rgba(0,212,255,0.08)' : '1px solid rgba(0,0,0,0.06)' }}>
                     <div className="flex items-center gap-2.5 px-2 py-2 rounded-xl transition-colors"
-                        style={{ background: 'rgba(0,212,255,0.04)', border: '1px solid rgba(0,212,255,0.08)' }}>
+                        style={{
+                            background: theme === 'dark' ? 'rgba(0,212,255,0.04)' : 'rgba(0,212,255,0.06)',
+                            border: theme === 'dark' ? '1px solid rgba(0,212,255,0.08)' : '1px solid rgba(0,212,255,0.15)'
+                        }}>
                         {/* Avatar */}
                         <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 font-bold text-sm"
                             style={{ background: 'linear-gradient(135deg,#00D4FF 0%,#0099BB 100%)', color: '#0B0F1A' }}>
                             {(user?.name || user?.email || 'S').charAt(0).toUpperCase()}
                         </div>
                         <div className="flex-1 min-w-0">
-                            <p className="text-[13px] font-semibold truncate" style={{ color: 'rgba(210,225,245,0.95)' }}>
+                            <p className="text-[13px] font-semibold truncate" style={{ color: theme === 'dark' ? 'rgba(210,225,245,0.95)' : 'rgba(15,23,42,0.95)' }}>
                                 {user?.name || user?.email || 'Super Admin'}
                             </p>
-                            <p className="text-[10px] capitalize truncate" style={{ color: 'rgba(0,212,255,0.5)' }}>
+                            <p className="text-[10px] capitalize truncate" style={{ color: '#00D4FF' }}>
                                 {user?.role?.replace(/_/g, ' ').toLowerCase()}
                             </p>
                         </div>
@@ -150,13 +153,13 @@ export default function SuperAdminLayout() {
                             onClick={logout}
                             title="Cerrar sesión"
                             className="p-1.5 rounded-lg transition-all duration-150"
-                            style={{ color: 'rgba(180,195,220,0.4)' }}
+                            style={{ color: theme === 'dark' ? 'rgba(180,195,220,0.4)' : 'rgba(75,85,99,0.5)' }}
                             onMouseEnter={e => {
                                 (e.currentTarget as HTMLElement).style.color = '#ff6b6b';
                                 (e.currentTarget as HTMLElement).style.background = 'rgba(255,107,107,0.1)';
                             }}
                             onMouseLeave={e => {
-                                (e.currentTarget as HTMLElement).style.color = 'rgba(180,195,220,0.4)';
+                                (e.currentTarget as HTMLElement).style.color = theme === 'dark' ? 'rgba(180,195,220,0.4)' : 'rgba(75,85,99,0.5)';
                                 (e.currentTarget as HTMLElement).style.background = '';
                             }}
                         >
@@ -173,23 +176,26 @@ export default function SuperAdminLayout() {
                 {/* ── Top Header ── */}
                 <header className="sticky top-0 z-10 flex items-center gap-4 px-8 h-16 shrink-0"
                     style={{
-                        background: 'rgba(11,15,26,0.85)',
+                        background: theme === 'dark' ? 'rgba(11,15,26,0.85)' : 'rgba(255,255,255,0.85)',
                         backdropFilter: 'blur(20px)',
                         WebkitBackdropFilter: 'blur(20px)',
-                        borderBottom: '1px solid rgba(0,212,255,0.08)',
+                        borderBottom: theme === 'dark' ? '1px solid rgba(0,212,255,0.08)' : '1px solid rgba(0,0,0,0.08)',
                     }}>
 
                     {/* Page breadcrumb */}
                     <div className="flex items-center gap-2 flex-1 min-w-0">
                         <CurrentIcon className="w-4 h-4 shrink-0" style={{ color: '#00D4FF' }} />
-                        <h2 className="text-[15px] font-semibold truncate" style={{ color: 'rgba(210,225,245,0.9)' }}>
+                        <h2 className="text-[15px] font-semibold truncate" style={{ color: theme === 'dark' ? 'rgba(210,225,245,0.9)' : 'rgba(15,23,42,0.9)' }}>
                             {currentPage?.name || 'Panel Principal'}
                         </h2>
                     </div>
 
                     {/* Search bar */}
                     <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg w-52"
-                        style={{ background: 'rgba(0,212,255,0.05)', border: '1px solid rgba(0,212,255,0.1)' }}>
+                        style={{
+                            background: theme === 'dark' ? 'rgba(0,212,255,0.05)' : 'rgba(0,212,255,0.08)',
+                            border: theme === 'dark' ? '1px solid rgba(0,212,255,0.1)' : '1px solid rgba(0,212,255,0.2)'
+                        }}>
                         <Search className="w-3.5 h-3.5 shrink-0" style={{ color: 'rgba(0,212,255,0.4)' }} />
                         <input
                             type="text"
@@ -197,15 +203,39 @@ export default function SuperAdminLayout() {
                             value={searchQuery}
                             onChange={e => setSearchQuery(e.target.value)}
                             className="bg-transparent text-[13px] outline-none w-full placeholder:text-opacity-40"
-                            style={{ color: 'rgba(210,225,245,0.8)', caretColor: '#00D4FF' }}
+                            style={{ color: theme === 'dark' ? 'rgba(210,225,245,0.8)' : 'rgba(15,23,42,0.8)', caretColor: '#00D4FF' }}
                         />
                     </div>
 
+                    {/* Theme toggle */}
+                    <button
+                        onClick={toggleTheme}
+                        className="p-2 rounded-lg transition-all duration-150 cursor-pointer"
+                        style={{
+                            color: theme === 'dark' ? 'rgba(180,195,220,0.5)' : 'rgba(75,85,99,0.7)',
+                            background: 'rgba(0,212,255,0.04)',
+                            border: theme === 'dark' ? '1px solid rgba(0,212,255,0.08)' : '1px solid rgba(0,212,255,0.2)'
+                        }}
+                        onMouseEnter={e => {
+                            (e.currentTarget as HTMLElement).style.color = '#00D4FF';
+                        }}
+                        onMouseLeave={e => {
+                            (e.currentTarget as HTMLElement).style.color = theme === 'dark' ? 'rgba(180,195,220,0.5)' : 'rgba(75,85,99,0.7)';
+                        }}
+                        title={theme === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
+                    >
+                        {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+                    </button>
+
                     {/* Notification bell */}
                     <button className="relative p-2 rounded-lg transition-all duration-150"
-                        style={{ color: 'rgba(180,195,220,0.5)', background: 'rgba(0,212,255,0.04)', border: '1px solid rgba(0,212,255,0.08)' }}
+                        style={{
+                            color: theme === 'dark' ? 'rgba(180,195,220,0.5)' : 'rgba(75,85,99,0.7)',
+                            background: 'rgba(0,212,255,0.04)',
+                            border: theme === 'dark' ? '1px solid rgba(0,212,255,0.08)' : '1px solid rgba(0,212,255,0.2)'
+                        }}
                         onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = '#00D4FF'}
-                        onMouseLeave={e => (e.currentTarget as HTMLElement).style.color = 'rgba(180,195,220,0.5)'}
+                        onMouseLeave={e => (e.currentTarget as HTMLElement).style.color = theme === 'dark' ? 'rgba(180,195,220,0.5)' : 'rgba(75,85,99,0.7)'}
                     >
                         <Bell className="w-4 h-4" />
                     </button>
