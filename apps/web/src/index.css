@@ -263,3 +263,18 @@ input:-webkit-autofill:active {
   -webkit-box-shadow: 0 0 0px 1000px rgba(15, 23, 42, 0.95) inset !important;
   transition: background-color 5000s ease-in-out 0s;
 }
+
+/* Estilos globales para select y option en modo oscuro */
+select,
+option,
+select option {
+  background-color: #0f172a !important; /* Slate 900 background */
+  color: #f1f5f9 !important;            /* Slate 100 text */
+}
+
+/* Ajustes de color para cuando están seleccionados o en foco */
+select:focus,
+select option:checked {
+  background-color: #1e293b !important; /* Slate 800 background */
+  color: #00D4FF !important;            /* Cyan text color */
+}
