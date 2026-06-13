@@ -221,9 +221,19 @@ export class LiorenService {
 
   // ─── RUT lookup ────────────────────────────────────────────────────────────
 
-  async consultaRut(rut: string) {
+  async consultaRut(rut: string, tenantId?: string) {
     try {
-      const token = this.defaultToken;
+      let token = this.defaultToken;
+
+      if (tenantId) {
+        const config = await this.prisma.dteConfig.findUnique({
+          where: { tenantId }
+        });
+        if (config?.liorenToken) {
+          token = config.liorenToken;
+        }
+      }
+
       if (!token) throw new Error('Token no configurado');
       
       const cleanRut = rut.replace(/\./g, '').replace(/-/g, '');
