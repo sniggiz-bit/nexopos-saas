@@ -19,6 +19,7 @@ interface UpdateProductData {
     isActive?: boolean;
     stock?: number;
     priceTiers?: PriceTier[];
+    galleryImages?: string[];
 }
 
 async function updateProduct({ id, ...data }: UpdateProductData): Promise<Product> {

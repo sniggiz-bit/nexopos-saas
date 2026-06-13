@@ -19,6 +19,7 @@ interface CreateProductData {
     branchId?: string;
     priceTiers?: PriceTier[];
     tenantId?: string;
+    galleryImages?: string[];
 }
 
 async function createProduct(data: CreateProductData): Promise<Product> {
