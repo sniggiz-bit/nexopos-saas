@@ -19,7 +19,7 @@ import {
     MapPin,
     Hash,
 } from 'lucide-react';
-import { formatRut } from '@nexopos/shared';
+import { formatRut, validateRut } from '@nexopos/shared';
 import { apiClient } from '../../api/client';
 import toast from 'react-hot-toast';
 
@@ -85,8 +85,7 @@ export function SuppliersPage() {
             const formatted = formatRut(value);
             setForm((prev) => ({ ...prev, [field]: formatted }));
 
-            const clean = value.replace(/\./g, '').replace(/-/g, '');
-            if (clean.length >= 8) {
+            if (validateRut(formatted)) {
                 handleRutLookup(formatted);
             }
         } else {
