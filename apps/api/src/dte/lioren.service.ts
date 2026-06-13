@@ -223,37 +223,59 @@ export class LiorenService {
 
   async consultaRut(rut: string, tenantId?: string) {
     try {
-      let token = this.defaultToken;
+      const cleanRut = rut.replace(/\./g, '').replace(/-/g, '').trim();
+      const dv = cleanRut.slice(-1);
+      const cuerpo = cleanRut.slice(0, -1);
+      const formattedRut = `${cuerpo}-${dv}`;
 
-      if (tenantId) {
-        const config = await this.prisma.dteConfig.findUnique({
-          where: { tenantId }
-        });
-        if (config?.liorenToken) {
-          token = config.liorenToken;
-        }
-      }
+      const token = process.env.SRE_TOKEN || 'token_publico';
 
-      if (!token) throw new Error('Token no configurado');
-      
-      const cleanRut = rut.replace(/\./g, '').replace(/-/g, '');
-      const response = await axios.post('https://lioren.cl/api/rut', { token, rut: cleanRut });
-      
-      if (response.data) {
+      this.logger.log(`[RUT Lookup] Consultando RUT ${formattedRut} en SRE con token: ${token === 'token_publico' ? 'publico' : 'personalizado'}`);
+
+      const response = await axios.get('https://sre.cl/api/company_info', {
+        params: {
+          token,
+          rut: formattedRut,
+          actualizado: 'False'
+        },
+        timeout: 10000
+      });
+
+      if (response.data && response.data.result) {
         return {
           success: true,
           data: {
-            reasonSocial: response.data.rs,
-            giro: response.data.giro,
-            address: response.data.dir,
-            comuna: response.data.comuna,
+            reasonSocial: response.data.razon_social,
+            giro: response.data.glosa_giro,
+            address: response.data.direccion,
+            comuna: response.data.ciudad || response.data.comuna,
             city: response.data.ciudad,
           },
         };
       }
-      return { success: false, message: 'Datos no encontrados' };
+
+      const message = response.data?.message || 'Datos no encontrados en el registro de empresas';
+      return { success: false, message };
     } catch (error: any) {
-      return { success: false, error: error.message };
+      this.logger.error(`[RUT Lookup] Error al consultar RUT: ${error.message}`);
+      
+      // Fallback a MOCK en desarrollo para no bloquear a los programadores locales
+      if (process.env.NODE_ENV !== 'production') {
+        this.logger.log('[RUT Lookup] MOCK MODE: Devuelto datos de prueba en desarrollo.');
+        return {
+          success: true,
+          data: {
+            reasonSocial: 'Empresa de Prueba S.A.',
+            giro: 'Venta de software',
+            address: 'Av. Providencia 1234',
+            comuna: 'Providencia',
+            city: 'Santiago',
+          }
+        };
+      }
+
+      const errorMsg = error.response?.data?.message || error.message;
+      return { success: false, error: errorMsg };
     }
   }
 

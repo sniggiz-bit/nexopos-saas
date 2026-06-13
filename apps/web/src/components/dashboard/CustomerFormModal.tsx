@@ -94,20 +94,30 @@ export function CustomerFormModal({ isOpen, onClose, initialData }: CustomerForm
         try {
             // Se utiliza apiClient para anteponer /api de forma automática y usar cabeceras de auth
             const response = await apiClient.get(`/common/rut-lookup/${rut}`);
-            if (response.data && response.data.success && response.data.data) {
-                const { reasonSocial, giro, address, comuna } = response.data.data;
-                setFormData(prev => ({
-                    ...prev,
-                    name: prev.name || reasonSocial || '',
-                    giro: prev.giro || giro || '',
-                    address: prev.address || address || '',
-                    comuna: prev.comuna || comuna || '',
-                }));
-                toast.success('Datos tributarios completados de forma automática');
+            if (response.data) {
+                if (response.data.success && response.data.data) {
+                    const { reasonSocial, giro, address, comuna } = response.data.data;
+                    setFormData(prev => ({
+                        ...prev,
+                        name: reasonSocial || prev.name || '',
+                        giro: giro || prev.giro || '',
+                        address: address || prev.address || '',
+                        comuna: comuna || prev.comuna || '',
+                    }));
+                    toast.success('Datos tributarios completados de forma automática');
+                } else {
+                    const errorMsg = response.data.error || response.data.message || 'Error al consultar datos';
+                    if (errorMsg.includes('disponibles') || errorMsg.includes('403') || errorMsg.includes('agotado') || errorMsg.includes('límite') || errorMsg.includes('limite')) {
+                        toast.error('Límite de consultas de RUT agotado. Ingresa los datos manualmente.');
+                    } else {
+                        toast.error(`No se pudo autocompletar: ${errorMsg}`);
+                    }
+                }
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error('RUT Lookup error:', error);
-            // Fallar de forma silenciosa para que no interrumpa al usuario
+            const msg = error.response?.data?.message || error.message || 'Error en el servidor';
+            toast.error(`Error en servidor al consultar RUT: ${msg}`);
         } finally {
             setLoadingRut(false);
         }

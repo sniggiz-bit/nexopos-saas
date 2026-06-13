@@ -20,6 +20,8 @@ import {
     Hash,
 } from 'lucide-react';
 import { formatRut } from '@nexopos/shared';
+import { apiClient } from '../../api/client';
+import toast from 'react-hot-toast';
 
 interface SupplierForm {
     name: string;
@@ -94,22 +96,29 @@ export function SuppliersPage() {
 
     const handleRutLookup = async (rut: string) => {
         try {
-            const apiUrl = import.meta.env.VITE_API_URL || '';
-            const response = await fetch(`${apiUrl}/common/rut-lookup/${rut}`);
-
-            if (response.ok) {
-                const result = await response.json();
-                if (result.success && result.data) {
-                    const { reasonSocial, address } = result.data;
+            const response = await apiClient.get(`/common/rut-lookup/${rut}`);
+            if (response.data) {
+                if (response.data.success && response.data.data) {
+                    const { reasonSocial, address } = response.data.data;
                     setForm(prev => ({
                         ...prev,
-                        name: prev.name || reasonSocial || '',
-                        address: prev.address || address || '',
+                        name: reasonSocial || prev.name || '',
+                        address: address || prev.address || '',
                     }));
+                    toast.success('Datos de proveedor completados automáticamente');
+                } else {
+                    const errorMsg = response.data.error || response.data.message || 'Error al consultar datos';
+                    if (errorMsg.includes('disponibles') || errorMsg.includes('403') || errorMsg.includes('agotado') || errorMsg.includes('límite') || errorMsg.includes('limite')) {
+                        toast.error('Límite de consultas de RUT agotado. Ingresa los datos manualmente.');
+                    } else {
+                        toast.error(`No se pudo autocompletar: ${errorMsg}`);
+                    }
                 }
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error('RUT Lookup error:', error);
+            const msg = error.response?.data?.message || error.message || 'Error en el servidor';
+            toast.error(`Error en servidor al consultar RUT: ${msg}`);
         }
     };
 
