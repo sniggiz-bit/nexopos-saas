@@ -25,6 +25,7 @@ interface StoreProduct {
   description?: string;
   price: number;
   image?: string;
+  galleryImages?: string[];
   stock: number;
   unitType: 'UNIT' | 'WEIGHT';
   category?: { id: string; name: string };
@@ -215,15 +216,28 @@ const ProductModal = ({
   product, brandColor, storeName, whatsappNumber, onClose, onAddToCart,
 }: ProductModalProps) => {
   const [qty, setQty] = useState(1);
+  const [activeImage, setActiveImage] = useState<string | null>(null);
 
   useEffect(() => {
     if (product) {
       setQty(1);
+      setActiveImage(product.image || null);
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = '';
     }
     return () => { document.body.style.overflow = ''; };
+  }, [product]);
+
+  const allImages = useMemo(() => {
+    const list: string[] = [];
+    if (product?.image) list.push(product.image);
+    if (product?.galleryImages) {
+      product.galleryImages.forEach(img => {
+        if (img && img !== product.image) list.push(img);
+      });
+    }
+    return list;
   }, [product]);
 
   if (!product) return null;
@@ -257,13 +271,35 @@ const ProductModal = ({
         </button>
 
         <div className="md:grid md:grid-cols-2">
-          {/* Image */}
-          <div className="aspect-square bg-gray-50 dark:bg-slate-950 dark:bg-slate-850 rounded-t-3xl md:rounded-l-3xl md:rounded-tr-none overflow-hidden">
-            {product.image ? (
-              <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center">
-                <Package className="w-24 h-24 text-gray-200" />
+          {/* Image Section with Gallery support */}
+          <div className="flex flex-col p-4 bg-gray-50 dark:bg-slate-950 rounded-t-3xl md:rounded-l-3xl md:rounded-tr-none">
+            {/* Active Image */}
+            <div className="aspect-square w-full rounded-2xl overflow-hidden bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800">
+              {activeImage ? (
+                <img src={activeImage} alt={product.name} className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center">
+                  <Package className="w-24 h-24 text-gray-200" />
+                </div>
+              )}
+            </div>
+
+            {/* Thumbnails (Only if there are gallery images) */}
+            {allImages.length > 1 && (
+              <div className="flex gap-2 mt-3 overflow-x-auto pb-1 scrollbar-thin">
+                {allImages.map((img, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setActiveImage(img)}
+                    className={`w-14 h-14 rounded-lg overflow-hidden border-2 transition-all flex-shrink-0 bg-white dark:bg-slate-900 ${
+                      activeImage === img
+                        ? 'border-[#00D4FF]'
+                        : 'border-gray-200 dark:border-slate-800 hover:border-gray-300 dark:hover:border-slate-700'
+                    }`}
+                  >
+                    <img src={img} alt={`${product.name} - ${idx}`} className="w-full h-full object-cover" />
+                  </button>
+                ))}
               </div>
             )}
           </div>
