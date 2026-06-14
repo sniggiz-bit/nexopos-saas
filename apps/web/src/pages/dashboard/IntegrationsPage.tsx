@@ -116,15 +116,15 @@ function CreateConnectionModal({ onClose, onCreated }: CreateModalProps) {
 
     return (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="rounded-xl shadow-2xl w-full max-w-md overflow-hidden border border-[rgba(0,212,255,0.15)] bg-[hsl(220,25%,9%)]">
-                <div className="flex items-center justify-between p-5 border-b border-[rgba(0,212,255,0.08)] bg-[rgba(0,212,255,0.02)]">
-                    <h2 className="text-lg font-bold text-white">Nueva Integración</h2>
-                    <button onClick={onClose} className="text-[rgba(180,195,220,0.6)] hover:text-white transition-colors">✕</button>
+            <div className="rounded-xl shadow-2xl w-full max-w-md overflow-hidden border border-border bg-[hsl(var(--card))]">
+                <div className="flex items-center justify-between p-5 border-b border-border bg-muted/30">
+                    <h2 className="text-lg font-bold text-foreground">Nueva Integración</h2>
+                    <button onClick={onClose} className="text-muted-foreground/[0.6] hover:text-foreground transition-colors">✕</button>
                 </div>
 
                 <form onSubmit={handleSubmit} className="p-5 space-y-4">
                     <div>
-                        <label className="block text-sm font-semibold text-[rgba(210,225,245,0.85)] mb-1.5">Plataforma</label>
+                        <label className="block text-sm font-semibold text-foreground/[0.85] mb-1.5">Plataforma</label>
                         <div className="flex gap-3">
                             {(['SHOPIFY', 'WOOCOMMERCE'] as const).map(p => (
                                 <button
@@ -134,7 +134,7 @@ function CreateConnectionModal({ onClose, onCreated }: CreateModalProps) {
                                     className={`flex-1 py-2 rounded-lg border-2 text-sm font-bold transition-all ${
                                         platform === p
                                             ? 'border-[#00D4FF] bg-[#00D4FF]/10 text-[#00D4FF]'
-                                            : 'border-[rgba(0,212,255,0.15)] text-[rgba(180,195,220,0.6)] hover:border-[rgba(0,212,255,0.3)] bg-[rgba(255,255,255,0.01)]'
+                                            : 'border-border text-muted-foreground/[0.6] hover:border-border bg-card'
                                     }`}
                                 >
                                     {p === 'SHOPIFY' ? 'Shopify' : 'WooCommerce'}
@@ -144,85 +144,85 @@ function CreateConnectionModal({ onClose, onCreated }: CreateModalProps) {
                     </div>
 
                     <div>
-                        <label className="block text-sm font-semibold text-[rgba(210,225,245,0.85)] mb-1">Nombre de la conexión</label>
+                        <label className="block text-sm font-semibold text-foreground/[0.85] mb-1">Nombre de la conexión</label>
                         <input
                             type="text"
                             required
                             value={name}
                             onChange={e => setName(e.target.value)}
                             placeholder="Ej: Mi tienda Shopify"
-                            className="w-full px-3 py-2 bg-[rgba(255,255,255,0.02)] border border-[rgba(0,212,255,0.15)] text-white rounded-lg text-sm focus:ring-2 focus:ring-[#00D4FF] focus:border-transparent outline-none transition-all placeholder:text-[rgba(180,195,220,0.3)]"
+                            className="w-full px-3 py-2 bg-card border border-border text-foreground rounded-lg text-sm focus:ring-2 focus:ring-[#00D4FF] focus:border-transparent outline-none transition-all placeholder:text-muted-foreground/[0.3]"
                         />
                     </div>
 
                     {platform === 'SHOPIFY' ? (
                         <>
                             <div>
-                                <label className="block text-sm font-semibold text-[rgba(210,225,245,0.85)] mb-1">Dominio de tienda</label>
+                                <label className="block text-sm font-semibold text-foreground/[0.85] mb-1">Dominio de tienda</label>
                                 <input
                                     type="text"
                                     required
                                     value={shopDomain}
                                     onChange={e => setShopDomain(e.target.value)}
                                     placeholder="mi-tienda.myshopify.com"
-                                    className="w-full px-3 py-2 bg-[rgba(255,255,255,0.02)] border border-[rgba(0,212,255,0.15)] text-white rounded-lg text-sm focus:ring-2 focus:ring-[#00D4FF] focus:border-transparent outline-none transition-all placeholder:text-[rgba(180,195,220,0.3)]"
+                                    className="w-full px-3 py-2 bg-card border border-border text-foreground rounded-lg text-sm focus:ring-2 focus:ring-[#00D4FF] focus:border-transparent outline-none transition-all placeholder:text-muted-foreground/[0.3]"
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-semibold text-[rgba(210,225,245,0.85)] mb-1">Access Token</label>
+                                <label className="block text-sm font-semibold text-foreground/[0.85] mb-1">Access Token</label>
                                 <input
                                     type="password"
                                     required
                                     value={accessToken}
                                     onChange={e => setAccessToken(e.target.value)}
                                     placeholder="shpat_xxxxxxxxxxxxxxxxxxxxxxxx"
-                                    className="w-full px-3 py-2 bg-[rgba(255,255,255,0.02)] border border-[rgba(0,212,255,0.15)] text-white rounded-lg text-sm focus:ring-2 focus:ring-[#00D4FF] focus:border-transparent outline-none transition-all placeholder:text-[rgba(180,195,220,0.3)]"
+                                    className="w-full px-3 py-2 bg-card border border-border text-foreground rounded-lg text-sm focus:ring-2 focus:ring-[#00D4FF] focus:border-transparent outline-none transition-all placeholder:text-muted-foreground/[0.3]"
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-semibold text-[rgba(210,225,245,0.85)] mb-1">Location ID <span className="text-[rgba(180,195,220,0.4)] font-normal">(opcional)</span></label>
+                                <label className="block text-sm font-semibold text-foreground/[0.85] mb-1">Location ID <span className="text-muted-foreground/[0.4] font-normal">(opcional)</span></label>
                                 <input
                                     type="text"
                                     value={locationId}
                                     onChange={e => setLocationId(e.target.value)}
                                     placeholder="ID de ubicación de inventario"
-                                    className="w-full px-3 py-2 bg-[rgba(255,255,255,0.02)] border border-[rgba(0,212,255,0.15)] text-white rounded-lg text-sm focus:ring-2 focus:ring-[#00D4FF] focus:border-transparent outline-none transition-all placeholder:text-[rgba(180,195,220,0.3)]"
+                                    className="w-full px-3 py-2 bg-card border border-border text-foreground rounded-lg text-sm focus:ring-2 focus:ring-[#00D4FF] focus:border-transparent outline-none transition-all placeholder:text-muted-foreground/[0.3]"
                                 />
                             </div>
                         </>
                     ) : (
                         <>
                             <div>
-                                <label className="block text-sm font-semibold text-[rgba(210,225,245,0.85)] mb-1">URL del sitio</label>
+                                <label className="block text-sm font-semibold text-foreground/[0.85] mb-1">URL del sitio</label>
                                 <input
                                     type="url"
                                     required
                                     value={siteUrl}
                                     onChange={e => setSiteUrl(e.target.value)}
                                     placeholder="https://mi-tienda.com"
-                                    className="w-full px-3 py-2 bg-[rgba(255,255,255,0.02)] border border-[rgba(0,212,255,0.15)] text-white rounded-lg text-sm focus:ring-2 focus:ring-[#00D4FF] focus:border-transparent outline-none transition-all placeholder:text-[rgba(180,195,220,0.3)]"
+                                    className="w-full px-3 py-2 bg-card border border-border text-foreground rounded-lg text-sm focus:ring-2 focus:ring-[#00D4FF] focus:border-transparent outline-none transition-all placeholder:text-muted-foreground/[0.3]"
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-semibold text-[rgba(210,225,245,0.85)] mb-1">Consumer Key</label>
+                                <label className="block text-sm font-semibold text-foreground/[0.85] mb-1">Consumer Key</label>
                                 <input
                                     type="text"
                                     required
                                     value={consumerKey}
                                     onChange={e => setConsumerKey(e.target.value)}
                                     placeholder="ck_xxxxxxxxxxxxxxxx"
-                                    className="w-full px-3 py-2 bg-[rgba(255,255,255,0.02)] border border-[rgba(0,212,255,0.15)] text-white rounded-lg text-sm focus:ring-2 focus:ring-[#00D4FF] focus:border-transparent outline-none transition-all placeholder:text-[rgba(180,195,220,0.3)]"
+                                    className="w-full px-3 py-2 bg-card border border-border text-foreground rounded-lg text-sm focus:ring-2 focus:ring-[#00D4FF] focus:border-transparent outline-none transition-all placeholder:text-muted-foreground/[0.3]"
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-semibold text-[rgba(210,225,245,0.85)] mb-1">Consumer Secret</label>
+                                <label className="block text-sm font-semibold text-foreground/[0.85] mb-1">Consumer Secret</label>
                                 <input
                                     type="password"
                                     required
                                     value={consumerSecret}
                                     onChange={e => setConsumerSecret(e.target.value)}
                                     placeholder="cs_xxxxxxxxxxxxxxxx"
-                                    className="w-full px-3 py-2 bg-[rgba(255,255,255,0.02)] border border-[rgba(0,212,255,0.15)] text-white rounded-lg text-sm focus:ring-2 focus:ring-[#00D4FF] focus:border-transparent outline-none transition-all placeholder:text-[rgba(180,195,220,0.3)]"
+                                    className="w-full px-3 py-2 bg-card border border-border text-foreground rounded-lg text-sm focus:ring-2 focus:ring-[#00D4FF] focus:border-transparent outline-none transition-all placeholder:text-muted-foreground/[0.3]"
                                 />
                             </div>
                         </>
@@ -232,7 +232,7 @@ function CreateConnectionModal({ onClose, onCreated }: CreateModalProps) {
                         <button
                             type="button"
                             onClick={onClose}
-                            className="flex-1 px-4 py-2 border border-[rgba(0,212,255,0.15)] text-[rgba(210,225,245,0.85)] hover:bg-[#00D4FF]/5 rounded-lg text-sm transition-colors"
+                            className="flex-1 px-4 py-2 border border-border text-foreground/[0.85] hover:bg-[#00D4FF]/5 rounded-lg text-sm transition-colors"
                         >
                             Cancelar
                         </button>
@@ -315,16 +315,16 @@ function ConnectionCard({ connection, onRefresh }: ConnectionCardProps) {
     ];
 
     return (
-        <div className="rounded-xl border border-[rgba(0,212,255,0.08)] p-5 space-y-4 hover:border-[rgba(0,212,255,0.2)] transition-all duration-300 shadow-[0_0_20px_rgba(0,212,255,0.02)]" style={{ background: 'rgba(255,255,255,0.02)' }}>
+        <div className="rounded-xl border border-border p-5 space-y-4 hover:border-border transition-all duration-300 shadow-[0_0_20px_rgba(0,212,255,0.02)]" style={{ background: 'rgba(255,255,255,0.02)' }}>
             <div className="flex items-start justify-between">
                 <div>
                     <div className="flex items-center gap-2 mb-1.5">
                         <PlatformBadge platform={connection.platform} />
                         <StatusBadge isActive={connection.isActive} />
                     </div>
-                    <h3 className="font-bold text-white text-[15px]">{connection.name}</h3>
+                    <h3 className="font-bold text-foreground text-[15px]">{connection.name}</h3>
                     {connection.lastSyncAt && (
-                        <p className="text-xs text-[rgba(180,195,220,0.4)] mt-1.5 flex items-center">
+                        <p className="text-xs text-muted-foreground/[0.4] mt-1.5 flex items-center">
                             <Clock className="w-3.5 h-3.5 inline mr-1 text-[#00D4FF]" />
                             Última sync: {new Date(connection.lastSyncAt).toLocaleString('es-CL')}
                         </p>
@@ -332,7 +332,7 @@ function ConnectionCard({ connection, onRefresh }: ConnectionCardProps) {
                 </div>
                 <button
                     onClick={handleDelete}
-                    className="text-[rgba(180,195,220,0.4)] hover:text-red-400 hover:bg-red-500/10 p-1.5 rounded-lg transition-colors"
+                    className="text-muted-foreground/[0.4] hover:text-red-400 hover:bg-red-500/10 p-1.5 rounded-lg transition-colors"
                     title="Eliminar conexión"
                 >
                     <Trash2 className="w-4 h-4" />
@@ -343,7 +343,7 @@ function ConnectionCard({ connection, onRefresh }: ConnectionCardProps) {
                 <button
                     onClick={handleTest}
                     disabled={testLoading}
-                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs border border-[rgba(0,212,255,0.15)] rounded-lg hover:bg-[#00D4FF]/5 text-[rgba(210,225,245,0.85)] font-medium transition-colors disabled:opacity-50"
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs border border-border rounded-lg hover:bg-[#00D4FF]/5 text-foreground/[0.85] font-medium transition-colors disabled:opacity-50"
                 >
                     <Plug className="w-3.5 h-3.5" />
                     {testLoading ? 'Probando...' : 'Probar'}
@@ -409,25 +409,25 @@ function OrdersTable({ connectionId }: { connectionId?: string }) {
 
     return (
         <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-[rgba(0,212,255,0.06)]">
-                <thead style={{ background: 'rgba(0,212,255,0.04)' }}>
+            <table className="min-w-full divide-y divide-border">
+                <thead style={{ background: 'hsl(var(--background))' }}>
                     <tr>
                         {['ID Externo', 'Plataforma', 'Cliente', 'Total', 'Estado', 'Fecha', 'Acciones'].map(h => (
-                            <th key={h} className="px-4 py-3 text-left text-xs font-bold text-[rgba(0,212,255,0.6)] uppercase tracking-wider">
+                            <th key={h} className="px-4 py-3 text-left text-xs font-bold text-muted-foreground uppercase tracking-wider">
                                 {h}
                             </th>
                         ))}
                     </tr>
                 </thead>
-                <tbody className="divide-y divide-[rgba(0,212,255,0.06)]">
+                <tbody className="divide-y divide-border">
                     {orders.map(order => (
-                        <tr key={order.id} className="hover:bg-[rgba(0,212,255,0.02)] transition-colors">
-                            <td className="px-4 py-3 text-sm font-mono text-[rgba(210,225,245,0.9)]">#{order.externalId}</td>
+                        <tr key={order.id} className="hover:bg-muted/30 transition-colors">
+                            <td className="px-4 py-3 text-sm font-mono text-foreground/[0.9]">#{order.externalId}</td>
                             <td className="px-4 py-3">
                                 {order.connection && <PlatformBadge platform={order.connection.platform as any} />}
                             </td>
-                            <td className="px-4 py-3 text-sm text-[rgba(210,225,245,0.7)]">{order.customerEmail ?? '—'}</td>
-                            <td className="px-4 py-3 text-sm font-bold text-white tabular-nums">
+                            <td className="px-4 py-3 text-sm text-foreground/[0.7]">{order.customerEmail ?? '—'}</td>
+                            <td className="px-4 py-3 text-sm font-bold text-foreground tabular-nums">
                                 {order.currency} {(order.totalAmount / 100).toLocaleString('es-CL')}
                             </td>
                             <td className="px-4 py-3">
@@ -441,7 +441,7 @@ function OrdersTable({ connectionId }: { connectionId?: string }) {
                                     {order.status === 'PROCESSED' ? 'Procesado' : order.status === 'FAILED' ? 'Fallido' : 'Pendiente'}
                                 </span>
                             </td>
-                            <td className="px-4 py-3 text-sm text-[rgba(180,195,220,0.4)] tabular-nums">
+                            <td className="px-4 py-3 text-sm text-muted-foreground/[0.4] tabular-nums">
                                 {new Date(order.createdAt).toLocaleDateString('es-CL')}
                             </td>
                             <td className="px-4 py-3">
@@ -485,8 +485,8 @@ export function IntegrationsPage() {
                 {/* Header */}
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-2xl font-bold text-white">Integraciones E-commerce</h1>
-                        <p className="text-[13px] text-[rgba(180,195,220,0.5)] mt-1">
+                        <h1 className="text-2xl font-bold text-foreground">Integraciones E-commerce</h1>
+                        <p className="text-[13px] text-muted-foreground/[0.5] mt-1">
                             Sincroniza productos, inventario y pedidos con Shopify o WooCommerce
                         </p>
                     </div>
@@ -500,7 +500,7 @@ export function IntegrationsPage() {
                 </div>
 
                 {/* Tabs */}
-                <div className="flex gap-1 p-1 rounded-lg w-fit border border-[rgba(0,212,255,0.08)]" style={{ background: 'rgba(255,255,255,0.02)' }}>
+                <div className="flex gap-1 p-1 rounded-lg w-fit border border-border" style={{ background: 'rgba(255,255,255,0.02)' }}>
                     {[
                         { key: 'connections', label: 'Conexiones' },
                         { key: 'orders', label: 'Pedidos externos' },
@@ -511,7 +511,7 @@ export function IntegrationsPage() {
                             className={`px-4 py-1.5 text-sm font-semibold rounded-md transition-all ${
                                 activeTab === tab.key
                                     ? 'bg-[#00D4FF] text-[#0B0F1A] shadow-[0_0_10px_rgba(0,212,255,0.25)]'
-                                    : 'text-[rgba(180,195,220,0.6)] hover:text-white'
+                                    : 'text-muted-foreground/[0.6] hover:text-white'
                             }`}
                         >
                             {tab.label}
@@ -523,15 +523,15 @@ export function IntegrationsPage() {
                 {activeTab === 'connections' && (
                     <>
                         {isLoading ? (
-                            <div className="text-center py-12 text-[rgba(180,195,220,0.5)]">
+                            <div className="text-center py-12 text-muted-foreground/[0.5]">
                                 <div className="w-6 h-6 border-2 border-[#00D4FF] border-t-transparent rounded-full animate-spin mx-auto mb-2" />
                                 <span>Cargando conexiones...</span>
                             </div>
                         ) : connections.length === 0 ? (
-                            <div className="text-center py-16 rounded-xl border border-dashed border-[rgba(0,212,255,0.15)] bg-[rgba(255,255,255,0.01)] max-w-2xl mx-auto">
-                                <Plug className="w-12 h-12 mx-auto mb-3 text-[rgba(0,212,255,0.15)]" />
-                                <h3 className="text-white font-bold mb-1">Sin conexiones activas</h3>
-                                <p className="text-sm text-[rgba(180,195,220,0.5)] mb-4">
+                            <div className="text-center py-16 rounded-xl border border-dashed border-border bg-card max-w-2xl mx-auto">
+                                <Plug className="w-12 h-12 mx-auto mb-3 text-muted-foreground" />
+                                <h3 className="text-foreground font-bold mb-1">Sin conexiones activas</h3>
+                                <p className="text-sm text-muted-foreground/[0.5] mb-4">
                                     Crea tu primera conexión con Shopify o WooCommerce
                                 </p>
                                 <button
@@ -558,18 +558,18 @@ export function IntegrationsPage() {
 
                 {/* Orders tab */}
                 {activeTab === 'orders' && (
-                    <div className="rounded-xl border border-[rgba(0,212,255,0.08)] overflow-hidden" style={{ background: 'rgba(255,255,255,0.02)' }}>
+                    <div className="rounded-xl border border-border overflow-hidden" style={{ background: 'rgba(255,255,255,0.02)' }}>
                         {connections.length > 0 && (
-                            <div className="p-4 border-b border-[rgba(0,212,255,0.06)] bg-[rgba(0,212,255,0.01)] flex items-center gap-3">
-                                <label className="text-sm text-[rgba(210,225,245,0.85)] font-semibold">Filtrar por conexión:</label>
+                            <div className="p-4 border-b border-border bg-muted/30 flex items-center gap-3">
+                                <label className="text-sm text-foreground/[0.85] font-semibold">Filtrar por conexión:</label>
                                 <select
                                     value={selectedConnectionId ?? ''}
                                     onChange={e => setSelectedConnectionId(e.target.value || undefined)}
-                                    className="text-sm border border-[rgba(0,212,255,0.15)] bg-[hsl(220,25%,9%)] text-[rgba(210,225,245,0.85)] rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-[#00D4FF] outline-none"
+                                    className="text-sm border border-border bg-[hsl(var(--card))] text-foreground/[0.85] rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-[#00D4FF] outline-none"
                                 >
-                                    <option value="" className="bg-[hsl(220,25%,9%)]">Todas las conexiones</option>
+                                    <option value="" className="bg-[hsl(var(--card))]">Todas las conexiones</option>
                                     {connections.map(c => (
-                                        <option key={c.id} value={c.id} className="bg-[hsl(220,25%,9%)]">{c.name}</option>
+                                        <option key={c.id} value={c.id} className="bg-[hsl(var(--card))]">{c.name}</option>
                                     ))}
                                 </select>
                             </div>

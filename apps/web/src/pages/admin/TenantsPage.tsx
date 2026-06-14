@@ -87,7 +87,7 @@ export default function TenantsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white">Gestión de Clientes</h1>
+          <h1 className="text-2xl font-bold text-foreground">Gestión de Clientes</h1>
           <p className="text-neutral-500 text-sm mt-0.5">{total} empresa{total !== 1 ? 's' : ''} registrada{total !== 1 ? 's' : ''}</p>
         </div>
         <div className="relative">
@@ -131,7 +131,7 @@ export default function TenantsPage() {
                 className="hover:bg-neutral-700/30 transition-colors cursor-pointer"
               >
                 <td className="px-5 py-4">
-                  <div className="font-medium text-white">{tenant.name}</div>
+                  <div className="font-medium text-foreground">{tenant.name}</div>
                   <div className="text-xs text-neutral-500 font-mono mt-0.5">{tenant.id.substring(0, 8)}…</div>
                 </td>
                 <td className="px-5 py-4">

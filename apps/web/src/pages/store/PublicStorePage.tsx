@@ -164,7 +164,7 @@ const ProductCard = ({ product, brandColor, onAddToCart, onViewDetail }: Product
           <div className="absolute bottom-0 left-0 right-0 translate-y-full group-hover:translate-y-0 transition-transform duration-200">
             <button
               onClick={e => { e.stopPropagation(); onAddToCart(product); }}
-              className="w-full py-2 text-white text-xs font-bold tracking-wide flex items-center justify-center gap-1.5 hover:brightness-90 transition-all active:scale-98"
+              className="w-full py-2 text-foreground text-xs font-bold tracking-wide flex items-center justify-center gap-1.5 hover:brightness-90 transition-all active:scale-98"
               style={{ backgroundColor: brandColor }}
             >
               <Plus className="w-3.5 h-3.5" />
@@ -357,7 +357,7 @@ const ProductModal = ({
                   onClose();
                 }}
                 disabled={!stock.available}
-                className="w-full py-3.5 rounded-2xl text-white font-bold text-sm transition-all duration-150 disabled:opacity-40 active:scale-98 hover:brightness-90"
+                className="w-full py-3.5 rounded-2xl text-foreground font-bold text-sm transition-all duration-150 disabled:opacity-40 active:scale-98 hover:brightness-90"
                 style={{ backgroundColor: stock.available ? brandColor : '#9ca3af' }}
               >
                 {stock.available
@@ -666,19 +666,19 @@ const SliderCarousel = ({ slides, brandColor }: { slides: Slide[]; brandColor: s
       {(slide.title || slide.subtitle || slide.buttonText) && (
         <div className="absolute bottom-0 left-0 right-0 p-5 pb-10 sm:p-8 sm:pb-12">
           {slide.title && (
-            <h2 className="text-xl sm:text-3xl font-black text-white drop-shadow-lg leading-tight">
+            <h2 className="text-xl sm:text-3xl font-black text-foreground drop-shadow-lg leading-tight">
               {slide.title}
             </h2>
           )}
           {slide.subtitle && (
-            <p className="text-sm sm:text-base text-white/80 mt-1 drop-shadow">{slide.subtitle}</p>
+            <p className="text-sm sm:text-base text-foreground/80 mt-1 drop-shadow">{slide.subtitle}</p>
           )}
           {slide.buttonText && slide.buttonLink && (
             <a
               href={slide.buttonLink}
               target="_blank"
               rel="noreferrer"
-              className="inline-block mt-3 px-5 py-2.5 rounded-xl text-sm font-bold text-white shadow-lg hover:brightness-90 transition-all active:scale-95"
+              className="inline-block mt-3 px-5 py-2.5 rounded-xl text-sm font-bold text-foreground shadow-lg hover:brightness-90 transition-all active:scale-95"
               style={{ backgroundColor: brandColor }}
             >
               {slide.buttonText}
@@ -931,7 +931,7 @@ export const PublicStorePage = () => {
         {/* Announcement Bar */}
         {store?.storeSettings.announcementEnabled && store.storeSettings.announcementText && (
           <div
-            className="w-full py-2 px-4 text-center text-xs font-semibold text-white tracking-wide"
+            className="w-full py-2 px-4 text-center text-xs font-semibold text-foreground tracking-wide"
             style={{ backgroundColor: store.storeSettings.announcementColor || '#10b981' }}
           >
             {store.storeSettings.announcementText}
@@ -985,7 +985,7 @@ export const PublicStorePage = () => {
             {/* Cart button */}
             <button
               onClick={() => setIsCartOpen(true)}
-              className="relative flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl text-white text-sm font-bold transition-all duration-150 active:scale-95 hover:brightness-90"
+              className="relative flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl text-foreground text-sm font-bold transition-all duration-150 active:scale-95 hover:brightness-90"
               style={{ backgroundColor: brandColor }}
             >
               <ShoppingCart className="w-4 h-4" />
@@ -1011,7 +1011,7 @@ export const PublicStorePage = () => {
             style={{ backgroundImage: `url(${store.storeSettings.bannerUrl})` }}
           >
             <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-black/10 flex items-end pb-6 px-6">
-              <h2 className="text-white text-2xl sm:text-3xl font-black drop-shadow-lg">
+              <h2 className="text-foreground text-2xl sm:text-3xl font-black drop-shadow-lg">
                 {store.name}
               </h2>
             </div>
@@ -1127,7 +1127,7 @@ export const PublicStorePage = () => {
                     Filtros
                     {activeFiltersCount > 0 && (
                       <span
-                        className="w-4 h-4 rounded-full text-[9px] font-black text-white flex items-center justify-center"
+                        className="w-4 h-4 rounded-full text-[9px] font-black text-foreground flex items-center justify-center"
                         style={{ backgroundColor: brandColor }}
                       >
                         {activeFiltersCount}
@@ -1228,7 +1228,7 @@ export const PublicStorePage = () => {
             />
             <button
               onClick={() => setIsMobileFilterOpen(false)}
-              className="w-full mt-6 py-3.5 rounded-2xl text-white font-bold text-sm"
+              className="w-full mt-6 py-3.5 rounded-2xl text-foreground font-bold text-sm"
               style={{ backgroundColor: brandColor }}
             >
               Ver {products.length} resultado{products.length !== 1 ? 's' : ''}

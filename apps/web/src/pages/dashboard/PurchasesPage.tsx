@@ -33,7 +33,7 @@ interface PurchaseLineItem {
 // ─── Status Badge ─────────────────────────────────────────────────────────────
 
 const STATUS_CONFIG: Record<string, { label: string; className: string }> = {
-    COMPLETED: { label: 'Completada', className: 'bg-[rgba(0,212,255,0.06)] text-[#00D4FF] border border-[rgba(0,212,255,0.15)]' },
+    COMPLETED: { label: 'Completada', className: 'bg-muted/30 text-[#00D4FF] border border-border' },
     PENDING: { label: 'Pendiente', className: 'bg-[rgba(245,158,11,0.06)] text-[#F59E0B] border border-[rgba(245,158,11,0.15)]' },
     CANCELLED: { label: 'Cancelada', className: 'bg-[rgba(239,68,68,0.06)] text-[#EF4444] border border-[rgba(239,68,68,0.15)]' },
 };
@@ -169,21 +169,21 @@ export function PurchasesPage() {
                 {/* FORM PANEL                                                  */}
                 {/* ─────────────────────────────────────────────────────────── */}
                 {showForm && (
-                    <div className="bg-[rgba(15,22,36,0.5)] rounded-2xl shadow-sm border border-[rgba(0,212,255,0.08)] backdrop-blur-md overflow-hidden">
+                    <div className="bg-card/[0.5] rounded-2xl shadow-sm border border-border backdrop-blur-md overflow-hidden">
                         {/* Form Header */}
-                        <div className="px-6 py-4 bg-[rgba(0,212,255,0.03)] border-b border-[rgba(0,212,255,0.08)] flex items-center justify-between">
+                        <div className="px-6 py-4 bg-muted/30 border-b border-border flex items-center justify-between">
                             <div className="flex items-center gap-3">
-                                <div className="w-9 h-9 bg-[rgba(0,212,255,0.1)] border border-[rgba(0,212,255,0.2)] rounded-lg flex items-center justify-center">
+                                <div className="w-9 h-9 bg-muted/30 border border-border rounded-lg flex items-center justify-center">
                                     <PackagePlus className="w-5 h-5 text-[#00D4FF]" />
                                 </div>
                                 <div>
-                                    <h3 className="font-bold text-white">Nueva Compra</h3>
+                                    <h3 className="font-bold text-foreground">Nueva Compra</h3>
                                     <p className="text-xs text-gray-400 font-medium">El stock se actualizará automáticamente al guardar</p>
                                 </div>
                             </div>
                             <button
                                 onClick={handleCancel}
-                                className="text-gray-400 hover:text-white hover:bg-[rgba(255,255,255,0.05)] rounded-full p-1.5 transition-colors"
+                                className="text-gray-400 hover:text-foreground hover:bg-card rounded-full p-1.5 transition-colors"
                             >
                                 <X className="w-5 h-5" />
                             </button>
@@ -202,7 +202,7 @@ export function PurchasesPage() {
                                         required
                                         value={branchId}
                                         onChange={(e) => setBranchId(e.target.value)}
-                                        className="w-full px-4 py-2.5 bg-[rgba(15,22,36,0.8)] border border-[rgba(0,212,255,0.15)] text-white rounded-lg focus:border-[#00D4FF] focus:ring-1 focus:ring-[#00D4FF] outline-none text-sm"
+                                        className="w-full px-4 py-2.5 bg-card/[0.8] border border-border text-foreground rounded-lg focus:border-[#00D4FF] focus:ring-1 focus:ring-[#00D4FF] outline-none text-sm"
                                     >
                                         <option value="" className="bg-[hsl(220,30%,8%)] text-gray-400">— Seleccionar sucursal —</option>
                                         {branches.map((b) => (
@@ -222,7 +222,7 @@ export function PurchasesPage() {
                                     <select
                                         value={supplierId}
                                         onChange={(e) => setSupplierId(e.target.value)}
-                                        className="w-full px-4 py-2.5 bg-[rgba(15,22,36,0.8)] border border-[rgba(0,212,255,0.15)] text-white rounded-lg focus:border-[#00D4FF] focus:ring-1 focus:ring-[#00D4FF] outline-none text-sm"
+                                        className="w-full px-4 py-2.5 bg-card/[0.8] border border-border text-foreground rounded-lg focus:border-[#00D4FF] focus:ring-1 focus:ring-[#00D4FF] outline-none text-sm"
                                     >
                                         <option value="" className="bg-[hsl(220,30%,8%)] text-gray-400">— Sin proveedor —</option>
                                         {(suppliers ?? []).map((s) => (
@@ -246,22 +246,22 @@ export function PurchasesPage() {
                                         value={productSearch}
                                         onChange={(e) => setProductSearch(e.target.value)}
                                         placeholder="Buscar por nombre o SKU..."
-                                        className="w-full px-4 py-2.5 pl-10 bg-[rgba(15,22,36,0.8)] border border-[rgba(0,212,255,0.15)] text-white placeholder-slate-500 rounded-lg focus:border-[#00D4FF] focus:ring-1 focus:ring-[#00D4FF] outline-none text-sm"
+                                        className="w-full px-4 py-2.5 pl-10 bg-card/[0.8] border border-border text-foreground placeholder-slate-500 rounded-lg focus:border-[#00D4FF] focus:ring-1 focus:ring-[#00D4FF] outline-none text-sm"
                                     />
                                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none" />
 
                                     {/* Product dropdown */}
                                     {filteredProducts.length > 0 && (
-                                        <div className="absolute top-full left-0 right-0 mt-1 bg-[hsl(220,30%,8%)] border border-[rgba(0,212,255,0.15)] rounded-xl shadow-xl z-20 overflow-hidden">
+                                        <div className="absolute top-full left-0 right-0 mt-1 bg-[hsl(220,30%,8%)] border border-border rounded-xl shadow-xl z-20 overflow-hidden">
                                             {filteredProducts.map((product) => (
                                                 <button
                                                     key={product.id}
                                                     type="button"
                                                     onClick={() => addProduct(product)}
-                                                    className="w-full px-4 py-3 text-left hover:bg-[rgba(0,212,255,0.04)] border-b border-[rgba(0,212,255,0.05)] last:border-b-0 transition-colors flex items-center justify-between group"
+                                                    className="w-full px-4 py-3 text-left hover:bg-muted/30 border-b border-border last:border-b-0 transition-colors flex items-center justify-between group"
                                                 >
                                                     <div>
-                                                        <p className="text-sm font-medium text-white">{product.name}</p>
+                                                        <p className="text-sm font-medium text-foreground">{product.name}</p>
                                                         {product.sku && (
                                                             <p className="text-xs text-gray-400">SKU: {product.sku}</p>
                                                         )}
@@ -277,7 +277,7 @@ export function PurchasesPage() {
                                         </div>
                                     )}
                                     {productSearch && filteredProducts.length === 0 && (
-                                        <div className="absolute top-full left-0 right-0 mt-1 bg-[hsl(220,30%,8%)] border border-[rgba(0,212,255,0.15)] rounded-xl shadow-xl z-20 p-4 text-center text-sm text-gray-400">
+                                        <div className="absolute top-full left-0 right-0 mt-1 bg-[hsl(220,30%,8%)] border border-border rounded-xl shadow-xl z-20 p-4 text-center text-sm text-gray-400">
                                             No se encontraron productos activos.
                                         </div>
                                     )}
@@ -290,10 +290,10 @@ export function PurchasesPage() {
                                     <label className="block text-sm font-semibold text-gray-400 mb-2">
                                         Items de la Compra ({lineItems.length})
                                     </label>
-                                    <div className="border border-[rgba(0,212,255,0.08)] rounded-xl overflow-hidden bg-[rgba(15,22,36,0.3)]">
+                                    <div className="border border-border rounded-xl overflow-hidden bg-card/[0.3]">
                                         <table className="w-full">
                                             <thead>
-                                                <tr className="bg-[rgba(0,212,255,0.02)] border-b border-[rgba(0,212,255,0.08)]">
+                                                <tr className="bg-muted/30 border-b border-border">
                                                     <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase">
                                                         Producto
                                                     </th>
@@ -309,11 +309,11 @@ export function PurchasesPage() {
                                                     <th className="px-4 py-3 w-10"></th>
                                                 </tr>
                                             </thead>
-                                            <tbody className="divide-y divide-[rgba(0,212,255,0.05)]">
+                                            <tbody className="divide-y divide-border">
                                                 {lineItems.map((item) => (
-                                                    <tr key={item.product.id} className="hover:bg-[rgba(0,212,255,0.02)] transition-colors">
+                                                    <tr key={item.product.id} className="hover:bg-muted/30 transition-colors">
                                                         <td className="px-4 py-3">
-                                                            <p className="text-sm font-medium text-white">
+                                                            <p className="text-sm font-medium text-foreground">
                                                                 {item.product.name}
                                                             </p>
                                                             {item.product.sku && (
@@ -335,7 +335,7 @@ export function PurchasesPage() {
                                                                         e.target.value === '' ? '' : parseFloat(e.target.value)
                                                                     )
                                                                 }
-                                                                className="w-full text-center px-2 py-1.5 bg-[rgba(15,22,36,0.6)] border border-[rgba(0,212,255,0.15)] text-white rounded-lg focus:border-[#00D4FF] focus:ring-1 focus:ring-[#00D4FF] outline-none text-sm font-mono"
+                                                                className="w-full text-center px-2 py-1.5 bg-card/[0.6] border border-border text-foreground rounded-lg focus:border-[#00D4FF] focus:ring-1 focus:ring-[#00D4FF] outline-none text-sm font-mono"
                                                             />
                                                         </td>
                                                         <td className="px-4 py-3">
@@ -353,11 +353,11 @@ export function PurchasesPage() {
                                                                             e.target.value === '' ? '' : parseFloat(e.target.value)
                                                                         )
                                                                     }
-                                                                    className="w-full pl-6 pr-2 py-1.5 bg-[rgba(15,22,36,0.6)] border border-[rgba(0,212,255,0.15)] text-white rounded-lg focus:border-[#00D4FF] focus:ring-1 focus:ring-[#00D4FF] outline-none text-sm font-mono"
+                                                                    className="w-full pl-6 pr-2 py-1.5 bg-card/[0.6] border border-border text-foreground rounded-lg focus:border-[#00D4FF] focus:ring-1 focus:ring-[#00D4FF] outline-none text-sm font-mono"
                                                                 />
                                                             </div>
                                                         </td>
-                                                        <td className="px-4 py-3 text-right text-sm font-bold text-white font-mono">
+                                                        <td className="px-4 py-3 text-right text-sm font-bold text-foreground font-mono">
                                                             {formatPrice((Number(item.quantity) || 0) * (Number(item.costPrice) || 0))}
                                                         </td>
                                                         <td className="px-4 py-3 text-center">
@@ -379,7 +379,7 @@ export function PurchasesPage() {
 
                             {/* ── Empty items state ── */}
                             {lineItems.length === 0 && (
-                                <div className="border-2 border-dashed border-[rgba(0,212,255,0.1)] bg-[rgba(0,212,255,0.01)] rounded-xl p-8 text-center">
+                                <div className="border-2 border-dashed border-border bg-muted/30 rounded-xl p-8 text-center">
                                     <ShoppingCart className="w-10 h-10 text-gray-500 mx-auto mb-2" />
                                     <p className="text-sm text-gray-400">
                                         Usa el buscador de arriba para agregar productos a la compra.
@@ -397,14 +397,14 @@ export function PurchasesPage() {
                                     onChange={(e) => setNotes(e.target.value)}
                                     placeholder="Ej: Factura N° 3245, entrega parcial..."
                                     rows={2}
-                                    className="w-full px-4 py-2.5 bg-[rgba(15,22,36,0.8)] border border-[rgba(0,212,255,0.15)] text-white placeholder-slate-500 rounded-lg focus:border-[#00D4FF] focus:ring-1 focus:ring-[#00D4FF] outline-none text-sm resize-none"
+                                    className="w-full px-4 py-2.5 bg-card/[0.8] border border-border text-foreground placeholder-slate-500 rounded-lg focus:border-[#00D4FF] focus:ring-1 focus:ring-[#00D4FF] outline-none text-sm resize-none"
                                 />
                             </div>
 
                             {/* ── Summary + Actions ── */}
-                            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-[rgba(0,212,255,0.08)]">
+                            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-border">
                                 {/* Total */}
-                                <div className="flex items-center gap-3 bg-[rgba(0,212,255,0.04)] border border-[rgba(0,212,255,0.15)] rounded-xl px-5 py-3 w-full sm:w-auto">
+                                <div className="flex items-center gap-3 bg-muted/30 border border-border rounded-xl px-5 py-3 w-full sm:w-auto">
                                     <div>
                                         <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">
                                             Total Compra
@@ -425,7 +425,7 @@ export function PurchasesPage() {
                                     <button
                                         type="button"
                                         onClick={handleCancel}
-                                        className="flex-1 sm:flex-none px-4 py-2.5 text-gray-400 hover:bg-[rgba(255,255,255,0.05)] hover:text-white rounded-lg font-medium transition-colors text-sm"
+                                        className="flex-1 sm:flex-none px-4 py-2.5 text-gray-400 hover:bg-card hover:text-foreground rounded-lg font-medium transition-colors text-sm"
                                     >
                                         Cancelar
                                     </button>
@@ -461,9 +461,9 @@ export function PurchasesPage() {
                             Historial de Compras
                         </h3>
                     )}
-                    <div className="bg-[rgba(15,22,36,0.5)] border border-[rgba(0,212,255,0.08)] backdrop-blur-md rounded-xl overflow-hidden">
-                        <table className="min-w-full divide-y divide-[rgba(0,212,255,0.05)]">
-                            <thead className="bg-[rgba(0,212,255,0.02)]">
+                    <div className="bg-card/[0.5] border border-border backdrop-blur-md rounded-xl overflow-hidden">
+                        <table className="min-w-full divide-y divide-border">
+                            <thead className="bg-muted/30">
                                 <tr>
                                     <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
                                         <span className="flex items-center gap-1.5">
@@ -488,7 +488,7 @@ export function PurchasesPage() {
                                     </th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-[rgba(0,212,255,0.05)]">
+                            <tbody className="divide-y divide-border">
                                 {loadingPurchases ? (
                                     <tr>
                                         <td colSpan={6} className="px-6 py-16 text-center">
@@ -513,7 +513,7 @@ export function PurchasesPage() {
                                     </tr>
                                 ) : (
                                     purchases.map((purchase: Purchase) => (
-                                        <tr key={purchase.id} className="hover:bg-[rgba(0,212,255,0.02)] transition-colors border-b border-[rgba(0,212,255,0.05)]">
+                                        <tr key={purchase.id} className="hover:bg-muted/30 transition-colors border-b border-border">
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
                                                 {new Date(purchase.date).toLocaleDateString('es-CL', {
                                                     day: '2-digit',
@@ -533,11 +533,11 @@ export function PurchasesPage() {
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400">
-                                                <span className="bg-[rgba(0,212,255,0.04)] text-[#00D4FF] border border-[rgba(0,212,255,0.15)] px-2 py-0.5 rounded-full text-xs font-semibold font-mono">
+                                                <span className="bg-muted/30 text-[#00D4FF] border border-border px-2 py-0.5 rounded-full text-xs font-semibold font-mono">
                                                     {purchase._count?.items ?? '—'} items
                                                 </span>
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-bold text-white font-mono">
+                                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-bold text-foreground font-mono">
                                                 {formatPrice(purchase.totalAmount)}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-center">

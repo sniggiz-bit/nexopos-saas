@@ -71,7 +71,7 @@ export function CreditsPage() {
         <DashboardLayout>
             <div className="space-y-6">
                 <div className="flex items-center justify-between">
-                    <h1 className="text-2xl font-bold text-white">Créditos y Deudas</h1>
+                    <h1 className="text-2xl font-bold text-foreground">Créditos y Deudas</h1>
                 </div>
 
                 {/* Summary Card */}
@@ -102,13 +102,13 @@ export function CreditsPage() {
                         placeholder="Buscar por cliente o RUT..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full pl-10 pr-4 py-2 bg-[rgba(15,22,36,0.8)] border border-[rgba(0,212,255,0.15)] text-white placeholder-slate-500 rounded-lg focus:border-[#00D4FF] focus:ring-1 focus:ring-[#00D4FF] outline-none transition-all text-sm"
+                        className="w-full pl-10 pr-4 py-2 bg-card/[0.8] border border-border text-foreground placeholder-slate-500 rounded-lg focus:border-[#00D4FF] focus:ring-1 focus:ring-[#00D4FF] outline-none transition-all text-sm"
                     />
                 </div>
 
-                <div className="bg-[rgba(15,22,36,0.5)] border border-[rgba(0,212,255,0.08)] backdrop-blur-md rounded-xl overflow-hidden">
-                    <table className="min-w-full divide-y divide-[rgba(0,212,255,0.05)]">
-                        <thead className="bg-[rgba(0,212,255,0.02)]">
+                <div className="bg-card/[0.5] border border-border backdrop-blur-md rounded-xl overflow-hidden">
+                    <table className="min-w-full divide-y divide-border">
+                        <thead className="bg-muted/30">
                             <tr>
                                 <th className="px-6 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Cliente</th>
                                 <th className="px-6 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Monto Total</th>
@@ -117,16 +117,16 @@ export function CreditsPage() {
                                 <th className="px-6 py-3 text-right text-xs font-semibold text-gray-400 uppercase tracking-wider">Acciones</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-[rgba(0,212,255,0.05)]">
+                        <tbody className="divide-y divide-border">
                             {isLoading ? (
                                 <tr><td colSpan={5} className="px-6 py-4 text-center text-gray-400">Cargando créditos...</td></tr>
                             ) : !filteredCredits || filteredCredits.length === 0 ? (
                                 <tr><td colSpan={5} className="px-6 py-4 text-center text-gray-400">No se encontraron registros</td></tr>
                             ) : (
                                 filteredCredits.map((credit) => (
-                                    <tr key={credit.id} className="hover:bg-[rgba(0,212,255,0.02)] border-b border-[rgba(0,212,255,0.05)] transition-colors">
+                                    <tr key={credit.id} className="hover:bg-muted/30 border-b border-border transition-colors">
                                         <td className="px-6 py-4 whitespace-nowrap text-sm">
-                                            <div className="font-semibold text-white">{credit.customer?.name}</div>
+                                            <div className="font-semibold text-foreground">{credit.customer?.name}</div>
                                             <div className="text-xs text-gray-500 font-mono">{credit.customer?.rut}</div>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300 font-mono">{formatPrice(credit.totalAmount)}</td>
@@ -158,14 +158,14 @@ export function CreditsPage() {
 
             {/* Payment Modal */}
             <Dialog open={!!selectedCredit} onOpenChange={(open) => !open && setSelectedCredit(null)}>
-                <DialogContent className="bg-[rgba(15,22,36,0.95)] border border-[rgba(0,212,255,0.15)] text-white backdrop-blur-md">
+                <DialogContent className="bg-card/[0.95] border border-border text-foreground backdrop-blur-md">
                     <DialogHeader>
-                        <DialogTitle className="text-white font-bold">Registrar Abono</DialogTitle>
+                        <DialogTitle className="text-foreground font-bold">Registrar Abono</DialogTitle>
                     </DialogHeader>
                     <form onSubmit={handlePaymentSubmit} className="space-y-4">
                         <div>
                             <p className="text-sm text-gray-400 mb-2">
-                                Cliente: <span className="font-semibold text-white">{selectedCredit?.customer?.name}</span>
+                                Cliente: <span className="font-semibold text-foreground">{selectedCredit?.customer?.name}</span>
                             </p>
                             <p className="text-sm text-gray-400 mb-4">
                                 Saldo Pendiente: <span className="font-bold text-red-400 font-mono">{selectedCredit && formatPrice(selectedCredit.balance)}</span>
@@ -177,7 +177,7 @@ export function CreditsPage() {
                                 type="number"
                                 value={paymentAmount}
                                 onChange={(e) => setPaymentAmount(e.target.value)}
-                                className="w-full px-4 py-2 bg-[rgba(15,22,36,0.8)] border border-[rgba(0,212,255,0.15)] text-white placeholder-slate-500 rounded-lg focus:border-[#00D4FF] focus:ring-1 focus:ring-[#00D4FF] outline-none font-mono"
+                                className="w-full px-4 py-2 bg-card/[0.8] border border-border text-foreground placeholder-slate-500 rounded-lg focus:border-[#00D4FF] focus:ring-1 focus:ring-[#00D4FF] outline-none font-mono"
                                 max={selectedCredit?.balance}
                                 min="1"
                                 required
@@ -188,7 +188,7 @@ export function CreditsPage() {
                             <select
                                 value={paymentMethod}
                                 onChange={(e) => setPaymentMethod(e.target.value)}
-                                className="w-full px-4 py-2 bg-[rgba(15,22,36,0.8)] border border-[rgba(0,212,255,0.15)] text-white rounded-lg focus:border-[#00D4FF] focus:ring-1 focus:ring-[#00D4FF] outline-none"
+                                className="w-full px-4 py-2 bg-card/[0.8] border border-border text-foreground rounded-lg focus:border-[#00D4FF] focus:ring-1 focus:ring-[#00D4FF] outline-none"
                             >
                                 <option value="CASH" className="bg-[hsl(220,30%,8%)] text-white">Efectivo</option>
                                 <option value="CARD" className="bg-[hsl(220,30%,8%)] text-white">Tarjeta</option>
@@ -196,7 +196,7 @@ export function CreditsPage() {
                             </select>
                         </div>
                         <DialogFooter>
-                            <Button type="button" variant="outline" onClick={() => setSelectedCredit(null)} className="border-[rgba(0,212,255,0.15)] text-gray-400 hover:bg-[rgba(255,255,255,0.05)] hover:text-white">Cancelar</Button>
+                            <Button type="button" variant="outline" onClick={() => setSelectedCredit(null)} className="border-border text-gray-400 hover:bg-card hover:text-foreground">Cancelar</Button>
                             <Button type="submit" disabled={addPayment.isPending} className="bg-[#00D4FF] hover:bg-[#00BCE0] text-[#0B0F1A] hover:shadow-[0_0_15px_rgba(0,212,255,0.3)] font-semibold transition-all">
                                 {addPayment.isPending ? 'Procesando...' : 'Confirmar Abono'}
                             </Button>

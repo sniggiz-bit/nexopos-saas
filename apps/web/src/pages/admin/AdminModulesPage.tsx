@@ -36,10 +36,10 @@ export default function AdminModulesPage() {
     }
   };
 
-  if (loading) return <div className="p-8 flex justify-center"><Loader2 className="animate-spin text-white" /></div>;
+  if (loading) return <div className="p-8 flex justify-center"><Loader2 className="animate-spin text-foreground" /></div>;
 
   return (
-    <div className="p-6 md:p-10 max-w-7xl mx-auto text-white">
+    <div className="p-6 md:p-10 max-w-7xl mx-auto text-foreground">
       <h1 className="text-3xl font-bold mb-8">Administración de Módulos (SaaS)</h1>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {modules.map(mod => (

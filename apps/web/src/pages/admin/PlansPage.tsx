@@ -106,7 +106,7 @@ const NumInput = ({ label, desc, value, onChange, min = 1 }: {
     <div className="flex items-center gap-2">
       <button type="button" onClick={() => onChange(Math.max(min, value - 1))}
         className="w-7 h-7 rounded-lg bg-neutral-700 hover:bg-neutral-600 text-white flex items-center justify-center text-sm font-bold transition-colors">−</button>
-      <span className="w-10 text-center text-sm font-bold text-white tabular-nums">{value}</span>
+      <span className="w-10 text-center text-sm font-bold text-foreground tabular-nums">{value}</span>
       <button type="button" onClick={() => onChange(value + 1)}
         className="w-7 h-7 rounded-lg bg-neutral-700 hover:bg-neutral-600 text-white flex items-center justify-center text-sm font-bold transition-colors">+</button>
     </div>
@@ -130,7 +130,7 @@ const PlanCard = ({ plan, onEdit, onDelete }: { plan: Plan; onEdit: () => void; 
 
       <div className="flex items-start gap-4">
         <div className="flex-1 min-w-0">
-          <h3 className="text-base font-bold text-white mb-1">{plan.name}</h3>
+          <h3 className="text-base font-bold text-foreground mb-1">{plan.name}</h3>
           {plan.description && (
             <p className="text-xs text-neutral-400 mb-3 line-clamp-1">{plan.description}</p>
           )}
@@ -247,7 +247,7 @@ function PlanDrawer({ plan, modules, onClose, onSaved }: { plan: Partial<Plan>; 
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-neutral-800">
           <div>
-            <h2 className="text-lg font-bold text-white">
+            <h2 className="text-lg font-bold text-foreground">
               {isEdit ? (form.name || 'Editar Plan') : 'Nuevo Plan'}
             </h2>
             <p className="text-xs text-neutral-500 mt-0.5">
@@ -294,7 +294,7 @@ function PlanDrawer({ plan, modules, onClose, onSaved }: { plan: Partial<Plan>; 
                 </div>
                 <div className="bg-neutral-800 border border-neutral-700 rounded-xl p-4 flex items-center justify-between gap-4">
                   <div>
-                    <p className="text-sm font-semibold text-white">Plan destacado</p>
+                    <p className="text-sm font-semibold text-foreground">Plan destacado</p>
                     <p className="text-xs text-neutral-400 mt-0.5">Se muestra como "Más popular" en la landing</p>
                   </div>
                   <Toggle checked={form.isRecommended ?? false} onChange={v => set({ isRecommended: v })} />
@@ -336,7 +336,7 @@ function PlanDrawer({ plan, modules, onClose, onSaved }: { plan: Partial<Plan>; 
               <div className="space-y-5">
                 {/* Límite de usuarios */}
                 <div className="bg-neutral-800 border border-neutral-700 rounded-xl p-5">
-                  <p className="text-sm font-bold text-white mb-1">Límite de usuarios</p>
+                  <p className="text-sm font-bold text-foreground mb-1">Límite de usuarios</p>
                   <p className="text-xs text-neutral-500 mb-3">Máximo de usuarios incluidos en el plan</p>
                   <NumInput
                     label="Usuarios"
@@ -349,7 +349,7 @@ function PlanDrawer({ plan, modules, onClose, onSaved }: { plan: Partial<Plan>; 
 
                 {/* Módulos Core */}
                 <div className="bg-neutral-800 border border-neutral-700 rounded-xl p-5">
-                  <p className="text-sm font-bold text-white mb-0.5">Operación Base (Core)</p>
+                  <p className="text-sm font-bold text-foreground mb-0.5">Operación Base (Core)</p>
                   <p className="text-xs text-neutral-500 mb-4">Funciones esenciales de administración y venta</p>
                   {modules.filter(m => ['POS', 'QUOTES', 'CUSTOMERS', 'EXTRA_BRANCH', 'CREDITS'].includes(m.code)).map(m => {
                     const iconMap: Record<string, any> = { POS: [ShoppingCart, 'text-blue-400'], QUOTES: [FileText, 'text-sky-400'], CUSTOMERS: [Users, 'text-indigo-400'], EXTRA_BRANCH: [Building, 'text-violet-400'], CREDITS: [CreditCard, 'text-cyan-400'] };
@@ -363,7 +363,7 @@ function PlanDrawer({ plan, modules, onClose, onSaved }: { plan: Partial<Plan>; 
 
                 {/* Integraciones */}
                 <div className="bg-neutral-800 border border-neutral-700 rounded-xl p-5">
-                  <p className="text-sm font-bold text-white mb-0.5">E-commerce e Integraciones</p>
+                  <p className="text-sm font-bold text-foreground mb-0.5">E-commerce e Integraciones</p>
                   <p className="text-xs text-neutral-500 mb-4">Canales de venta digitales y pagos</p>
                   {modules.filter(m => ['ECOMMERCE', 'SHOPIFY', 'WOOCOMMERCE', 'TRANSBANK'].includes(m.code)).map(m => {
                     const iconMap: Record<string, any> = { ECOMMERCE: [ShoppingBag, 'text-amber-400'], SHOPIFY: [ShoppingBag, 'text-orange-400'], WOOCOMMERCE: [ShoppingBag, 'text-yellow-400'], TRANSBANK: [Wifi, 'text-rose-400'] };
@@ -377,7 +377,7 @@ function PlanDrawer({ plan, modules, onClose, onSaved }: { plan: Partial<Plan>; 
 
                 {/* DTE */}
                 <div className="bg-neutral-800 border border-neutral-700 rounded-xl p-5">
-                  <p className="text-sm font-bold text-white mb-0.5">Documentos Tributarios (DTE)</p>
+                  <p className="text-sm font-bold text-foreground mb-0.5">Documentos Tributarios (DTE)</p>
                   <p className="text-xs text-neutral-500 mb-4">Módulos SII Chile habilitados en el plan</p>
                   {modules.filter(m => ['DTE_BOLETA', 'DTE_FACTURA', 'DTE_NOTA_CREDITO', 'DTE_GUIA_DESPACHO'].includes(m.code)).map(m => {
                     const iconMap: Record<string, any> = { DTE_BOLETA: [Receipt, 'text-emerald-400'], DTE_FACTURA: [FileText, 'text-green-400'], DTE_NOTA_CREDITO: [FileMinus, 'text-teal-400'], DTE_GUIA_DESPACHO: [Truck, 'text-lime-400'] };
@@ -505,7 +505,7 @@ export default function PlansPage() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-white">Planes y Precios</h1>
+            <h1 className="text-2xl font-bold text-foreground">Planes y Precios</h1>
             <p className="text-sm text-neutral-400 mt-0.5">
               {plans.length} plan{plans.length !== 1 ? 'es' : ''} configurado{plans.length !== 1 ? 's' : ''}
             </p>

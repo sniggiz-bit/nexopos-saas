@@ -144,7 +144,7 @@ export function RegisterPage() {
                     </div>
 
                     <div className="space-y-4">
-                        <h1 className="text-4xl xl:text-5xl font-black text-white leading-tight tracking-tight">
+                        <h1 className="text-4xl xl:text-5xl font-black text-foreground leading-tight tracking-tight">
                             Únete al futuro de la{' '}
                             <span className="bg-gradient-to-r from-purple-400 via-indigo-400 to-cyan-400 bg-clip-text text-transparent">
                                 gestión inteligente
@@ -324,7 +324,7 @@ export function RegisterPage() {
 function LoaderIcon() {
     return (
         <svg
-            className="animate-spin h-4 w-4 text-white"
+            className="animate-spin h-4 w-4 text-foreground"
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
             viewBox="0 0 24 24"

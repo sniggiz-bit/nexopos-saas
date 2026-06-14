@@ -94,7 +94,7 @@ export function QuotePrintPage() {
                             {/* Left: business info + logo */}
                             <div className="flex items-start gap-4">
                                 <div className="w-16 h-16 bg-indigo-600 rounded-xl flex items-center justify-center shrink-0 print:bg-indigo-600">
-                                    <span className="text-2xl font-black text-white">{tenantInitial}</span>
+                                    <span className="text-2xl font-black text-foreground">{tenantInitial}</span>
                                 </div>
                                 <div>
                                     <p className="text-lg font-bold text-gray-900 leading-tight">{tenant?.name || ''}</p>

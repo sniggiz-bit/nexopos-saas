@@ -84,7 +84,7 @@ export default function AnnouncementsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white">Comunicados</h1>
+          <h1 className="text-2xl font-bold text-foreground">Comunicados</h1>
           <p className="text-neutral-500 text-sm mt-0.5">
             {loading ? 'Cargando...' : `${announcements.length} comunicado${announcements.length !== 1 ? 's' : ''}`}
           </p>
@@ -129,7 +129,7 @@ export default function AnnouncementsPage() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                      <h3 className="text-sm font-bold text-white">{ann.title}</h3>
+                      <h3 className="text-sm font-bold text-foreground">{ann.title}</h3>
                       <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border
                         ${ann.isActive ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-neutral-700 text-neutral-500 border-neutral-600'}`}>
                         <CheckCircle2 size={9} />
@@ -172,7 +172,7 @@ export default function AnnouncementsPage() {
           <div className="fixed right-0 top-0 h-full w-full max-w-md bg-neutral-900 border-l border-neutral-800 z-50 flex flex-col shadow-2xl">
             <div className="flex items-center justify-between px-6 py-5 border-b border-neutral-800">
               <div>
-                <h2 className="text-lg font-bold text-white">Nuevo Comunicado</h2>
+                <h2 className="text-lg font-bold text-foreground">Nuevo Comunicado</h2>
                 <p className="text-xs text-neutral-500 mt-0.5">Se mostrará a todos los clientes activos</p>
               </div>
               <button onClick={() => setIsModalOpen(false)} className="p-2 rounded-lg hover:bg-neutral-800 text-neutral-400 hover:text-white transition-colors">

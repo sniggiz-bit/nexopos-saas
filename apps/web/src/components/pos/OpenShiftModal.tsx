@@ -156,7 +156,7 @@ export function OpenShiftModal({ isOpen }: OpenShiftModalProps) {
                     </div>
                     <DialogHeader className="relative z-10">
                         <div className="bg-white/20 w-11 h-11 rounded-xl flex items-center justify-center mb-3 backdrop-blur-md">
-                            <Store className="text-white" size={22} />
+                            <Store className="text-foreground" size={22} />
                         </div>
                         <DialogTitle className="text-2xl font-bold tracking-tight">Apertura de Caja</DialogTitle>
                         <p className="text-indigo-100 text-sm mt-1">

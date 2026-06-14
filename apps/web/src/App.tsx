@@ -82,7 +82,7 @@ function RoleBasedRedirect() {
 
 function LoadingScreen() {
   return (
-    <div className="min-h-screen flex items-center justify-center" style={{ background: 'hsl(220,30%,6%)' }}>
+    <div className="min-h-screen flex items-center justify-center" style={{ background: 'hsl(var(--background))' }}>
       <div className="text-center">
         <div className="relative w-14 h-14 mx-auto mb-5">
           <div className="absolute inset-0 rounded-full" style={{ border: '2px solid rgba(0,212,255,0.1)' }} />
@@ -178,18 +178,18 @@ function App() {
             position="bottom-right"
             toastOptions={{
               style: {
-                background: 'hsl(220,25%,9%)',
-                color: 'rgba(210,225,245,0.9)',
-                border: '1px solid rgba(0,212,255,0.15)',
+                background: 'hsl(var(--card))',
+                color: 'hsl(var(--foreground))',
+                border: '1px solid hsl(var(--border))',
                 borderRadius: '12px',
                 fontSize: '13px',
                 fontFamily: 'Inter, system-ui, sans-serif',
               },
               success: {
-                iconTheme: { primary: '#34D399', secondary: 'hsl(220,25%,9%)' },
+                iconTheme: { primary: '#34D399', secondary: 'hsl(var(--card))' },
               },
               error: {
-                iconTheme: { primary: '#F87171', secondary: 'hsl(220,25%,9%)' },
+                iconTheme: { primary: '#F87171', secondary: 'hsl(var(--card))' },
               },
             }}
           />

@@ -24,10 +24,10 @@ const C = {
     redA:    (a: number) => `rgba(248,113,113,${a})`,
     violet:  '#A78BFA',
     violetA: (a: number) => `rgba(167,139,250,${a})`,
-    card:    'rgba(255,255,255,0.025)',
-    border:  'rgba(0,212,255,0.1)',
-    text:    'rgba(210,225,245,0.9)',
-    muted:   'rgba(180,195,220,0.45)',
+    card: 'hsl(var(--card))',
+    border: 'hsl(var(--border))',
+    text: 'hsl(var(--foreground))',
+    muted: 'hsl(var(--muted-foreground))',
 };
 
 interface Filters {
@@ -88,15 +88,15 @@ function SummaryCard({ label, value, sub, icon, accent: _accent, accentAlpha }: 
 
 // ── Input / Select shared styles ───────────────────────────────────────────────
 const inputStyle: React.CSSProperties = {
-    background:  'rgba(0,212,255,0.04)',
-    border:      '1px solid rgba(0,212,255,0.12)',
+    background: 'hsl(var(--background))',
+    border: '1px solid hsl(var(--border))',
     borderRadius: '10px',
     padding:     '7px 12px',
     fontSize:    '13px',
-    color:       'rgba(210,225,245,0.85)',
+    color: 'hsl(var(--foreground))',
     outline:     'none',
     width:       '100%',
-    colorScheme: 'dark',
+    colorScheme: 'normal',
 };
 
 // ── Page ───────────────────────────────────────────────────────────────────────

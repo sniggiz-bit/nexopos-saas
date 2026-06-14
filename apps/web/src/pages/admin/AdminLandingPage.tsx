@@ -408,7 +408,7 @@ export default function AdminLandingPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+          <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
             <Globe size={22} className="text-purple-400" />Landing Page
           </h1>
           <p className="text-neutral-500 text-sm mt-0.5">Edita el contenido de la página pública de NexoPOS</p>
@@ -473,7 +473,7 @@ export default function AdminLandingPage() {
       {activeTab === 'hero' && (
         <div className="space-y-4">
           <div className="bg-neutral-800 border border-neutral-700 rounded-xl p-5 space-y-4">
-            <p className="text-sm font-bold text-white">Encabezado principal</p>
+            <p className="text-sm font-bold text-foreground">Encabezado principal</p>
             <Field label="Badge / Chip" value={cfg.hero.badge} onChange={v => set('hero', { badge: v })} placeholder="Ej. Plataforma B2B para PYMES" />
             <Field label="Título" value={cfg.hero.title} onChange={v => set('hero', { title: v })} placeholder="Ej. Mucho más que un POS" />
             <Field label="Título destacado (en color)" value={cfg.hero.titleHighlight} onChange={v => set('hero', { titleHighlight: v })} placeholder="Ej. Integral para tu Empresa" />
@@ -494,14 +494,14 @@ export default function AdminLandingPage() {
       {activeTab === 'pain' && (
         <div className="space-y-4">
           <div className="bg-neutral-800 border border-neutral-700 rounded-xl p-5 space-y-4">
-            <p className="text-sm font-bold text-white">Sección de Puntos de Dolor (El Dolor)</p>
+            <p className="text-sm font-bold text-foreground">Sección de Puntos de Dolor (El Dolor)</p>
             <Field label="Subtítulo de sección" value={cfg.pain?.subtitle || ''} onChange={v => set('pain', { subtitle: v })} />
             <Field label="Título de sección" value={cfg.pain?.title || ''} onChange={v => set('pain', { title: v })} />
           </div>
 
           <div className="bg-neutral-800 border border-neutral-700 rounded-xl p-5">
             <div className="flex items-center justify-between mb-4">
-              <p className="text-sm font-bold text-white">Dolores / Fricciones ({(cfg.pain?.items || []).length})</p>
+              <p className="text-sm font-bold text-foreground">Dolores / Fricciones ({(cfg.pain?.items || []).length})</p>
               <button
                 onClick={addPainItem}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-700 text-white text-xs font-medium transition-colors"
@@ -534,7 +534,7 @@ export default function AdminLandingPage() {
       {/* Tab: Solution */}
       {activeTab === 'solution' && (
         <div className="bg-neutral-800 border border-neutral-700 rounded-xl p-5 space-y-4">
-          <p className="text-sm font-bold text-white">Sección de Solución (NexoPOS al rescate)</p>
+          <p className="text-sm font-bold text-foreground">Sección de Solución (NexoPOS al rescate)</p>
           <Field label="Subtítulo de sección" value={cfg.solution?.subtitle || ''} onChange={v => set('solution', { subtitle: v })} />
           <Field label="Título de sección" value={cfg.solution?.title || ''} onChange={v => set('solution', { title: v })} />
           <Field label="Descripción principal" value={cfg.solution?.description || ''} onChange={v => set('solution', { description: v })} multiline />
@@ -548,14 +548,14 @@ export default function AdminLandingPage() {
       {activeTab === 'features' && (
         <div className="space-y-4">
           <div className="bg-neutral-800 border border-neutral-700 rounded-xl p-5 space-y-4">
-            <p className="text-sm font-bold text-white">Encabezado de la sección</p>
+            <p className="text-sm font-bold text-foreground">Encabezado de la sección</p>
             <Field label="Título de sección" value={cfg.features.sectionTitle} onChange={v => set('features', { sectionTitle: v })} />
             <Field label="Subtítulo de sección" value={cfg.features.sectionSubtitle} onChange={v => set('features', { sectionSubtitle: v })} multiline />
           </div>
 
           <div className="bg-neutral-800 border border-neutral-700 rounded-xl p-5">
             <div className="flex items-center justify-between mb-4">
-              <p className="text-sm font-bold text-white">Características ({(cfg.features?.items || []).length})</p>
+              <p className="text-sm font-bold text-foreground">Características ({(cfg.features?.items || []).length})</p>
               <button
                 onClick={addFeatureItem}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-700 text-white text-xs font-medium transition-colors"
@@ -589,14 +589,14 @@ export default function AdminLandingPage() {
       {activeTab === 'useCases' && (
         <div className="space-y-4">
           <div className="bg-neutral-800 border border-neutral-700 rounded-xl p-5 space-y-4">
-            <p className="text-sm font-bold text-white">Sección de Casos de Uso (Sectores)</p>
+            <p className="text-sm font-bold text-foreground">Sección de Casos de Uso (Sectores)</p>
             <Field label="Subtítulo de sección" value={cfg.useCases?.subtitle || ''} onChange={v => set('useCases', { subtitle: v })} />
             <Field label="Título de sección" value={cfg.useCases?.title || ''} onChange={v => set('useCases', { title: v })} />
           </div>
 
           <div className="bg-neutral-800 border border-neutral-700 rounded-xl p-5">
             <div className="flex items-center justify-between mb-4">
-              <p className="text-sm font-bold text-white">Casos de Uso ({(cfg.useCases?.items || []).length})</p>
+              <p className="text-sm font-bold text-foreground">Casos de Uso ({(cfg.useCases?.items || []).length})</p>
               <button
                 onClick={addUseCaseItem}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-700 text-white text-xs font-medium transition-colors"
@@ -631,7 +631,7 @@ export default function AdminLandingPage() {
         <div className="bg-neutral-800 border border-neutral-700 rounded-xl p-5">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <p className="text-sm font-bold text-white">Métricas y Cifras de Éxito</p>
+              <p className="text-sm font-bold text-foreground">Métricas y Cifras de Éxito</p>
               <p className="text-xs text-neutral-500">Métricas clave expuestas como prueba social.</p>
             </div>
             <button
@@ -669,7 +669,7 @@ export default function AdminLandingPage() {
         <div className="bg-neutral-800 border border-neutral-700 rounded-xl p-5">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <p className="text-sm font-bold text-white">Testimonios de Clientes</p>
+              <p className="text-sm font-bold text-foreground">Testimonios de Clientes</p>
               <p className="text-xs text-neutral-500">Comentarios y pruebas de satisfacción.</p>
             </div>
             <button
@@ -705,14 +705,14 @@ export default function AdminLandingPage() {
       {activeTab === 'comparison' && (
         <div className="space-y-4">
           <div className="bg-neutral-800 border border-neutral-700 rounded-xl p-5 space-y-4">
-            <p className="text-sm font-bold text-white">Tabla Comparativa (NexoPOS vs Otros)</p>
+            <p className="text-sm font-bold text-foreground">Tabla Comparativa (NexoPOS vs Otros)</p>
             <Field label="Subtítulo de sección" value={cfg.comparison?.subtitle || ''} onChange={v => set('comparison', { subtitle: v })} />
             <Field label="Título de sección" value={cfg.comparison?.title || ''} onChange={v => set('comparison', { title: v })} />
           </div>
 
           <div className="bg-neutral-800 border border-neutral-700 rounded-xl p-5">
             <div className="flex items-center justify-between mb-4">
-              <p className="text-sm font-bold text-white">Filas de la Tabla ({(cfg.comparison?.rows || []).length})</p>
+              <p className="text-sm font-bold text-foreground">Filas de la Tabla ({(cfg.comparison?.rows || []).length})</p>
               <button
                 onClick={addComparisonRow}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-700 text-white text-xs font-medium transition-colors"
@@ -749,7 +749,7 @@ export default function AdminLandingPage() {
       {/* Tab: Pricing */}
       {activeTab === 'pricing' && (
         <div className="bg-neutral-800 border border-neutral-700 rounded-xl p-5 space-y-4">
-          <p className="text-sm font-bold text-white">Sección de precios</p>
+          <p className="text-sm font-bold text-foreground">Sección de precios</p>
           <p className="text-xs text-neutral-500">Los planes se muestran automáticamente desde la configuración de planes.</p>
           <Field label="Título" value={cfg.pricing.title} onChange={v => set('pricing', { title: v })} />
           <Field label="Subtítulo" value={cfg.pricing.subtitle} onChange={v => set('pricing', { subtitle: v })} multiline />
@@ -760,14 +760,14 @@ export default function AdminLandingPage() {
       {activeTab === 'faqs' && (
         <div className="space-y-4">
           <div className="bg-neutral-800 border border-neutral-700 rounded-xl p-5 space-y-4">
-            <p className="text-sm font-bold text-white">Preguntas Frecuentes (FAQs)</p>
+            <p className="text-sm font-bold text-foreground">Preguntas Frecuentes (FAQs)</p>
             <Field label="Subtítulo de sección" value={cfg.faqs?.subtitle || ''} onChange={v => set('faqs', { subtitle: v })} />
             <Field label="Título de sección" value={cfg.faqs?.title || ''} onChange={v => set('faqs', { title: v })} />
           </div>
 
           <div className="bg-neutral-800 border border-neutral-700 rounded-xl p-5">
             <div className="flex items-center justify-between mb-4">
-              <p className="text-sm font-bold text-white">Preguntas ({(cfg.faqs?.items || []).length})</p>
+              <p className="text-sm font-bold text-foreground">Preguntas ({(cfg.faqs?.items || []).length})</p>
               <button
                 onClick={addFaqItem}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-700 text-white text-xs font-medium transition-colors"
@@ -800,7 +800,7 @@ export default function AdminLandingPage() {
       {/* Tab: CTA */}
       {activeTab === 'cta' && (
         <div className="bg-neutral-800 border border-neutral-700 rounded-xl p-5 space-y-4">
-          <p className="text-sm font-bold text-white">Llamada a la acción (Call to Action)</p>
+          <p className="text-sm font-bold text-foreground">Llamada a la acción (Call to Action)</p>
           <Field label="Título" value={cfg.cta.title} onChange={v => set('cta', { title: v })} />
           <Field label="Subtítulo" value={cfg.cta.subtitle} onChange={v => set('cta', { subtitle: v })} multiline />
           <Field label="Texto del botón" value={cfg.cta.button} onChange={v => set('cta', { button: v })} placeholder="Comenzar 15 Días Gratis" />
@@ -810,7 +810,7 @@ export default function AdminLandingPage() {
       {/* Tab: Footer */}
       {activeTab === 'footer' && (
         <div className="bg-neutral-800 border border-neutral-700 rounded-xl p-5 space-y-4">
-          <p className="text-sm font-bold text-white">Pie de página</p>
+          <p className="text-sm font-bold text-foreground">Pie de página</p>
           <Field label="Descripción del footer" value={cfg.footer.description} onChange={v => set('footer', { description: v })} multiline />
         </div>
       )}
@@ -818,7 +818,7 @@ export default function AdminLandingPage() {
       {/* Tab: SEO */}
       {activeTab === 'seo' && (
         <div className="bg-neutral-800 border border-neutral-700 rounded-xl p-5 space-y-4">
-          <p className="text-sm font-bold text-white">Metadatos de Buscadores (SEO)</p>
+          <p className="text-sm font-bold text-foreground">Metadatos de Buscadores (SEO)</p>
           <p className="text-xs text-neutral-500">Estos textos aparecerán en Google y al compartir el link en redes sociales.</p>
           <Field label="Título (Meta Title)" value={cfg.seo?.title || ''} onChange={v => set('seo', { ...cfg.seo, title: v })} placeholder="NexoPOS - El Sistema de Gestión Integral" />
           <Field label="Descripción (Meta Description)" value={cfg.seo?.description || ''} onChange={v => set('seo', { ...cfg.seo, description: v })} multiline placeholder="Centraliza tus ventas, inventario..." />
@@ -831,7 +831,7 @@ export default function AdminLandingPage() {
         <div className="bg-neutral-800 border border-neutral-700 rounded-xl p-5 space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-bold text-white">Asistente Inteligente Público</p>
+              <p className="text-sm font-bold text-foreground">Asistente Inteligente Público</p>
               <p className="text-xs text-neutral-500">Muestra un chat de triaje en la landing page para captar prospectos o derivar soporte.</p>
             </div>
             <button

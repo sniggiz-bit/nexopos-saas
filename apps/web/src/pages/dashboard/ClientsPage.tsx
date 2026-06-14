@@ -11,18 +11,18 @@ const C = {
     cyanA: (a: number) => `rgba(0,212,255,${a})`,
     red:   '#F87171',
     redA:  (a: number) => `rgba(248,113,113,${a})`,
-    text:  'rgba(210,225,245,0.9)',
-    muted: 'rgba(180,195,220,0.45)',
+    text: 'hsl(var(--foreground))',
+    muted: 'hsl(var(--muted-foreground))',
     subtle:'rgba(180,195,220,0.25)',
 };
 
 const inputStyle: React.CSSProperties = {
-    background:   'rgba(0,212,255,0.04)',
-    border:       '1px solid rgba(0,212,255,0.12)',
+    background: 'hsl(var(--background))',
+    border: '1px solid hsl(var(--border))',
     borderRadius: '10px',
     padding:      '7px 12px 7px 36px',
     fontSize:     '13px',
-    color:        'rgba(210,225,245,0.85)',
+    color: 'hsl(var(--foreground))',
     outline:      'none',
     width:        '100%',
 };

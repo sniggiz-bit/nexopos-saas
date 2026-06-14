@@ -61,11 +61,11 @@ function KpiCard({ title, value, subtitle, icon: Icon, color }: {
   icon: React.ElementType; color: string;
 }) {
   return (
-    <div className="bg-[rgba(15,22,36,0.5)] border border-[rgba(0,212,255,0.08)] backdrop-blur-md rounded-xl p-5 shadow-sm">
+    <div className="bg-card/[0.5] border border-border backdrop-blur-md rounded-xl p-5 shadow-sm">
       <div className="flex items-start justify-between">
         <div>
           <p className="text-sm font-medium text-gray-400">{title}</p>
-          <p className="mt-1.5 text-2xl font-black text-white font-mono tracking-tight">{value}</p>
+          <p className="mt-1.5 text-2xl font-black text-foreground font-mono tracking-tight">{value}</p>
           {subtitle && <p className="mt-0.5 text-xs text-gray-500">{subtitle}</p>}
         </div>
         <div className={`p-2.5 rounded-lg border ${color}`}>
@@ -93,10 +93,10 @@ function ShiftRow({ shift }: { shift: ShiftRecord }) {
     : '—';
 
   return (
-    <div className="border border-[rgba(0,212,255,0.08)] bg-[rgba(15,22,36,0.3)] rounded-xl overflow-hidden">
+    <div className="border border-border bg-card/[0.3] rounded-xl overflow-hidden">
       <button
         onClick={() => setOpen(!open)}
-        className="w-full flex items-center gap-3 px-4 py-3.5 bg-transparent hover:bg-[rgba(0,212,255,0.02)] transition-colors text-left"
+        className="w-full flex items-center gap-3 px-4 py-3.5 bg-transparent hover:bg-muted/30 transition-colors text-left"
       >
         <div className="flex-shrink-0">
           {diff === 0
@@ -109,7 +109,7 @@ function ShiftRow({ shift }: { shift: ShiftRecord }) {
         <div className="flex-1 grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-0.5 min-w-0">
           <div>
             <p className="text-xs text-gray-500">Fecha</p>
-            <p className="text-sm font-semibold text-white font-mono">
+            <p className="text-sm font-semibold text-foreground font-mono">
               {new Date(shift.startTime).toLocaleDateString('es-CL', { day: '2-digit', month: 'short', year: 'numeric' })}
             </p>
           </div>
@@ -123,7 +123,7 @@ function ShiftRow({ shift }: { shift: ShiftRecord }) {
           </div>
           <div>
             <p className="text-xs text-gray-500">Total ventas</p>
-            <p className="text-sm font-bold text-white font-mono">{fmt(meta?.totalSales)}</p>
+            <p className="text-sm font-bold text-foreground font-mono">{fmt(meta?.totalSales)}</p>
           </div>
         </div>
 
@@ -134,7 +134,7 @@ function ShiftRow({ shift }: { shift: ShiftRecord }) {
               {diff >= 0 ? '+' : ''}{fmt(diff)}
             </p>
           </div>
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[rgba(0,212,255,0.05)] border border-[rgba(0,212,255,0.1)] text-xs text-gray-400">
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-muted/30 border border-border text-xs text-gray-400">
             <Clock size={11} />{duration}
           </div>
           {open ? <ChevronUp size={16} className="text-gray-400" /> : <ChevronDown size={16} className="text-gray-400" />}
@@ -142,7 +142,7 @@ function ShiftRow({ shift }: { shift: ShiftRecord }) {
       </button>
 
       {open && (
-        <div className="border-t border-[rgba(0,212,255,0.08)] bg-[rgba(0,212,255,0.01)] px-5 py-4">
+        <div className="border-t border-border bg-muted/30 px-5 py-4">
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-4">
             <InfoCell label="Apertura" value={new Date(shift.startTime).toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' })} />
             <InfoCell label="Cierre" value={shift.endTime ? new Date(shift.endTime).toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' }) : '—'} />
@@ -161,9 +161,9 @@ function ShiftRow({ shift }: { shift: ShiftRecord }) {
               <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Desglose por método de pago</p>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 {Object.entries(meta.paymentMethods as Record<string, number>).map(([method, amount]) => (
-                  <div key={method} className="bg-[rgba(15,22,36,0.8)] border border-[rgba(0,212,255,0.15)] rounded-lg px-3 py-2 text-center">
+                  <div key={method} className="bg-card/[0.8] border border-border rounded-lg px-3 py-2 text-center">
                     <p className="text-[10px] text-gray-500 uppercase tracking-wide">{METHOD_LABELS[method] ?? method}</p>
-                    <p className="text-sm font-bold text-white font-mono mt-0.5">{fmt(amount)}</p>
+                    <p className="text-sm font-bold text-foreground font-mono mt-0.5">{fmt(amount)}</p>
                   </div>
                 ))}
               </div>
@@ -171,10 +171,10 @@ function ShiftRow({ shift }: { shift: ShiftRecord }) {
           )}
 
           {meta?.taxSummary && (
-            <div className="bg-[rgba(15,22,36,0.8)] border border-[rgba(0,212,255,0.15)] rounded-lg px-4 py-3 flex gap-6 text-sm">
-              <span className="text-gray-400">Neto: <strong className="text-white font-mono">{fmt(meta.taxSummary.totalNet)}</strong></span>
-              <span className="text-gray-400">IVA 19%: <strong className="text-white font-mono">{fmt(meta.taxSummary.totalIva)}</strong></span>
-              <span className="text-gray-400">Bruto: <strong className="text-white font-mono">{fmt(meta.taxSummary.totalGross)}</strong></span>
+            <div className="bg-card/[0.8] border border-border rounded-lg px-4 py-3 flex gap-6 text-sm">
+              <span className="text-gray-400">Neto: <strong className="text-foreground font-mono">{fmt(meta.taxSummary.totalNet)}</strong></span>
+              <span className="text-gray-400">IVA 19%: <strong className="text-foreground font-mono">{fmt(meta.taxSummary.totalIva)}</strong></span>
+              <span className="text-gray-400">Bruto: <strong className="text-foreground font-mono">{fmt(meta.taxSummary.totalGross)}</strong></span>
             </div>
           )}
 
@@ -234,13 +234,13 @@ function ShiftHistoryTab({ tenantId }: { tenantId: string }) {
   return (
     <div className="space-y-4">
       {/* Filters */}
-      <div className="bg-[rgba(15,22,36,0.5)] border border-[rgba(0,212,255,0.08)] backdrop-blur-md shadow-sm p-4 flex flex-wrap items-end gap-3 rounded-xl">
+      <div className="bg-card/[0.5] border border-border backdrop-blur-md shadow-sm p-4 flex flex-wrap items-end gap-3 rounded-xl">
         <div>
           <label className="block text-xs font-semibold text-gray-400 mb-1">Desde</label>
           <input
             type="date" value={from}
             onChange={e => setFrom(e.target.value)}
-            className="border border-[rgba(0,212,255,0.15)] bg-[rgba(15,22,36,0.8)] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#00D4FF] focus:ring-1 focus:ring-[#00D4FF] font-mono"
+            className="border border-border bg-card/[0.8] rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:border-[#00D4FF] focus:ring-1 focus:ring-[#00D4FF] font-mono"
           />
         </div>
         <div>
@@ -248,7 +248,7 @@ function ShiftHistoryTab({ tenantId }: { tenantId: string }) {
           <input
             type="date" value={to}
             onChange={e => setTo(e.target.value)}
-            className="border border-[rgba(0,212,255,0.15)] bg-[rgba(15,22,36,0.8)] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#00D4FF] focus:ring-1 focus:ring-[#00D4FF] font-mono"
+            className="border border-border bg-card/[0.8] rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:border-[#00D4FF] focus:ring-1 focus:ring-[#00D4FF] font-mono"
           />
         </div>
         <button
@@ -258,12 +258,12 @@ function ShiftHistoryTab({ tenantId }: { tenantId: string }) {
           Filtrar
         </button>
         {(from || to) && (
-          <button onClick={clearFilter} className="px-3 py-2 text-sm text-gray-400 hover:text-white transition-colors">
+          <button onClick={clearFilter} className="px-3 py-2 text-sm text-gray-400 hover:text-foreground transition-colors">
             Limpiar
           </button>
         )}
         <div className="ml-auto flex items-center gap-1.5 text-xs text-gray-500">
-          <button onClick={() => load(page, from, to)} className="p-1.5 rounded-lg hover:bg-[rgba(255,255,255,0.05)] text-gray-400 hover:text-white transition-colors">
+          <button onClick={() => load(page, from, to)} className="p-1.5 rounded-lg hover:bg-card text-gray-400 hover:text-foreground transition-colors">
             <RefreshCw size={13} />
           </button>
           {history && <span>{history.total} cierre{history.total !== 1 ? 's' : ''}</span>}
@@ -276,7 +276,7 @@ function ShiftHistoryTab({ tenantId }: { tenantId: string }) {
           <Loader2 size={20} className="animate-spin text-[#00D4FF]" />Cargando historial...
         </div>
       ) : !history || history.data.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-20 text-gray-400 bg-[rgba(15,22,36,0.5)] border border-[rgba(0,212,255,0.08)] rounded-xl">
+        <div className="flex flex-col items-center justify-center py-20 text-gray-400 bg-card/[0.5] border border-border rounded-xl">
           <XCircle size={36} className="mb-3 opacity-30 text-gray-500" />
           <p className="font-semibold text-gray-400">Sin cierres registrados</p>
           <p className="text-xs text-gray-500 mt-1">
@@ -300,13 +300,13 @@ function ShiftHistoryTab({ tenantId }: { tenantId: string }) {
               <div className="flex gap-1">
                 <button
                   onClick={() => goPage(page - 1)} disabled={page <= 1}
-                  className="p-2 rounded-lg border border-[rgba(0,212,255,0.15)] hover:bg-[rgba(255,255,255,0.05)] disabled:opacity-40 text-white transition-colors"
+                  className="p-2 rounded-lg border border-border hover:bg-card disabled:opacity-40 text-foreground transition-colors"
                 >
                   <ChevronLeft size={15} />
                 </button>
                 <button
                   onClick={() => goPage(page + 1)} disabled={page >= history.lastPage}
-                  className="p-2 rounded-lg border border-[rgba(0,212,255,0.15)] hover:bg-[rgba(255,255,255,0.05)] disabled:opacity-40 text-white transition-colors"
+                  className="p-2 rounded-lg border border-border hover:bg-card disabled:opacity-40 text-foreground transition-colors"
                 >
                   <ChevronRight size={15} />
                 </button>
@@ -342,11 +342,11 @@ export function TreasuryPage() {
     <DashboardLayout>
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-white">Tesorería</h1>
+          <h1 className="text-2xl font-bold text-foreground">Tesorería</h1>
         </div>
 
         {/* Tabs */}
-        <div className="border-b border-[rgba(0,212,255,0.08)]">
+        <div className="border-b border-border">
           <nav className="flex gap-1">
             {TABS.map(({ key, label, Icon }) => (
               <button
@@ -384,7 +384,7 @@ export function TreasuryPage() {
                   value={formatCurrency(totalCashFlow)}
                   subtitle="Ingresos del día"
                   icon={TrendingUp}
-                  color="bg-[rgba(0,212,255,0.06)] text-[#00D4FF] border border-[rgba(0,212,255,0.15)]"
+                  color="bg-muted/30 text-[#00D4FF] border border-border"
                 />
                 <KpiCard
                   title="Próximos Vencimientos"
@@ -396,22 +396,22 @@ export function TreasuryPage() {
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="bg-[rgba(15,22,36,0.5)] border border-[rgba(0,212,255,0.08)] backdrop-blur-md shadow-sm p-5 rounded-xl">
+                <div className="bg-card/[0.5] border border-border backdrop-blur-md shadow-sm p-5 rounded-xl">
                   <h2 className="text-sm font-semibold text-[#00D4FF] uppercase tracking-wider mb-4">Flujo de Caja — Hoy</h2>
                   <div className="space-y-3">
                     {!cashFlow?.length ? (
                       <p className="text-sm text-gray-500">No hay movimientos hoy.</p>
                     ) : cashFlow.map(item => (
-                      <div key={item.method} className="flex justify-between items-center border-b border-[rgba(0,212,255,0.05)] pb-3 last:border-0 last:pb-0">
+                      <div key={item.method} className="flex justify-between items-center border-b border-border pb-3 last:border-0 last:pb-0">
                         <div className="flex items-center gap-2">
                           <DollarSign size={14} className="text-gray-500" />
                           <span className="text-sm font-medium text-gray-300">{METHOD_LABELS[item.method] ?? item.method}</span>
                         </div>
-                        <span className="text-sm font-bold text-white font-mono">{formatCurrency(item.amount)}</span>
+                        <span className="text-sm font-bold text-foreground font-mono">{formatCurrency(item.amount)}</span>
                       </div>
                     ))}
                     {cashFlow && cashFlow.length > 0 && (
-                      <div className="pt-2 flex justify-between text-sm font-bold text-white border-t border-[rgba(0,212,255,0.08)]">
+                      <div className="pt-2 flex justify-between text-sm font-bold text-foreground border-t border-border">
                         <span>Total</span>
                         <span className="font-mono text-[#00D4FF]">{formatCurrency(totalCashFlow)}</span>
                       </div>
@@ -419,23 +419,23 @@ export function TreasuryPage() {
                   </div>
                 </div>
 
-                <div className="bg-[rgba(15,22,36,0.5)] border border-[rgba(0,212,255,0.08)] backdrop-blur-md shadow-sm p-5 rounded-xl">
+                <div className="bg-card/[0.5] border border-border backdrop-blur-md shadow-sm p-5 rounded-xl">
                   <h2 className="text-sm font-semibold text-[#00D4FF] uppercase tracking-wider mb-4">Vencimientos Próximos (7 días)</h2>
                   <div className="overflow-x-auto">
                     <table className="min-w-full text-sm">
                       <thead>
-                        <tr className="border-b border-[rgba(0,212,255,0.08)]">
+                        <tr className="border-b border-border">
                           <th className="pb-2 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Cliente</th>
                           <th className="pb-2 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider font-mono">Vence</th>
                           <th className="pb-2 text-right text-xs font-semibold text-gray-400 uppercase tracking-wider">Saldo</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-[rgba(0,212,255,0.05)]">
+                      <tbody className="divide-y divide-border">
                         {!maturities?.length ? (
                           <tr><td colSpan={3} className="py-6 text-center text-gray-500">No hay vencimientos próximos.</td></tr>
                         ) : maturities.map(credit => (
                           <tr key={credit.id}>
-                            <td className="py-2.5 text-white font-semibold">{credit.customer.name}</td>
+                            <td className="py-2.5 text-foreground font-semibold">{credit.customer.name}</td>
                             <td className="py-2.5 text-gray-400 font-mono">{credit.dueDate ? formatDate(credit.dueDate) : '—'}</td>
                             <td className="py-2.5 text-right font-bold text-red-400 font-mono">{formatCurrency(credit.balance)}</td>
                           </tr>

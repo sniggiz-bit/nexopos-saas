@@ -24,8 +24,8 @@ const C = {
     amberA: (a: number) => `rgba(245,158,11,${a})`,
     violet: '#A78BFA',
     violetA:(a: number) => `rgba(167,139,250,${a})`,
-    text:   'rgba(210,225,245,0.9)',
-    muted:  'rgba(180,195,220,0.45)',
+    text: 'hsl(var(--foreground))',
+    muted: 'hsl(var(--muted-foreground))',
     subtle: 'rgba(180,195,220,0.25)',
 };
 
@@ -63,7 +63,7 @@ const fieldStyle: React.CSSProperties = {
     outline:      'none',
     width:        '100%',
     transition:   'border-color 150ms',
-    colorScheme:  'dark',
+    colorScheme: 'normal',
 };
 
 // ── Stats Panel ────────────────────────────────────────────────────────────────

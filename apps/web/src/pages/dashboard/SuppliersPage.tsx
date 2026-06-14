@@ -162,7 +162,7 @@ export function SuppliersPage() {
                             placeholder="Buscar proveedor..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="px-4 py-2 bg-[rgba(15,22,36,0.8)] border border-[rgba(0,212,255,0.15)] text-white placeholder-slate-500 rounded-lg text-sm focus:border-[#00D4FF] focus:ring-1 focus:ring-[#00D4FF] outline-none w-56"
+                            className="px-4 py-2 bg-card/[0.8] border border-border text-foreground placeholder-slate-500 rounded-lg text-sm focus:border-[#00D4FF] focus:ring-1 focus:ring-[#00D4FF] outline-none w-56"
                         />
                         <button
                             onClick={handleOpenCreate}
@@ -175,9 +175,9 @@ export function SuppliersPage() {
                 </div>
 
                 {/* Table */}
-                <div className="bg-[rgba(15,22,36,0.5)] border border-[rgba(0,212,255,0.08)] backdrop-blur-md rounded-xl overflow-hidden">
-                    <table className="min-w-full divide-y divide-[rgba(0,212,255,0.05)]">
-                        <thead className="bg-[rgba(0,212,255,0.02)]">
+                <div className="bg-card/[0.5] border border-border backdrop-blur-md rounded-xl overflow-hidden">
+                    <table className="min-w-full divide-y divide-border">
+                        <thead className="bg-muted/30">
                             <tr>
                                 <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
                                     Proveedor
@@ -196,7 +196,7 @@ export function SuppliersPage() {
                                 </th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-[rgba(0,212,255,0.05)]">
+                        <tbody className="divide-y divide-border">
                             {isLoading ? (
                                 <tr>
                                     <td colSpan={5} className="px-6 py-16 text-center">
@@ -223,14 +223,14 @@ export function SuppliersPage() {
                                 </tr>
                             ) : (
                                 filteredSuppliers.map((supplier) => (
-                                    <tr key={supplier.id} className="hover:bg-[rgba(0,212,255,0.02)] transition-colors border-b border-[rgba(0,212,255,0.05)]">
+                                    <tr key={supplier.id} className="hover:bg-muted/30 transition-colors border-b border-border">
                                         <td className="px-6 py-4">
                                             <div className="flex items-center gap-3">
-                                                <div className="w-9 h-9 rounded-full bg-[rgba(0,212,255,0.08)] border border-[rgba(0,212,255,0.15)] text-[#00D4FF] flex items-center justify-center font-bold text-xs shrink-0">
+                                                <div className="w-9 h-9 rounded-full bg-muted/30 border border-border text-[#00D4FF] flex items-center justify-center font-bold text-xs shrink-0">
                                                     {supplier.name.substring(0, 2).toUpperCase()}
                                                 </div>
                                                 <div>
-                                                    <p className="text-sm font-semibold text-white">{supplier.name}</p>
+                                                    <p className="text-sm font-semibold text-foreground">{supplier.name}</p>
                                                     {supplier.address && (
                                                         <p className="text-xs text-gray-400 flex items-center gap-1 mt-0.5">
                                                             <MapPin className="w-3 h-3 text-gray-500" />
@@ -274,7 +274,7 @@ export function SuppliersPage() {
                                             <button
                                                 onClick={() => handleOpenEdit(supplier)}
                                                 title="Editar"
-                                                className="text-[#00D4FF] hover:text-[#00BCE0] mr-2 p-1.5 hover:bg-[rgba(0,212,255,0.06)] rounded-lg transition-colors"
+                                                className="text-[#00D4FF] hover:text-[#00BCE0] mr-2 p-1.5 hover:bg-muted/30 rounded-lg transition-colors"
                                             >
                                                 <Edit className="w-4 h-4" />
                                             </button>
@@ -304,20 +304,20 @@ export function SuppliersPage() {
             {/* ─── Modal Crear / Editar ─── */}
             {isModalOpen && (
                 <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                    <div className="bg-[rgba(15,22,36,0.95)] border border-[rgba(0,212,255,0.15)] rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden">
+                    <div className="bg-card/[0.95] border border-border rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden">
                         {/* Modal Header */}
-                        <div className="px-6 py-4 border-b border-[rgba(0,212,255,0.08)] flex justify-between items-center bg-[rgba(0,212,255,0.02)]">
+                        <div className="px-6 py-4 border-b border-border flex justify-between items-center bg-muted/30">
                             <div className="flex items-center gap-3">
-                                <div className="w-9 h-9 bg-[rgba(0,212,255,0.1)] border border-[rgba(0,212,255,0.2)] rounded-lg flex items-center justify-center text-[#00D4FF]">
+                                <div className="w-9 h-9 bg-muted/30 border border-border rounded-lg flex items-center justify-center text-[#00D4FF]">
                                     <Truck className="w-5 h-5" />
                                 </div>
-                                <h3 className="text-lg font-bold text-white">
+                                <h3 className="text-lg font-bold text-foreground">
                                     {editingSupplier ? 'Editar Proveedor' : 'Nuevo Proveedor'}
                                 </h3>
                             </div>
                             <button
                                 onClick={handleClose}
-                                className="text-gray-400 hover:text-white hover:bg-[rgba(255,255,255,0.05)] rounded-full p-1.5 transition-colors"
+                                className="text-gray-400 hover:text-foreground hover:bg-card rounded-full p-1.5 transition-colors"
                             >
                                 <X className="w-5 h-5" />
                             </button>
@@ -337,7 +337,7 @@ export function SuppliersPage() {
                                     value={form.name}
                                     onChange={(e) => handleChange('name', e.target.value)}
                                     placeholder="Ej: Distribuidora Los Andes S.A."
-                                    className="w-full px-4 py-2.5 bg-[rgba(15,22,36,0.8)] border border-[rgba(0,212,255,0.15)] text-white placeholder-slate-500 rounded-lg focus:border-[#00D4FF] focus:ring-1 focus:ring-[#00D4FF] outline-none transition-all text-sm"
+                                    className="w-full px-4 py-2.5 bg-card/[0.8] border border-border text-foreground placeholder-slate-500 rounded-lg focus:border-[#00D4FF] focus:ring-1 focus:ring-[#00D4FF] outline-none transition-all text-sm"
                                 />
                             </div>
 
@@ -352,7 +352,7 @@ export function SuppliersPage() {
                                         value={form.rut}
                                         onChange={(e) => handleChange('rut', e.target.value)}
                                         placeholder="Ej: 76.543.210-9"
-                                        className="w-full px-4 py-2.5 bg-[rgba(15,22,36,0.8)] border border-[rgba(0,212,255,0.15)] text-white placeholder-slate-500 rounded-lg focus:border-[#00D4FF] focus:ring-1 focus:ring-[#00D4FF] outline-none transition-all text-sm font-mono"
+                                        className="w-full px-4 py-2.5 bg-card/[0.8] border border-border text-foreground placeholder-slate-500 rounded-lg focus:border-[#00D4FF] focus:ring-1 focus:ring-[#00D4FF] outline-none transition-all text-sm font-mono"
                                     />
                                 </div>
                                 <div>
@@ -364,7 +364,7 @@ export function SuppliersPage() {
                                         value={form.phone}
                                         onChange={(e) => handleChange('phone', e.target.value)}
                                         placeholder="Ej: +56 9 1234 5678"
-                                        className="w-full px-4 py-2.5 bg-[rgba(15,22,36,0.8)] border border-[rgba(0,212,255,0.15)] text-white placeholder-slate-500 rounded-lg focus:border-[#00D4FF] focus:ring-1 focus:ring-[#00D4FF] outline-none transition-all text-sm font-mono"
+                                        className="w-full px-4 py-2.5 bg-card/[0.8] border border-border text-foreground placeholder-slate-500 rounded-lg focus:border-[#00D4FF] focus:ring-1 focus:ring-[#00D4FF] outline-none transition-all text-sm font-mono"
                                     />
                                 </div>
                             </div>
@@ -379,7 +379,7 @@ export function SuppliersPage() {
                                     value={form.email}
                                     onChange={(e) => handleChange('email', e.target.value)}
                                     placeholder="Ej: ventas@proveedor.cl"
-                                    className="w-full px-4 py-2.5 bg-[rgba(15,22,36,0.8)] border border-[rgba(0,212,255,0.15)] text-white placeholder-slate-500 rounded-lg focus:border-[#00D4FF] focus:ring-1 focus:ring-[#00D4FF] outline-none transition-all text-sm"
+                                    className="w-full px-4 py-2.5 bg-card/[0.8] border border-border text-foreground placeholder-slate-500 rounded-lg focus:border-[#00D4FF] focus:ring-1 focus:ring-[#00D4FF] outline-none transition-all text-sm"
                                 />
                             </div>
 
@@ -393,7 +393,7 @@ export function SuppliersPage() {
                                     value={form.address}
                                     onChange={(e) => handleChange('address', e.target.value)}
                                     placeholder="Ej: Av. Providencia 1234, Santiago"
-                                    className="w-full px-4 py-2.5 bg-[rgba(15,22,36,0.8)] border border-[rgba(0,212,255,0.15)] text-white placeholder-slate-500 rounded-lg focus:border-[#00D4FF] focus:ring-1 focus:ring-[#00D4FF] outline-none transition-all text-sm"
+                                    className="w-full px-4 py-2.5 bg-card/[0.8] border border-border text-foreground placeholder-slate-500 rounded-lg focus:border-[#00D4FF] focus:ring-1 focus:ring-[#00D4FF] outline-none transition-all text-sm"
                                 />
                             </div>
 
@@ -402,7 +402,7 @@ export function SuppliersPage() {
                                 <button
                                     type="button"
                                     onClick={handleClose}
-                                    className="px-4 py-2.5 text-gray-400 hover:bg-[rgba(255,255,255,0.05)] hover:text-white rounded-lg font-medium transition-colors text-sm"
+                                    className="px-4 py-2.5 text-gray-400 hover:bg-card hover:text-foreground rounded-lg font-medium transition-colors text-sm"
                                 >
                                     Cancelar
                                 </button>

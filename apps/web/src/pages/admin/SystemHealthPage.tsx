@@ -49,7 +49,7 @@ export default function SystemHealthPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white">Monitor del Sistema</h1>
+          <h1 className="text-2xl font-bold text-foreground">Monitor del Sistema</h1>
           <p className="text-neutral-500 text-sm mt-0.5">
             {loading ? 'Cargando...' : `${logs.length} evento${logs.length !== 1 ? 's' : ''} registrado${logs.length !== 1 ? 's' : ''}`}
           </p>

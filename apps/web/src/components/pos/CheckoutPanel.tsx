@@ -189,7 +189,7 @@ export function CheckoutPanel({
                         <CheckCircle2 className="w-9 h-9 text-green-600" />
                     </div>
                     <div className="text-center">
-                        <h3 className="text-lg font-black text-slate-900 dark:text-white">¡Venta exitosa!</h3>
+                        <h3 className="text-lg font-black text-slate-900 dark:text-foreground">¡Venta exitosa!</h3>
                         <p className="text-sm text-slate-400 mt-1">
                             {autoPrint
                                 ? hasRealDtePdf
@@ -263,7 +263,7 @@ export function CheckoutPanel({
                         <XCircle className="w-9 h-9 text-red-600" />
                     </div>
                     <div className="text-center">
-                        <h3 className="text-lg font-black text-slate-900 dark:text-white">Error en la venta</h3>
+                        <h3 className="text-lg font-black text-slate-900 dark:text-foreground">Error en la venta</h3>
                         <p className="text-sm text-slate-400 mt-1">Por favor, intenta nuevamente.</p>
                     </div>
                 </div>

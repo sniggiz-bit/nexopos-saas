@@ -165,11 +165,11 @@ export function CloseShiftModal({ isOpen, onClose, shiftId, currentShift }: Clos
                         <div className="grid grid-cols-2 gap-3">
                             <div className="bg-slate-50 dark:bg-slate-900 p-4 rounded-xl border border-slate-100 dark:border-slate-800">
                                 <p className="text-xs text-slate-500 uppercase font-bold mb-1">Monto Esperado</p>
-                                <p className="text-xl font-bold text-slate-900 dark:text-white">{formatPrice(Number(closedShift.shift.expectedAmount))}</p>
+                                <p className="text-xl font-bold text-slate-900 dark:text-foreground">{formatPrice(Number(closedShift.shift.expectedAmount))}</p>
                             </div>
                             <div className="bg-slate-50 dark:bg-slate-900 p-4 rounded-xl border border-slate-100 dark:border-slate-800">
                                 <p className="text-xs text-slate-500 uppercase font-bold mb-1">Monto Declarado</p>
-                                <p className="text-xl font-bold text-slate-900 dark:text-white">{formatPrice(Number(closedShift.shift.finalAmount))}</p>
+                                <p className="text-xl font-bold text-slate-900 dark:text-foreground">{formatPrice(Number(closedShift.shift.finalAmount))}</p>
                             </div>
                         </div>
 
@@ -237,14 +237,14 @@ export function CloseShiftModal({ isOpen, onClose, shiftId, currentShift }: Clos
                     </div>
                     <DialogHeader className="relative z-10">
                         <div className="bg-white/20 w-11 h-11 rounded-xl flex items-center justify-center mb-3 backdrop-blur-md">
-                            <Calculator className="text-white" size={22} />
+                            <Calculator className="text-foreground" size={22} />
                         </div>
                         <DialogTitle className="text-2xl font-bold tracking-tight">Cierre de Caja</DialogTitle>
                         <p className="text-red-100 text-sm mt-1">Ingresa el recuento final de efectivo para cerrar el turno.</p>
                         {shiftElapsed && (
                             <div className="flex items-center gap-2 mt-2 text-red-200 text-xs">
                                 <Clock size={12} />
-                                <span>Turno activo hace <strong className="text-white">{shiftElapsed}</strong>{shiftStart && ` (desde ${shiftStart})`}</span>
+                                <span>Turno activo hace <strong className="text-foreground">{shiftElapsed}</strong>{shiftStart && ` (desde ${shiftStart})`}</span>
                             </div>
                         )}
                     </DialogHeader>
@@ -329,7 +329,7 @@ export function CloseShiftModal({ isOpen, onClose, shiftId, currentShift }: Clos
                             {isLoadingSummary ? (
                                 <div className="h-5 w-24 bg-slate-200 dark:bg-slate-600 rounded animate-pulse" />
                             ) : (
-                                <span className="text-base font-black text-slate-900 dark:text-white tabular-nums">
+                                <span className="text-base font-black text-slate-900 dark:text-foreground tabular-nums">
                                     {formatPrice(summary?.totalSales ?? 0)}
                                 </span>
                             )}

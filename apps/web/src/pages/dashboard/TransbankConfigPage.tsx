@@ -85,26 +85,26 @@ export function TransbankConfigPage() {
             <div className="max-w-2xl space-y-6">
 
                 <div>
-                    <h1 className="text-2xl font-black text-white">Terminal Transbank</h1>
+                    <h1 className="text-2xl font-black text-foreground">Terminal Transbank</h1>
                     <p className="text-sm text-gray-400 mt-1">
                         Configuración del agente local y terminal POS Integrado para esta sucursal.
                     </p>
                 </div>
 
                 {/* ── Estado del agente ── */}
-                <div className="bg-[rgba(15,22,36,0.5)] border border-[rgba(0,212,255,0.08)] backdrop-blur-md rounded-2xl p-6 space-y-4 shadow-sm">
+                <div className="bg-card/[0.5] border border-border backdrop-blur-md rounded-2xl p-6 space-y-4 shadow-sm">
                     <div className="flex items-center justify-between">
-                        <h2 className="font-bold text-white flex items-center gap-2">
+                        <h2 className="font-bold text-foreground flex items-center gap-2">
                             <Wifi className="w-4 h-4 text-[#00D4FF]" /> Estado del agente local
                         </h2>
-                        <Button variant="ghost" size="sm" onClick={checkAgent} disabled={agentChecking} className="text-gray-400 hover:text-white hover:bg-[rgba(255,255,255,0.05)] transition-colors">
+                        <Button variant="ghost" size="sm" onClick={checkAgent} disabled={agentChecking} className="text-gray-400 hover:text-foreground hover:bg-card transition-colors">
                             <RefreshCw className={`w-4 h-4 mr-1.5 ${agentChecking ? 'animate-spin' : ''}`} />
                             Verificar
                         </Button>
                     </div>
 
                     {agentStatus === null ? (
-                        <div className="h-14 bg-[rgba(15,22,36,0.5)] border border-[rgba(0,212,255,0.08)] rounded-xl animate-pulse" />
+                        <div className="h-14 bg-card/[0.5] border border-border rounded-xl animate-pulse" />
                     ) : agentStatus.ok ? (
                         <div className="flex items-start gap-4 bg-[rgba(16,185,129,0.04)] border border-[rgba(16,185,129,0.15)] rounded-xl p-4">
                             <CheckCircle2 className="w-6 h-6 text-[#10B981] mt-0.5 shrink-0" />
@@ -131,19 +131,19 @@ export function TransbankConfigPage() {
                 </div>
 
                 {/* ── Configuración ── */}
-                <div className="bg-[rgba(15,22,36,0.5)] border border-[rgba(0,212,255,0.08)] backdrop-blur-md rounded-2xl p-6 space-y-5 shadow-sm">
-                    <h2 className="font-bold text-white">Configuración del terminal</h2>
+                <div className="bg-card/[0.5] border border-border backdrop-blur-md rounded-2xl p-6 space-y-5 shadow-sm">
+                    <h2 className="font-bold text-foreground">Configuración del terminal</h2>
 
                     {isLoading ? (
                         <div className="space-y-3">
-                            {[1, 2, 3].map(i => <div key={i} className="h-10 bg-[rgba(15,22,36,0.5)] border border-[rgba(0,212,255,0.08)] rounded-lg animate-pulse" />)}
+                            {[1, 2, 3].map(i => <div key={i} className="h-10 bg-card/[0.5] border border-border rounded-lg animate-pulse" />)}
                         </div>
                     ) : (
                         <>
                             {/* Modo mock */}
-                            <div className="flex items-center justify-between py-3 border-b border-[rgba(0,212,255,0.05)]">
+                            <div className="flex items-center justify-between py-3 border-b border-border">
                                 <div>
-                                    <Label className="font-semibold text-white">Modo simulador</Label>
+                                    <Label className="font-semibold text-foreground">Modo simulador</Label>
                                     <p className="text-xs text-gray-400 mt-0.5">
                                         Actívalo para probar sin hardware. Nunca en producción.
                                     </p>
@@ -171,7 +171,7 @@ export function TransbankConfigPage() {
                                     onChange={e => setComPort(e.target.value)}
                                     placeholder="COM3"
                                     disabled={mockMode}
-                                    className="max-w-xs bg-[rgba(15,22,36,0.8)] border border-[rgba(0,212,255,0.15)] text-white focus:border-[#00D4FF] focus:ring-1 focus:ring-[#00D4FF] font-mono outline-none"
+                                    className="max-w-xs bg-card/[0.8] border border-border text-foreground focus:border-[#00D4FF] focus:ring-1 focus:ring-[#00D4FF] font-mono outline-none"
                                 />
                             </div>
 
@@ -182,7 +182,7 @@ export function TransbankConfigPage() {
                                     value={baudRate}
                                     onChange={e => setBaudRate(Number(e.target.value))}
                                     disabled={mockMode}
-                                    className="max-w-xs block px-3 py-2 text-sm border border-[rgba(0,212,255,0.15)] rounded-lg bg-[rgba(15,22,36,0.8)] text-white focus:outline-none focus:ring-1 focus:ring-[#00D4FF] focus:border-[#00D4FF] disabled:opacity-50"
+                                    className="max-w-xs block px-3 py-2 text-sm border border-border rounded-lg bg-card/[0.8] text-foreground focus:outline-none focus:ring-1 focus:ring-[#00D4FF] focus:border-[#00D4FF] disabled:opacity-50"
                                 >
                                     {BAUD_OPTIONS.map(b => (
                                         <option key={b} value={b} className="bg-[hsl(220,30%,8%)] text-white">{b.toLocaleString()}</option>
@@ -202,7 +202,7 @@ export function TransbankConfigPage() {
                                     onChange={e => setAgentPort(Number(e.target.value))}
                                     min={1024}
                                     max={65535}
-                                    className="max-w-xs bg-[rgba(15,22,36,0.8)] border border-[rgba(0,212,255,0.15)] text-white focus:border-[#00D4FF] focus:ring-1 focus:ring-[#00D4FF] font-mono outline-none"
+                                    className="max-w-xs bg-card/[0.8] border border-border text-foreground focus:border-[#00D4FF] focus:ring-1 focus:ring-[#00D4FF] font-mono outline-none"
                                 />
                             </div>
 
@@ -218,14 +218,14 @@ export function TransbankConfigPage() {
                 </div>
 
                 {/* ── Comando de inicio ── */}
-                <div className="bg-[rgba(15,22,36,0.5)] border border-[rgba(0,212,255,0.08)] backdrop-blur-md rounded-2xl p-6 space-y-3 shadow-sm">
-                    <h2 className="font-bold text-white flex items-center gap-2">
+                <div className="bg-card/[0.5] border border-border backdrop-blur-md rounded-2xl p-6 space-y-3 shadow-sm">
+                    <h2 className="font-bold text-foreground flex items-center gap-2">
                         <Terminal className="w-4 h-4 text-[#00D4FF]" /> Comando de inicio (PowerShell)
                     </h2>
                     <p className="text-xs text-gray-400">
-                        Ejecuta esto en la PC del cajero, dentro de la carpeta <code className="bg-slate-900 border border-[rgba(0,212,255,0.08)] text-[#00D4FF] font-mono px-1 rounded">apps/transbank-agent</code>:
+                        Ejecuta esto en la PC del cajero, dentro de la carpeta <code className="bg-slate-900 border border-border text-[#00D4FF] font-mono px-1 rounded">apps/transbank-agent</code>:
                     </p>
-                    <pre className="bg-[hsl(220,30%,4%)] text-gray-300 border border-[rgba(0,212,255,0.08)] text-xs rounded-xl p-4 overflow-x-auto leading-relaxed font-mono">
+                    <pre className="bg-[hsl(220,30%,4%)] text-gray-300 border border-border text-xs rounded-xl p-4 overflow-x-auto leading-relaxed font-mono">
                         <code>{startCmd}</code>
                     </pre>
                     {mockMode && (

@@ -70,11 +70,11 @@ export function PublicChatWidget({ cfg }: { cfg: { welcomeMessage: string; optio
               <Bot className="w-5 h-5 text-purple-400" />
             </div>
             <div>
-              <h3 className="text-sm font-bold text-white">Soporte IA</h3>
+              <h3 className="text-sm font-bold text-foreground">Soporte IA</h3>
               <p className="text-[10px] text-emerald-400 font-medium">En línea</p>
             </div>
           </div>
-          <button onClick={() => setIsOpen(false)} className="text-slate-400 hover:text-white transition-colors">
+          <button onClick={() => setIsOpen(false)} className="text-slate-400 hover:text-foreground transition-colors">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -85,7 +85,7 @@ export function PublicChatWidget({ cfg }: { cfg: { welcomeMessage: string; optio
             <div key={msg.id} className={`flex flex-col ${msg.sender === 'user' ? 'items-end' : 'items-start'}`}>
               <div className={`flex gap-2 max-w-[85%] ${msg.sender === 'user' ? 'flex-row-reverse' : ''}`}>
                 <div className={`shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${msg.sender === 'user' ? 'bg-indigo-600' : 'bg-slate-800 border border-white/[0.1]'}`}>
-                  {msg.sender === 'user' ? <User className="w-4 h-4 text-white" /> : <Bot className="w-4 h-4 text-purple-400" />}
+                  {msg.sender === 'user' ? <User className="w-4 h-4 text-foreground" /> : <Bot className="w-4 h-4 text-purple-400" />}
                 </div>
                 <div className={`p-3 rounded-2xl text-sm ${msg.sender === 'user' ? 'bg-indigo-600 text-white rounded-tr-sm' : 'bg-slate-800 text-slate-200 border border-white/[0.05] rounded-tl-sm'}`}>
                   {msg.text}

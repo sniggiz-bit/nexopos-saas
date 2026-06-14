@@ -91,7 +91,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
             {/* Impersonation banner */}
             {isImpersonating && (
-                <div className="fixed top-0 w-full z-50 flex justify-center items-center gap-4 px-4 py-2 text-sm font-medium text-white"
+                <div className="fixed top-0 w-full z-50 flex justify-center items-center gap-4 px-4 py-2 text-sm font-medium text-foreground"
                     style={{ background: 'linear-gradient(90deg,#7c3aed,#6d28d9)' }}>
                     <span>🕵️ Modo Impersonation activo</span>
                     <button
@@ -287,7 +287,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                         className="p-2 rounded-lg transition-all duration-150 cursor-pointer"
                         style={{
                             color: theme === 'dark' ? 'rgba(180,195,220,0.5)' : 'rgba(75,85,99,0.7)',
-                            background: 'rgba(0,212,255,0.04)',
+                            background: 'hsl(var(--background))',
                             border: theme === 'dark' ? '1px solid rgba(0,212,255,0.08)' : '1px solid rgba(0,212,255,0.2)'
                         }}
                         onMouseEnter={e => {
@@ -305,7 +305,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                     <button className="relative p-2 rounded-lg transition-all duration-150"
                         style={{
                             color: theme === 'dark' ? 'rgba(180,195,220,0.5)' : 'rgba(75,85,99,0.7)',
-                            background: 'rgba(0,212,255,0.04)',
+                            background: 'hsl(var(--background))',
                             border: theme === 'dark' ? '1px solid rgba(0,212,255,0.08)' : '1px solid rgba(0,212,255,0.2)'
                         }}
                         onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = '#00D4FF'}

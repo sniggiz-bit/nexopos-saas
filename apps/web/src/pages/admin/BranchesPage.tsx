@@ -36,10 +36,10 @@ export default function BranchesPage() {
 
     return (
         <DashboardLayout>
-            <div className="space-y-6 flex-1 min-h-[calc(100vh-4rem)] p-6 bg-[rgba(15,22,36,0.1)]">
+            <div className="space-y-6 flex-1 min-h-[calc(100vh-4rem)] p-6 bg-card/[0.1]">
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-2xl font-bold text-white">Sucursales</h1>
+                        <h1 className="text-2xl font-bold text-foreground">Sucursales</h1>
                         <p className="text-gray-400 text-sm mt-1">Gestiona las diferentes ubicaciones de tu negocio</p>
                     </div>
                     <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
@@ -48,9 +48,9 @@ export default function BranchesPage() {
                                 <Plus className="mr-2 h-4 w-4" /> Nueva Sucursal
                             </Button>
                         </DialogTrigger>
-                        <DialogContent className="bg-[rgba(15,22,36,0.95)] border border-[rgba(0,212,255,0.15)] text-white backdrop-blur-md">
+                        <DialogContent className="bg-card/[0.95] border border-border text-foreground backdrop-blur-md">
                             <DialogHeader>
-                                <DialogTitle className="text-white font-bold">Crear Nueva Sucursal</DialogTitle>
+                                <DialogTitle className="text-foreground font-bold">Crear Nueva Sucursal</DialogTitle>
                             </DialogHeader>
                             <form onSubmit={handleSubmit} className="space-y-4 pt-4">
                                 <div className="space-y-2">
@@ -60,7 +60,7 @@ export default function BranchesPage() {
                                         value={newBranchData.name}
                                         onChange={(e) => setNewBranchData({ ...newBranchData, name: e.target.value })}
                                         placeholder="Ej: Sucursal Centro"
-                                        className="bg-[rgba(15,22,36,0.8)] border border-[rgba(0,212,255,0.15)] text-white focus:border-[#00D4FF] focus:ring-1 focus:ring-[#00D4FF]"
+                                        className="bg-card/[0.8] border border-border text-foreground focus:border-[#00D4FF] focus:ring-1 focus:ring-[#00D4FF]"
                                         required
                                     />
                                 </div>
@@ -71,11 +71,11 @@ export default function BranchesPage() {
                                         value={newBranchData.address}
                                         onChange={(e) => setNewBranchData({ ...newBranchData, address: e.target.value })}
                                         placeholder="Ej: Av. Principal 123"
-                                        className="bg-[rgba(15,22,36,0.8)] border border-[rgba(0,212,255,0.15)] text-white focus:border-[#00D4FF] focus:ring-1 focus:ring-[#00D4FF]"
+                                        className="bg-card/[0.8] border border-border text-foreground focus:border-[#00D4FF] focus:ring-1 focus:ring-[#00D4FF]"
                                     />
                                 </div>
                                 <DialogFooter>
-                                    <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)} className="border-[rgba(0,212,255,0.15)] text-gray-400 hover:bg-[rgba(255,255,255,0.05)] hover:text-white">
+                                    <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)} className="border-border text-gray-400 hover:bg-card hover:text-foreground">
                                         Cancelar
                                     </Button>
                                     <Button type="submit" disabled={submitting} className="bg-[#00D4FF] hover:bg-[#00BCE0] text-[#0B0F1A] hover:shadow-[0_0_15px_rgba(0,212,255,0.3)] transition-all font-semibold">
@@ -91,14 +91,14 @@ export default function BranchesPage() {
                     {loading ? (
                         <div className="col-span-3 text-center py-10 text-gray-500">Cargando sucursales...</div>
                     ) : branches.length === 0 ? (
-                        <div className="col-span-3 text-center py-10 text-gray-500 border border-dashed border-[rgba(0,212,255,0.1)] bg-[rgba(0,212,255,0.01)] rounded-xl">
+                        <div className="col-span-3 text-center py-10 text-gray-500 border border-dashed border-border bg-muted/30 rounded-xl">
                             No hay sucursales registradas. Crea la primera.
                         </div>
                     ) : (
                         branches.map((branch) => (
-                            <div key={branch.id} className="bg-[rgba(15,22,36,0.5)] border border-[rgba(0,212,255,0.08)] backdrop-blur-md rounded-xl p-6 hover:border-[rgba(0,212,255,0.2)] hover:shadow-[0_0_15px_rgba(0,212,255,0.05)] transition-all duration-300">
+                            <div key={branch.id} className="bg-card/[0.5] border border-border backdrop-blur-md rounded-xl p-6 hover:border-border hover:shadow-[0_0_15px_rgba(0,212,255,0.05)] transition-all duration-300">
                                 <div className="flex items-start justify-between mb-4">
-                                    <div className="p-3 bg-[rgba(0,212,255,0.08)] border border-[rgba(0,212,255,0.15)] rounded-lg text-[#00D4FF]">
+                                    <div className="p-3 bg-muted/30 border border-border rounded-lg text-[#00D4FF]">
                                         <Store size={24} />
                                     </div>
                                     {branch.isMain && (
@@ -107,9 +107,9 @@ export default function BranchesPage() {
                                         </span>
                                     )}
                                 </div>
-                                <h3 className="text-lg font-semibold text-white mb-2">{branch.name}</h3>
+                                <h3 className="text-lg font-semibold text-foreground mb-2">{branch.name}</h3>
                                 <p className="text-sm text-gray-400 mb-4">{branch.address || 'Sin dirección registrada'}</p>
-                                <div className="pt-4 border-t border-[rgba(0,212,255,0.05)] flex justify-between items-center text-xs text-gray-500 font-mono">
+                                <div className="pt-4 border-t border-border flex justify-between items-center text-xs text-gray-500 font-mono">
                                     <span>ID: {branch.id.substring(0, 8)}...</span>
                                     <span>Creado: {new Date(branch.createdAt).toLocaleDateString()}</span>
                                 </div>

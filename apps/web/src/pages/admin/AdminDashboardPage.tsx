@@ -60,7 +60,7 @@ const StatCard = ({
     </div>
     <div className="min-w-0">
       <p className="text-neutral-400 text-xs font-medium mb-1">{title}</p>
-      <h3 className="text-2xl font-bold text-white tracking-tight">{value}</h3>
+      <h3 className="text-2xl font-bold text-foreground tracking-tight">{value}</h3>
       {sub && <p className="text-xs text-neutral-500 mt-0.5">{sub}</p>}
     </div>
   </div>
@@ -173,7 +173,7 @@ export default function AdminDashboardPage() {
       {/* Distribución de planes + resumen por plan */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-neutral-800 border border-neutral-700 rounded-xl p-6">
-          <h3 className="text-white font-semibold mb-4">Distribución de Planes</h3>
+          <h3 className="text-foreground font-semibold mb-4">Distribución de Planes</h3>
           {planDist.length > 0 ? (
             <div className="h-64">
               <Doughnut data={doughnutData} options={doughnutOptions} />
@@ -186,7 +186,7 @@ export default function AdminDashboardPage() {
         </div>
 
         <div className="bg-neutral-800 border border-neutral-700 rounded-xl p-6">
-          <h3 className="text-white font-semibold mb-4">Planes Activos</h3>
+          <h3 className="text-foreground font-semibold mb-4">Planes Activos</h3>
           <div className="space-y-3">
             {planDist.length === 0 && (
               <p className="text-neutral-600 text-sm">Sin datos</p>
@@ -206,7 +206,7 @@ export default function AdminDashboardPage() {
                       <span className="text-sm text-neutral-300">{plan.name}</span>
                     </div>
                     <div className="text-right">
-                      <span className="text-sm font-semibold text-white">{plan.count}</span>
+                      <span className="text-sm font-semibold text-foreground">{plan.count}</span>
                       <span className="text-xs text-neutral-500 ml-1.5">
                         ${(plan.price * plan.count).toLocaleString('es-CL')}/mes
                       </span>

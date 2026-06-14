@@ -26,7 +26,7 @@ export default function SuperAdminBranchesPage() {
         <div className="space-y-6">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+                    <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
                         <Building2 className="text-purple-500" /> Gestión Global de Sucursales
                     </h1>
                     <p className="text-neutral-400">Control de habilitación de locales para todos los clientes</p>
@@ -79,7 +79,7 @@ export default function SuperAdminBranchesPage() {
                                                     <Store size={18} />
                                                 </div>
                                                 <div>
-                                                    <div className="font-medium text-white">{branch.name}</div>
+                                                    <div className="font-medium text-foreground">{branch.name}</div>
                                                     <div className="text-[10px] text-neutral-500 uppercase tracking-tighter">ID: {branch.id.substring(0, 8)}</div>
                                                 </div>
                                             </div>

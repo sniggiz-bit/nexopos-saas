@@ -105,11 +105,11 @@ export default function NewTransferPage() {
     return (
         <div className="max-w-4xl mx-auto space-y-6">
             <div className="flex items-center gap-4 mb-8">
-                <Button variant="ghost" size="icon" onClick={() => navigate('/admin/branches')} className="text-neutral-400 hover:text-white">
+                <Button variant="ghost" size="icon" onClick={() => navigate('/admin/branches')} className="text-neutral-400 hover:text-foreground">
                     <ArrowLeft size={24} />
                 </Button>
                 <div>
-                    <h1 className="text-2xl font-bold text-white">Nuevo Traspaso</h1>
+                    <h1 className="text-2xl font-bold text-foreground">Nuevo Traspaso</h1>
                     <div className="flex items-center gap-2 text-sm text-neutral-400 mt-1">
                         <span className={step >= 1 ? 'text-purple-400 font-medium' : ''}>1. Origen/Destino</span>
                         <ArrowRight size={14} />
@@ -185,7 +185,7 @@ export default function NewTransferPage() {
                                         filteredProducts.map(product => (
                                             <div key={product.id} className="p-3 border-b border-neutral-800 flex justify-between items-center hover:bg-neutral-800 transition-colors">
                                                 <div>
-                                                    <div className="font-medium text-white">{product.name}</div>
+                                                    <div className="font-medium text-foreground">{product.name}</div>
                                                     <div className="text-xs text-neutral-500">SKU: {product.sku || 'N/A'} | Stock: {product.stock || 0}</div>
                                                     {/* Ideally show stock for origin branch specifically */}
                                                 </div>
@@ -206,7 +206,7 @@ export default function NewTransferPage() {
 
                     <Card className="bg-neutral-800 border-neutral-700">
                         <CardContent className="pt-6">
-                            <h3 className="font-medium text-white mb-4">Productos Seleccionados ({selectedProducts.length})</h3>
+                            <h3 className="font-medium text-foreground mb-4">Productos Seleccionados ({selectedProducts.length})</h3>
                             {selectedProducts.length === 0 ? (
                                 <div className="text-center py-8 text-neutral-500">
                                     <Package size={48} className="mx-auto mb-2 opacity-20" />
@@ -216,11 +216,11 @@ export default function NewTransferPage() {
                                 <div className="space-y-2">
                                     {selectedProducts.map((item, index) => (
                                         <div key={index} className="flex items-center justify-between p-3 bg-neutral-900/50 rounded-lg border border-neutral-800">
-                                            <span className="text-white">{getProductName(item.productId)}</span>
+                                            <span className="text-foreground">{getProductName(item.productId)}</span>
                                             <div className="flex items-center gap-4">
                                                 <div className="flex items-center gap-2">
                                                     <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => handleAddProduct({ id: item.productId }, -1)}>-</Button>
-                                                    <span className="text-white w-8 text-center">{item.quantity}</span>
+                                                    <span className="text-foreground w-8 text-center">{item.quantity}</span>
                                                     <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => handleAddProduct({ id: item.productId }, 1)}>+</Button>
                                                 </div>
                                                 <Button size="icon" variant="ghost" className="text-red-400 hover:text-red-300 hover:bg-red-400/10" onClick={() => handleRemoveProduct(item.productId)}>
@@ -243,25 +243,25 @@ export default function NewTransferPage() {
                         <div className="grid grid-cols-2 gap-4 text-center">
                             <div className="p-4 bg-neutral-900/50 rounded-lg">
                                 <div className="text-xs text-neutral-500 uppercase">Origen</div>
-                                <div className="text-lg font-bold text-white mt-1">
+                                <div className="text-lg font-bold text-foreground mt-1">
                                     {branches.find(b => b.id === originBranchId)?.name}
                                 </div>
                             </div>
                             <div className="p-4 bg-neutral-900/50 rounded-lg">
                                 <div className="text-xs text-neutral-500 uppercase">Destino</div>
-                                <div className="text-lg font-bold text-white mt-1">
+                                <div className="text-lg font-bold text-foreground mt-1">
                                     {branches.find(b => b.id === destBranchId)?.name}
                                 </div>
                             </div>
                         </div>
 
                         <div className="border-t border-neutral-700 pt-4">
-                            <h3 className="font-medium text-white mb-4">Resumen de Productos</h3>
+                            <h3 className="font-medium text-foreground mb-4">Resumen de Productos</h3>
                             <div className="space-y-2">
                                 {selectedProducts.map((item, index) => (
                                     <div key={index} className="flex justify-between text-sm py-1">
                                         <span className="text-neutral-300">{getProductName(item.productId)}</span>
-                                        <span className="text-white font-medium">x {item.quantity}</span>
+                                        <span className="text-foreground font-medium">x {item.quantity}</span>
                                     </div>
                                 ))}
                             </div>

@@ -63,11 +63,11 @@ export function SupportChatWidget() {
               <Bot className="w-5 h-5 text-purple-400" />
             </div>
             <div>
-              <h3 className="text-sm font-bold text-white">Soporte IA</h3>
+              <h3 className="text-sm font-bold text-foreground">Soporte IA</h3>
               <p className="text-[10px] text-green-400 font-medium">En línea</p>
             </div>
           </div>
-          <button onClick={() => setIsOpen(false)} className="text-neutral-400 hover:text-white transition-colors">
+          <button onClick={() => setIsOpen(false)} className="text-neutral-400 hover:text-foreground transition-colors">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -78,7 +78,7 @@ export function SupportChatWidget() {
             <div key={msg.id} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
               <div className={`flex gap-2 max-w-[85%] ${msg.sender === 'user' ? 'flex-row-reverse' : ''}`}>
                 <div className={`shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${msg.sender === 'user' ? 'bg-indigo-600' : 'bg-neutral-800 border border-neutral-700'}`}>
-                  {msg.sender === 'user' ? <User className="w-4 h-4 text-white" /> : <Bot className="w-4 h-4 text-purple-400" />}
+                  {msg.sender === 'user' ? <User className="w-4 h-4 text-foreground" /> : <Bot className="w-4 h-4 text-purple-400" />}
                 </div>
                 <div className={`p-3 rounded-2xl text-sm ${msg.sender === 'user' ? 'bg-indigo-600 text-white rounded-tr-sm' : 'bg-neutral-800 text-neutral-200 border border-neutral-700 rounded-tl-sm'}`}>
                   {msg.text}

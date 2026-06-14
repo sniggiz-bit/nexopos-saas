@@ -119,7 +119,7 @@ export function SubscriptionPage() {
               
               <div className="flex items-start justify-between mb-4 relative z-10">
                 <div className={`p-3 rounded-xl bg-gradient-to-br ${gradient} shadow-lg ${glow}`}>
-                  <Icon className="w-6 h-6 text-white" />
+                  <Icon className="w-6 h-6 text-foreground" />
                 </div>
                 {isActive && (
                   <span className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider font-bold text-emerald-400 bg-emerald-400/10 border border-emerald-400/20 px-2.5 py-1 rounded-full shadow-[0_0_10px_rgba(16,185,129,0.2)]">
@@ -129,12 +129,12 @@ export function SubscriptionPage() {
                 )}
               </div>
               
-              <h3 className="text-lg font-bold text-white mb-2 tracking-tight group-hover:text-indigo-200 transition-colors">
+              <h3 className="text-lg font-bold text-foreground mb-2 tracking-tight group-hover:text-indigo-200 transition-colors">
                 {mod.name}
               </h3>
               {!isIncludedInPlan && (
                 <div className="mb-3">
-                  <span className="text-2xl font-black text-white">
+                  <span className="text-2xl font-black text-foreground">
                     ${mod.price?.toLocaleString('es-CL') || '10.000'}
                   </span>
                   <span className="text-xs text-slate-400 ml-1">/mes</span>
@@ -198,7 +198,7 @@ export function SubscriptionPage() {
                 {activeModules?.tenant?.name || 'Cargando negocio...'} {activeModules?.tenant?.rut && `(${activeModules.tenant.rut})`}
               </span>
             </div>
-            <h2 className="text-3xl md:text-4xl font-black text-white mb-4 tracking-tight leading-tight">
+            <h2 className="text-3xl md:text-4xl font-black text-foreground mb-4 tracking-tight leading-tight">
               Control total sobre tu <span className="bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text text-transparent">Ecosistema</span>
             </h2>
             <p className="text-slate-400 text-base leading-relaxed">
@@ -212,7 +212,7 @@ export function SubscriptionPage() {
                  <Crown className="w-3.5 h-3.5 text-emerald-400" />
                  Módulos en Plan
                </p>
-               <p className="text-4xl font-black text-white">{activeModules?.planModules.length || 0}</p>
+               <p className="text-4xl font-black text-foreground">{activeModules?.planModules.length || 0}</p>
              </div>
              <div className="flex-1 md:flex-none bg-gradient-to-br from-indigo-500/10 to-purple-500/10 border border-indigo-500/20 rounded-2xl p-6 min-w-[180px] shadow-[0_0_30px_-10px_rgba(99,102,241,0.2)] backdrop-blur-xl">
                <p className="text-[11px] text-indigo-300 font-bold uppercase tracking-widest mb-2 flex items-center gap-2">
@@ -234,7 +234,7 @@ export function SubscriptionPage() {
             <div className="p-2 rounded-lg bg-blue-500/10 border border-blue-500/20">
               <Store className="w-5 h-5 text-blue-400" />
             </div>
-            <h3 className="text-xl font-bold text-white tracking-tight">Operación Base y Ventas</h3>
+            <h3 className="text-xl font-bold text-foreground tracking-tight">Operación Base y Ventas</h3>
           </div>
           <p className="text-sm text-slate-400 ml-11 mb-2">Expande la gestión comercial y operativa del Punto de Venta.</p>
           {renderModuleGrid(coreCodes, Store, "from-blue-500 to-cyan-500", "shadow-blue-500/30")}
@@ -246,7 +246,7 @@ export function SubscriptionPage() {
             <div className="p-2 rounded-lg bg-amber-500/10 border border-amber-500/20">
               <Plug className="w-5 h-5 text-amber-400" />
             </div>
-            <h3 className="text-xl font-bold text-white tracking-tight">E-commerce e Integraciones</h3>
+            <h3 className="text-xl font-bold text-foreground tracking-tight">E-commerce e Integraciones</h3>
           </div>
           <p className="text-sm text-slate-400 ml-11 mb-2">Conecta tu tienda física con Shopify, WooCommerce y Transbank.</p>
           {renderModuleGrid(integrationsCodes, Plug, "from-amber-500 to-orange-500", "shadow-amber-500/30")}
@@ -258,7 +258,7 @@ export function SubscriptionPage() {
             <div className="p-2 rounded-lg bg-purple-500/10 border border-purple-500/20">
               <FileText className="w-5 h-5 text-purple-400" />
             </div>
-            <h3 className="text-xl font-bold text-white tracking-tight">Documentos Tributarios (SII)</h3>
+            <h3 className="text-xl font-bold text-foreground tracking-tight">Documentos Tributarios (SII)</h3>
           </div>
           <p className="text-sm text-slate-400 ml-11 mb-2">Emisión automática de Boletas, Facturas y Notas de Crédito.</p>
           {renderModuleGrid(dteCodes, FileText, "from-purple-500 to-pink-500", "shadow-purple-500/30")}

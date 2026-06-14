@@ -303,7 +303,7 @@ export function LandingPage() {
                                 {hero.badge}
                             </div>
                             
-                            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight text-white leading-[1.1]">
+                            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight text-foreground leading-[1.1]">
                                 {hero.title}{' '}
                                 <span className="bg-gradient-to-r from-cyan-400 via-indigo-400 to-emerald-400 bg-clip-text text-transparent block mt-2">
                                     {hero.titleHighlight}
@@ -400,7 +400,7 @@ export function LandingPage() {
                                     {pain.subtitle}
                                 </span>
                             )}
-                            <h2 className="text-3xl font-black text-white sm:text-4xl tracking-tight leading-tight">
+                            <h2 className="text-3xl font-black text-foreground sm:text-4xl tracking-tight leading-tight">
                                 {pain.title}
                             </h2>
                         </div>
@@ -461,7 +461,7 @@ export function LandingPage() {
                                         {solution.subtitle}
                                     </span>
                                 )}
-                                <h2 className="text-3xl sm:text-4xl font-black text-white tracking-tight leading-tight">
+                                <h2 className="text-3xl sm:text-4xl font-black text-foreground tracking-tight leading-tight">
                                     {solution.title}
                                 </h2>
                                 <p className="text-slate-400 leading-relaxed text-sm sm:text-base">
@@ -490,7 +490,7 @@ export function LandingPage() {
             <section id="features" className="py-24 lg:py-32 relative z-10 border-t border-white/[0.05]">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="text-center max-w-3xl mx-auto mb-20 space-y-4">
-                        <h2 className="text-3xl font-black text-white sm:text-4xl tracking-tight">
+                        <h2 className="text-3xl font-black text-foreground sm:text-4xl tracking-tight">
                             {features.sectionTitle}
                         </h2>
                         <p className="text-slate-400 text-sm sm:text-base leading-relaxed">
@@ -535,7 +535,7 @@ export function LandingPage() {
                                     {useCases.subtitle}
                                 </span>
                             )}
-                            <h2 className="text-3xl font-black text-white sm:text-4xl tracking-tight">
+                            <h2 className="text-3xl font-black text-foreground sm:text-4xl tracking-tight">
                                 {useCases.title}
                             </h2>
                         </div>
@@ -585,7 +585,7 @@ export function LandingPage() {
                                 {testimonials.items.map((testimonial, i) => (
                                     <div key={i} className="p-8 rounded-3xl bg-white/[0.02] border border-white/[0.06] flex flex-col justify-between relative">
                                         {/* Quotation icon decoration */}
-                                        <div className="absolute top-6 right-8 text-white/[0.02] text-7xl font-serif pointer-events-none">“</div>
+                                        <div className="absolute top-6 right-8 text-foreground/[0.02] text-7xl font-serif pointer-events-none">“</div>
                                         <p className="text-slate-300 leading-relaxed text-sm italic relative z-10 mb-6">
                                             "{testimonial.content}"
                                         </p>
@@ -616,7 +616,7 @@ export function LandingPage() {
                                     {comparison.subtitle}
                                 </span>
                             )}
-                            <h2 className="text-3xl font-black text-white sm:text-4xl tracking-tight">
+                            <h2 className="text-3xl font-black text-foreground sm:text-4xl tracking-tight">
                                 {comparison.title}
                             </h2>
                         </div>
@@ -650,7 +650,7 @@ export function LandingPage() {
             <section id="pricing" className="py-24 lg:py-32 relative z-10 border-t border-white/[0.05]">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="text-center max-w-3xl mx-auto mb-20 space-y-4">
-                        <h2 className="text-3xl font-black text-white sm:text-4xl tracking-tight">{pricing.title}</h2>
+                        <h2 className="text-3xl font-black text-foreground sm:text-4xl tracking-tight">{pricing.title}</h2>
                         <p className="text-slate-400 text-sm sm:text-base">{pricing.subtitle}</p>
                     </div>
                     
@@ -729,7 +729,7 @@ export function LandingPage() {
                                     {faqs.subtitle}
                                 </span>
                             )}
-                            <h2 className="text-3xl font-black text-white tracking-tight leading-tight">{faqs.title}</h2>
+                            <h2 className="text-3xl font-black text-foreground tracking-tight leading-tight">{faqs.title}</h2>
                         </div>
                         <div className="space-y-4">
                             {faqs.items.map((item, i) => (
@@ -743,7 +743,7 @@ export function LandingPage() {
             {/* CTA Final */}
             <section className="relative z-10 border-t border-b border-white/[0.06] bg-gradient-to-br from-indigo-950/20 via-[#070913] to-emerald-950/20 py-20 sm:py-24">
                 <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
-                    <h2 className="text-3xl font-black tracking-tight sm:text-4xl text-white">{cta.title}</h2>
+                    <h2 className="text-3xl font-black tracking-tight sm:text-4xl text-foreground">{cta.title}</h2>
                     <p className="text-slate-400 text-sm sm:text-base leading-relaxed max-w-xl mx-auto">{cta.subtitle}</p>
                     <div className="pt-2">
                         <Link 

@@ -68,7 +68,7 @@ const NumInput = ({ label, desc, value, onChange }: { label: string; desc: strin
         </div>
         <div className="flex items-center gap-2">
             <button onClick={() => onChange(Math.max(1, value - 1))} className="w-7 h-7 rounded-lg bg-neutral-700 hover:bg-neutral-600 text-white flex items-center justify-center text-sm font-bold">−</button>
-            <span className="w-10 text-center text-sm font-bold text-white tabular-nums">{value}</span>
+            <span className="w-10 text-center text-sm font-bold text-foreground tabular-nums">{value}</span>
             <button onClick={() => onChange(value + 1)} className="w-7 h-7 rounded-lg bg-neutral-700 hover:bg-neutral-600 text-white flex items-center justify-center text-sm font-bold">+</button>
         </div>
     </div>
@@ -79,7 +79,7 @@ const MetCard = ({ icon: Icon, label, value, sub, color = 'text-purple-400' }: {
         <div className="p-2.5 rounded-xl bg-neutral-800"><Icon size={18} className={color} /></div>
         <div>
             <p className="text-xs text-neutral-500">{label}</p>
-            <p className="text-base font-bold text-white leading-snug">{value}</p>
+            <p className="text-base font-bold text-foreground leading-snug">{value}</p>
             {sub && <p className="text-xs text-neutral-500">{sub}</p>}
         </div>
     </div>
@@ -104,14 +104,14 @@ function FeaturesTab({ settings, onSave }: { settings: TenantSettings; onSave: (
     return (
         <div className="space-y-5">
             <div className="bg-neutral-800 border border-neutral-700 rounded-xl p-5">
-                <p className="text-sm font-bold text-white mb-0.5">Módulos principales</p>
+                <p className="text-sm font-bold text-foreground mb-0.5">Módulos principales</p>
                 <p className="text-xs text-neutral-500 mb-4">Activa o desactiva funcionalidades para este cliente</p>
                 <ToggleRow icon={Store} label="Tienda Online (E-commerce)" desc="Panel admin de tienda, publicación de productos y carrito público" checked={local.enableEcommerce} onChange={v => set({ enableEcommerce: v })} color="text-blue-400" />
                 <ToggleRow icon={CreditCard} label="Transbank / Pago electrónico" desc="Integración Webpay para cobros con tarjeta en el punto de venta" checked={local.enableTransbank} onChange={v => set({ enableTransbank: v })} color="text-emerald-400" />
                 <ToggleRow icon={Plug} label="Integraciones externas" desc="Shopify, WooCommerce y otras plataformas e-commerce" checked={local.enableIntegrations} onChange={v => set({ enableIntegrations: v })} color="text-amber-400" />
             </div>
             <div className="bg-neutral-800 border border-neutral-700 rounded-xl p-5">
-                <p className="text-sm font-bold text-white mb-0.5">Documentos tributarios electrónicos (DTE)</p>
+                <p className="text-sm font-bold text-foreground mb-0.5">Documentos tributarios electrónicos (DTE)</p>
                 <p className="text-xs text-neutral-500 mb-4">Módulos SII Chile — requieren configuración adicional en el cliente</p>
                 <ToggleRow icon={FileText} label="Boleta electrónica" desc="Emisión de boletas al SII" checked={local.enableBoletaDte} onChange={v => set({ enableBoletaDte: v })} color="text-purple-400" />
                 <ToggleRow icon={FileText} label="Factura electrónica" desc="Emisión de facturas al SII" checked={local.enableFacturaDte} onChange={v => set({ enableFacturaDte: v })} color="text-purple-400" />
@@ -172,7 +172,7 @@ function ModulesSaaSTab({ tenantId }: { tenantId: string }) {
     return (
         <div className="space-y-5">
             <div className="bg-neutral-800 border border-neutral-700 rounded-xl p-5">
-                <p className="text-sm font-bold text-white mb-0.5">Gestión de Módulos SaaS</p>
+                <p className="text-sm font-bold text-foreground mb-0.5">Gestión de Módulos SaaS</p>
                 <p className="text-xs text-neutral-500 mb-4">Habilita módulos adicionales (Add-ons) independientemente del Plan Base del cliente.</p>
                 
                 <div className="space-y-1">
@@ -228,7 +228,7 @@ function MetricsTab({ tenantId }: { tenantId: string }) {
     return (
         <div className="space-y-4">
             <div className="flex justify-end">
-                <button onClick={load} className="flex items-center gap-1.5 text-xs text-neutral-400 hover:text-white transition-colors"><RefreshCw size={13} />Actualizar</button>
+                <button onClick={load} className="flex items-center gap-1.5 text-xs text-neutral-400 hover:text-foreground transition-colors"><RefreshCw size={13} />Actualizar</button>
             </div>
             <div className="grid grid-cols-2 gap-3">
                 <MetCard icon={TrendingUp} label="Ventas este mes" value={metrics.salesThisMonth} sub="transacciones" color="text-emerald-400" />
@@ -253,13 +253,13 @@ function LimitsTab({ settings, onSave }: { settings: TenantSettings; onSave: (s:
     return (
         <div className="space-y-4">
             <div className="bg-neutral-800 border border-neutral-700 rounded-xl p-5">
-                <p className="text-sm font-bold text-white mb-4">Límites de recursos</p>
+                <p className="text-sm font-bold text-foreground mb-4">Límites de recursos</p>
                 <NumInput label="Sucursales" desc="Máximo de sucursales permitidas" value={local.maxBranches} onChange={v => set({ maxBranches: v })} />
                 <NumInput label="Cajas / Terminales" desc="Terminales de venta por sucursal" value={local.maxRegisters} onChange={v => set({ maxRegisters: v })} />
                 <NumInput label="Usuarios" desc="Máximo de usuarios en el equipo" value={local.maxUsers} onChange={v => set({ maxUsers: v })} />
             </div>
             <div className="bg-neutral-800 border border-neutral-700 rounded-xl p-5">
-                <p className="text-sm font-bold text-white mb-1">Permisos especiales</p>
+                <p className="text-sm font-bold text-foreground mb-1">Permisos especiales</p>
                 <p className="text-xs text-neutral-500 mb-4">Capacidades avanzadas potencialmente destructivas</p>
                 <ToggleRow icon={ShieldAlert} label="Eliminación permanente" desc="Permite borrar registros de forma irreversible" checked={local.canHardDelete} onChange={v => set({ canHardDelete: v })} danger color="text-red-400" />
             </div>
@@ -313,7 +313,7 @@ function DangerTab({ tenant, onStatusChange }: { tenant: TenantDetail; onStatusC
                 <div className="flex items-center gap-3 mb-4">
                     <div className="p-2 rounded-lg bg-blue-500/10"><LogIn size={16} className="text-blue-400" /></div>
                     <div>
-                        <p className="text-sm font-semibold text-white">Acceder como cliente</p>
+                        <p className="text-sm font-semibold text-foreground">Acceder como cliente</p>
                         <p className="text-xs text-neutral-500 mt-0.5">Inicia sesión en nombre del cliente para soporte o revisión</p>
                     </div>
                 </div>
@@ -321,7 +321,7 @@ function DangerTab({ tenant, onStatusChange }: { tenant: TenantDetail; onStatusC
                     <div className="flex items-center gap-3 p-3 bg-neutral-900/60 rounded-xl mb-4">
                         <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center text-xs font-bold text-blue-300 uppercase flex-shrink-0">{adminUser.name.charAt(0)}</div>
                         <div className="min-w-0">
-                            <p className="text-sm text-white font-medium truncate">{adminUser.name}</p>
+                            <p className="text-sm text-foreground font-medium truncate">{adminUser.name}</p>
                             <p className="text-xs text-neutral-500 truncate">{adminUser.email}</p>
                         </div>
                     </div>
@@ -439,7 +439,7 @@ export default function TenantDetailPage() {
             <div className="flex items-center gap-4">
                 <button onClick={() => navigate('/admin/tenants')} className="p-2 rounded-lg hover:bg-neutral-800 text-neutral-400 hover:text-white transition-colors"><ArrowLeft size={20} /></button>
                 <div className="flex-1 min-w-0">
-                    <h1 className="text-2xl font-bold text-white truncate">{tenant.name}</h1>
+                    <h1 className="text-2xl font-bold text-foreground truncate">{tenant.name}</h1>
                     <p className="text-xs text-neutral-500 mt-0.5 font-mono truncate">{tenant.id}</p>
                 </div>
                 <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold flex-shrink-0
@@ -459,7 +459,7 @@ export default function TenantDetailPage() {
                         <div className="p-2 rounded-lg bg-neutral-900/50"><Icon size={16} className={color} /></div>
                         <div>
                             <p className="text-[10px] text-neutral-500 uppercase tracking-wide">{label}</p>
-                            <p className="text-sm font-bold text-white">{value}</p>
+                            <p className="text-sm font-bold text-foreground">{value}</p>
                         </div>
                     </div>
                 ))}
@@ -481,7 +481,7 @@ export default function TenantDetailPage() {
                 {activeTab === 'info' && (
                     <div className="grid grid-cols-2 gap-4">
                         <div className="bg-neutral-800 border border-neutral-700 rounded-xl p-5 space-y-3">
-                            <h3 className="text-sm font-semibold text-white mb-3">Datos del negocio</h3>
+                            <h3 className="text-sm font-semibold text-foreground mb-3">Datos del negocio</h3>
                             {([['Nombre', tenant.name], ['Slug', tenant.slug], ['RUT', tenant.rut ?? '—'], ['Giro', tenant.giro ?? '—'], ['Teléfono', tenant.phone ?? '—'], ['Dirección', tenant.address ?? '—']] as [string, string][]).map(([l, v]) => (
                                 <div key={l} className="flex justify-between items-start">
                                     <span className="text-xs text-neutral-500">{l}</span>
@@ -492,7 +492,7 @@ export default function TenantDetailPage() {
                         <div className="space-y-4">
                             {/* Plan de Suscripción */}
                             <div className="bg-neutral-800 border border-neutral-700 rounded-xl p-5 space-y-3">
-                                <h3 className="text-sm font-semibold text-white">Plan de Suscripción</h3>
+                                <h3 className="text-sm font-semibold text-foreground">Plan de Suscripción</h3>
                                 <p className="text-xs text-neutral-500">Cambia el plan de suscripción de este cliente para modificar sus límites y módulos.</p>
                                 <div className="flex gap-2">
                                     <select
@@ -520,7 +520,7 @@ export default function TenantDetailPage() {
 
                             {/* Usuarios */}
                             <div className="bg-neutral-800 border border-neutral-700 rounded-xl p-5">
-                                <h3 className="text-sm font-semibold text-white mb-3">Usuarios</h3>
+                                <h3 className="text-sm font-semibold text-foreground mb-3">Usuarios</h3>
                                 <div className="space-y-2">
                                     {tenant.users?.length ? tenant.users.map(u => (
                                         <div key={u.id} className="flex items-center gap-3 p-2.5 rounded-lg bg-neutral-900/50">

@@ -98,12 +98,12 @@ export function UserFormModal({ isOpen, onClose, initialData }: UserFormModalPro
                 className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
                 onClick={onClose}
             />
-            <div className="relative bg-[rgba(15,22,36,0.95)] border border-[rgba(0,212,255,0.15)] rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-                <div className="flex items-center justify-between px-6 py-4 border-b border-[rgba(0,212,255,0.08)] bg-[rgba(0,212,255,0.02)]">
-                    <h2 className="text-xl font-bold text-white">{initialData ? 'Editar Empleado' : 'Registrar Empleado'}</h2>
+            <div className="relative bg-card/[0.95] border border-border rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-muted/30">
+                    <h2 className="text-xl font-bold text-foreground">{initialData ? 'Editar Empleado' : 'Registrar Empleado'}</h2>
                     <button
                         onClick={onClose}
-                        className="text-gray-400 hover:text-white hover:bg-[rgba(255,255,255,0.05)] p-2 rounded-full transition-colors"
+                        className="text-gray-400 hover:text-foreground hover:bg-card p-2 rounded-full transition-colors"
                     >
                         <X size={20} />
                     </button>
@@ -116,7 +116,7 @@ export function UserFormModal({ isOpen, onClose, initialData }: UserFormModalPro
                             type="text"
                             required
                             placeholder="Ej. Juan Pérez"
-                            className="w-full px-4 py-2 bg-[rgba(15,22,36,0.8)] border border-[rgba(0,212,255,0.15)] rounded-xl text-white placeholder-slate-500 focus:border-[#00D4FF] focus:ring-1 focus:ring-[#00D4FF] outline-none transition-all"
+                            className="w-full px-4 py-2 bg-card/[0.8] border border-border rounded-xl text-foreground placeholder-slate-500 focus:border-[#00D4FF] focus:ring-1 focus:ring-[#00D4FF] outline-none transition-all"
                             value={formData.name}
                             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                         />
@@ -128,7 +128,7 @@ export function UserFormModal({ isOpen, onClose, initialData }: UserFormModalPro
                             type="email"
                             required
                             placeholder="juan@nexopos.cl"
-                            className="w-full px-4 py-2 bg-[rgba(15,22,36,0.8)] border border-[rgba(0,212,255,0.15)] rounded-xl text-white placeholder-slate-500 focus:border-[#00D4FF] focus:ring-1 focus:ring-[#00D4FF] outline-none transition-all"
+                            className="w-full px-4 py-2 bg-card/[0.8] border border-border rounded-xl text-foreground placeholder-slate-500 focus:border-[#00D4FF] focus:ring-1 focus:ring-[#00D4FF] outline-none transition-all"
                             value={formData.email}
                             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                         />
@@ -140,7 +140,7 @@ export function UserFormModal({ isOpen, onClose, initialData }: UserFormModalPro
                             type="password"
                             required={!initialData}
                             placeholder={initialData ? "Dejar en blanco para conservar" : "••••••••"}
-                            className="w-full px-4 py-2 bg-[rgba(15,22,36,0.8)] border border-[rgba(0,212,255,0.15)] rounded-xl text-white placeholder-slate-500 focus:border-[#00D4FF] focus:ring-1 focus:ring-[#00D4FF] outline-none transition-all"
+                            className="w-full px-4 py-2 bg-card/[0.8] border border-border rounded-xl text-foreground placeholder-slate-500 focus:border-[#00D4FF] focus:ring-1 focus:ring-[#00D4FF] outline-none transition-all"
                             value={formData.password}
                             onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                         />
@@ -151,7 +151,7 @@ export function UserFormModal({ isOpen, onClose, initialData }: UserFormModalPro
                         <div>
                             <label className="block text-sm font-semibold text-gray-400 mb-1">Rol</label>
                             <select
-                                className="w-full px-4 py-2 bg-[rgba(15,22,36,0.8)] border border-[rgba(0,212,255,0.15)] rounded-xl text-white focus:border-[#00D4FF] focus:ring-1 focus:ring-[#00D4FF] outline-none transition-all"
+                                className="w-full px-4 py-2 bg-card/[0.8] border border-border rounded-xl text-foreground focus:border-[#00D4FF] focus:ring-1 focus:ring-[#00D4FF] outline-none transition-all"
                                 value={formData.role}
                                 onChange={(e) => setFormData({ ...formData, role: e.target.value })}
                             >
@@ -164,7 +164,7 @@ export function UserFormModal({ isOpen, onClose, initialData }: UserFormModalPro
                         <div>
                             <label className="block text-sm font-semibold text-gray-400 mb-1">Sucursal</label>
                             <select
-                                className="w-full px-4 py-2 bg-[rgba(15,22,36,0.8)] border border-[rgba(0,212,255,0.15)] rounded-xl text-white focus:border-[#00D4FF] focus:ring-1 focus:ring-[#00D4FF] outline-none transition-all disabled:opacity-50"
+                                className="w-full px-4 py-2 bg-card/[0.8] border border-border rounded-xl text-foreground focus:border-[#00D4FF] focus:ring-1 focus:ring-[#00D4FF] outline-none transition-all disabled:opacity-50"
                                 value={formData.branchId}
                                 onChange={(e) => setFormData({ ...formData, branchId: e.target.value })}
                                 disabled={branches.length === 0}
@@ -177,11 +177,11 @@ export function UserFormModal({ isOpen, onClose, initialData }: UserFormModalPro
                         </div>
                     </div>
 
-                    <div className="pt-4 mt-2 border-t border-[rgba(0,212,255,0.08)] flex justify-end gap-3">
+                    <div className="pt-4 mt-2 border-t border-border flex justify-end gap-3">
                         <button
                             type="button"
                             onClick={onClose}
-                            className="px-5 py-2.5 text-sm font-medium text-gray-400 bg-transparent hover:bg-[rgba(255,255,255,0.05)] hover:text-white rounded-xl transition-colors"
+                            className="px-5 py-2.5 text-sm font-medium text-gray-400 bg-transparent hover:bg-card hover:text-foreground rounded-xl transition-colors"
                         >
                             Cancelar
                         </button>
