@@ -24,7 +24,7 @@
     --secondary: 220 14% 96%;
     --secondary-foreground: 222.2 47.4% 11.2%;
     --muted: 220 14% 96%;
-    --muted-foreground: 220 10% 32%;
+    --muted-foreground: 220 12% 38%;
     --accent: 220 14% 96%;
     --accent-foreground: 222.2 47.4% 11.2%;
     --destructive: 0 84.2% 58%;
@@ -126,16 +126,16 @@
   /* Scrollbar ultra-delgado */
   .scrollbar-thin {
     scrollbar-width: thin;
-    scrollbar-color: rgba(0, 212, 255, 0.15) transparent;
+    scrollbar-color: rgba(0, 212, 255, 0.25) transparent;
   }
   .scrollbar-thin::-webkit-scrollbar { width: 4px; height: 4px; }
   .scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
   .scrollbar-thin::-webkit-scrollbar-thumb {
-    background: rgba(0, 212, 255, 0.2);
+    background: rgba(0, 212, 255, 0.3);
     border-radius: 999px;
   }
   .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-    background: rgba(0, 212, 255, 0.4);
+    background: rgba(0, 212, 255, 0.5);
   }
 
   /* Fade overlay scroll horizontal */
@@ -173,11 +173,19 @@
     -webkit-backdrop-filter: blur(12px);
     border: 1px solid rgba(255, 255, 255, 0.06);
   }
+  :root .glass {
+    background: rgba(248, 250, 252, 0.7);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+  }
   .glass-cyan {
     background: rgba(0, 212, 255, 0.05);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     border: 1px solid rgba(0, 212, 255, 0.15);
+  }
+  :root .glass-cyan {
+    background: rgba(0, 212, 255, 0.06);
+    border: 1px solid rgba(0, 212, 255, 0.22);
   }
 
   /* ── Sidebar active indicator ── */
@@ -254,27 +262,49 @@
 .animate-float-slow { animation: float-slow 10s ease-in-out infinite; }
 .animate-float-reverse { animation: float-reverse 12s ease-in-out infinite; }
 
-/* Autofill fixes for Chrome dark theme */
-input:-webkit-autofill,
-input:-webkit-autofill:hover,
-input:-webkit-autofill:focus,
-input:-webkit-autofill:active {
+/* Autofill fixes — adapts to theme */
+:root input:-webkit-autofill,
+:root input:-webkit-autofill:hover,
+:root input:-webkit-autofill:focus,
+:root input:-webkit-autofill:active {
+  -webkit-text-fill-color: #1e293b !important;
+  -webkit-box-shadow: 0 0 0px 1000px #f8fafc inset !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+.dark input:-webkit-autofill,
+.dark input:-webkit-autofill:hover,
+.dark input:-webkit-autofill:focus,
+.dark input:-webkit-autofill:active {
   -webkit-text-fill-color: #e2e8f0 !important;
   -webkit-box-shadow: 0 0 0px 1000px rgba(15, 23, 42, 0.95) inset !important;
   transition: background-color 5000s ease-in-out 0s;
 }
 
-/* Estilos globales para select y option en modo oscuro */
-select,
-option,
-select option {
-  background-color: #0f172a !important; /* Slate 900 background */
-  color: #f1f5f9 !important;            /* Slate 100 text */
+/* Select / option — modo oscuro (por defecto es la clase .dark) */
+.dark select,
+.dark option,
+.dark select option {
+  background-color: #0f172a !important;
+  color: #f1f5f9 !important;
 }
 
-/* Ajustes de color para cuando están seleccionados o en foco */
-select:focus,
-select option:checked {
-  background-color: #1e293b !important; /* Slate 800 background */
-  color: #00D4FF !important;            /* Cyan text color */
+.dark select:focus,
+.dark select option:checked {
+  background-color: #1e293b !important;
+  color: #00D4FF !important;
+}
+
+/* Select / option — modo claro */
+:root:not(.dark) select,
+:root:not(.dark) option,
+:root:not(.dark) select option {
+  background-color: #ffffff !important;
+  color: #1e293b !important;
+}
+
+:root:not(.dark) select:focus,
+:root:not(.dark) select option:checked {
+  background-color: #f0f9ff !important;
+  color: #0284c7 !important;
 }

@@ -21,7 +21,7 @@ const C = {
     violetA: (a: number) => `rgba(167,139,250,${a})`,
     text: 'hsl(var(--foreground))',
     muted: 'hsl(var(--muted-foreground))',
-    subtle:  'rgba(180,195,220,0.25)',
+    subtle:  'hsl(var(--muted-foreground))',
 };
 
 // ── DTE type badge ─────────────────────────────────────────────────────────────
@@ -86,9 +86,9 @@ function EmptyState() {
         <tr>
             <td colSpan={7}>
                 <div className="flex flex-col items-center justify-center py-16 gap-3">
-                    <FileX className="w-10 h-10" style={{ color: C.cyanA(0.2) }} />
-                    <p className="text-sm font-semibold" style={{ color: C.subtle }}>No hay ventas registradas</p>
-                    <p className="text-xs" style={{ color: C.cyanA(0.3) }}>Ajusta los filtros o realiza una venta en el POS.</p>
+                    <FileX className="w-10 h-10" style={{ color: C.cyanA(0.35) }} />
+                    <p className="text-sm font-semibold" style={{ color: C.muted }}>No hay ventas registradas</p>
+                    <p className="text-xs" style={{ color: C.muted }}>Ajusta los filtros o realiza una venta en el POS.</p>
                 </div>
             </td>
         </tr>
@@ -122,16 +122,16 @@ export function SalesHistoryTable({ sales, isLoading, onEmitNotaCredito, emittin
 
     return (
         <div className="rounded-2xl overflow-hidden"
-            style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(0,212,255,0.1)' }}>
+            style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}>
             <div className="overflow-x-auto">
                 <table className="min-w-full text-[13px]">
                     {/* ── thead ── */}
                     <thead>
-                        <tr style={{ borderBottom: '1px solid rgba(0,212,255,0.07)' }}>
+                        <tr style={{ borderBottom: '1px solid hsl(var(--border))' }}>
                             {COLS.map(col => (
                                 <th key={col}
                                     className="px-5 py-3.5 text-left text-[10px] font-bold uppercase tracking-widest whitespace-nowrap"
-                                    style={{ color: 'rgba(0,212,255,0.4)', background: 'rgba(0,212,255,0.03)' }}>
+                                    style={{ color: 'hsl(var(--muted-foreground))', background: 'hsl(var(--muted))' }}>
                                     {col}
                                 </th>
                             ))}
@@ -152,9 +152,9 @@ export function SalesHistoryTable({ sales, isLoading, onEmitNotaCredito, emittin
 
                                 return (
                                     <tr key={sale.id}
-                                        style={{ borderBottom: '1px solid rgba(0,212,255,0.05)', background: isEven ? 'transparent' : 'rgba(0,212,255,0.015)' }}
+                                        style={{ borderBottom: '1px solid hsl(var(--border))', background: isEven ? 'transparent' : 'hsl(var(--muted) / 0.4)' }}
                                         onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'rgba(0,212,255,0.04)'}
-                                        onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = isEven ? 'transparent' : 'rgba(0,212,255,0.015)'}>
+                                        onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = isEven ? 'transparent' : 'hsl(var(--muted) / 0.4)'}>
 
                                         {/* Folio / ID */}
                                         <td className="px-5 py-3.5 whitespace-nowrap font-mono">
@@ -240,7 +240,7 @@ export function SalesHistoryTable({ sales, isLoading, onEmitNotaCredito, emittin
             {/* Footer count */}
             {sales.length > 0 && !isLoading && (
                 <div className="px-5 py-3 text-[11px] text-right"
-                    style={{ borderTop: '1px solid rgba(0,212,255,0.07)', color: C.cyanA(0.35) }}>
+                    style={{ borderTop: '1px solid hsl(var(--border))', color: C.muted }}>
                     {sales.length} registro{sales.length !== 1 ? 's' : ''} encontrado{sales.length !== 1 ? 's' : ''}
                 </div>
             )}
