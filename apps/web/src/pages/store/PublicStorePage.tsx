@@ -4,10 +4,12 @@ import {
   ShoppingCart, Plus, Minus, X, Search, SlidersHorizontal,
   ChevronLeft, ChevronRight, Tag, Package, MessageCircle,
   ArrowUpDown, XCircle, Star, ShieldCheck, Truck, Clock, Phone,
+  Sun, Moon,
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { api } from '../../lib/api';
 import { useSocket } from '../../hooks/useSocket';
+import { useTheme } from '../../context/ThemeContext';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -95,11 +97,11 @@ function useDebounce<T>(value: T, delay: number): T {
 
 const SkeletonCard = () => (
   <div className="bg-white rounded-xl overflow-hidden animate-pulse">
-    <div className="aspect-[3/4] bg-gray-100" />
+    <div className="aspect-[3/4] bg-gray-100 dark:bg-slate-800" />
     <div className="p-2.5 space-y-2">
-      <div className="h-2.5 bg-gray-100 rounded-full w-1/3" />
-      <div className="h-3 bg-gray-100 rounded-full w-4/5" />
-      <div className="h-4 bg-gray-100 rounded-full w-2/5" />
+      <div className="h-2.5 bg-gray-100 dark:bg-slate-800 rounded-full w-1/3" />
+      <div className="h-3 bg-gray-100 dark:bg-slate-800 rounded-full w-4/5" />
+      <div className="h-4 bg-gray-100 dark:bg-slate-800 rounded-full w-2/5" />
     </div>
   </div>
 );
@@ -117,10 +119,10 @@ const ProductCard = ({ product, brandColor, onAddToCart, onViewDetail }: Product
   const stock = getStockStatus(product.stock);
 
   return (
-    <div className="group bg-white rounded-xl overflow-hidden hover:shadow-md transition-all duration-200 flex flex-col border border-gray-100">
+    <div className="group bg-white dark:bg-slate-900 rounded-xl overflow-hidden hover:shadow-md transition-all duration-200 flex flex-col border border-gray-100 dark:border-slate-800 dark:border-slate-800">
       {/* Image */}
       <div
-        className="relative aspect-[3/4] overflow-hidden bg-gray-50 cursor-pointer"
+        className="relative aspect-[3/4] overflow-hidden bg-gray-50 dark:bg-slate-950 cursor-pointer"
         onClick={() => onViewDetail(product)}
       >
         {product.image ? (
@@ -131,7 +133,7 @@ const ProductCard = ({ product, brandColor, onAddToCart, onViewDetail }: Product
             loading="lazy"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center bg-gray-50">
+          <div className="w-full h-full flex items-center justify-center bg-gray-50 dark:bg-slate-950">
             <Package className="w-10 h-10 text-gray-200" />
           </div>
         )}
@@ -152,7 +154,7 @@ const ProductCard = ({ product, brandColor, onAddToCart, onViewDetail }: Product
 
         {/* Out of stock overlay */}
         {product.stock <= 0 && (
-          <div className="absolute inset-0 bg-white/70 flex items-center justify-center">
+          <div className="absolute inset-0 bg-white/70 dark:bg-black/60 flex items-center justify-center">
             <span className="bg-gray-800/85 text-white text-[10px] font-bold px-2.5 py-1 rounded-full">
               Agotado
             </span>
@@ -177,20 +179,20 @@ const ProductCard = ({ product, brandColor, onAddToCart, onViewDetail }: Product
       {/* Info — compacto */}
       <div className="p-2.5 flex flex-col gap-1">
         {product.brand && (
-          <p className="text-[9px] uppercase tracking-widest font-semibold text-gray-400 leading-none">
+          <p className="text-[9px] uppercase tracking-widest font-semibold text-gray-400 dark:text-slate-500 leading-none">
             {product.brand.name}
           </p>
         )}
         <h3
-          className="text-xs font-semibold text-gray-800 leading-snug line-clamp-2 cursor-pointer hover:text-gray-600 transition-colors"
+          className="text-xs font-semibold text-gray-800 dark:text-slate-200 leading-snug line-clamp-2 cursor-pointer hover:text-gray-600 dark:text-slate-350 transition-colors"
           onClick={() => onViewDetail(product)}
         >
           {product.name}
         </h3>
         <div className="flex items-center justify-between mt-0.5">
-          <p className="text-sm font-bold text-gray-900">{formatCLP(product.price)}</p>
+          <p className="text-sm font-bold text-gray-900 dark:text-white">{formatCLP(product.price)}</p>
           {product.unitType === 'WEIGHT' && (
-            <p className="text-[9px] text-gray-400">/kg</p>
+            <p className="text-[9px] text-gray-400 dark:text-slate-500">/kg</p>
           )}
         </div>
       </div>
@@ -243,20 +245,20 @@ const ProductModal = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
       <div
-        className="relative bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[92vh] overflow-y-auto"
+        className="relative bg-white dark:bg-slate-900 rounded-3xl shadow-2xl w-full max-w-2xl max-h-[92vh] overflow-y-auto"
         onClick={e => e.stopPropagation()}
       >
         {/* Close */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 z-10 w-9 h-9 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center transition-colors"
+          className="absolute top-4 right-4 z-10 w-9 h-9 bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:bg-slate-700 dark:hover:bg-slate-700 rounded-full flex items-center justify-center transition-colors"
         >
-          <X className="w-4 h-4 text-gray-600" />
+          <X className="w-4 h-4 text-gray-600 dark:text-slate-350" />
         </button>
 
         <div className="md:grid md:grid-cols-2">
           {/* Image */}
-          <div className="aspect-square bg-gray-50 rounded-t-3xl md:rounded-l-3xl md:rounded-tr-none overflow-hidden">
+          <div className="aspect-square bg-gray-50 dark:bg-slate-950 dark:bg-slate-850 rounded-t-3xl md:rounded-l-3xl md:rounded-tr-none overflow-hidden">
             {product.image ? (
               <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
             ) : (
@@ -269,7 +271,7 @@ const ProductModal = ({
           {/* Details */}
           <div className="p-6 flex flex-col gap-4">
             {/* Breadcrumb */}
-            <div className="flex items-center gap-1 text-[11px] text-gray-400">
+            <div className="flex items-center gap-1 text-[11px] text-gray-400 dark:text-slate-500">
               {product.category && <span>{product.category.name}</span>}
               {product.brand && (
                 <>
@@ -279,7 +281,7 @@ const ProductModal = ({
               )}
             </div>
 
-            <h2 className="text-xl font-bold text-gray-900 leading-tight">{product.name}</h2>
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white leading-tight">{product.name}</h2>
 
             {/* Stock indicator */}
             <div className="flex items-center gap-1.5">
@@ -296,26 +298,26 @@ const ProductModal = ({
             <div>
               {hasTierDiscount ? (
                 <div className="space-y-0.5">
-                  <p className="text-sm text-gray-400 line-through">{formatCLP(product.price)} c/u</p>
+                  <p className="text-sm text-gray-400 dark:text-slate-500 line-through">{formatCLP(product.price)} c/u</p>
                   <p className="text-3xl font-black" style={{ color: brandColor }}>
                     {formatCLP(activePrice)}
                   </p>
-                  <p className="text-xs font-semibold text-emerald-600">Precio por volumen activo</p>
+                  <p className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">Precio por volumen activo</p>
                 </div>
               ) : (
-                <p className="text-3xl font-black text-gray-900">{formatCLP(product.price)}</p>
+                <p className="text-3xl font-black text-gray-900 dark:text-white">{formatCLP(product.price)}</p>
               )}
             </div>
 
             {/* Price tiers */}
             {product.priceTiers.length > 0 && (
-              <div className="bg-emerald-50 border border-emerald-100 rounded-2xl p-3">
-                <p className="text-xs font-bold text-emerald-700 mb-2">Precios por volumen</p>
+              <div className="bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-100 dark:border-emerald-900/30 rounded-2xl p-3">
+                <p className="text-xs font-bold text-emerald-700 dark:text-emerald-400 mb-2">Precios por volumen</p>
                 <div className="space-y-1">
                   {product.priceTiers.map(tier => (
                     <div
                       key={tier.minQuantity}
-                      className={`flex justify-between text-xs ${qty >= tier.minQuantity ? 'font-bold text-emerald-700' : 'text-emerald-600/70'}`}
+                      className={`flex justify-between text-xs ${qty >= tier.minQuantity ? 'font-bold text-emerald-700 dark:text-emerald-400' : 'text-emerald-600 dark:text-emerald-400/70'}`}
                     >
                       <span>+{tier.minQuantity} unidades</span>
                       <span>{formatCLP(tier.unitPrice)} c/u</span>
@@ -327,23 +329,23 @@ const ProductModal = ({
 
             {/* Quantity */}
             <div className="flex items-center gap-3">
-              <span className="text-sm font-medium text-gray-600">Cantidad</span>
-              <div className="flex items-center border border-gray-200 rounded-xl overflow-hidden">
+              <span className="text-sm font-medium text-gray-600 dark:text-slate-350">Cantidad</span>
+              <div className="flex items-center border border-gray-200 dark:border-slate-800 rounded-xl overflow-hidden">
                 <button
                   onClick={() => setQty(q => Math.max(1, q - 1))}
-                  className="px-3 py-2 hover:bg-gray-100 transition-colors text-gray-600"
+                  className="px-3 py-2 hover:bg-gray-100 dark:hover:bg-slate-800 dark:bg-slate-800 transition-colors text-gray-600 dark:text-slate-350"
                 >
                   <Minus className="w-4 h-4" />
                 </button>
-                <span className="w-10 text-center text-sm font-bold text-gray-900">{qty}</span>
+                <span className="w-10 text-center text-sm font-bold text-gray-900 dark:text-white">{qty}</span>
                 <button
                   onClick={() => setQty(q => product.stock > 0 ? Math.min(product.stock, q + 1) : q)}
-                  className="px-3 py-2 hover:bg-gray-100 transition-colors text-gray-600"
+                  className="px-3 py-2 hover:bg-gray-100 dark:hover:bg-slate-800 dark:bg-slate-800 transition-colors text-gray-600 dark:text-slate-350"
                 >
                   <Plus className="w-4 h-4" />
                 </button>
               </div>
-              <span className="text-sm font-bold text-gray-700 ml-auto">
+              <span className="text-sm font-bold text-gray-700 dark:text-slate-300 ml-auto">
                 {formatCLP(activePrice * qty)}
               </span>
             </div>
@@ -357,7 +359,7 @@ const ProductModal = ({
                   onClose();
                 }}
                 disabled={!stock.available}
-                className="w-full py-3.5 rounded-2xl text-foreground font-bold text-sm transition-all duration-150 disabled:opacity-40 active:scale-98 hover:brightness-90"
+                className="w-full py-3.5 rounded-2xl text-white dark:text-[#0B0F1A] font-bold text-sm transition-all duration-150 disabled:opacity-40 active:scale-98 hover:brightness-90"
                 style={{ backgroundColor: stock.available ? brandColor : '#9ca3af' }}
               >
                 {stock.available
@@ -378,12 +380,12 @@ const ProductModal = ({
             {/* Description */}
             {product.description && (
               <div className="border-t pt-4">
-                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1.5">Descripción</p>
-                <p className="text-sm text-gray-600 leading-relaxed">{product.description}</p>
+                <p className="text-xs font-semibold text-gray-400 dark:text-slate-500 uppercase tracking-wide mb-1.5">Descripción</p>
+                <p className="text-sm text-gray-600 dark:text-slate-350 leading-relaxed">{product.description}</p>
               </div>
             )}
             {product.sku && (
-              <p className="text-xs text-gray-400">SKU: {product.sku}</p>
+              <p className="text-xs text-gray-400 dark:text-slate-500">SKU: {product.sku}</p>
             )}
           </div>
         </div>
@@ -432,33 +434,33 @@ const CartDrawer = ({
         />
       )}
       <div
-        className={`fixed top-0 right-0 h-full w-full max-w-sm bg-white shadow-2xl z-50 flex flex-col transition-transform duration-300 ease-out ${
+        className={`fixed top-0 right-0 h-full w-full max-w-sm bg-white dark:bg-slate-900 shadow-2xl z-50 flex flex-col transition-transform duration-300 ease-out ${
           isOpen ? 'translate-x-0' : 'translate-x-full'
         }`}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-5 border-b border-gray-100">
+        <div className="flex items-center justify-between p-5 border-b border-gray-100 dark:border-slate-800 dark:border-slate-800">
           <div>
-            <h2 className="text-base font-bold text-gray-900">Tu carrito</h2>
-            <p className="text-xs text-gray-400">
+            <h2 className="text-base font-bold text-gray-900 dark:text-white">Tu carrito</h2>
+            <p className="text-xs text-gray-400 dark:text-slate-500">
               {count} {count === 1 ? 'producto' : 'productos'}
             </p>
           </div>
           <button
             onClick={onClose}
-            className="w-8 h-8 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center transition-colors"
+            className="w-8 h-8 bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:bg-slate-700 dark:hover:bg-slate-700 rounded-full flex items-center justify-center transition-colors"
           >
-            <X className="w-4 h-4 text-gray-600" />
+            <X className="w-4 h-4 text-gray-600 dark:text-slate-350" />
           </button>
         </div>
 
         {/* Items */}
         <div className="flex-1 overflow-y-auto p-4">
           {cart.length === 0 ? (
-            <div className="h-full flex flex-col items-center justify-center gap-3 text-gray-300">
+            <div className="h-full flex flex-col items-center justify-center gap-3 text-gray-300 dark:text-slate-600">
               <ShoppingCart className="w-16 h-16" />
-              <p className="text-sm font-medium text-gray-400">Tu carrito está vacío</p>
-              <p className="text-xs text-gray-300">Agrega productos para continuar</p>
+              <p className="text-sm font-medium text-gray-400 dark:text-slate-500">Tu carrito está vacío</p>
+              <p className="text-xs text-gray-300 dark:text-slate-600">Agrega productos para continuar</p>
             </div>
           ) : (
             <div className="space-y-4">
@@ -471,24 +473,24 @@ const CartDrawer = ({
                       className="w-14 h-14 rounded-xl object-cover flex-shrink-0"
                     />
                   ) : (
-                    <div className="w-14 h-14 rounded-xl bg-gray-100 flex items-center justify-center flex-shrink-0">
-                      <Package className="w-6 h-6 text-gray-300" />
+                    <div className="w-14 h-14 rounded-xl bg-gray-100 dark:bg-slate-800 flex items-center justify-center flex-shrink-0">
+                      <Package className="w-6 h-6 text-gray-300 dark:text-slate-600" />
                     </div>
                   )}
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-gray-900 truncate">{item.name}</p>
-                    <p className="text-xs text-gray-400">{formatCLP(item.price)} c/u</p>
+                    <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">{item.name}</p>
+                    <p className="text-xs text-gray-400 dark:text-slate-500">{formatCLP(item.price)} c/u</p>
                     <div className="flex items-center gap-1.5 mt-1.5">
                       <button
                         onClick={() => onUpdateQty(item.id, -1)}
-                        className="w-6 h-6 rounded-full border border-gray-200 flex items-center justify-center hover:bg-gray-100 transition-colors"
+                        className="w-6 h-6 rounded-full border border-gray-200 dark:border-slate-800 flex items-center justify-center hover:bg-gray-100 dark:hover:bg-slate-800 dark:bg-slate-800 transition-colors"
                       >
                         <Minus className="w-3 h-3" />
                       </button>
                       <span className="text-sm font-bold w-5 text-center">{item.quantity}</span>
                       <button
                         onClick={() => onUpdateQty(item.id, 1)}
-                        className="w-6 h-6 rounded-full border border-gray-200 flex items-center justify-center hover:bg-gray-100 transition-colors"
+                        className="w-6 h-6 rounded-full border border-gray-200 dark:border-slate-800 flex items-center justify-center hover:bg-gray-100 dark:hover:bg-slate-800 dark:bg-slate-800 transition-colors"
                       >
                         <Plus className="w-3 h-3" />
                       </button>
@@ -497,11 +499,11 @@ const CartDrawer = ({
                   <div className="flex flex-col items-end justify-between">
                     <button
                       onClick={() => onRemove(item.id)}
-                      className="text-gray-300 hover:text-red-400 transition-colors"
+                      className="text-gray-300 dark:text-slate-600 hover:text-red-400 transition-colors"
                     >
                       <X className="w-3.5 h-3.5" />
                     </button>
-                    <p className="text-sm font-bold text-gray-900">
+                    <p className="text-sm font-bold text-gray-900 dark:text-white">
                       {formatCLP(item.price * item.quantity)}
                     </p>
                   </div>
@@ -513,10 +515,10 @@ const CartDrawer = ({
 
         {/* Footer */}
         {cart.length > 0 && (
-          <div className="p-5 border-t border-gray-100 bg-gray-50 space-y-3">
+          <div className="p-5 border-t border-gray-100 dark:border-slate-800 dark:border-slate-800 bg-gray-50 dark:bg-slate-950 dark:bg-slate-950 space-y-3">
             <div className="flex justify-between items-baseline">
-              <span className="text-sm font-semibold text-gray-700">Total</span>
-              <span className="text-xl font-black text-gray-900">{formatCLP(total)}</span>
+              <span className="text-sm font-semibold text-gray-700 dark:text-slate-300">Total</span>
+              <span className="text-xl font-black text-gray-900 dark:text-white">{formatCLP(total)}</span>
             </div>
             <button
               onClick={handleCheckout}
@@ -527,7 +529,7 @@ const CartDrawer = ({
             </button>
             <button
               onClick={onClose}
-              className="w-full text-xs text-center text-gray-400 hover:text-gray-600 font-medium transition-colors"
+              className="w-full text-xs text-center text-gray-400 dark:text-slate-500 hover:text-gray-600 dark:text-slate-350 font-medium transition-colors"
             >
               Continuar comprando →
             </button>
@@ -571,7 +573,7 @@ const FilterPanel = ({
 
       {filters.brands.length > 0 && (
         <div>
-          <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 dark:text-slate-500 mb-2">
             Marcas
           </p>
           <div className="space-y-0.5">
@@ -585,11 +587,11 @@ const FilterPanel = ({
                   onClick={() => !isEmpty && onBrandChange(isActive ? '' : b.id)}
                   disabled={isEmpty}
                   className={`w-full text-left px-3 py-2 rounded-xl text-xs transition-all duration-150 flex justify-between items-center
-                    ${isActive ? 'font-bold text-white' : isEmpty ? 'text-gray-300 cursor-not-allowed' : 'text-gray-600 hover:bg-gray-100'}`}
+                    ${isActive ? 'font-bold text-white' : isEmpty ? 'text-gray-300 dark:text-slate-600 cursor-not-allowed' : 'text-gray-600 dark:text-slate-350 hover:bg-gray-100 dark:hover:bg-slate-800 dark:bg-slate-800'}`}
                   style={{ backgroundColor: isActive ? brandColor : undefined }}
                 >
                   <span>{b.name}</span>
-                  <span className={`text-[10px] ${isActive ? 'text-white/60' : isEmpty ? 'text-gray-200' : 'text-gray-400'}`}>
+                  <span className={`text-[10px] ${isActive ? 'text-white/60' : isEmpty ? 'text-gray-200' : 'text-gray-400 dark:text-slate-500'}`}>
                     {count}
                   </span>
                 </button>
@@ -601,7 +603,7 @@ const FilterPanel = ({
 
       {filters.categories.length > 0 && (
         <div>
-          <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 dark:text-slate-500 mb-2">
             Categorías
           </p>
           <div className="space-y-0.5">
@@ -615,11 +617,11 @@ const FilterPanel = ({
                   onClick={() => !isEmpty && onCategoryChange(isActive ? '' : c.id)}
                   disabled={isEmpty}
                   className={`w-full text-left px-3 py-2 rounded-xl text-xs transition-all duration-150 flex justify-between items-center
-                    ${isActive ? 'font-bold text-white' : isEmpty ? 'text-gray-300 cursor-not-allowed' : 'text-gray-600 hover:bg-gray-100'}`}
+                    ${isActive ? 'font-bold text-white' : isEmpty ? 'text-gray-300 dark:text-slate-600 cursor-not-allowed' : 'text-gray-600 dark:text-slate-350 hover:bg-gray-100 dark:hover:bg-slate-800 dark:bg-slate-800'}`}
                   style={{ backgroundColor: isActive ? brandColor : undefined }}
                 >
                   <span>{c.name}</span>
-                  <span className={`text-[10px] ${isActive ? 'text-white/60' : isEmpty ? 'text-gray-200' : 'text-gray-400'}`}>
+                  <span className={`text-[10px] ${isActive ? 'text-white/60' : isEmpty ? 'text-gray-200' : 'text-gray-400 dark:text-slate-500'}`}>
                     {count}
                   </span>
                 </button>
@@ -650,7 +652,7 @@ const SliderCarousel = ({ slides, brandColor }: { slides: Slide[]; brandColor: s
   const slide = slides[current];
 
   return (
-    <div className="relative w-full overflow-hidden bg-gray-900 h-52 sm:h-72 md:h-80">
+    <div className="relative w-full overflow-hidden bg-gray-900 dark:bg-black h-52 sm:h-72 md:h-80">
       {/* Image */}
       {slide.imageUrl && (
         <img
@@ -725,6 +727,7 @@ const SliderCarousel = ({ slides, brandColor }: { slides: Slide[]; brandColor: s
 
 export const PublicStorePage = () => {
   const { slug } = useParams<{ slug: string }>();
+  const { theme, toggleTheme } = useTheme();
 
   const [store, setStore] = useState<StoreData | null>(null);
   const [products, setProducts] = useState<StoreProduct[]>([]);
@@ -913,21 +916,21 @@ export const PublicStorePage = () => {
 
   if (storeError) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-8">
+      <div className="min-h-screen bg-gray-50 dark:bg-slate-950 flex items-center justify-center p-8">
         <div className="text-center space-y-4">
           <XCircle className="w-16 h-16 text-gray-200 mx-auto" />
-          <h1 className="text-2xl font-bold text-gray-700">Tienda no disponible</h1>
-          <p className="text-gray-400 text-sm">{storeError}</p>
+          <h1 className="text-2xl font-bold text-gray-700 dark:text-slate-300">Tienda no disponible</h1>
+          <p className="text-gray-400 dark:text-slate-500 text-sm">{storeError}</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-slate-950 dark:bg-slate-950 dark:text-slate-100 transition-colors duration-200">
 
       {/* ── Sticky Header ─────────────────────────────────────────────────── */}
-      <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-sm">
+      <header className="sticky top-0 z-30 bg-white/95 dark:bg-slate-900/95 dark:border-slate-800 backdrop-blur-md border-b border-gray-100 dark:border-slate-800 dark:border-slate-800 shadow-sm transition-colors duration-200">
         {/* Announcement Bar */}
         {store?.storeSettings.announcementEnabled && store.storeSettings.announcementText && (
           <div
@@ -962,19 +965,19 @@ export const PublicStorePage = () => {
             {/* Search */}
             <div className="flex-1 max-w-md mx-auto">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-slate-500 pointer-events-none" />
                 <input
                   ref={searchRef}
                   type="text"
                   value={searchInput}
                   onChange={e => setSearchInput(e.target.value)}
                   placeholder="Buscar productos..."
-                  className="w-full pl-9 pr-8 py-2 bg-gray-100 hover:bg-gray-200/80 focus:bg-white border-2 border-transparent focus:border-gray-300 rounded-xl text-sm text-gray-800 placeholder-gray-400 outline-none transition-all duration-200"
+                  className="w-full pl-9 pr-8 py-2 bg-gray-100 dark:bg-slate-800 dark:bg-slate-800 hover:bg-gray-200 dark:bg-slate-700 dark:hover:bg-slate-700/80 dark:hover:bg-slate-700/80 focus:bg-white dark:focus:bg-slate-900 border-2 border-transparent focus:border-gray-300 dark:focus:border-slate-700 rounded-xl text-sm text-gray-800 dark:text-slate-200 dark:text-slate-100 placeholder-gray-400 dark:placeholder-slate-500 outline-none transition-all duration-200"
                 />
                 {searchInput && (
                   <button
                     onClick={() => setSearchInput('')}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 dark:text-slate-500 hover:text-gray-600 dark:text-slate-350"
                   >
                     <X className="w-3.5 h-3.5" />
                   </button>
@@ -982,10 +985,19 @@ export const PublicStorePage = () => {
               </div>
             </div>
 
+            {/* Theme toggle */}
+            <button
+              onClick={toggleTheme}
+              className="relative flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-xl border border-gray-200 dark:border-slate-800 dark:border-slate-800 bg-white dark:bg-slate-900 text-gray-600 dark:text-slate-350 dark:text-slate-350 hover:bg-gray-100 dark:hover:bg-slate-800 dark:bg-slate-800 dark:hover:bg-slate-800 transition-all duration-150 active:scale-95 shadow-sm"
+              aria-label="Toggle theme"
+            >
+              {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4" />}
+            </button>
+
             {/* Cart button */}
             <button
               onClick={() => setIsCartOpen(true)}
-              className="relative flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl text-foreground text-sm font-bold transition-all duration-150 active:scale-95 hover:brightness-90"
+              className="relative flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl text-white font-bold text-sm transition-all duration-150 active:scale-95 hover:brightness-90"
               style={{ backgroundColor: brandColor }}
             >
               <ShoppingCart className="w-4 h-4" />
@@ -1028,13 +1040,13 @@ export const PublicStorePage = () => {
 
       {/* ── Category pills (quick nav) ──────────────────────────────────────── */}
       {storeFilters.categories.length > 0 && (
-        <div className="bg-white border-b border-gray-100">
+        <div className="bg-white dark:bg-slate-900 border-b border-gray-100 dark:border-slate-800 dark:border-slate-800 dark:border-slate-800">
           <div className="max-w-7xl mx-auto px-4 sm:px-6">
             <div className="flex items-center gap-2 py-3 overflow-x-auto scrollbar-hide">
               <button
                 onClick={() => setActiveCategory('')}
                 className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-150 ${
-                  !activeCategory ? 'text-white shadow-sm' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  !activeCategory ? 'text-white shadow-sm' : 'bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-350 hover:bg-gray-200 dark:bg-slate-700 dark:hover:bg-slate-700'
                 }`}
                 style={{ backgroundColor: !activeCategory ? brandColor : undefined }}
               >
@@ -1047,7 +1059,7 @@ export const PublicStorePage = () => {
                   className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-150 ${
                     activeCategory === cat.id
                       ? 'text-white shadow-sm'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      : 'bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-350 hover:bg-gray-200 dark:bg-slate-700 dark:hover:bg-slate-700'
                   }`}
                   style={{ backgroundColor: activeCategory === cat.id ? brandColor : undefined }}
                 >
@@ -1061,11 +1073,11 @@ export const PublicStorePage = () => {
 
       {/* ── Featured Products ───────────────────────────────────────────────── */}
       {!loadingProducts && featuredProducts.length > 0 && (
-        <div className="bg-white border-b border-gray-100">
+        <div className="bg-white dark:bg-slate-900 border-b border-gray-100 dark:border-slate-800 dark:border-slate-800 dark:border-slate-800">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 py-5">
             <div className="flex items-center gap-2 mb-4">
               <Star className="w-4 h-4 text-amber-500" fill="currentColor" />
-              <h2 className="text-sm font-bold text-gray-800 uppercase tracking-widest">
+              <h2 className="text-sm font-bold text-gray-800 dark:text-slate-200 uppercase tracking-widest">
                 Destacados
               </h2>
             </div>
@@ -1092,7 +1104,7 @@ export const PublicStorePage = () => {
           {/* Desktop sidebar */}
           {hasSidebar && (
             <aside className="hidden lg:block w-52 flex-shrink-0">
-              <div className="sticky top-20 bg-white rounded-2xl border border-gray-100 p-4 shadow-sm">
+              <div className="sticky top-20 bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 dark:border-slate-800 p-4 shadow-sm">
                 <FilterPanel
                   filters={storeFilters}
                   activeCategory={activeCategory}
@@ -1111,7 +1123,7 @@ export const PublicStorePage = () => {
             {/* Toolbar */}
             <div className="flex items-center justify-between mb-4 gap-3">
               <div className="flex items-center gap-2">
-                <p className="text-xs text-gray-400 font-medium">
+                <p className="text-xs text-gray-400 dark:text-slate-500 font-medium">
                   {loadingProducts
                     ? 'Buscando...'
                     : `${products.length} producto${products.length !== 1 ? 's' : ''}`}
@@ -1121,7 +1133,7 @@ export const PublicStorePage = () => {
                 {hasSidebar && (
                   <button
                     onClick={() => setIsMobileFilterOpen(true)}
-                    className="lg:hidden flex items-center gap-1.5 px-2.5 py-1.5 bg-white rounded-xl border border-gray-200 text-xs font-semibold text-gray-600 hover:bg-gray-50 transition-colors"
+                    className="lg:hidden flex items-center gap-1.5 px-2.5 py-1.5 bg-white rounded-xl border border-gray-200 dark:border-slate-800 text-xs font-semibold text-gray-600 dark:text-slate-350 hover:bg-gray-50 dark:bg-slate-950 transition-colors"
                   >
                     <SlidersHorizontal className="w-3 h-3" />
                     Filtros
@@ -1139,11 +1151,11 @@ export const PublicStorePage = () => {
 
               {/* Sort */}
               <div className="flex items-center gap-1.5">
-                <ArrowUpDown className="w-3 h-3 text-gray-300 hidden sm:block" />
+                <ArrowUpDown className="w-3 h-3 text-gray-300 dark:text-slate-600 hidden sm:block" />
                 <select
                   value={sortBy}
                   onChange={e => setSortBy(e.target.value as typeof sortBy)}
-                  className="text-xs text-gray-600 border border-gray-200 rounded-xl px-2.5 py-1.5 bg-white focus:outline-none focus:border-gray-300 cursor-pointer"
+                  className="text-xs text-gray-600 dark:text-slate-350 border border-gray-200 dark:border-slate-800 rounded-xl px-2.5 py-1.5 bg-white focus:outline-none focus:border-gray-300 cursor-pointer"
                 >
                   <option value="name">Nombre A–Z</option>
                   <option value="price_asc">Precio: menor a mayor</option>
@@ -1161,8 +1173,8 @@ export const PublicStorePage = () => {
             ) : products.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-24 gap-4 text-center">
                 <Package className="w-14 h-14 text-gray-200" />
-                <h3 className="text-sm font-bold text-gray-500">Sin resultados</h3>
-                <p className="text-xs text-gray-400 max-w-xs">
+                <h3 className="text-sm font-bold text-gray-500 dark:text-slate-400">Sin resultados</h3>
+                <p className="text-xs text-gray-400 dark:text-slate-500 max-w-xs">
                   {searchInput || activeCategory || activeBrand
                     ? 'No hay productos con los filtros aplicados.'
                     : 'Esta tienda no tiene productos publicados aún.'}
@@ -1209,12 +1221,12 @@ export const PublicStorePage = () => {
             onClick={e => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-5">
-              <h3 className="text-base font-bold text-gray-900">Filtros</h3>
+              <h3 className="text-base font-bold text-gray-900 dark:text-white">Filtros</h3>
               <button
                 onClick={() => setIsMobileFilterOpen(false)}
-                className="w-7 h-7 bg-gray-100 rounded-full flex items-center justify-center"
+                className="w-7 h-7 bg-gray-100 dark:bg-slate-800 rounded-full flex items-center justify-center"
               >
-                <X className="w-4 h-4 text-gray-500" />
+                <X className="w-4 h-4 text-gray-500 dark:text-slate-400" />
               </button>
             </div>
             <FilterPanel
@@ -1228,7 +1240,7 @@ export const PublicStorePage = () => {
             />
             <button
               onClick={() => setIsMobileFilterOpen(false)}
-              className="w-full mt-6 py-3.5 rounded-2xl text-foreground font-bold text-sm"
+              className="w-full mt-6 py-3.5 rounded-2xl text-white dark:text-[#0B0F1A] font-bold text-sm"
               style={{ backgroundColor: brandColor }}
             >
               Ver {products.length} resultado{products.length !== 1 ? 's' : ''}
@@ -1260,7 +1272,7 @@ export const PublicStorePage = () => {
 
       {/* ── Trust Badges ────────────────────────────────────────────────────── */}
       {!loadingStore && store && (
-        <div className="bg-white border-t border-gray-100 mt-8">
+        <div className="bg-white border-t border-gray-100 dark:border-slate-800 dark:border-slate-800 mt-8">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 py-5">
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               {[
@@ -1270,12 +1282,12 @@ export const PublicStorePage = () => {
                 { icon: Star, title: 'Calidad garantizada', desc: 'Productos seleccionados' },
               ].map(({ icon: Icon, title, desc }) => (
                 <div key={title} className="flex items-start gap-3">
-                  <div className="p-2 rounded-lg bg-gray-50 flex-shrink-0">
-                    <Icon className="w-4 h-4 text-gray-500" />
+                  <div className="p-2 rounded-lg bg-gray-50 dark:bg-slate-950 flex-shrink-0">
+                    <Icon className="w-4 h-4 text-gray-500 dark:text-slate-400" />
                   </div>
                   <div>
-                    <p className="text-xs font-semibold text-gray-700">{title}</p>
-                    <p className="text-[10px] text-gray-400 mt-0.5">{desc}</p>
+                    <p className="text-xs font-semibold text-gray-700 dark:text-slate-300">{title}</p>
+                    <p className="text-[10px] text-gray-400 dark:text-slate-500 mt-0.5">{desc}</p>
                   </div>
                 </div>
               ))}
@@ -1286,7 +1298,7 @@ export const PublicStorePage = () => {
 
       {/* ── Footer ──────────────────────────────────────────────────────────── */}
       {!loadingStore && store && (
-        <footer className="bg-gray-900 text-white mt-0">
+        <footer className="bg-gray-900 dark:bg-black text-white mt-0">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
               {/* Brand */}
@@ -1296,7 +1308,7 @@ export const PublicStorePage = () => {
                 ) : (
                   <p className="text-base font-black tracking-tight">{store.name}</p>
                 )}
-                <p className="text-xs text-gray-400 mt-1">Tu tienda online de confianza</p>
+                <p className="text-xs text-gray-400 dark:text-slate-500 mt-1">Tu tienda online de confianza</p>
               </div>
 
               {/* WhatsApp CTA */}
@@ -1313,11 +1325,11 @@ export const PublicStorePage = () => {
               )}
             </div>
 
-            <div className="mt-6 pt-5 border-t border-gray-800 flex flex-col sm:flex-row items-center justify-between gap-2 text-[10px] text-gray-500">
+            <div className="mt-6 pt-5 border-t border-gray-800 flex flex-col sm:flex-row items-center justify-between gap-2 text-[10px] text-gray-500 dark:text-slate-400">
               <p>© {new Date().getFullYear()} {store.name}. Todos los derechos reservados.</p>
               <p>
                 Powered by{' '}
-                <span className="text-gray-300 font-semibold">NexoPOS</span>
+                <span className="text-gray-300 dark:text-slate-600 font-semibold">NexoPOS</span>
               </p>
             </div>
           </div>
