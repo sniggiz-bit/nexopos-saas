@@ -78,7 +78,7 @@ export default function SuperAdminLayout() {
                     {navigationGroups.map((group) => (
                         <div key={group.title}>
                             <p className="px-3 mb-1.5 text-[9px] font-bold uppercase tracking-[0.12em]"
-                                style={{ color: 'rgba(0,212,255,0.35)' }}>
+                                style={{ color: theme === 'dark' ? 'rgba(0,212,255,0.35)' : 'rgba(71,85,105,0.6)' }}>
                                 {group.title}
                             </p>
                             <div className="space-y-0.5">
@@ -97,7 +97,7 @@ export default function SuperAdminLayout() {
                                                 background: 'linear-gradient(90deg, rgba(0,212,255,0.12) 0%, rgba(0,212,255,0.04) 100%)',
                                                 color: '#00D4FF',
                                             } : {
-                                                color: theme === 'dark' ? 'rgba(180,195,220,0.6)' : 'rgba(75,85,99,0.85)',
+                                                color: theme === 'dark' ? 'rgba(180,195,220,0.6)' : 'rgba(55,65,81,0.95)',
                                             }}
                                             onMouseEnter={e => {
                                                 if (!isActive) {
@@ -108,7 +108,7 @@ export default function SuperAdminLayout() {
                                             onMouseLeave={e => {
                                                 if (!isActive) {
                                                     (e.currentTarget as HTMLElement).style.background = '';
-                                                    (e.currentTarget as HTMLElement).style.color = theme === 'dark' ? 'rgba(180,195,220,0.6)' : 'rgba(75,85,99,0.85)';
+                                                    (e.currentTarget as HTMLElement).style.color = theme === 'dark' ? 'rgba(180,195,220,0.6)' : 'rgba(55,65,81,0.95)';
                                                 }
                                             }}
                                         >

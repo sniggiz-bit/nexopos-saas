@@ -14,6 +14,7 @@ import { useQuery } from '@tanstack/react-query';
 import { getSales } from '../../api/sales';
 import { getDashboardAnalytics } from '../../api/dashboard';
 import { apiClient } from '../../api/client';
+import { useTheme } from '../../context/ThemeContext';
 import {
     Chart as ChartJS,
     CategoryScale,
@@ -36,11 +37,15 @@ ChartJS.register(
 // ── Color palette ──────────────────────────────────────────────────────────────
 const CYAN       = '#00D4FF';
 const CYAN_ALPHA = (a: number) => `rgba(0,212,255,${a})`;
-const BG_CARD    = 'rgba(255,255,255,0.02)';
-const BORDER     = 'rgba(0,212,255,0.1)';
 
 export function DashboardOverviewPage() {
     const { user }                          = useAuth();
+    const { theme }                         = useTheme();
+    const isDark                            = theme === 'dark';
+
+    const BG_CARD    = isDark ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.85)';
+    const BORDER     = isDark ? 'rgba(0,212,255,0.1)' : 'rgba(0,212,255,0.2)';
+
     const { data: stats, isLoading }        = useDashboardStats(user?.branchId || undefined);
     const { data: products }                = useProducts();
 
@@ -143,22 +148,22 @@ export function DashboardOverviewPage() {
         plugins: {
             legend: { display: false },
             tooltip: {
-                backgroundColor: 'rgba(11,15,26,0.95)',
+                backgroundColor: isDark ? 'rgba(11,15,26,0.95)' : 'rgba(255,255,255,0.95)',
                 borderColor: CYAN_ALPHA(0.3),
                 borderWidth: 1,
-                titleColor: CYAN,
-                bodyColor: 'rgba(210,225,245,0.8)',
+                titleColor: isDark ? CYAN : '#00A8CC',
+                bodyColor: isDark ? 'rgba(210,225,245,0.8)' : 'rgba(15,23,42,0.8)',
                 callbacks: { label: (ctx: any) => ` ${formatPrice(ctx.raw)}` },
             },
         },
         scales: {
             y: {
-                ticks: { color: 'rgba(180,195,220,0.4)', callback: (v: any) => `$${(v / 1000).toFixed(0)}k`, font: { size: 10 } },
-                grid:  { color: 'rgba(0,212,255,0.05)', drawBorder: false },
+                ticks: { color: isDark ? 'rgba(180,195,220,0.4)' : 'rgba(71,85,105,0.7)', callback: (v: any) => `$${(v / 1000).toFixed(0)}k`, font: { size: 10 } },
+                grid:  { color: isDark ? 'rgba(0,212,255,0.05)' : 'rgba(0,212,255,0.1)', drawBorder: false },
                 border: { display: false },
             },
             x: {
-                ticks: { color: 'rgba(180,195,220,0.4)', font: { size: 9 } },
+                ticks: { color: isDark ? 'rgba(180,195,220,0.4)' : 'rgba(71,85,105,0.7)', font: { size: 9 } },
                 grid:  { display: false },
                 border: { display: false },
             },
@@ -235,7 +240,7 @@ export function DashboardOverviewPage() {
 
                     {/* Comparativa mensual */}
                     <div className="rounded-2xl p-5 flex flex-col justify-between"
-                        style={{ background: BG_CARD, border: BORDER.replace('0.1', '0.1') + ' solid', borderColor: BORDER }}>
+                        style={{ background: BG_CARD, border: `1px solid ${BORDER}` }}>
 
                         <div>
                             <div className="flex items-center gap-2 mb-4">
@@ -243,22 +248,22 @@ export function DashboardOverviewPage() {
                                     style={{ background: CYAN_ALPHA(0.1) }}>
                                     <TrendingUp className="w-3.5 h-3.5" style={{ color: CYAN }} />
                                 </div>
-                                <p className="text-[11px] font-bold uppercase tracking-wider" style={{ color: 'rgba(0,212,255,0.5)' }}>
+                                <p className="text-[11px] font-bold uppercase tracking-wider" style={{ color: isDark ? 'rgba(0,212,255,0.5)' : 'rgba(0,120,180,0.8)' }}>
                                     Comparativa Mensual
                                 </p>
                             </div>
                             <p className="text-3xl font-black tabular-nums leading-none mb-1"
-                                style={{ color: 'rgba(210,225,245,0.95)', textShadow: `0 0 30px ${CYAN_ALPHA(0.15)}` }}>
+                                style={{ color: isDark ? 'rgba(210,225,245,0.95)' : 'rgba(15,23,42,0.95)', textShadow: isDark ? `0 0 30px ${CYAN_ALPHA(0.15)}` : 'none' }}>
                                 {formatPrice(mc?.currentRevenue ?? 0)}
                             </p>
-                            <p className="text-xs mt-1" style={{ color: 'rgba(180,195,220,0.4)' }}>mes actual</p>
+                            <p className="text-xs mt-1" style={{ color: isDark ? 'rgba(180,195,220,0.4)' : 'rgba(71,85,105,0.6)' }}>mes actual</p>
                         </div>
 
-                        <div className="mt-5 pt-4" style={{ borderTop: '1px solid rgba(0,212,255,0.08)' }}>
+                        <div className="mt-5 pt-4" style={{ borderTop: isDark ? '1px solid rgba(0,212,255,0.08)' : '1px solid rgba(0,212,255,0.18)' }}>
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <p className="text-[10px] mb-0.5" style={{ color: 'rgba(180,195,220,0.4)' }}>mes anterior</p>
-                                    <p className="text-sm font-bold tabular-nums" style={{ color: 'rgba(210,225,245,0.7)' }}>
+                                    <p className="text-[10px] mb-0.5" style={{ color: isDark ? 'rgba(180,195,220,0.4)' : 'rgba(71,85,105,0.6)' }}>mes anterior</p>
+                                    <p className="text-sm font-bold tabular-nums" style={{ color: isDark ? 'rgba(210,225,245,0.7)' : 'rgba(15,23,42,0.7)' }}>
                                         {formatPrice(mc?.prevRevenue ?? 0)}
                                     </p>
                                 </div>
@@ -266,7 +271,7 @@ export function DashboardOverviewPage() {
                                     <TrendBadge value={pctChange} />
                                 ) : (
                                     <span className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold"
-                                        style={{ background: 'rgba(180,195,220,0.08)', color: 'rgba(180,195,220,0.4)' }}>
+                                        style={{ background: isDark ? 'rgba(180,195,220,0.08)' : 'rgba(71,85,105,0.08)', color: isDark ? 'rgba(180,195,220,0.4)' : 'rgba(71,85,105,0.6)' }}>
                                         <Minus size={10} /> Sin datos
                                     </span>
                                 )}
@@ -283,12 +288,12 @@ export function DashboardOverviewPage() {
                                     style={{ background: CYAN_ALPHA(0.1) }}>
                                     <Activity className="w-3.5 h-3.5" style={{ color: CYAN }} />
                                 </div>
-                                <p className="text-[11px] font-bold uppercase tracking-wider" style={{ color: 'rgba(0,212,255,0.5)' }}>
+                                <p className="text-[11px] font-bold uppercase tracking-wider" style={{ color: isDark ? 'rgba(0,212,255,0.5)' : 'rgba(0,120,180,0.8)' }}>
                                     Ventas por Hora — Hoy
                                 </p>
                             </div>
                             <span className="text-xs font-bold tabular-nums px-2 py-0.5 rounded-full"
-                                style={{ background: CYAN_ALPHA(0.1), color: CYAN }}>
+                                style={{ background: CYAN_ALPHA(0.1), color: isDark ? CYAN : '#00A8CC' }}>
                                 {formatPrice(totalToday)}
                             </span>
                         </div>
@@ -364,26 +369,26 @@ export function DashboardOverviewPage() {
                         emptyIcon={<Package className="w-8 h-8" style={{ color: 'rgba(0,212,255,0.15)' }} />}
                         emptyText="Sin ventas este mes"
                     >
-                        <div className="divide-y" style={{ borderColor: 'rgba(0,212,255,0.06)' }}>
+                        <div className="divide-y" style={{ borderColor: isDark ? 'rgba(0,212,255,0.06)' : 'rgba(0,212,255,0.12)' }}>
                             {(analytics?.topProducts || []).map((p, i) => (
                                 <div key={p.id} className="px-4 py-2.5 flex items-center gap-3 group transition-colors"
-                                    style={{ borderColor: 'rgba(0,212,255,0.06)' }}
+                                    style={{ borderColor: isDark ? 'rgba(0,212,255,0.06)' : 'rgba(0,212,255,0.12)' }}
                                     onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'rgba(0,212,255,0.03)'}
                                     onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = ''}>
                                     <span className="text-[10px] font-black w-4 text-right flex-shrink-0 tabular-nums"
-                                        style={{ color: i === 0 ? CYAN : 'rgba(180,195,220,0.25)' }}>
+                                        style={{ color: i === 0 ? CYAN : isDark ? 'rgba(180,195,220,0.25)' : 'rgba(71,85,105,0.5)' }}>
                                         {i + 1}
                                     </span>
                                     <div className="flex-1 min-w-0">
-                                        <p className="text-[13px] font-medium truncate" style={{ color: 'rgba(210,225,245,0.85)' }}>
+                                        <p className="text-[13px] font-medium truncate" style={{ color: isDark ? 'rgba(210,225,245,0.85)' : 'rgba(15,23,42,0.85)' }}>
                                             {p.name}
                                         </p>
-                                        <p className="text-[10px]" style={{ color: 'rgba(180,195,220,0.35)' }}>
+                                        <p className="text-[10px]" style={{ color: isDark ? 'rgba(180,195,220,0.35)' : 'rgba(71,85,105,0.55)' }}>
                                             {p.qty} uds
                                         </p>
                                     </div>
                                     <p className="text-[13px] font-bold tabular-nums flex-shrink-0"
-                                        style={{ color: 'rgba(210,225,245,0.7)' }}>
+                                        style={{ color: isDark ? 'rgba(210,225,245,0.7)' : 'rgba(15,23,42,0.7)' }}>
                                         {formatPrice(p.revenue)}
                                     </p>
                                 </div>
@@ -409,16 +414,16 @@ export function DashboardOverviewPage() {
                         emptyIcon={<Package className="w-8 h-8" style={{ color: 'rgba(0,212,255,0.15)' }} />}
                         emptyText="Sin alertas de stock"
                     >
-                        <div className="divide-y" style={{ borderColor: 'rgba(0,212,255,0.06)' }}>
+                        <div className="divide-y" style={{ borderColor: isDark ? 'rgba(0,212,255,0.06)' : 'rgba(0,212,255,0.12)' }}>
                             {lowStockProducts.map(product => (
                                 <div key={product.id} className="px-4 py-2.5 flex items-center justify-between transition-colors"
                                     onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'rgba(0,212,255,0.03)'}
                                     onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = ''}>
                                     <div className="min-w-0">
-                                        <p className="text-[13px] font-medium truncate" style={{ color: 'rgba(210,225,245,0.85)' }}>
+                                        <p className="text-[13px] font-medium truncate" style={{ color: isDark ? 'rgba(210,225,245,0.85)' : 'rgba(15,23,42,0.85)' }}>
                                             {product.name}
                                         </p>
-                                        <p className="text-[10px]" style={{ color: 'rgba(180,195,220,0.35)' }}>
+                                        <p className="text-[10px]" style={{ color: isDark ? 'rgba(180,195,220,0.35)' : 'rgba(71,85,105,0.55)' }}>
                                             {product.category?.name || 'Sin categoría'}
                                         </p>
                                     </div>
@@ -427,7 +432,7 @@ export function DashboardOverviewPage() {
                                             style={{ color: product.stock === 0 ? '#F87171' : '#F59E0B' }}>
                                             {product.stock} uds
                                         </span>
-                                        <p className="text-[10px]" style={{ color: 'rgba(180,195,220,0.3)' }}>
+                                        <p className="text-[10px]" style={{ color: isDark ? 'rgba(180,195,220,0.3)' : 'rgba(71,85,105,0.5)' }}>
                                             mín. {product.minStock}
                                         </p>
                                     </div>
@@ -451,7 +456,7 @@ export function DashboardOverviewPage() {
                         emptyText="No hay ventas hoy"
                     >
                         <div className="divide-y max-h-64 overflow-y-auto scrollbar-thin"
-                            style={{ borderColor: 'rgba(0,212,255,0.06)' }}>
+                            style={{ borderColor: isDark ? 'rgba(0,212,255,0.06)' : 'rgba(0,212,255,0.12)' }}>
                             {completedSalesToday.slice(0, 15).map(sale => {
                                 const method    = sale.payments?.[0]?.paymentMethod || '—';
                                 const itemCount = sale.items?.reduce((sum: number, i: any) => sum + i.quantity, 0) ?? 0;
@@ -461,15 +466,15 @@ export function DashboardOverviewPage() {
                                         onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'rgba(0,212,255,0.03)'}
                                         onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = ''}>
                                         <div>
-                                            <p className="text-[13px] font-bold tabular-nums" style={{ color: 'rgba(210,225,245,0.9)' }}>
+                                            <p className="text-[13px] font-bold tabular-nums" style={{ color: isDark ? 'rgba(210,225,245,0.9)' : 'rgba(15,23,42,0.9)' }}>
                                                 {formatPrice(sale.total)}
                                             </p>
-                                            <p className="text-[10px]" style={{ color: 'rgba(180,195,220,0.35)' }}>
+                                            <p className="text-[10px]" style={{ color: isDark ? 'rgba(180,195,220,0.35)' : 'rgba(71,85,105,0.55)' }}>
                                                 {itemCount} ítem{itemCount !== 1 ? 's' : ''} · {method}
                                             </p>
                                         </div>
                                         <span className="text-[11px] tabular-nums px-2 py-0.5 rounded-md"
-                                            style={{ background: 'rgba(0,212,255,0.06)', color: 'rgba(0,212,255,0.5)' }}>
+                                            style={{ background: isDark ? 'rgba(0,212,255,0.06)' : 'rgba(0,212,255,0.12)', color: isDark ? 'rgba(0,212,255,0.5)' : 'rgba(0,120,180,0.8)' }}>
                                             {time}
                                         </span>
                                     </div>
@@ -478,7 +483,7 @@ export function DashboardOverviewPage() {
                         </div>
                         {completedSalesToday.length > 0 && (
                             <div className="px-4 py-2 text-[10px] text-right"
-                                style={{ borderTop: '1px solid rgba(0,212,255,0.06)', color: 'rgba(180,195,220,0.3)' }}>
+                                style={{ borderTop: isDark ? '1px solid rgba(0,212,255,0.06)' : '1px solid rgba(0,212,255,0.12)', color: isDark ? 'rgba(180,195,220,0.3)' : 'rgba(71,85,105,0.5)' }}>
                                 {completedSalesToday.length} venta{completedSalesToday.length !== 1 ? 's' : ''} completada{completedSalesToday.length !== 1 ? 's' : ''}
                             </div>
                         )}
@@ -509,29 +514,35 @@ interface PrimaryKpiCardProps {
 }
 
 function PrimaryKpiCard({ title, value, sub, icon: Icon, accent, accentAlpha, trend, alert: _alert }: PrimaryKpiCardProps) {
+    const { theme } = useTheme();
+    const isDark = theme === 'dark';
     return (
         <div className="relative rounded-2xl p-5 overflow-hidden group transition-all duration-300"
             style={{
-                background: `linear-gradient(135deg, ${accentAlpha(0.06)} 0%, rgba(255,255,255,0.01) 100%)`,
-                border: `1px solid ${accentAlpha(0.15)}`,
+                background: isDark 
+                    ? `linear-gradient(135deg, ${accentAlpha(0.06)} 0%, rgba(255,255,255,0.01) 100%)`
+                    : `linear-gradient(135deg, ${accentAlpha(0.04)} 0%, rgba(255,255,255,0.85) 100%)`,
+                border: isDark 
+                    ? `1px solid ${accentAlpha(0.15)}`
+                    : `1px solid ${accentAlpha(0.25)}`,
             }}
             onMouseEnter={e => {
-                (e.currentTarget as HTMLElement).style.borderColor = accentAlpha(0.3);
-                (e.currentTarget as HTMLElement).style.boxShadow   = `0 0 25px ${accentAlpha(0.12)}`;
+                (e.currentTarget as HTMLElement).style.borderColor = accentAlpha(isDark ? 0.3 : 0.45);
+                (e.currentTarget as HTMLElement).style.boxShadow   = `0 0 25px ${accentAlpha(isDark ? 0.12 : 0.08)}`;
             }}
             onMouseLeave={e => {
-                (e.currentTarget as HTMLElement).style.borderColor = accentAlpha(0.15);
+                (e.currentTarget as HTMLElement).style.borderColor = accentAlpha(isDark ? 0.15 : 0.25);
                 (e.currentTarget as HTMLElement).style.boxShadow   = '';
             }}>
 
             {/* Background glow orb */}
             <div className="absolute -top-6 -right-6 w-24 h-24 rounded-full pointer-events-none"
-                style={{ background: `radial-gradient(circle, ${accentAlpha(0.12)} 0%, transparent 70%)` }} />
+                style={{ background: `radial-gradient(circle, ${accentAlpha(isDark ? 0.12 : 0.08)} 0%, transparent 70%)` }} />
 
             <div className="relative z-10">
                 <div className="flex items-start justify-between mb-3">
                     <div className="w-9 h-9 rounded-xl flex items-center justify-center"
-                        style={{ background: accentAlpha(0.12), border: `1px solid ${accentAlpha(0.2)}` }}>
+                        style={{ background: accentAlpha(isDark ? 0.12 : 0.08), border: `1px solid ${accentAlpha(isDark ? 0.2 : 0.15)}` }}>
                         <Icon className="w-4 h-4" style={{ color: accent, filter: `drop-shadow(0 0 6px ${accentAlpha(0.6)})` }} />
                     </div>
                     {trend !== null && trend !== undefined && (
@@ -539,15 +550,15 @@ function PrimaryKpiCard({ title, value, sub, icon: Icon, accent, accentAlpha, tr
                     )}
                 </div>
                 <p className="text-[10px] font-bold uppercase tracking-widest mb-1.5"
-                    style={{ color: accentAlpha(0.55) }}>
+                    style={{ color: isDark ? accentAlpha(0.55) : accentAlpha(0.75) }}>
                     {title}
                 </p>
                 <p className="text-2xl font-black tabular-nums leading-none"
-                    style={{ color: 'rgba(210,225,245,0.95)' }}>
+                    style={{ color: isDark ? 'rgba(210,225,245,0.95)' : 'rgba(15,23,42,0.95)' }}>
                     {value}
                 </p>
                 {sub && (
-                    <p className="text-[10px] mt-1.5" style={{ color: 'rgba(180,195,220,0.35)' }}>{sub}</p>
+                    <p className="text-[10px] mt-1.5" style={{ color: isDark ? 'rgba(180,195,220,0.35)' : 'rgba(71,85,105,0.6)' }}>{sub}</p>
                 )}
             </div>
         </div>
@@ -558,25 +569,30 @@ function PrimaryKpiCard({ title, value, sub, icon: Icon, accent, accentAlpha, tr
 interface MiniKpiCardProps { title: string; value: string; icon: React.ElementType; href?: string; }
 
 function MiniKpiCard({ title, value, icon: Icon, href }: MiniKpiCardProps) {
+    const { theme } = useTheme();
+    const isDark = theme === 'dark';
     const content = (
         <div className="rounded-xl p-4 h-full transition-all duration-200 group"
-            style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(0,212,255,0.08)' }}
+            style={{
+                background: isDark ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.85)',
+                border: isDark ? '1px solid rgba(0,212,255,0.08)' : '1px solid rgba(0,212,255,0.18)'
+            }}
             onMouseEnter={e => {
-                (e.currentTarget as HTMLElement).style.borderColor = 'rgba(0,212,255,0.2)';
-                (e.currentTarget as HTMLElement).style.background  = 'rgba(0,212,255,0.04)';
+                (e.currentTarget as HTMLElement).style.borderColor = 'rgba(0,212,255,0.3)';
+                (e.currentTarget as HTMLElement).style.background  = isDark ? 'rgba(0,212,255,0.04)' : 'rgba(0,212,255,0.06)';
             }}
             onMouseLeave={e => {
-                (e.currentTarget as HTMLElement).style.borderColor = 'rgba(0,212,255,0.08)';
-                (e.currentTarget as HTMLElement).style.background  = 'rgba(255,255,255,0.02)';
+                (e.currentTarget as HTMLElement).style.borderColor = isDark ? 'rgba(0,212,255,0.08)' : 'rgba(0,212,255,0.18)';
+                (e.currentTarget as HTMLElement).style.background  = isDark ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.85)';
             }}>
             <div className="flex items-center justify-between mb-2">
                 <p className="text-[9px] font-bold uppercase tracking-widest"
-                    style={{ color: 'rgba(0,212,255,0.4)' }}>
+                    style={{ color: isDark ? 'rgba(0,212,255,0.4)' : 'rgba(0,120,180,0.7)' }}>
                     {title}
                 </p>
-                <Icon className="w-3 h-3" style={{ color: 'rgba(0,212,255,0.3)' }} />
+                <Icon className="w-3 h-3" style={{ color: isDark ? 'rgba(0,212,255,0.3)' : 'rgba(0,120,180,0.5)' }} />
             </div>
-            <p className="text-xl font-black tabular-nums" style={{ color: 'rgba(210,225,245,0.9)' }}>
+            <p className="text-xl font-black tabular-nums" style={{ color: isDark ? 'rgba(210,225,245,0.9)' : 'rgba(15,23,42,0.9)' }}>
                 {value}
             </p>
         </div>
@@ -597,17 +613,22 @@ interface DetailCardProps {
 }
 
 function DetailCard({ icon, title, iconBg, headerRight, empty, emptyIcon, emptyText, children }: DetailCardProps) {
+    const { theme } = useTheme();
+    const isDark = theme === 'dark';
     return (
         <div className="rounded-2xl overflow-hidden"
-            style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(0,212,255,0.1)' }}>
+            style={{
+                background: isDark ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.85)',
+                border: isDark ? '1px solid rgba(0,212,255,0.1)' : '1px solid rgba(0,212,255,0.2)'
+            }}>
             {/* Header */}
             <div className="flex items-center justify-between px-4 py-3.5"
-                style={{ borderBottom: '1px solid rgba(0,212,255,0.07)' }}>
+                style={{ borderBottom: isDark ? '1px solid rgba(0,212,255,0.07)' : '1px solid rgba(0,212,255,0.15)' }}>
                 <div className="flex items-center gap-2">
                     <div className="w-6 h-6 rounded-lg flex items-center justify-center" style={{ background: iconBg }}>
                         {icon}
                     </div>
-                    <h3 className="text-[12px] font-bold" style={{ color: 'rgba(210,225,245,0.8)' }}>
+                    <h3 className="text-[12px] font-bold" style={{ color: isDark ? 'rgba(210,225,245,0.8)' : 'rgba(15,23,42,0.85)' }}>
                         {title}
                     </h3>
                 </div>
@@ -618,7 +639,7 @@ function DetailCard({ icon, title, iconBg, headerRight, empty, emptyIcon, emptyT
             {empty ? (
                 <div className="py-12 flex flex-col items-center gap-2">
                     {emptyIcon}
-                    <p className="text-[12px]" style={{ color: 'rgba(180,195,220,0.3)' }}>{emptyText}</p>
+                    <p className="text-[12px]" style={{ color: isDark ? 'rgba(180,195,220,0.3)' : 'rgba(71,85,105,0.5)' }}>{emptyText}</p>
                 </div>
             ) : children}
         </div>
@@ -652,18 +673,20 @@ interface DteMiniCardProps {
 }
 
 function DteMiniCard({ title, value, sub, accent: _accent, accentAlpha, alert }: DteMiniCardProps) {
+    const { theme } = useTheme();
+    const isDark = theme === 'dark';
     return (
         <div className="rounded-xl p-4 transition-all duration-200 relative overflow-hidden"
             style={{
-                background: accentAlpha(0.04),
-                border: `1px solid ${accentAlpha(alert ? 0.3 : 0.12)}`,
+                background: isDark ? accentAlpha(0.04) : accentAlpha(0.06),
+                border: `1px solid ${accentAlpha(alert ? 0.3 : (isDark ? 0.12 : 0.22))}`,
             }}
             onMouseEnter={e => {
                 (e.currentTarget as HTMLElement).style.borderColor = accentAlpha(0.3);
                 (e.currentTarget as HTMLElement).style.boxShadow   = `0 0 18px ${accentAlpha(0.1)}`;
             }}
             onMouseLeave={e => {
-                (e.currentTarget as HTMLElement).style.borderColor = accentAlpha(alert ? 0.3 : 0.12);
+                (e.currentTarget as HTMLElement).style.borderColor = accentAlpha(alert ? 0.3 : (isDark ? 0.12 : 0.22));
                 (e.currentTarget as HTMLElement).style.boxShadow   = '';
             }}>
             {/* Glow orb */}
@@ -674,22 +697,22 @@ function DteMiniCard({ title, value, sub, accent: _accent, accentAlpha, alert }:
                 {/* Badge Lioren */}
                 <div className="flex items-center justify-between mb-2">
                     <p className="text-[9px] font-bold uppercase tracking-widest"
-                        style={{ color: accentAlpha(0.55) }}>
+                        style={{ color: isDark ? accentAlpha(0.55) : accentAlpha(0.75) }}>
                         {title}
                     </p>
                     <span className="text-[8px] font-bold px-1.5 py-0.5 rounded tracking-wider"
-                        style={{ background: accentAlpha(0.12), color: accentAlpha(0.7) }}>
+                        style={{ background: accentAlpha(0.12), color: isDark ? accentAlpha(0.7) : accentAlpha(0.85) }}>
                         LIOREN
                     </span>
                 </div>
 
                 <p className="text-2xl font-black tabular-nums leading-none"
-                    style={{ color: 'rgba(210,225,245,0.95)' }}>
+                    style={{ color: isDark ? 'rgba(210,225,245,0.95)' : 'rgba(15,23,42,0.95)' }}>
                     {value.toLocaleString('es-CL')}
                 </p>
 
                 {sub && (
-                    <p className="text-[10px] mt-1.5" style={{ color: 'rgba(180,195,220,0.35)' }}>
+                    <p className="text-[10px] mt-1.5" style={{ color: isDark ? 'rgba(180,195,220,0.35)' : 'rgba(71,85,105,0.6)' }}>
                         {sub}
                     </p>
                 )}
@@ -702,32 +725,35 @@ function DteMiniCard({ title, value, sub, accent: _accent, accentAlpha, alert }:
 interface WebOrdersCardProps { pending: number; total: number; }
 
 function WebOrdersCard({ pending, total }: WebOrdersCardProps) {
+    const { theme } = useTheme();
+    const isDark = theme === 'dark';
     return (
         <Link to="/dashboard/integrations" className="block h-full">
             <div className="rounded-xl p-4 h-full transition-all duration-200 group relative overflow-hidden flex flex-col justify-between"
-                style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(0,212,255,0.08)' }}
+                style={{
+                    background: isDark ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.85)',
+                    border: isDark ? '1px solid rgba(0,212,255,0.08)' : '1px solid rgba(0,212,255,0.18)'
+                }}
                 onMouseEnter={e => {
                     (e.currentTarget as HTMLElement).style.borderColor = 'rgba(0,212,255,0.2)';
-                    (e.currentTarget as HTMLElement).style.background  = 'rgba(0,212,255,0.04)';
-                    (e.currentTarget as HTMLElement).style.boxShadow   = '0 0 15px rgba(0,212,255,0.05)';
+                    (e.currentTarget as HTMLElement).style.background  = isDark ? 'rgba(0,212,255,0.04)' : 'rgba(0,212,255,0.06)';
                 }}
                 onMouseLeave={e => {
-                    (e.currentTarget as HTMLElement).style.borderColor = 'rgba(0,212,255,0.08)';
-                    (e.currentTarget as HTMLElement).style.background  = 'rgba(255,255,255,0.02)';
-                    (e.currentTarget as HTMLElement).style.boxShadow   = '';
+                    (e.currentTarget as HTMLElement).style.borderColor = isDark ? 'rgba(0,212,255,0.08)' : 'rgba(0,212,255,0.18)';
+                    (e.currentTarget as HTMLElement).style.background  = isDark ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.85)';
                 }}>
                 <div className="flex items-center justify-between mb-2">
                     <p className="text-[9px] font-bold uppercase tracking-widest"
-                        style={{ color: 'rgba(0,212,255,0.4)' }}>
+                        style={{ color: isDark ? 'rgba(0,212,255,0.4)' : 'rgba(0,120,180,0.7)' }}>
                         Pedidos Web
                     </p>
                     <Globe className="w-3.5 h-3.5 text-[#00D4FF]" />
                 </div>
                 <div>
-                    <p className="text-xl font-black text-white tabular-nums leading-none">
-                        {pending} <span className="text-[11px] font-medium text-gray-400">Pendientes</span>
+                    <p className="text-xl font-black tabular-nums leading-none" style={{ color: isDark ? 'rgba(210,225,245,0.95)' : 'rgba(15,23,42,0.95)' }}>
+                        {pending} <span className="text-[11px] font-medium" style={{ color: isDark ? 'rgba(180,195,220,0.4)' : 'rgba(71,85,105,0.6)' }}>Pendientes</span>
                     </p>
-                    <p className="text-[10px] text-gray-500 mt-2 font-medium">
+                    <p className="text-[10px] mt-2 font-medium" style={{ color: isDark ? 'rgba(180,195,220,0.35)' : 'rgba(71,85,105,0.5)' }}>
                         {total} pedidos totales importados
                     </p>
                 </div>
@@ -740,6 +766,8 @@ function WebOrdersCard({ pending, total }: WebOrdersCardProps) {
 interface ShiftClosureCardProps { summary: any; }
 
 function ShiftClosureCard({ summary }: ShiftClosureCardProps) {
+    const { theme } = useTheme();
+    const isDark = theme === 'dark';
     const isActive = summary?.active ?? false;
     const cash = summary?.paymentMethods?.EFECTIVO ?? 0;
     const debit = summary?.paymentMethods?.DEBITO ?? 0;
@@ -748,20 +776,21 @@ function ShiftClosureCard({ summary }: ShiftClosureCardProps) {
     return (
         <Link to="/dashboard/treasury" className="block h-full">
             <div className="rounded-xl p-3.5 h-full transition-all duration-200 group relative overflow-hidden flex flex-col justify-between"
-                style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(0,212,255,0.08)' }}
+                style={{
+                    background: isDark ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.85)',
+                    border: isDark ? '1px solid rgba(0,212,255,0.08)' : '1px solid rgba(0,212,255,0.18)'
+                }}
                 onMouseEnter={e => {
                     (e.currentTarget as HTMLElement).style.borderColor = 'rgba(0,212,255,0.2)';
-                    (e.currentTarget as HTMLElement).style.background  = 'rgba(0,212,255,0.04)';
-                    (e.currentTarget as HTMLElement).style.boxShadow   = '0 0 15px rgba(0,212,255,0.05)';
+                    (e.currentTarget as HTMLElement).style.background  = isDark ? 'rgba(0,212,255,0.04)' : 'rgba(0,212,255,0.06)';
                 }}
                 onMouseLeave={e => {
-                    (e.currentTarget as HTMLElement).style.borderColor = 'rgba(0,212,255,0.08)';
-                    (e.currentTarget as HTMLElement).style.background  = 'rgba(255,255,255,0.02)';
-                    (e.currentTarget as HTMLElement).style.boxShadow   = '';
+                    (e.currentTarget as HTMLElement).style.borderColor = isDark ? 'rgba(0,212,255,0.08)' : 'rgba(0,212,255,0.18)';
+                    (e.currentTarget as HTMLElement).style.background  = isDark ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.85)';
                 }}>
                 <div className="flex items-center justify-between mb-2">
                     <p className="text-[9px] font-bold uppercase tracking-widest"
-                        style={{ color: 'rgba(0,212,255,0.4)' }}>
+                        style={{ color: isDark ? 'rgba(0,212,255,0.4)' : 'rgba(0,120,180,0.7)' }}>
                         Detalles del Cierre
                     </p>
                     <span className={`text-[8px] px-1.5 py-0.5 rounded font-black uppercase tracking-wider ${
@@ -775,7 +804,7 @@ function ShiftClosureCard({ summary }: ShiftClosureCardProps) {
 
                 <div className="space-y-1.5 my-1">
                     <div className="flex items-center justify-between text-[11px]">
-                        <span className="text-gray-400 flex items-center gap-1">
+                        <span className="flex items-center gap-1" style={{ color: isDark ? 'rgba(180,195,220,0.45)' : 'rgba(71,85,105,0.75)' }}>
                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
                             Efectivo
                         </span>
@@ -784,7 +813,7 @@ function ShiftClosureCard({ summary }: ShiftClosureCardProps) {
                         </span>
                     </div>
                     <div className="flex items-center justify-between text-[11px]">
-                        <span className="text-gray-400 flex items-center gap-1">
+                        <span className="flex items-center gap-1" style={{ color: isDark ? 'rgba(180,195,220,0.45)' : 'rgba(71,85,105,0.75)' }}>
                             <span className="w-1.5 h-1.5 rounded-full bg-[#00D4FF]" />
                             Débito
                         </span>
@@ -793,7 +822,7 @@ function ShiftClosureCard({ summary }: ShiftClosureCardProps) {
                         </span>
                     </div>
                     <div className="flex items-center justify-between text-[11px]">
-                        <span className="text-gray-400 flex items-center gap-1">
+                        <span className="flex items-center gap-1" style={{ color: isDark ? 'rgba(180,195,220,0.45)' : 'rgba(71,85,105,0.75)' }}>
                             <span className="w-1.5 h-1.5 rounded-full bg-purple-400" />
                             Transf.
                         </span>
