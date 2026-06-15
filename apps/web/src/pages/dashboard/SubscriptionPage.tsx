@@ -66,7 +66,6 @@ export function SubscriptionPage() {
       const response = await api.post('/mercadopago/subscribe-module', { moduleId: module.id });
       
       if (response.data && response.data.init_point) {
-        // Redirect to Mercado Pago
         window.location.href = response.data.init_point;
       } else {
         toast.error('No se pudo generar el link de pago');
@@ -83,9 +82,11 @@ export function SubscriptionPage() {
       <div className="flex flex-col items-center justify-center h-[70vh]">
         <div className="relative">
           <div className="absolute inset-0 bg-indigo-500/20 blur-xl rounded-full" />
-          <Loader2 className="w-12 h-12 animate-spin text-indigo-400 relative z-10" />
+          <Loader2 className="w-12 h-12 animate-spin text-indigo-500 dark:text-indigo-400 relative z-10" />
         </div>
-        <p className="mt-4 text-indigo-200/60 font-medium tracking-wide animate-pulse">Cargando ecosistema de módulos...</p>
+        <p className="mt-4 text-muted-foreground font-medium tracking-wide animate-pulse">
+          Cargando ecosistema de módulos...
+        </p>
       </div>
     );
   }
@@ -104,32 +105,31 @@ export function SubscriptionPage() {
           const isHiring = hiring === mod.id;
 
           return (
-            <div 
-              key={mod.id} 
+            <div
+              key={mod.id}
               className={`group relative flex flex-col p-6 rounded-2xl border transition-all duration-500 ${
-                isActive 
-                  ? `bg-white/[0.04] border-emerald-500/30 hover:border-emerald-500/50 hover:shadow-[0_0_30px_-5px_rgba(16,185,129,0.15)]` 
-                  : `bg-white/[0.02] border-white/[0.05] hover:border-white/[0.1] hover:bg-white/[0.04] hover:shadow-[0_0_30px_-5px_rgba(255,255,255,0.05)]`
+                isActive
+                  ? `bg-emerald-50 dark:bg-white/[0.04] border-emerald-300 dark:border-emerald-500/30 hover:border-emerald-400 dark:hover:border-emerald-500/50 shadow-sm hover:shadow-emerald-100 dark:hover:shadow-[0_0_30px_-5px_rgba(16,185,129,0.15)]`
+                  : `bg-white dark:bg-white/[0.02] border-slate-200 dark:border-white/[0.05] hover:border-slate-300 dark:hover:border-white/[0.1] hover:bg-slate-50 dark:hover:bg-white/[0.04] shadow-sm hover:shadow-slate-100`
               }`}
             >
-              
               {isActive && (
                 <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 via-transparent to-transparent rounded-2xl pointer-events-none" />
               )}
               
               <div className="flex items-start justify-between mb-4 relative z-10">
                 <div className={`p-3 rounded-xl bg-gradient-to-br ${gradient} shadow-lg ${glow}`}>
-                  <Icon className="w-6 h-6 text-foreground" />
+                  <Icon className="w-6 h-6 text-white" />
                 </div>
                 {isActive && (
-                  <span className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider font-bold text-emerald-400 bg-emerald-400/10 border border-emerald-400/20 px-2.5 py-1 rounded-full shadow-[0_0_10px_rgba(16,185,129,0.2)]">
+                  <span className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-400/10 border border-emerald-300 dark:border-emerald-400/20 px-2.5 py-1 rounded-full">
                     <CheckCircle2 className="w-3.5 h-3.5" />
                     Activo
                   </span>
                 )}
               </div>
               
-              <h3 className="text-lg font-bold text-foreground mb-2 tracking-tight group-hover:text-indigo-200 transition-colors">
+              <h3 className="text-lg font-bold text-foreground mb-2 tracking-tight group-hover:text-indigo-600 dark:group-hover:text-indigo-200 transition-colors">
                 {mod.name}
               </h3>
               {!isIncludedInPlan && (
@@ -137,31 +137,31 @@ export function SubscriptionPage() {
                   <span className="text-2xl font-black text-foreground">
                     ${mod.price?.toLocaleString('es-CL') || '10.000'}
                   </span>
-                  <span className="text-xs text-slate-400 ml-1">/mes</span>
+                  <span className="text-xs text-muted-foreground ml-1">/mes</span>
                 </div>
               )}
-              <p className="text-sm text-slate-400 leading-relaxed mb-6 flex-1">
+              <p className="text-sm text-muted-foreground leading-relaxed mb-6 flex-1">
                 {mod.description || 'Integra capacidades avanzadas a tu plataforma y automatiza tu operación.'}
               </p>
 
-              <div className="mt-auto pt-5 border-t border-white/[0.05] relative z-10">
+              <div className="mt-auto pt-5 border-t border-slate-100 dark:border-white/[0.05] relative z-10">
                 {isActive ? (
                   <div className="flex items-center justify-between text-xs font-medium">
-                    <span className="flex items-center gap-2 text-emerald-400/80">
+                    <span className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400/80">
                       <ShieldCheck className="w-4 h-4" />
                       {isIncludedInPlan ? 'Plan Base (Incluido)' : 'Add-on Extra'}
                     </span>
                   </div>
                 ) : (
-                  <button 
+                  <button
                     onClick={() => handleHireModule(mod)}
                     disabled={isHiring}
-                    className="w-full relative overflow-hidden group/btn flex items-center justify-between px-5 py-3 rounded-xl bg-white/[0.05] hover:bg-indigo-600 border border-white/[0.1] hover:border-indigo-500 text-white text-sm font-semibold transition-all duration-300 disabled:opacity-50 disabled:hover:bg-white/[0.05] disabled:hover:border-white/[0.1]"
+                    className="w-full relative overflow-hidden group/btn flex items-center justify-between px-5 py-3 rounded-xl bg-slate-100 hover:bg-indigo-600 dark:bg-white/[0.05] dark:hover:bg-indigo-600 border border-slate-200 hover:border-indigo-500 dark:border-white/[0.1] dark:hover:border-indigo-500 text-slate-700 hover:text-white dark:text-white text-sm font-semibold transition-all duration-300 disabled:opacity-50 disabled:hover:bg-slate-100 disabled:hover:text-slate-700 disabled:hover:border-slate-200 dark:disabled:hover:bg-white/[0.05] dark:disabled:hover:border-white/[0.1]"
                   >
                     <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/0 via-white/20 to-indigo-500/0 translate-x-[-100%] group-hover/btn:translate-x-[100%] transition-transform duration-700" />
                     {isHiring ? (
                       <span className="flex items-center gap-2 mx-auto">
-                        <Loader2 className="w-4 h-4 animate-spin text-indigo-300" /> Instalando...
+                        <Loader2 className="w-4 h-4 animate-spin text-indigo-500 dark:text-indigo-300" /> Instalando...
                       </span>
                     ) : (
                       <>
@@ -184,87 +184,91 @@ export function SubscriptionPage() {
       <div className="space-y-12 max-w-7xl mx-auto pb-20">
         
         {/* ── Resumen de Suscripción (Hero) ── */}
-      <div className="relative overflow-hidden rounded-3xl bg-slate-950/50 border border-white/[0.05] p-8 md:p-10 shadow-2xl">
-        {/* Decorative elements */}
-        <div className="absolute -top-40 -right-40 w-96 h-96 bg-indigo-500/20 blur-[100px] rounded-full pointer-events-none" />
-        <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-emerald-500/10 blur-[100px] rounded-full pointer-events-none" />
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay pointer-events-none" />
-        
-        <div className="relative z-10 flex flex-col md:flex-row gap-10 items-start md:items-center justify-between">
-          <div className="max-w-xl">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/[0.05] border border-white/[0.1] mb-6 backdrop-blur-md">
-              <Sparkles className="w-4 h-4 text-amber-400" />
-              <span className="text-xs font-bold tracking-widest uppercase text-slate-300">
-                {activeModules?.tenant?.name || 'Cargando negocio...'} {activeModules?.tenant?.rut && `(${activeModules.tenant.rut})`}
-              </span>
-            </div>
-            <h2 className="text-3xl md:text-4xl font-black text-foreground mb-4 tracking-tight leading-tight">
-              Control total sobre tu <span className="bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text text-transparent">Ecosistema</span>
-            </h2>
-            <p className="text-slate-400 text-base leading-relaxed">
-              Personaliza las capacidades de tu plataforma. Paga únicamente por lo que usas e instala nuevas herramientas con un solo clic, sin descargas ni configuraciones complejas.
-            </p>
-          </div>
+        <div className="relative overflow-hidden rounded-3xl border p-8 md:p-10 shadow-xl
+          bg-gradient-to-br from-slate-900 to-slate-800
+          dark:bg-none dark:bg-slate-950/50
+          border-slate-700 dark:border-white/[0.05]">
 
-          <div className="flex flex-wrap gap-4 w-full md:w-auto">
-             <div className="flex-1 md:flex-none bg-white/[0.02] border border-white/[0.05] rounded-2xl p-6 min-w-[180px] shadow-inner backdrop-blur-xl">
-               <p className="text-[11px] text-slate-400 font-bold uppercase tracking-widest mb-2 flex items-center gap-2">
-                 <Crown className="w-3.5 h-3.5 text-emerald-400" />
-                 Módulos en Plan
-               </p>
-               <p className="text-4xl font-black text-foreground">{activeModules?.planModules.length || 0}</p>
-             </div>
-             <div className="flex-1 md:flex-none bg-gradient-to-br from-indigo-500/10 to-purple-500/10 border border-indigo-500/20 rounded-2xl p-6 min-w-[180px] shadow-[0_0_30px_-10px_rgba(99,102,241,0.2)] backdrop-blur-xl">
-               <p className="text-[11px] text-indigo-300 font-bold uppercase tracking-widest mb-2 flex items-center gap-2">
-                 <Zap className="w-3.5 h-3.5" />
-                 Add-ons Extra
-               </p>
-               <p className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-indigo-300 to-purple-300">{activeModules?.addonModules.length || 0}</p>
-             </div>
+          {/* Decorative blobs */}
+          <div className="absolute -top-40 -right-40 w-96 h-96 bg-indigo-500/20 blur-[100px] rounded-full pointer-events-none" />
+          <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-emerald-500/10 blur-[100px] rounded-full pointer-events-none" />
+          <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.08] mix-blend-overlay pointer-events-none" />
+          
+          <div className="relative z-10 flex flex-col md:flex-row gap-10 items-start md:items-center justify-between">
+            <div className="max-w-xl">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 border border-white/20 mb-6 backdrop-blur-md">
+                <Sparkles className="w-4 h-4 text-amber-400" />
+                <span className="text-xs font-bold tracking-widest uppercase text-slate-200">
+                  {activeModules?.tenant?.name || 'Cargando negocio...'} {activeModules?.tenant?.rut && `(${activeModules.tenant.rut})`}
+                </span>
+              </div>
+              <h2 className="text-3xl md:text-4xl font-black text-white mb-4 tracking-tight leading-tight">
+                Control total sobre tu <span className="bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text text-transparent">Ecosistema</span>
+              </h2>
+              <p className="text-slate-300 text-base leading-relaxed">
+                Personaliza las capacidades de tu plataforma. Paga únicamente por lo que usas e instala nuevas herramientas con un solo clic, sin descargas ni configuraciones complejas.
+              </p>
+            </div>
+
+            <div className="flex flex-wrap gap-4 w-full md:w-auto">
+              <div className="flex-1 md:flex-none bg-white/10 border border-white/15 rounded-2xl p-6 min-w-[180px] shadow-inner backdrop-blur-xl">
+                <p className="text-[11px] text-slate-300 font-bold uppercase tracking-widest mb-2 flex items-center gap-2">
+                  <Crown className="w-3.5 h-3.5 text-emerald-400" />
+                  Módulos en Plan
+                </p>
+                <p className="text-4xl font-black text-white">{activeModules?.planModules.length || 0}</p>
+              </div>
+              <div className="flex-1 md:flex-none bg-gradient-to-br from-indigo-500/20 to-purple-500/20 border border-indigo-400/30 rounded-2xl p-6 min-w-[180px] shadow-[0_0_30px_-10px_rgba(99,102,241,0.3)] backdrop-blur-xl">
+                <p className="text-[11px] text-indigo-200 font-bold uppercase tracking-widest mb-2 flex items-center gap-2">
+                  <Zap className="w-3.5 h-3.5" />
+                  Add-ons Extra
+                </p>
+                <p className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-indigo-300 to-purple-300">{activeModules?.addonModules.length || 0}</p>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* ── App Store Interno ── */}
-      <div className="space-y-16">
-        
-        {/* Core Modules */}
-        <section className="relative">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 rounded-lg bg-blue-500/10 border border-blue-500/20">
-              <Store className="w-5 h-5 text-blue-400" />
+        {/* ── App Store Interno ── */}
+        <div className="space-y-16">
+          
+          {/* Core Modules */}
+          <section className="relative">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20">
+                <Store className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+              </div>
+              <h3 className="text-xl font-bold text-foreground tracking-tight">Operación Base y Ventas</h3>
             </div>
-            <h3 className="text-xl font-bold text-foreground tracking-tight">Operación Base y Ventas</h3>
-          </div>
-          <p className="text-sm text-slate-400 ml-11 mb-2">Expande la gestión comercial y operativa del Punto de Venta.</p>
-          {renderModuleGrid(coreCodes, Store, "from-blue-500 to-cyan-500", "shadow-blue-500/30")}
-        </section>
+            <p className="text-sm text-muted-foreground ml-11 mb-2">Expande la gestión comercial y operativa del Punto de Venta.</p>
+            {renderModuleGrid(coreCodes, Store, "from-blue-500 to-cyan-500", "shadow-blue-500/30")}
+          </section>
 
-        {/* Integraciones */}
-        <section className="relative">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 rounded-lg bg-amber-500/10 border border-amber-500/20">
-              <Plug className="w-5 h-5 text-amber-400" />
+          {/* Integraciones */}
+          <section className="relative">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-2 rounded-lg bg-amber-100 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20">
+                <Plug className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+              </div>
+              <h3 className="text-xl font-bold text-foreground tracking-tight">E-commerce e Integraciones</h3>
             </div>
-            <h3 className="text-xl font-bold text-foreground tracking-tight">E-commerce e Integraciones</h3>
-          </div>
-          <p className="text-sm text-slate-400 ml-11 mb-2">Conecta tu tienda física con Shopify, WooCommerce y Transbank.</p>
-          {renderModuleGrid(integrationsCodes, Plug, "from-amber-500 to-orange-500", "shadow-amber-500/30")}
-        </section>
+            <p className="text-sm text-muted-foreground ml-11 mb-2">Conecta tu tienda física con Shopify, WooCommerce y Transbank.</p>
+            {renderModuleGrid(integrationsCodes, Plug, "from-amber-500 to-orange-500", "shadow-amber-500/30")}
+          </section>
 
-        {/* DTE */}
-        <section className="relative">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 rounded-lg bg-purple-500/10 border border-purple-500/20">
-              <FileText className="w-5 h-5 text-purple-400" />
+          {/* DTE */}
+          <section className="relative">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-2 rounded-lg bg-purple-100 dark:bg-purple-500/10 border border-purple-200 dark:border-purple-500/20">
+                <FileText className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+              </div>
+              <h3 className="text-xl font-bold text-foreground tracking-tight">Documentos Tributarios (SII)</h3>
             </div>
-            <h3 className="text-xl font-bold text-foreground tracking-tight">Documentos Tributarios (SII)</h3>
-          </div>
-          <p className="text-sm text-slate-400 ml-11 mb-2">Emisión automática de Boletas, Facturas y Notas de Crédito.</p>
-          {renderModuleGrid(dteCodes, FileText, "from-purple-500 to-pink-500", "shadow-purple-500/30")}
-        </section>
+            <p className="text-sm text-muted-foreground ml-11 mb-2">Emisión automática de Boletas, Facturas y Notas de Crédito.</p>
+            {renderModuleGrid(dteCodes, FileText, "from-purple-500 to-pink-500", "shadow-purple-500/30")}
+          </section>
 
-      </div>
+        </div>
       </div>
     </DashboardLayout>
   );

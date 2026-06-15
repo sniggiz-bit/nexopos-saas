@@ -72,20 +72,20 @@ const Toggle = ({ value, onChange }: { value: boolean; onChange: (v: boolean) =>
         type="button"
         onClick={() => onChange(!value)}
         className={`relative w-12 h-6 rounded-full transition-all duration-200 flex-shrink-0 outline-none ${
-            value ? 'bg-[#0099CC] shadow-[0_0_10px_rgba(0,153,204,0.3)]' : 'bg-slate-800 border border-border'
+            value ? 'bg-[#0099CC] shadow-[0_0_10px_rgba(0,153,204,0.3)]' : 'bg-slate-200 dark:bg-slate-700 border border-border'
         }`}
     >
         <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full transition-transform duration-200 ${
-            value ? 'translate-x-6 bg-[#0B0F1A]' : 'bg-gray-500'
+            value ? 'translate-x-6 bg-white dark:bg-[#0B0F1A]' : 'bg-white dark:bg-slate-400'
         }`} />
     </button>
 );
 
 const Field = ({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) => (
     <div className="space-y-1.5">
-        <label className="block text-xs font-bold uppercase tracking-wider text-gray-400">{label}</label>
+        <label className="block text-xs font-bold uppercase tracking-wider text-muted-foreground">{label}</label>
         {children}
-        {hint && <p className="text-[11px] text-gray-500">{hint}</p>}
+        {hint && <p className="text-[11px] text-muted-foreground">{hint}</p>}
     </div>
 );
 
@@ -153,9 +153,9 @@ const ImageUploadField = ({ value, onChange, label, hint, previewClass = 'h-32' 
                         onClick={() => inputRef.current?.click()}
                         className="w-full border-2 border-dashed border-border bg-card/[0.3] rounded-xl flex flex-col items-center justify-center gap-2 py-8 cursor-pointer hover:border-[#0099CC] hover:bg-muted/30 transition-all group"
                     >
-                        <ImageIcon className="w-8 h-8 text-gray-600 group-hover:text-[#0099CC] transition-colors" />
-                        <span className="text-sm font-medium text-gray-400 group-hover:text-gray-300">Haz clic para subir imagen</span>
-                        <span className="text-xs text-gray-600">JPG, PNG, WebP — máx 5MB</span>
+                        <ImageIcon className="w-8 h-8 text-muted-foreground group-hover:text-[#0099CC] transition-colors" />
+                        <span className="text-sm font-medium text-muted-foreground group-hover:text-foreground">Haz clic para subir imagen</span>
+                        <span className="text-xs text-muted-foreground">JPG, PNG, WebP — máx 5MB</span>
                     </button>
                 )}
                 <div className="flex gap-2 items-center">
@@ -286,7 +286,7 @@ const StorePromoPanel = ({ slug, brandColor }: { slug: string; brandColor: strin
                 </div>
                 <div>
                     <p className="text-sm font-bold text-foreground">Promociona tu tienda</p>
-                    <p className="text-xs text-gray-400">Código QR y link corto para compartir</p>
+                    <p className="text-xs text-muted-foreground">Código QR y link corto para compartir</p>
                 </div>
             </div>
 
@@ -305,12 +305,12 @@ const StorePromoPanel = ({ slug, brandColor }: { slug: string; brandColor: strin
                                 className="w-32 h-32 block rounded"
                             />
                         </div>
-                        <p className="text-[10px] text-gray-500 font-mono text-center truncate max-w-[144px]">{slug}</p>
+                        <p className="text-[10px] text-muted-foreground font-mono text-center truncate max-w-[144px]">{slug}</p>
                         <button
                             type="button"
                             onClick={handleDownloadQr}
                             disabled={downloadingQr}
-                            className="flex items-center gap-1.5 px-3 py-1.5 bg-card border border-border rounded-lg text-xs font-semibold text-gray-300 hover:border-[#0099CC] hover:text-[#0099CC] transition-colors shadow-sm disabled:opacity-50"
+                            className="flex items-center gap-1.5 px-3 py-1.5 bg-card border border-border rounded-lg text-xs font-semibold text-muted-foreground hover:border-[#0099CC] hover:text-[#0099CC] transition-colors shadow-sm disabled:opacity-50"
                         >
                             {downloadingQr ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
                             Descargar PNG
@@ -321,14 +321,14 @@ const StorePromoPanel = ({ slug, brandColor }: { slug: string; brandColor: strin
                     <div className="flex-1 space-y-4 min-w-0">
                         {/* Public URL */}
                         <div>
-                            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1.5">URL de tu tienda</p>
+                            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">URL de tu tienda</p>
                             <div className="flex items-center gap-1.5 bg-card/[0.8] rounded-xl border border-border px-3 py-2 shadow-sm">
-                                <Globe className="w-3.5 h-3.5 text-gray-500 flex-shrink-0" />
-                                <span className="text-xs text-gray-300 flex-1 truncate font-mono">{publicUrl}</span>
-                                <button type="button" onClick={() => handleCopy(publicUrl, 'URL copiada')} className="p-1 text-gray-400 hover:text-[#0099CC] transition-colors flex-shrink-0">
+                                <Globe className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
+                                <span className="text-xs text-foreground flex-1 truncate font-mono">{publicUrl}</span>
+                                <button type="button" onClick={() => handleCopy(publicUrl, 'URL copiada')} className="p-1 text-muted-foreground hover:text-[#0099CC] transition-colors flex-shrink-0">
                                     <Copy className="w-3.5 h-3.5" />
                                 </button>
-                                <a href={publicUrl} target="_blank" rel="noreferrer" className="p-1 text-gray-400 hover:text-[#0099CC] transition-colors flex-shrink-0">
+                                <a href={publicUrl} target="_blank" rel="noreferrer" className="p-1 text-muted-foreground hover:text-[#0099CC] transition-colors flex-shrink-0">
                                     <ExternalLink className="w-3.5 h-3.5" />
                                 </a>
                             </div>
@@ -336,7 +336,7 @@ const StorePromoPanel = ({ slug, brandColor }: { slug: string; brandColor: strin
 
                         {/* Short URL */}
                         <div>
-                            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1.5">Link corto</p>
+                            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">Link corto</p>
                             {shortUrl ? (
                                 <div className="flex items-center gap-1.5 bg-[rgba(16,185,129,0.04)] border border-[rgba(16,185,129,0.15)] rounded-xl px-3 py-2">
                                     <Link2 className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
@@ -350,7 +350,7 @@ const StorePromoPanel = ({ slug, brandColor }: { slug: string; brandColor: strin
                                     type="button"
                                     onClick={handleGenerateShortUrl}
                                     disabled={generatingShort}
-                                    className="flex items-center gap-1.5 px-3 py-2 bg-card border border-border rounded-xl text-xs font-semibold text-gray-300 hover:border-[#0099CC] hover:text-[#0099CC] transition-colors shadow-sm disabled:opacity-50 w-full justify-center"
+                                    className="flex items-center gap-1.5 px-3 py-2 bg-card border border-border rounded-xl text-xs font-semibold text-muted-foreground hover:border-[#0099CC] hover:text-[#0099CC] transition-colors shadow-sm disabled:opacity-50 w-full justify-center"
                                 >
                                     {generatingShort ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Zap className="w-3.5 h-3.5 text-[#0099CC]" />}
                                     {generatingShort ? 'Generando...' : 'Generar link corto (TinyURL)'}
@@ -360,7 +360,7 @@ const StorePromoPanel = ({ slug, brandColor }: { slug: string; brandColor: strin
 
                         {/* Share buttons */}
                         <div>
-                            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1.5">Compartir</p>
+                            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">Compartir</p>
                             <div className="flex flex-wrap gap-2">
                                 <button
                                     type="button"
@@ -373,7 +373,7 @@ const StorePromoPanel = ({ slug, brandColor }: { slug: string; brandColor: strin
                                 <button
                                     type="button"
                                     onClick={handleNativeShare}
-                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-card border border-border rounded-lg text-xs font-semibold text-gray-300 hover:border-[#0099CC] hover:text-[#0099CC] transition-colors shadow-sm"
+                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-card border border-border rounded-lg text-xs font-semibold text-muted-foreground hover:border-[#0099CC] hover:text-[#0099CC] transition-colors shadow-sm"
                                 >
                                     <Share2 className="w-3.5 h-3.5" />
                                     Compartir
@@ -381,7 +381,7 @@ const StorePromoPanel = ({ slug, brandColor }: { slug: string; brandColor: strin
                                 <button
                                     type="button"
                                     onClick={() => handleCopy(shareUrl, 'Link copiado')}
-                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-card border border-border rounded-lg text-xs font-semibold text-gray-300 hover:border-[#0099CC] hover:text-[#0099CC] transition-colors shadow-sm"
+                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-card border border-border rounded-lg text-xs font-semibold text-muted-foreground hover:border-[#0099CC] hover:text-[#0099CC] transition-colors shadow-sm"
                                 >
                                     <Copy className="w-3.5 h-3.5" />
                                     Copiar link
@@ -407,7 +407,7 @@ const GeneralTab = ({ cfg, onChange, storeLink, onCopyLink }: {
         <div className="flex items-center justify-between p-4 bg-card/[0.4] border border-border rounded-2xl">
             <div>
                 <p className="text-sm font-bold text-foreground">Tienda activa</p>
-                <p className="text-xs text-gray-400 mt-0.5">Los clientes pueden visitar y comprar</p>
+                <p className="text-xs text-muted-foreground mt-0.5">Los clientes pueden visitar y comprar</p>
             </div>
             <Toggle value={cfg.isActive} onChange={v => onChange({ isActive: v })} />
         </div>
@@ -422,7 +422,7 @@ const GeneralTab = ({ cfg, onChange, storeLink, onCopyLink }: {
 
         <Field label="URL de tu tienda">
             <div className="flex rounded-xl overflow-hidden border border-border focus-within:border-[#0099CC] focus-within:ring-1 focus-within:ring-[#0099CC] transition-all bg-card/[0.8]">
-                <span className="flex items-center px-3 bg-card/[0.5] text-gray-400 text-xs border-r border-border whitespace-nowrap font-semibold">
+                <span className="flex items-center px-3 bg-card/[0.5] text-muted-foreground text-xs border-r border-border whitespace-nowrap font-semibold">
                     nexopos.cl/store/
                 </span>
                 <input
@@ -435,11 +435,11 @@ const GeneralTab = ({ cfg, onChange, storeLink, onCopyLink }: {
             </div>
             {storeLink && (
                 <div className="mt-2 flex items-center gap-2 p-2.5 bg-card/[0.3] border border-border rounded-xl">
-                    <span className="text-xs text-gray-400 truncate flex-1 font-mono">{storeLink}</span>
-                    <button type="button" onClick={onCopyLink} className="p-1.5 text-gray-400 hover:text-[#0099CC] transition-colors" title="Copiar">
+                    <span className="text-xs text-muted-foreground truncate flex-1 font-mono">{storeLink}</span>
+                    <button type="button" onClick={onCopyLink} className="p-1.5 text-muted-foreground hover:text-[#0099CC] transition-colors" title="Copiar">
                         <Copy className="w-3.5 h-3.5" />
                     </button>
-                    <a href={storeLink} target="_blank" rel="noreferrer" className="p-1.5 text-gray-400 hover:text-[#0099CC] transition-colors" title="Abrir">
+                    <a href={storeLink} target="_blank" rel="noreferrer" className="p-1.5 text-muted-foreground hover:text-[#0099CC] transition-colors" title="Abrir">
                         <ExternalLink className="w-3.5 h-3.5" />
                     </a>
                 </div>
@@ -508,14 +508,14 @@ const AparienciaTab = ({ cfg, onChange }: { cfg: StoreConfig; onChange: (p: Part
         <div className="space-y-8">
             {/* Brand color */}
             <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-3">Color de marca</label>
+                <label className="block text-xs font-bold uppercase tracking-wider text-muted-foreground mb-3">Color de marca</label>
                 <div className="flex items-center gap-3">
                     <div className="relative">
                         <input
                             type="color"
                             value={cfg.brandColor}
                             onChange={e => onChange({ brandColor: e.target.value })}
-                            className="w-12 h-12 rounded-xl border-2 border-border bg-slate-900 cursor-pointer p-1"
+                            className="w-12 h-12 rounded-xl border-2 border-border bg-card cursor-pointer p-1"
                         />
                     </div>
                     <div className="flex-1">
@@ -548,7 +548,7 @@ const AparienciaTab = ({ cfg, onChange }: { cfg: StoreConfig; onChange: (p: Part
                 <div className="flex items-center justify-between p-4 bg-card/[0.4] border-b border-border">
                     <div>
                         <p className="text-sm font-bold text-foreground">Barra de anuncio</p>
-                        <p className="text-xs text-gray-400 mt-0.5">Mensaje destacado en el tope de la tienda</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">Mensaje destacado en el tope de la tienda</p>
                     </div>
                     <Toggle value={cfg.announcementEnabled} onChange={v => onChange({ announcementEnabled: v })} />
                 </div>
@@ -560,12 +560,12 @@ const AparienciaTab = ({ cfg, onChange }: { cfg: StoreConfig; onChange: (p: Part
                             placeholder="¡Envío gratis en compras sobre $50.000!"
                         />
                         <div className="flex items-center gap-3">
-                            <span className="text-xs text-gray-400 font-bold uppercase tracking-wider flex-shrink-0">Color:</span>
+                            <span className="text-xs text-muted-foreground font-bold uppercase tracking-wider flex-shrink-0">Color:</span>
                             <input
                                 type="color"
                                 value={cfg.announcementColor}
                                 onChange={e => onChange({ announcementColor: e.target.value })}
-                                className="h-9 w-12 rounded-lg border border-border bg-slate-900 cursor-pointer p-0.5"
+                                className="h-9 w-12 rounded-lg border border-border bg-card cursor-pointer p-0.5"
                             />
                             {cfg.announcementText && (
                                 <div
@@ -585,7 +585,7 @@ const AparienciaTab = ({ cfg, onChange }: { cfg: StoreConfig; onChange: (p: Part
                 <div className="flex items-center justify-between mb-4">
                     <div>
                         <p className="text-sm font-bold text-foreground">Slides promocionales</p>
-                        <p className="text-xs text-gray-400 mt-0.5">Carrusel auto-rotante al inicio de la tienda</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">Carrusel auto-rotante al inicio de la tienda</p>
                     </div>
                     <button
                         type="button"
@@ -600,21 +600,21 @@ const AparienciaTab = ({ cfg, onChange }: { cfg: StoreConfig; onChange: (p: Part
                 <div className="space-y-3">
                     {cfg.sliders.length === 0 && (
                         <div className="text-center py-12 border-2 border-dashed border-border bg-card/[0.2] rounded-2xl">
-                            <ImageIcon className="w-8 h-8 text-gray-600 mx-auto mb-2" />
-                            <p className="text-sm text-gray-500">Sin slides — presiona "Agregar slide"</p>
+                            <ImageIcon className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+                            <p className="text-sm text-muted-foreground">Sin slides — presiona "Agregar slide"</p>
                         </div>
                     )}
                     {cfg.sliders.map((slide, idx) => (
                         <div key={slide.id} className="border border-border bg-card/[0.3] rounded-2xl overflow-hidden">
                             <div className="flex items-center justify-between px-4 py-2.5 bg-card/[0.4] border-b border-border">
-                                <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Slide {idx + 1}</span>
+                                <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Slide {idx + 1}</span>
                                 <div className="flex items-center gap-0.5">
                                     <button type="button" onClick={() => moveSlider(slide.id, 'up')} disabled={idx === 0}
-                                        className="p-1.5 text-gray-500 hover:text-gray-300 disabled:opacity-20 transition-colors rounded-lg hover:bg-card">
+                                        className="p-1.5 text-muted-foreground hover:text-foreground disabled:opacity-20 transition-colors rounded-lg hover:bg-card">
                                         <ChevronUp className="w-3.5 h-3.5" />
                                     </button>
                                     <button type="button" onClick={() => moveSlider(slide.id, 'down')} disabled={idx === cfg.sliders.length - 1}
-                                        className="p-1.5 text-gray-500 hover:text-gray-300 disabled:opacity-20 transition-colors rounded-lg hover:bg-card">
+                                        className="p-1.5 text-muted-foreground hover:text-foreground disabled:opacity-20 transition-colors rounded-lg hover:bg-card">
                                         <ChevronDown className="w-3.5 h-3.5" />
                                     </button>
                                     <button type="button" onClick={() => removeSlider(slide.id)}
@@ -721,7 +721,7 @@ const CatalogoTab = ({ cfg, onChange, products }: {
                     </div>
                     <div>
                         <p className="text-xl font-black text-amber-500">{featuredCount}</p>
-                        <p className="text-xs text-gray-400">Destacados</p>
+                        <p className="text-xs text-muted-foreground">Destacados</p>
                     </div>
                 </div>
                 <div className="flex items-center gap-3 p-3.5 bg-[rgba(16,185,129,0.04)] border border-[rgba(16,185,129,0.15)] rounded-2xl">
@@ -730,7 +730,7 @@ const CatalogoTab = ({ cfg, onChange, products }: {
                     </div>
                     <div>
                         <p className="text-xl font-black text-[#10B981]">{publicCount}</p>
-                        <p className="text-xs text-gray-400">Visibles en tienda</p>
+                        <p className="text-xs text-muted-foreground">Visibles en tienda</p>
                     </div>
                 </div>
             </div>
@@ -757,14 +757,14 @@ const CatalogoTab = ({ cfg, onChange, products }: {
                         className="w-full pl-9 pr-3 py-2 bg-card/[0.8] border border-border text-foreground focus:border-[#0099CC] rounded-xl text-sm outline-none placeholder:text-gray-600"
                     />
                 </div>
-                <div className="flex rounded-xl border border-border overflow-hidden bg-slate-900">
+                <div className="flex rounded-xl border border-border overflow-hidden bg-card">
                     {(['all', 'featured'] as const).map(v => (
                         <button
                             key={v}
                             type="button"
                             onClick={() => setView(v)}
                             className={`px-3 py-2 text-xs font-semibold transition-colors border-r border-border last:border-0 ${
-                                view === v ? 'bg-[#0099CC] text-[#0B0F1A] font-bold' : 'text-gray-400 hover:bg-white/5'
+                                view === v ? 'bg-[#0099CC] text-white font-bold' : 'text-muted-foreground hover:bg-muted/50'
                             }`}
                         >
                             {v === 'all' ? 'Todos' : '⭐ Destacados'}
@@ -776,7 +776,7 @@ const CatalogoTab = ({ cfg, onChange, products }: {
                     Publicar todo
                 </button>
                 <button type="button" onClick={() => bulkPublic(false)}
-                    className="px-3 py-2 text-xs font-bold bg-card border border-border text-gray-300 rounded-xl hover:bg-card transition-colors">
+                    className="px-3 py-2 text-xs font-bold bg-card border border-border text-muted-foreground rounded-xl hover:bg-muted/30 transition-colors">
                     Ocultar todo
                 </button>
             </div>
@@ -789,10 +789,10 @@ const CatalogoTab = ({ cfg, onChange, products }: {
                             <th className="px-4 py-3 w-10 text-center">
                                 <Star className="w-3.5 h-3.5 text-gray-600 mx-auto" />
                             </th>
-                            <th className="px-4 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Producto</th>
-                            <th className="px-4 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-wider hidden sm:table-cell">Precio</th>
-                            <th className="px-4 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-wider hidden md:table-cell">Categoría</th>
-                            <th className="px-4 py-3 text-center text-[10px] font-bold text-gray-400 uppercase tracking-wider">Visible</th>
+                            <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Producto</th>
+                            <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden sm:table-cell">Precio</th>
+                            <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden md:table-cell">Categoría</th>
+                            <th className="px-4 py-3 text-center text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Visible</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-border">
@@ -814,12 +814,12 @@ const CatalogoTab = ({ cfg, onChange, products }: {
                                         <div className="flex items-center gap-2.5">
                                             {p.image
                                                 ? <img src={p.image} alt="" className="w-9 h-9 rounded-xl object-cover flex-shrink-0 shadow-sm border border-border" />
-                                                : <div className="w-9 h-9 rounded-xl bg-slate-800 border border-border flex-shrink-0" />
+                                                : <div className="w-9 h-9 rounded-xl bg-muted border border-border flex-shrink-0" />
                                             }
                                             <span className="font-medium text-foreground text-sm leading-snug">{p.name}</span>
                                         </div>
                                     </td>
-                                    <td className="px-4 py-3 text-gray-400 text-sm hidden sm:table-cell">{formatCLP(p.price)}</td>
+                                    <td className="px-4 py-3 text-muted-foreground text-sm hidden sm:table-cell">{formatCLP(p.price)}</td>
                                     <td className="px-4 py-3 hidden md:table-cell">
                                         {p.category?.name
                                             ? <span className="text-xs font-semibold text-[#0099CC] bg-muted/30 border border-border px-2 py-0.5 rounded-full">{p.category.name}</span>
