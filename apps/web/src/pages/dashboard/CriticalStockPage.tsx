@@ -52,7 +52,7 @@ export function CriticalStockPage() {
                     </div>
                 </div>
 
-                <div className="rounded-xl overflow-hidden animate-fade-up shadow-[0_0_30px_rgba(239,68,68,0.02)]" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(239,68,68,0.15)' }}>
+                <div className="rounded-xl overflow-hidden animate-fade-up shadow-[0_0_30px_rgba(239,68,68,0.04)]" style={{ background: 'hsl(var(--card))', border: '1px solid rgba(239,68,68,0.2)' }}>
                     <table className="min-w-full divide-y divide-[rgba(239,68,68,0.1)]">
                         <thead style={{ background: 'rgba(239,68,68,0.04)' }}>
                             <tr>

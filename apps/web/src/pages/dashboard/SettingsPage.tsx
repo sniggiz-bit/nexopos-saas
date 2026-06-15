@@ -26,7 +26,7 @@ const C = {
     violetA:(a: number) => `rgba(167,139,250,${a})`,
     text: 'hsl(var(--foreground))',
     muted: 'hsl(var(--muted-foreground))',
-    subtle: 'rgba(180,195,220,0.25)',
+    subtle: 'hsl(var(--muted-foreground))',
 };
 
 // ── Types ──────────────────────────────────────────────────────────────────────
@@ -338,7 +338,7 @@ export function SettingsPage() {
             <div className="max-w-2xl space-y-5">
 
                 {/* ── Config card ── */}
-                <div className="rounded-2xl p-6" style={{ background: 'rgba(255,255,255,0.02)', border: `1px solid ${C.cyanA(0.1)}` }}>
+                <div className="rounded-2xl p-6" style={{ background: 'hsl(var(--card))', border: `1px solid hsl(var(--border))` }}>
                     <div className="flex items-center gap-3 mb-5">
                         <div className="w-9 h-9 rounded-xl flex items-center justify-center"
                             style={{ background: C.cyanA(0.1), border: `1px solid ${C.cyanA(0.2)}` }}>
@@ -463,7 +463,7 @@ export function SettingsPage() {
                 </div>
 
                 {/* ── Stats card ── */}
-                <div className="rounded-2xl p-6" style={{ background: 'rgba(255,255,255,0.02)', border: `1px solid ${C.cyanA(0.1)}` }}>
+                <div className="rounded-2xl p-6" style={{ background: 'hsl(var(--card))', border: `1px solid hsl(var(--border))` }}>
                     <div className="flex items-center justify-between mb-5">
                         <div>
                             <h3 className="text-[15px] font-bold" style={{ color: C.text }}>Actividad DTE</h3>

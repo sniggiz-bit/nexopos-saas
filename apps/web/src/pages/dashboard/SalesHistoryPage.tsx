@@ -57,24 +57,24 @@ interface SummaryCardProps {
 function SummaryCard({ label, value, sub, icon, accent: _accent, accentAlpha }: SummaryCardProps) {
     return (
         <div className="rounded-2xl p-5 flex items-center gap-4 transition-all duration-200 relative overflow-hidden"
-            style={{ background: accentAlpha(0.05), border: `1px solid ${accentAlpha(0.15)}` }}
+            style={{ background: accentAlpha(0.07), border: `1px solid ${accentAlpha(0.2)}` }}
             onMouseEnter={e => {
-                (e.currentTarget as HTMLElement).style.borderColor = accentAlpha(0.3);
-                (e.currentTarget as HTMLElement).style.boxShadow   = `0 0 20px ${accentAlpha(0.08)}`;
+                (e.currentTarget as HTMLElement).style.borderColor = accentAlpha(0.35);
+                (e.currentTarget as HTMLElement).style.boxShadow   = `0 0 20px ${accentAlpha(0.1)}`;
             }}
             onMouseLeave={e => {
-                (e.currentTarget as HTMLElement).style.borderColor = accentAlpha(0.15);
+                (e.currentTarget as HTMLElement).style.borderColor = accentAlpha(0.2);
                 (e.currentTarget as HTMLElement).style.boxShadow   = '';
             }}>
             {/* glow orb */}
             <div className="absolute -top-6 -right-6 w-20 h-20 rounded-full pointer-events-none"
-                style={{ background: `radial-gradient(circle, ${accentAlpha(0.1)} 0%, transparent 70%)` }} />
+                style={{ background: `radial-gradient(circle, ${accentAlpha(0.12)} 0%, transparent 70%)` }} />
             <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0 relative z-10"
-                style={{ background: accentAlpha(0.12), border: `1px solid ${accentAlpha(0.2)}` }}>
+                style={{ background: accentAlpha(0.14), border: `1px solid ${accentAlpha(0.25)}` }}>
                 {icon}
             </div>
             <div className="relative z-10">
-                <p className="text-[10px] font-bold uppercase tracking-widest mb-0.5" style={{ color: accentAlpha(0.55) }}>
+                <p className="text-[10px] font-bold uppercase tracking-widest mb-0.5" style={{ color: accentAlpha(0.75) }}>
                     {label}
                 </p>
                 <p className="text-2xl font-black tabular-nums leading-tight" style={{ color: C.text }}>
@@ -202,7 +202,7 @@ export function SalesHistoryPage() {
                         {/* Desde */}
                         <div className="flex flex-col gap-1.5 min-w-[155px]">
                             <label className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest"
-                                style={{ color: C.cyanA(0.5) }}>
+                                style={{ color: C.cyanA(0.75) }}>
                                 <CalendarDays className="w-3 h-3" /> Desde
                             </label>
                             <input type="date" value={filters.startDate} max={filters.endDate || todayISO()}
@@ -214,7 +214,7 @@ export function SalesHistoryPage() {
                         {/* Hasta */}
                         <div className="flex flex-col gap-1.5 min-w-[155px]">
                             <label className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest"
-                                style={{ color: C.cyanA(0.5) }}>
+                                style={{ color: C.cyanA(0.75) }}>
                                 <CalendarDays className="w-3 h-3" /> Hasta
                             </label>
                             <input type="date" value={filters.endDate} min={filters.startDate} max={todayISO()}
@@ -226,7 +226,7 @@ export function SalesHistoryPage() {
                         {/* Sucursal */}
                         <div className="flex flex-col gap-1.5 min-w-[175px]">
                             <label className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest"
-                                style={{ color: C.cyanA(0.5) }}>
+                                style={{ color: C.cyanA(0.75) }}>
                                 <Store className="w-3 h-3" /> Sucursal
                             </label>
                             <select value={filters.branchId} onChange={e => set('branchId', e.target.value)}
@@ -240,7 +240,7 @@ export function SalesHistoryPage() {
 
                         {/* Estado */}
                         <div className="flex flex-col gap-1.5 min-w-[145px]">
-                            <label className="text-[10px] font-bold uppercase tracking-widest" style={{ color: C.cyanA(0.5) }}>
+                            <label className="text-[10px] font-bold uppercase tracking-widest" style={{ color: C.cyanA(0.75) }}>
                                 Estado
                             </label>
                             <select value={filters.status} onChange={e => set('status', e.target.value as SaleStatus | '')}
@@ -255,14 +255,14 @@ export function SalesHistoryPage() {
                         {/* Limpiar */}
                         <button onClick={reset}
                             className="mt-auto px-4 py-[7px] rounded-xl text-[13px] font-medium transition-all duration-150"
-                            style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', color: C.muted }}
+                            style={{ background: 'hsl(var(--muted))', border: '1px solid hsl(var(--border))', color: 'hsl(var(--muted-foreground))' }}
                             onMouseEnter={e => {
                                 (e.currentTarget as HTMLElement).style.color = C.text;
-                                (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.15)';
+                                (e.currentTarget as HTMLElement).style.borderColor = 'hsl(var(--foreground) / 0.25)';
                             }}
                             onMouseLeave={e => {
-                                (e.currentTarget as HTMLElement).style.color = C.muted;
-                                (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.08)';
+                                (e.currentTarget as HTMLElement).style.color = 'hsl(var(--muted-foreground))';
+                                (e.currentTarget as HTMLElement).style.borderColor = 'hsl(var(--border))';
                             }}>
                             Limpiar filtros
                         </button>

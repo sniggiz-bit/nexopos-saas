@@ -13,7 +13,7 @@ const C = {
     redA:  (a: number) => `rgba(248,113,113,${a})`,
     text: 'hsl(var(--foreground))',
     muted: 'hsl(var(--muted-foreground))',
-    subtle:'rgba(180,195,220,0.25)',
+    subtle: 'hsl(var(--muted-foreground))',
 };
 
 const inputStyle: React.CSSProperties = {
@@ -77,15 +77,15 @@ export function ClientsPage() {
 
                 {/* ── Table ── */}
                 <div className="rounded-2xl overflow-hidden"
-                    style={{ background: 'rgba(255,255,255,0.02)', border: `1px solid ${C.cyanA(0.1)}` }}>
+                    style={{ background: 'hsl(var(--card))', border: `1px solid hsl(var(--border))` }}>
                     <div className="overflow-x-auto">
                         <table className="min-w-full text-[13px]">
                             <thead>
-                                <tr style={{ borderBottom: '1px solid rgba(0,212,255,0.07)' }}>
+                                <tr style={{ borderBottom: '1px solid hsl(var(--border))' }}>
                                     {COLS.map(col => (
                                         <th key={col}
                                             className={`px-5 py-3.5 text-[10px] font-bold uppercase tracking-widest whitespace-nowrap ${col === 'Acciones' ? 'text-right' : 'text-left'}`}
-                                            style={{ color: C.cyanA(0.4), background: C.cyanA(0.03) }}>
+                                            style={{ color: 'hsl(var(--muted-foreground))', background: 'hsl(var(--muted))' }}>
                                             {col}
                                         </th>
                                     ))}
@@ -118,14 +118,14 @@ export function ClientsPage() {
                                         const isEven = idx % 2 === 0;
                                         return (
                                             <tr key={customer.id}
-                                                style={{ borderBottom: '1px solid rgba(0,212,255,0.05)', background: isEven ? 'transparent' : C.cyanA(0.015) }}
-                                                onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = C.cyanA(0.04)}
-                                                onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = isEven ? 'transparent' : C.cyanA(0.015)}>
+                                            style={{ borderBottom: '1px solid hsl(var(--border))', background: isEven ? 'transparent' : 'hsl(var(--muted) / 0.4)' }}
+                                            onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'hsl(var(--muted) / 0.6)'}
+                                            onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = isEven ? 'transparent' : 'hsl(var(--muted) / 0.4)'}>
 
                                                 <td className="px-5 py-3.5 whitespace-nowrap">
                                                     <div className="flex items-center gap-3">
                                                         <div className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm shrink-0"
-                                                            style={{ background: C.cyanA(0.1), color: C.cyan, border: `1px solid ${C.cyanA(0.2)}` }}>
+                                                            style={{ background: 'hsl(var(--primary) / 0.1)', color: 'hsl(var(--primary))', border: `1px solid hsl(var(--primary) / 0.2)` }}>
                                                             {customer.name.charAt(0).toUpperCase()}
                                                         </div>
                                                         <span className="font-semibold" style={{ color: C.text }}>{customer.name}</span>
@@ -161,7 +161,7 @@ export function ClientsPage() {
                     </div>
                     {filtered.length > 0 && !isLoading && (
                         <div className="px-5 py-2.5 text-[11px] text-right"
-                            style={{ borderTop: '1px solid rgba(0,212,255,0.07)', color: C.cyanA(0.35) }}>
+                            style={{ borderTop: '1px solid hsl(var(--border))', color: C.muted }}>
                             {filtered.length} cliente{filtered.length !== 1 ? 's' : ''}
                         </div>
                     )}
