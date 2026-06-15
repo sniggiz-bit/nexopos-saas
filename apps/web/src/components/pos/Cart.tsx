@@ -113,7 +113,7 @@ export function Cart({ onConfirm, onCheckoutClose, isProcessing, isSuccess, isEr
         }
     };
 
-    const outerClass = 'relative flex flex-col h-full bg-background border-l border-border shadow-xl overflow-hidden';
+    const outerClass = 'relative flex flex-col h-full bg-card border-l border-border shadow-xl overflow-hidden';
 
     if (checkoutMode) {
         return (
@@ -137,7 +137,7 @@ export function Cart({ onConfirm, onCheckoutClose, isProcessing, isSuccess, isEr
     return (
         <div className={outerClass}>
             {/* ── Tabs ── */}
-            <div className="bg-background px-3 pt-3 pb-2 border-b border-border shrink-0">
+            <div className="bg-card px-3 pt-3 pb-2 border-b border-border shrink-0">
                 <div className="grid grid-cols-2 gap-1 p-1 bg-muted rounded-xl">
                     <TabButton
                         active={activeTab === 'cart'}
@@ -164,7 +164,7 @@ export function Cart({ onConfirm, onCheckoutClose, isProcessing, isSuccess, isEr
             {/* ── Content ── */}
             <div className="flex-1 overflow-hidden relative">
                 {activeTab === 'cart' ? (
-                    <ScrollArea className="h-full bg-background">
+                    <ScrollArea className="h-full bg-card">
                         <div className={cn(
                             "p-3 pb-52",
                             items.length > 5 ? "space-y-1" : items.length > 3 ? "space-y-1.5" : "space-y-2"
@@ -187,7 +187,7 @@ export function Cart({ onConfirm, onCheckoutClose, isProcessing, isSuccess, isEr
 
             {/* ── Footer ── */}
             {activeTab === 'cart' && (
-                <div className="absolute bottom-0 w-full bg-background border-t border-border p-4 z-20 shadow-[0_-8px_24px_-6px_rgb(0_0_0/0.12)]">
+                <div className="absolute bottom-0 w-full bg-card border-t border-border p-4 z-20 shadow-[0_-8px_24px_-6px_rgb(0_0_0/0.12)]">
                     {/* Totals */}
                     <div className="space-y-1.5 mb-4">
                         {totalDiscount > 0 && (
@@ -313,7 +313,7 @@ function TabButton({
             className={[
                 'flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-sm font-medium transition-all duration-150',
                 active
-                    ? 'bg-background text-foreground shadow-sm'
+                    ? 'bg-card text-foreground shadow-sm'
                     : 'text-muted-foreground hover:text-foreground',
             ].join(' ')}
         >

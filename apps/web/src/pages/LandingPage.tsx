@@ -218,7 +218,7 @@ export function LandingPage() {
     }, [seo]);
 
     return (
-        <main className="min-h-screen bg-[#070913] text-slate-100 font-sans relative overflow-hidden selection:bg-cyan-500/30 selection:text-cyan-200">
+        <main className="dark min-h-screen bg-[#070913] text-slate-100 font-sans relative overflow-hidden selection:bg-cyan-500/30 selection:text-cyan-200">
             {/* Fine tech grid background overlay */}
             <div 
                 className="absolute inset-0 z-0 pointer-events-none opacity-40" 

@@ -62,7 +62,7 @@ function CategoryChip({
                 'whitespace-nowrap select-none',
                 active
                     ? 'bg-primary text-primary-foreground shadow-sm'
-                    : 'bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground',
+                    : 'bg-background border border-border text-muted-foreground hover:bg-muted hover:text-foreground shadow-sm',
             )}
         >
             {children}

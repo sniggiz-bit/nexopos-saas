@@ -36,7 +36,7 @@ export function ProductCard({ product, onAddToCart, viewMode = 'grid' }: Product
                 onClick={handleAdd}
                 className={[
                     'group flex items-center gap-3 px-4 py-2.5',
-                    'bg-white dark:bg-slate-800/80 rounded-xl border transition-all duration-150 select-none',
+                    'bg-card rounded-xl border transition-all duration-150 select-none shadow-sm',
                     added
                         ? 'border-success/50 animate-flash-border cursor-pointer'
                         : isOutOfStock
@@ -110,7 +110,7 @@ export function ProductCard({ product, onAddToCart, viewMode = 'grid' }: Product
             onClick={handleAdd}
             className={[
                 'group relative flex flex-col p-2 rounded-xl border transition-all duration-150 overflow-hidden select-none',
-                'bg-white dark:bg-slate-800/80',
+                'bg-card shadow-sm',
                 added
                     ? 'border-success/60 shadow-[0_0_0_2px_hsl(142_72%_40%/0.2)] cursor-pointer'
                     : isOutOfStock

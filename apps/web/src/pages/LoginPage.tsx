@@ -53,7 +53,7 @@ export function LoginPage() {
     };
 
     return (
-        <div className="min-h-screen flex bg-[#070913] relative overflow-hidden font-sans">
+        <div className="dark min-h-screen flex bg-[#070913] text-foreground relative overflow-hidden font-sans">
             {/* Background elements */}
             <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-indigo-600/10 blur-[120px]" />
             <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-emerald-500/10 blur-[120px]" />
