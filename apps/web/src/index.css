@@ -123,22 +123,7 @@
     color: hsl(var(--foreground));
   }
 
-  /* Consistencia global de tipografía — evita variaciones entre páginas */
-  :root:not(.dark) h1,
-  :root:not(.dark) h2,
-  :root:not(.dark) h3,
-  :root:not(.dark) h4 {
-    color: hsl(222.2, 84%, 5%);
-  }
 
-  :root:not(.dark) p,
-  :root:not(.dark) span,
-  :root:not(.dark) td,
-  :root:not(.dark) th,
-  :root:not(.dark) li,
-  :root:not(.dark) label {
-    color: inherit;
-  }
 
   /* Placeholder unificado */
   :root:not(.dark) input::placeholder,
