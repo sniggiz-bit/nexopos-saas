@@ -66,7 +66,7 @@ export function RegisterPage() {
     // ── Success screen ────────────────────────────────────────────────────────
     if (generatedPassword) {
         return (
-            <div className="min-h-screen bg-[#070913] flex items-center justify-center py-12 px-4 relative overflow-hidden font-sans">
+            <div className="dark min-h-screen bg-[#070913] flex items-center justify-center py-12 px-4 relative overflow-hidden font-sans text-slate-200">
                 {/* Background elements */}
                 <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-emerald-600/10 blur-[120px]" />
                 <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-cyan-500/10 blur-[120px]" />
@@ -122,7 +122,7 @@ export function RegisterPage() {
 
     // ── Registration form ─────────────────────────────────────────────────────
     return (
-        <div className="min-h-screen flex bg-[#070913] relative overflow-hidden font-sans">
+        <div className="dark min-h-screen flex bg-[#070913] relative overflow-hidden font-sans text-slate-200">
             {/* Background elements */}
             <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-cyan-600/10 blur-[120px]" />
             <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-purple-500/10 blur-[120px]" />
