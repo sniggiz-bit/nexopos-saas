@@ -86,7 +86,7 @@ export function TransbankConfigPage() {
 
                 <div>
                     <h1 className="text-2xl font-black text-foreground">Terminal Transbank</h1>
-                    <p className="text-sm text-gray-400 mt-1">
+                    <p className="text-sm text-muted-foreground mt-1">
                         Configuración del agente local y terminal POS Integrado para esta sucursal.
                     </p>
                 </div>
@@ -110,7 +110,7 @@ export function TransbankConfigPage() {
                             <CheckCircle2 className="w-6 h-6 text-[#10B981] mt-0.5 shrink-0" />
                             <div className="space-y-0.5">
                                 <p className="font-bold text-[#10B981]">Agente corriendo en localhost:{agentStatus.connected ? agentPort : 7777}</p>
-                                <p className="text-xs text-gray-400 font-mono">
+                                <p className="text-xs text-muted-foreground font-mono">
                                     {agentStatus.mockMode
                                         ? 'Modo simulador activo — sin hardware real'
                                         : `Puerto: ${agentStatus.port ?? '—'}  ·  Terminal: ${agentStatus.terminalId ?? '—'}`}
@@ -122,7 +122,7 @@ export function TransbankConfigPage() {
                             <WifiOff className="w-6 h-6 text-red-400 mt-0.5 shrink-0" />
                             <div className="space-y-0.5">
                                 <p className="font-bold text-red-400">Agente no disponible</p>
-                                <p className="text-xs text-gray-400">
+                                <p className="text-xs text-muted-foreground">
                                     El proceso no está corriendo en localhost:{agentPort}. Usa el comando de inicio abajo.
                                 </p>
                             </div>
@@ -144,26 +144,26 @@ export function TransbankConfigPage() {
                             <div className="flex items-center justify-between py-3 border-b border-border">
                                 <div>
                                     <Label className="font-semibold text-foreground">Modo simulador</Label>
-                                    <p className="text-xs text-gray-400 mt-0.5">
+                                    <p className="text-xs text-muted-foreground mt-0.5">
                                         Actívalo para probar sin hardware. Nunca en producción.
                                     </p>
                                 </div>
                                 <button
                                     onClick={() => setMockMode(v => !v)}
                                     className={`relative w-12 h-6 rounded-full transition-colors ${
-                                        mockMode ? 'bg-[#F59E0B]' : 'bg-gray-800'
+                                        mockMode ? 'bg-[#F59E0B]' : 'bg-slate-200 dark:bg-slate-700'
                                     }`}
                                 >
-                                    <span className={`absolute top-1 w-4 h-4 rounded-full bg-white shadow transition-transform ${
-                                        mockMode ? 'translate-x-7' : 'translate-x-1'
+                                    <span className={`absolute top-1 w-4 h-4 rounded-full shadow transition-transform ${
+                                        mockMode ? 'translate-x-7 bg-white' : 'translate-x-1 bg-white dark:bg-slate-400'
                                     }`} />
                                 </button>
                             </div>
 
                             {/* Puerto COM */}
                             <div className="space-y-1.5">
-                                <Label className="font-semibold text-gray-400">Puerto COM del terminal</Label>
-                                <p className="text-xs text-gray-500">
+                                <Label className="font-semibold text-muted-foreground">Puerto COM del terminal</Label>
+                                <p className="text-xs text-muted-foreground">
                                     Windows: COM3, COM4… · Linux/Mac: /dev/ttyUSB0
                                 </p>
                                 <Input
@@ -177,7 +177,7 @@ export function TransbankConfigPage() {
 
                             {/* Baud rate */}
                             <div className="space-y-1.5">
-                                <Label className="font-semibold text-gray-400">Velocidad (baud rate)</Label>
+                                <Label className="font-semibold text-muted-foreground">Velocidad (baud rate)</Label>
                                 <select
                                     value={baudRate}
                                     onChange={e => setBaudRate(Number(e.target.value))}
@@ -192,8 +192,8 @@ export function TransbankConfigPage() {
 
                             {/* Puerto HTTP del agente */}
                             <div className="space-y-1.5">
-                                <Label className="font-semibold text-gray-400">Puerto HTTP del agente</Label>
-                                <p className="text-xs text-gray-500">
+                                <Label className="font-semibold text-muted-foreground">Puerto HTTP del agente</Label>
+                                <p className="text-xs text-muted-foreground">
                                     Por defecto 7777. Cambia solo si hay conflicto.
                                 </p>
                                 <Input
@@ -222,10 +222,10 @@ export function TransbankConfigPage() {
                     <h2 className="font-bold text-foreground flex items-center gap-2">
                         <Terminal className="w-4 h-4 text-[#0099CC]" /> Comando de inicio (PowerShell)
                     </h2>
-                    <p className="text-xs text-gray-400">
-                        Ejecuta esto en la PC del cajero, dentro de la carpeta <code className="bg-slate-900 border border-border text-[#0099CC] font-mono px-1 rounded">apps/transbank-agent</code>:
+                    <p className="text-xs text-muted-foreground">
+                        Ejecuta esto en la PC del cajero, dentro de la carpeta <code className="bg-muted border border-border text-[#0099CC] font-mono px-1 rounded">apps/transbank-agent</code>:
                     </p>
-                    <pre className="bg-[hsl(220,30%,4%)] text-gray-300 border border-border text-xs rounded-xl p-4 overflow-x-auto leading-relaxed font-mono">
+                    <pre className="bg-slate-950 dark:bg-[hsl(220,30%,4%)] text-slate-200 dark:text-gray-300 border border-border text-xs rounded-xl p-4 overflow-x-auto leading-relaxed font-mono">
                         <code>{startCmd}</code>
                     </pre>
                     {mockMode && (
