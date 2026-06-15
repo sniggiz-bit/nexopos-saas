@@ -35,8 +35,8 @@ ChartJS.register(
 );
 
 // ── Color palette ──────────────────────────────────────────────────────────────
-const CYAN       = '#00D4FF';
-const CYAN_ALPHA = (a: number) => `rgba(0,212,255,${a})`;
+const CYAN       = '#0099CC';
+const CYAN_ALPHA = (a: number) => `rgba(0,153,204,${a})`;
 
 export function DashboardOverviewPage() {
     const { user }                          = useAuth();
@@ -44,7 +44,7 @@ export function DashboardOverviewPage() {
     const isDark                            = theme === 'dark';
 
     const BG_CARD    = isDark ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.85)';
-    const BORDER     = isDark ? 'rgba(0,212,255,0.1)' : 'rgba(0,212,255,0.2)';
+    const BORDER     = isDark ? 'rgba(0,153,204,0.1)' : 'rgba(0,153,204,0.2)';
 
     const { data: stats, isLoading }        = useDashboardStats(user?.branchId || undefined);
     const { data: products }                = useProducts();
@@ -151,7 +151,7 @@ export function DashboardOverviewPage() {
                 backgroundColor: isDark ? 'rgba(11,15,26,0.95)' : 'rgba(255,255,255,0.95)',
                 borderColor: CYAN_ALPHA(0.3),
                 borderWidth: 1,
-                titleColor: isDark ? CYAN : '#00A8CC',
+                titleColor: isDark ? CYAN : '#006B99',
                 bodyColor: isDark ? 'rgba(210,225,245,0.8)' : 'rgba(15,23,42,0.8)',
                 callbacks: { label: (ctx: any) => ` ${formatPrice(ctx.raw)}` },
             },
@@ -159,7 +159,7 @@ export function DashboardOverviewPage() {
         scales: {
             y: {
                 ticks: { color: isDark ? 'rgba(180,195,220,0.4)' : 'rgba(71,85,105,0.7)', callback: (v: any) => `$${(v / 1000).toFixed(0)}k`, font: { size: 10 } },
-                grid:  { color: isDark ? 'rgba(0,212,255,0.05)' : 'rgba(0,212,255,0.1)', drawBorder: false },
+                grid:  { color: isDark ? 'rgba(0,153,204,0.05)' : 'rgba(0,153,204,0.1)', drawBorder: false },
                 border: { display: false },
             },
             x: {
@@ -248,7 +248,7 @@ export function DashboardOverviewPage() {
                                     style={{ background: CYAN_ALPHA(0.1) }}>
                                     <TrendingUp className="w-3.5 h-3.5" style={{ color: CYAN }} />
                                 </div>
-                                <p className="text-[11px] font-bold uppercase tracking-wider" style={{ color: isDark ? 'rgba(0,212,255,0.5)' : 'rgba(0,120,180,0.8)' }}>
+                                <p className="text-[11px] font-bold uppercase tracking-wider" style={{ color: isDark ? 'rgba(0,153,204,0.5)' : 'rgba(0,120,180,0.8)' }}>
                                     Comparativa Mensual
                                 </p>
                             </div>
@@ -259,7 +259,7 @@ export function DashboardOverviewPage() {
                             <p className="text-xs mt-1" style={{ color: isDark ? 'rgba(180,195,220,0.4)' : 'rgba(71,85,105,0.6)' }}>mes actual</p>
                         </div>
 
-                        <div className="mt-5 pt-4" style={{ borderTop: isDark ? '1px solid rgba(0,212,255,0.08)' : '1px solid rgba(0,212,255,0.18)' }}>
+                        <div className="mt-5 pt-4" style={{ borderTop: isDark ? '1px solid rgba(0,153,204,0.08)' : '1px solid rgba(0,153,204,0.18)' }}>
                             <div className="flex items-center justify-between">
                                 <div>
                                     <p className="text-[10px] mb-0.5" style={{ color: isDark ? 'rgba(180,195,220,0.4)' : 'rgba(71,85,105,0.6)' }}>mes anterior</p>
@@ -288,12 +288,12 @@ export function DashboardOverviewPage() {
                                     style={{ background: CYAN_ALPHA(0.1) }}>
                                     <Activity className="w-3.5 h-3.5" style={{ color: CYAN }} />
                                 </div>
-                                <p className="text-[11px] font-bold uppercase tracking-wider" style={{ color: isDark ? 'rgba(0,212,255,0.5)' : 'rgba(0,120,180,0.8)' }}>
+                                <p className="text-[11px] font-bold uppercase tracking-wider" style={{ color: isDark ? 'rgba(0,153,204,0.5)' : 'rgba(0,120,180,0.8)' }}>
                                     Ventas por Hora — Hoy
                                 </p>
                             </div>
                             <span className="text-xs font-bold tabular-nums px-2 py-0.5 rounded-full"
-                                style={{ background: CYAN_ALPHA(0.1), color: isDark ? CYAN : '#00A8CC' }}>
+                                style={{ background: CYAN_ALPHA(0.1), color: isDark ? CYAN : '#006B99' }}>
                                 {formatPrice(totalToday)}
                             </span>
                         </div>
@@ -366,14 +366,14 @@ export function DashboardOverviewPage() {
                         title="Top Productos — Mes"
                         iconBg="rgba(167,139,250,0.1)"
                         empty={!analytics?.topProducts || analytics.topProducts.length === 0}
-                        emptyIcon={<Package className="w-8 h-8" style={{ color: 'rgba(0,212,255,0.15)' }} />}
+                        emptyIcon={<Package className="w-8 h-8" style={{ color: 'rgba(0,153,204,0.15)' }} />}
                         emptyText="Sin ventas este mes"
                     >
-                        <div className="divide-y" style={{ borderColor: isDark ? 'rgba(0,212,255,0.06)' : 'rgba(0,212,255,0.12)' }}>
+                        <div className="divide-y" style={{ borderColor: isDark ? 'rgba(0,153,204,0.06)' : 'rgba(0,153,204,0.12)' }}>
                             {(analytics?.topProducts || []).map((p, i) => (
                                 <div key={p.id} className="px-4 py-2.5 flex items-center gap-3 group transition-colors"
-                                    style={{ borderColor: isDark ? 'rgba(0,212,255,0.06)' : 'rgba(0,212,255,0.12)' }}
-                                    onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'rgba(0,212,255,0.03)'}
+                                    style={{ borderColor: isDark ? 'rgba(0,153,204,0.06)' : 'rgba(0,153,204,0.12)' }}
+                                    onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'rgba(0,153,204,0.03)'}
                                     onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = ''}>
                                     <span className="text-[10px] font-black w-4 text-right flex-shrink-0 tabular-nums"
                                         style={{ color: i === 0 ? CYAN : isDark ? 'rgba(180,195,220,0.25)' : 'rgba(71,85,105,0.5)' }}>
@@ -411,13 +411,13 @@ export function DashboardOverviewPage() {
                             </Link>
                         }
                         empty={lowStockProducts.length === 0}
-                        emptyIcon={<Package className="w-8 h-8" style={{ color: 'rgba(0,212,255,0.15)' }} />}
+                        emptyIcon={<Package className="w-8 h-8" style={{ color: 'rgba(0,153,204,0.15)' }} />}
                         emptyText="Sin alertas de stock"
                     >
-                        <div className="divide-y" style={{ borderColor: isDark ? 'rgba(0,212,255,0.06)' : 'rgba(0,212,255,0.12)' }}>
+                        <div className="divide-y" style={{ borderColor: isDark ? 'rgba(0,153,204,0.06)' : 'rgba(0,153,204,0.12)' }}>
                             {lowStockProducts.map(product => (
                                 <div key={product.id} className="px-4 py-2.5 flex items-center justify-between transition-colors"
-                                    onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'rgba(0,212,255,0.03)'}
+                                    onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'rgba(0,153,204,0.03)'}
                                     onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = ''}>
                                     <div className="min-w-0">
                                         <p className="text-[13px] font-medium truncate" style={{ color: isDark ? 'rgba(210,225,245,0.85)' : 'rgba(15,23,42,0.85)' }}>
@@ -452,18 +452,18 @@ export function DashboardOverviewPage() {
                             </span>
                         }
                         empty={completedSalesToday.length === 0}
-                        emptyIcon={<ShoppingCart className="w-8 h-8" style={{ color: 'rgba(0,212,255,0.15)' }} />}
+                        emptyIcon={<ShoppingCart className="w-8 h-8" style={{ color: 'rgba(0,153,204,0.15)' }} />}
                         emptyText="No hay ventas hoy"
                     >
                         <div className="divide-y max-h-64 overflow-y-auto scrollbar-thin"
-                            style={{ borderColor: isDark ? 'rgba(0,212,255,0.06)' : 'rgba(0,212,255,0.12)' }}>
+                            style={{ borderColor: isDark ? 'rgba(0,153,204,0.06)' : 'rgba(0,153,204,0.12)' }}>
                             {completedSalesToday.slice(0, 15).map(sale => {
                                 const method    = sale.payments?.[0]?.paymentMethod || '—';
                                 const itemCount = sale.items?.reduce((sum: number, i: any) => sum + i.quantity, 0) ?? 0;
                                 const time      = new Date(sale.createdAt).toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' });
                                 return (
                                     <div key={sale.id} className="px-4 py-2.5 flex items-center justify-between transition-colors"
-                                        onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'rgba(0,212,255,0.03)'}
+                                        onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'rgba(0,153,204,0.03)'}
                                         onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = ''}>
                                         <div>
                                             <p className="text-[13px] font-bold tabular-nums" style={{ color: isDark ? 'rgba(210,225,245,0.9)' : 'rgba(15,23,42,0.9)' }}>
@@ -474,7 +474,7 @@ export function DashboardOverviewPage() {
                                             </p>
                                         </div>
                                         <span className="text-[11px] tabular-nums px-2 py-0.5 rounded-md"
-                                            style={{ background: isDark ? 'rgba(0,212,255,0.06)' : 'rgba(0,212,255,0.12)', color: isDark ? 'rgba(0,212,255,0.5)' : 'rgba(0,120,180,0.8)' }}>
+                                            style={{ background: isDark ? 'rgba(0,153,204,0.06)' : 'rgba(0,153,204,0.12)', color: isDark ? 'rgba(0,153,204,0.5)' : 'rgba(0,120,180,0.8)' }}>
                                             {time}
                                         </span>
                                     </div>
@@ -483,7 +483,7 @@ export function DashboardOverviewPage() {
                         </div>
                         {completedSalesToday.length > 0 && (
                             <div className="px-4 py-2 text-[10px] text-right"
-                                style={{ borderTop: isDark ? '1px solid rgba(0,212,255,0.06)' : '1px solid rgba(0,212,255,0.12)', color: isDark ? 'rgba(180,195,220,0.3)' : 'rgba(71,85,105,0.5)' }}>
+                                style={{ borderTop: isDark ? '1px solid rgba(0,153,204,0.06)' : '1px solid rgba(0,153,204,0.12)', color: isDark ? 'rgba(180,195,220,0.3)' : 'rgba(71,85,105,0.5)' }}>
                                 {completedSalesToday.length} venta{completedSalesToday.length !== 1 ? 's' : ''} completada{completedSalesToday.length !== 1 ? 's' : ''}
                             </div>
                         )}
@@ -575,22 +575,22 @@ function MiniKpiCard({ title, value, icon: Icon, href }: MiniKpiCardProps) {
         <div className="rounded-xl p-4 h-full transition-all duration-200 group"
             style={{
                 background: isDark ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.85)',
-                border: isDark ? '1px solid rgba(0,212,255,0.08)' : '1px solid rgba(0,212,255,0.18)'
+                border: isDark ? '1px solid rgba(0,153,204,0.08)' : '1px solid rgba(0,153,204,0.18)'
             }}
             onMouseEnter={e => {
-                (e.currentTarget as HTMLElement).style.borderColor = 'rgba(0,212,255,0.3)';
-                (e.currentTarget as HTMLElement).style.background  = isDark ? 'rgba(0,212,255,0.04)' : 'rgba(0,212,255,0.06)';
+                (e.currentTarget as HTMLElement).style.borderColor = 'rgba(0,153,204,0.3)';
+                (e.currentTarget as HTMLElement).style.background  = isDark ? 'rgba(0,153,204,0.04)' : 'rgba(0,153,204,0.06)';
             }}
             onMouseLeave={e => {
-                (e.currentTarget as HTMLElement).style.borderColor = isDark ? 'rgba(0,212,255,0.08)' : 'rgba(0,212,255,0.18)';
+                (e.currentTarget as HTMLElement).style.borderColor = isDark ? 'rgba(0,153,204,0.08)' : 'rgba(0,153,204,0.18)';
                 (e.currentTarget as HTMLElement).style.background  = isDark ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.85)';
             }}>
             <div className="flex items-center justify-between mb-2">
                 <p className="text-[9px] font-bold uppercase tracking-widest"
-                    style={{ color: isDark ? 'rgba(0,212,255,0.4)' : 'rgba(0,120,180,0.7)' }}>
+                    style={{ color: isDark ? 'rgba(0,153,204,0.4)' : 'rgba(0,120,180,0.7)' }}>
                     {title}
                 </p>
-                <Icon className="w-3 h-3" style={{ color: isDark ? 'rgba(0,212,255,0.3)' : 'rgba(0,120,180,0.5)' }} />
+                <Icon className="w-3 h-3" style={{ color: isDark ? 'rgba(0,153,204,0.3)' : 'rgba(0,120,180,0.5)' }} />
             </div>
             <p className="text-xl font-black tabular-nums" style={{ color: isDark ? 'rgba(210,225,245,0.9)' : 'rgba(15,23,42,0.9)' }}>
                 {value}
@@ -619,11 +619,11 @@ function DetailCard({ icon, title, iconBg, headerRight, empty, emptyIcon, emptyT
         <div className="rounded-2xl overflow-hidden"
             style={{
                 background: isDark ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.85)',
-                border: isDark ? '1px solid rgba(0,212,255,0.1)' : '1px solid rgba(0,212,255,0.2)'
+                border: isDark ? '1px solid rgba(0,153,204,0.1)' : '1px solid rgba(0,153,204,0.2)'
             }}>
             {/* Header */}
             <div className="flex items-center justify-between px-4 py-3.5"
-                style={{ borderBottom: isDark ? '1px solid rgba(0,212,255,0.07)' : '1px solid rgba(0,212,255,0.15)' }}>
+                style={{ borderBottom: isDark ? '1px solid rgba(0,153,204,0.07)' : '1px solid rgba(0,153,204,0.15)' }}>
                 <div className="flex items-center gap-2">
                     <div className="w-6 h-6 rounded-lg flex items-center justify-center" style={{ background: iconBg }}>
                         {icon}
@@ -732,22 +732,22 @@ function WebOrdersCard({ pending, total }: WebOrdersCardProps) {
             <div className="rounded-xl p-4 h-full transition-all duration-200 group relative overflow-hidden flex flex-col justify-between"
                 style={{
                     background: isDark ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.85)',
-                    border: isDark ? '1px solid rgba(0,212,255,0.08)' : '1px solid rgba(0,212,255,0.18)'
+                    border: isDark ? '1px solid rgba(0,153,204,0.08)' : '1px solid rgba(0,153,204,0.18)'
                 }}
                 onMouseEnter={e => {
-                    (e.currentTarget as HTMLElement).style.borderColor = 'rgba(0,212,255,0.2)';
-                    (e.currentTarget as HTMLElement).style.background  = isDark ? 'rgba(0,212,255,0.04)' : 'rgba(0,212,255,0.06)';
+                    (e.currentTarget as HTMLElement).style.borderColor = 'rgba(0,153,204,0.2)';
+                    (e.currentTarget as HTMLElement).style.background  = isDark ? 'rgba(0,153,204,0.04)' : 'rgba(0,153,204,0.06)';
                 }}
                 onMouseLeave={e => {
-                    (e.currentTarget as HTMLElement).style.borderColor = isDark ? 'rgba(0,212,255,0.08)' : 'rgba(0,212,255,0.18)';
+                    (e.currentTarget as HTMLElement).style.borderColor = isDark ? 'rgba(0,153,204,0.08)' : 'rgba(0,153,204,0.18)';
                     (e.currentTarget as HTMLElement).style.background  = isDark ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.85)';
                 }}>
                 <div className="flex items-center justify-between mb-2">
                     <p className="text-[9px] font-bold uppercase tracking-widest"
-                        style={{ color: isDark ? 'rgba(0,212,255,0.4)' : 'rgba(0,120,180,0.7)' }}>
+                        style={{ color: isDark ? 'rgba(0,153,204,0.4)' : 'rgba(0,120,180,0.7)' }}>
                         Pedidos Web
                     </p>
-                    <Globe className="w-3.5 h-3.5 text-[#00D4FF]" />
+                    <Globe className="w-3.5 h-3.5 text-[#0099CC]" />
                 </div>
                 <div>
                     <p className="text-xl font-black tabular-nums leading-none" style={{ color: isDark ? 'rgba(210,225,245,0.95)' : 'rgba(15,23,42,0.95)' }}>
@@ -778,19 +778,19 @@ function ShiftClosureCard({ summary }: ShiftClosureCardProps) {
             <div className="rounded-xl p-3.5 h-full transition-all duration-200 group relative overflow-hidden flex flex-col justify-between"
                 style={{
                     background: isDark ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.85)',
-                    border: isDark ? '1px solid rgba(0,212,255,0.08)' : '1px solid rgba(0,212,255,0.18)'
+                    border: isDark ? '1px solid rgba(0,153,204,0.08)' : '1px solid rgba(0,153,204,0.18)'
                 }}
                 onMouseEnter={e => {
-                    (e.currentTarget as HTMLElement).style.borderColor = 'rgba(0,212,255,0.2)';
-                    (e.currentTarget as HTMLElement).style.background  = isDark ? 'rgba(0,212,255,0.04)' : 'rgba(0,212,255,0.06)';
+                    (e.currentTarget as HTMLElement).style.borderColor = 'rgba(0,153,204,0.2)';
+                    (e.currentTarget as HTMLElement).style.background  = isDark ? 'rgba(0,153,204,0.04)' : 'rgba(0,153,204,0.06)';
                 }}
                 onMouseLeave={e => {
-                    (e.currentTarget as HTMLElement).style.borderColor = isDark ? 'rgba(0,212,255,0.08)' : 'rgba(0,212,255,0.18)';
+                    (e.currentTarget as HTMLElement).style.borderColor = isDark ? 'rgba(0,153,204,0.08)' : 'rgba(0,153,204,0.18)';
                     (e.currentTarget as HTMLElement).style.background  = isDark ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.85)';
                 }}>
                 <div className="flex items-center justify-between mb-2">
                     <p className="text-[9px] font-bold uppercase tracking-widest"
-                        style={{ color: isDark ? 'rgba(0,212,255,0.4)' : 'rgba(0,120,180,0.7)' }}>
+                        style={{ color: isDark ? 'rgba(0,153,204,0.4)' : 'rgba(0,120,180,0.7)' }}>
                         Detalles del Cierre
                     </p>
                     <span className={`text-[8px] px-1.5 py-0.5 rounded font-black uppercase tracking-wider ${
@@ -814,10 +814,10 @@ function ShiftClosureCard({ summary }: ShiftClosureCardProps) {
                     </div>
                     <div className="flex items-center justify-between text-[11px]">
                         <span className="flex items-center gap-1" style={{ color: isDark ? 'rgba(180,195,220,0.45)' : 'rgba(71,85,105,0.75)' }}>
-                            <span className="w-1.5 h-1.5 rounded-full bg-[#00D4FF]" />
+                            <span className="w-1.5 h-1.5 rounded-full bg-[#0099CC]" />
                             Débito
                         </span>
-                        <span className="font-bold font-mono text-[#00D4FF] tabular-nums">
+                        <span className="font-bold font-mono text-[#0099CC] tabular-nums">
                             {formatPrice(debit)}
                         </span>
                     </div>

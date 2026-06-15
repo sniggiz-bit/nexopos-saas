@@ -56,7 +56,7 @@ export function UsersPage() {
             case 'TENANT_ADMIN':
                 return <span className="px-2 py-1 bg-[rgba(239,68,68,0.06)] text-red-400 border border-[rgba(239,68,68,0.15)] rounded-md text-xs font-semibold">Administrador</span>;
             case 'MANAGER':
-                return <span className="px-2 py-1 bg-muted/30 text-[#00D4FF] border border-border rounded-md text-xs font-semibold">Supervisor</span>;
+                return <span className="px-2 py-1 bg-muted/30 text-[#0099CC] border border-border rounded-md text-xs font-semibold">Supervisor</span>;
             case 'CASHIER':
                 return <span className="px-2 py-1 bg-[rgba(16,185,129,0.06)] text-[#10B981] border border-[rgba(16,185,129,0.15)] rounded-md text-xs font-semibold">Cajero</span>;
             case 'SUPER_ADMIN':
@@ -79,7 +79,7 @@ export function UsersPage() {
                             setUserToEdit(null);
                             setIsModalOpen(true);
                         }}
-                        className="flex items-center gap-2 px-4 py-2 bg-[#00D4FF] hover:bg-[#00BCE0] text-[#0B0F1A] hover:shadow-[0_0_15px_rgba(0,212,255,0.3)] transition-all rounded-lg font-semibold shadow-sm"
+                        className="flex items-center gap-2 px-4 py-2 bg-[#0099CC] hover:bg-[#00BCE0] text-[#0B0F1A] hover:shadow-[0_0_15px_rgba(0,153,204,0.3)] transition-all rounded-lg font-semibold shadow-sm"
                     >
                         <Plus size={20} />
                         Registrar Empleado
@@ -92,7 +92,7 @@ export function UsersPage() {
                         <input
                             type="text"
                             placeholder="Buscar por nombre o correo..."
-                            className="w-full pl-10 pr-4 py-2 bg-card/[0.8] border border-border text-foreground placeholder-slate-500 rounded-lg focus:outline-none focus:border-[#00D4FF] focus:ring-1 focus:ring-[#00D4FF] transition-all"
+                            className="w-full pl-10 pr-4 py-2 bg-card/[0.8] border border-border text-foreground placeholder-slate-500 rounded-lg focus:outline-none focus:border-[#0099CC] focus:ring-1 focus:ring-[#0099CC] transition-all"
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
@@ -125,7 +125,7 @@ export function UsersPage() {
                                         <tr key={u.id} className="hover:bg-muted/30 transition-colors border-b border-border">
                                             <td className="px-6 py-4">
                                                 <div className="flex items-center gap-3">
-                                                    <div className="w-10 h-10 rounded-full bg-muted/30 border border-border text-[#00D4FF] flex items-center justify-center font-bold">
+                                                    <div className="w-10 h-10 rounded-full bg-muted/30 border border-border text-[#0099CC] flex items-center justify-center font-bold">
                                                         {u.name ? u.name.charAt(0).toUpperCase() : u.email.charAt(0).toUpperCase()}
                                                     </div>
                                                     <div>
@@ -159,7 +159,7 @@ export function UsersPage() {
                                                                 setUserToEdit(u);
                                                                 setIsModalOpen(true);
                                                             }}
-                                                            className="text-sm text-[#00D4FF] hover:text-[#00BCE0] font-semibold mr-4 transition-colors"
+                                                            className="text-sm text-[#0099CC] hover:text-[#00BCE0] font-semibold mr-4 transition-colors"
                                                         >
                                                             Editar
                                                         </button>

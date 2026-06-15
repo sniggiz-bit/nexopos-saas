@@ -133,7 +133,7 @@ function CreateConnectionModal({ onClose, onCreated }: CreateModalProps) {
                                     onClick={() => setPlatform(p)}
                                     className={`flex-1 py-2 rounded-lg border-2 text-sm font-bold transition-all ${
                                         platform === p
-                                            ? 'border-[#00D4FF] bg-[#00D4FF]/10 text-[#00D4FF]'
+                                            ? 'border-[#0099CC] bg-[#0099CC]/10 text-[#0099CC]'
                                             : 'border-border text-muted-foreground/[0.6] hover:border-border bg-card'
                                     }`}
                                 >
@@ -151,7 +151,7 @@ function CreateConnectionModal({ onClose, onCreated }: CreateModalProps) {
                             value={name}
                             onChange={e => setName(e.target.value)}
                             placeholder="Ej: Mi tienda Shopify"
-                            className="w-full px-3 py-2 bg-card border border-border text-foreground rounded-lg text-sm focus:ring-2 focus:ring-[#00D4FF] focus:border-transparent outline-none transition-all placeholder:text-muted-foreground/[0.3]"
+                            className="w-full px-3 py-2 bg-card border border-border text-foreground rounded-lg text-sm focus:ring-2 focus:ring-[#0099CC] focus:border-transparent outline-none transition-all placeholder:text-muted-foreground/[0.3]"
                         />
                     </div>
 
@@ -165,7 +165,7 @@ function CreateConnectionModal({ onClose, onCreated }: CreateModalProps) {
                                     value={shopDomain}
                                     onChange={e => setShopDomain(e.target.value)}
                                     placeholder="mi-tienda.myshopify.com"
-                                    className="w-full px-3 py-2 bg-card border border-border text-foreground rounded-lg text-sm focus:ring-2 focus:ring-[#00D4FF] focus:border-transparent outline-none transition-all placeholder:text-muted-foreground/[0.3]"
+                                    className="w-full px-3 py-2 bg-card border border-border text-foreground rounded-lg text-sm focus:ring-2 focus:ring-[#0099CC] focus:border-transparent outline-none transition-all placeholder:text-muted-foreground/[0.3]"
                                 />
                             </div>
                             <div>
@@ -176,7 +176,7 @@ function CreateConnectionModal({ onClose, onCreated }: CreateModalProps) {
                                     value={accessToken}
                                     onChange={e => setAccessToken(e.target.value)}
                                     placeholder="shpat_xxxxxxxxxxxxxxxxxxxxxxxx"
-                                    className="w-full px-3 py-2 bg-card border border-border text-foreground rounded-lg text-sm focus:ring-2 focus:ring-[#00D4FF] focus:border-transparent outline-none transition-all placeholder:text-muted-foreground/[0.3]"
+                                    className="w-full px-3 py-2 bg-card border border-border text-foreground rounded-lg text-sm focus:ring-2 focus:ring-[#0099CC] focus:border-transparent outline-none transition-all placeholder:text-muted-foreground/[0.3]"
                                 />
                             </div>
                             <div>
@@ -186,7 +186,7 @@ function CreateConnectionModal({ onClose, onCreated }: CreateModalProps) {
                                     value={locationId}
                                     onChange={e => setLocationId(e.target.value)}
                                     placeholder="ID de ubicación de inventario"
-                                    className="w-full px-3 py-2 bg-card border border-border text-foreground rounded-lg text-sm focus:ring-2 focus:ring-[#00D4FF] focus:border-transparent outline-none transition-all placeholder:text-muted-foreground/[0.3]"
+                                    className="w-full px-3 py-2 bg-card border border-border text-foreground rounded-lg text-sm focus:ring-2 focus:ring-[#0099CC] focus:border-transparent outline-none transition-all placeholder:text-muted-foreground/[0.3]"
                                 />
                             </div>
                         </>
@@ -200,7 +200,7 @@ function CreateConnectionModal({ onClose, onCreated }: CreateModalProps) {
                                     value={siteUrl}
                                     onChange={e => setSiteUrl(e.target.value)}
                                     placeholder="https://mi-tienda.com"
-                                    className="w-full px-3 py-2 bg-card border border-border text-foreground rounded-lg text-sm focus:ring-2 focus:ring-[#00D4FF] focus:border-transparent outline-none transition-all placeholder:text-muted-foreground/[0.3]"
+                                    className="w-full px-3 py-2 bg-card border border-border text-foreground rounded-lg text-sm focus:ring-2 focus:ring-[#0099CC] focus:border-transparent outline-none transition-all placeholder:text-muted-foreground/[0.3]"
                                 />
                             </div>
                             <div>
@@ -211,7 +211,7 @@ function CreateConnectionModal({ onClose, onCreated }: CreateModalProps) {
                                     value={consumerKey}
                                     onChange={e => setConsumerKey(e.target.value)}
                                     placeholder="ck_xxxxxxxxxxxxxxxx"
-                                    className="w-full px-3 py-2 bg-card border border-border text-foreground rounded-lg text-sm focus:ring-2 focus:ring-[#00D4FF] focus:border-transparent outline-none transition-all placeholder:text-muted-foreground/[0.3]"
+                                    className="w-full px-3 py-2 bg-card border border-border text-foreground rounded-lg text-sm focus:ring-2 focus:ring-[#0099CC] focus:border-transparent outline-none transition-all placeholder:text-muted-foreground/[0.3]"
                                 />
                             </div>
                             <div>
@@ -222,7 +222,7 @@ function CreateConnectionModal({ onClose, onCreated }: CreateModalProps) {
                                     value={consumerSecret}
                                     onChange={e => setConsumerSecret(e.target.value)}
                                     placeholder="cs_xxxxxxxxxxxxxxxx"
-                                    className="w-full px-3 py-2 bg-card border border-border text-foreground rounded-lg text-sm focus:ring-2 focus:ring-[#00D4FF] focus:border-transparent outline-none transition-all placeholder:text-muted-foreground/[0.3]"
+                                    className="w-full px-3 py-2 bg-card border border-border text-foreground rounded-lg text-sm focus:ring-2 focus:ring-[#0099CC] focus:border-transparent outline-none transition-all placeholder:text-muted-foreground/[0.3]"
                                 />
                             </div>
                         </>
@@ -232,14 +232,14 @@ function CreateConnectionModal({ onClose, onCreated }: CreateModalProps) {
                         <button
                             type="button"
                             onClick={onClose}
-                            className="flex-1 px-4 py-2 border border-border text-foreground/[0.85] hover:bg-[#00D4FF]/5 rounded-lg text-sm transition-colors"
+                            className="flex-1 px-4 py-2 border border-border text-foreground/[0.85] hover:bg-[#0099CC]/5 rounded-lg text-sm transition-colors"
                         >
                             Cancelar
                         </button>
                         <button
                             type="submit"
                             disabled={loading}
-                            className="flex-1 px-4 py-2 bg-[#00D4FF] hover:bg-[#00BCE0] text-[#0B0F1A] font-bold rounded-lg text-sm transition-all disabled:opacity-50"
+                            className="flex-1 px-4 py-2 bg-[#0099CC] hover:bg-[#00BCE0] text-[#0B0F1A] font-bold rounded-lg text-sm transition-all disabled:opacity-50"
                         >
                             {loading ? 'Guardando...' : 'Crear conexión'}
                         </button>
@@ -315,7 +315,7 @@ function ConnectionCard({ connection, onRefresh }: ConnectionCardProps) {
     ];
 
     return (
-        <div className="rounded-xl border border-border p-5 space-y-4 hover:border-border transition-all duration-300 shadow-[0_0_20px_rgba(0,212,255,0.02)]" style={{ background: 'rgba(255,255,255,0.02)' }}>
+        <div className="rounded-xl border border-border p-5 space-y-4 hover:border-border transition-all duration-300 shadow-[0_0_20px_rgba(0,153,204,0.02)]" style={{ background: 'rgba(255,255,255,0.02)' }}>
             <div className="flex items-start justify-between">
                 <div>
                     <div className="flex items-center gap-2 mb-1.5">
@@ -325,7 +325,7 @@ function ConnectionCard({ connection, onRefresh }: ConnectionCardProps) {
                     <h3 className="font-bold text-foreground text-[15px]">{connection.name}</h3>
                     {connection.lastSyncAt && (
                         <p className="text-xs text-muted-foreground/[0.4] mt-1.5 flex items-center">
-                            <Clock className="w-3.5 h-3.5 inline mr-1 text-[#00D4FF]" />
+                            <Clock className="w-3.5 h-3.5 inline mr-1 text-[#0099CC]" />
                             Última sync: {new Date(connection.lastSyncAt).toLocaleString('es-CL')}
                         </p>
                     )}
@@ -343,7 +343,7 @@ function ConnectionCard({ connection, onRefresh }: ConnectionCardProps) {
                 <button
                     onClick={handleTest}
                     disabled={testLoading}
-                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs border border-border rounded-lg hover:bg-[#00D4FF]/5 text-foreground/[0.85] font-medium transition-colors disabled:opacity-50"
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs border border-border rounded-lg hover:bg-[#0099CC]/5 text-foreground/[0.85] font-medium transition-colors disabled:opacity-50"
                 >
                     <Plug className="w-3.5 h-3.5" />
                     {testLoading ? 'Probando...' : 'Probar'}
@@ -354,7 +354,7 @@ function ConnectionCard({ connection, onRefresh }: ConnectionCardProps) {
                         key={type}
                         onClick={() => handleSync(type)}
                         disabled={syncLoading !== null}
-                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-[#00D4FF]/5 text-[#00D4FF] border border-[#00D4FF]/20 rounded-lg hover:bg-[#00D4FF]/10 transition-colors disabled:opacity-50 font-semibold"
+                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-[#0099CC]/5 text-[#0099CC] border border-[#0099CC]/20 rounded-lg hover:bg-[#0099CC]/10 transition-colors disabled:opacity-50 font-semibold"
                     >
                         {syncLoading === type ? (
                             <RefreshCw className="w-3.5 h-3.5 animate-spin" />
@@ -448,7 +448,7 @@ function OrdersTable({ connectionId }: { connectionId?: string }) {
                                 {order.processedAt === null && order.status !== 'PROCESSED' && (
                                     <button
                                         onClick={() => handleProcess(order.id)}
-                                        className="text-xs text-[#00D4FF] hover:text-white font-bold hover:bg-[#00D4FF]/10 px-2.5 py-1 rounded-md transition-colors border border-[#00D4FF]/25"
+                                        className="text-xs text-[#0099CC] hover:text-white font-bold hover:bg-[#0099CC]/10 px-2.5 py-1 rounded-md transition-colors border border-[#0099CC]/25"
                                     >
                                         Procesar
                                     </button>
@@ -492,7 +492,7 @@ export function IntegrationsPage() {
                     </div>
                     <button
                         onClick={() => setShowCreateModal(true)}
-                        className="flex items-center gap-2 px-4 py-2 bg-[#00D4FF] hover:bg-[#00BCE0] text-[#0B0F1A] rounded-lg text-sm font-bold shadow-[0_0_15px_rgba(0,212,255,0.2)] transition-all"
+                        className="flex items-center gap-2 px-4 py-2 bg-[#0099CC] hover:bg-[#00BCE0] text-[#0B0F1A] rounded-lg text-sm font-bold shadow-[0_0_15px_rgba(0,153,204,0.2)] transition-all"
                     >
                         <Plus className="w-4 h-4 stroke-[3]" />
                         Nueva conexión
@@ -510,7 +510,7 @@ export function IntegrationsPage() {
                             onClick={() => setActiveTab(tab.key as any)}
                             className={`px-4 py-1.5 text-sm font-semibold rounded-md transition-all ${
                                 activeTab === tab.key
-                                    ? 'bg-[#00D4FF] text-[#0B0F1A] shadow-[0_0_10px_rgba(0,212,255,0.25)]'
+                                    ? 'bg-[#0099CC] text-[#0B0F1A] shadow-[0_0_10px_rgba(0,153,204,0.25)]'
                                     : 'text-muted-foreground/[0.6] hover:text-white'
                             }`}
                         >
@@ -524,7 +524,7 @@ export function IntegrationsPage() {
                     <>
                         {isLoading ? (
                             <div className="text-center py-12 text-muted-foreground/[0.5]">
-                                <div className="w-6 h-6 border-2 border-[#00D4FF] border-t-transparent rounded-full animate-spin mx-auto mb-2" />
+                                <div className="w-6 h-6 border-2 border-[#0099CC] border-t-transparent rounded-full animate-spin mx-auto mb-2" />
                                 <span>Cargando conexiones...</span>
                             </div>
                         ) : connections.length === 0 ? (
@@ -536,7 +536,7 @@ export function IntegrationsPage() {
                                 </p>
                                 <button
                                     onClick={() => setShowCreateModal(true)}
-                                    className="px-4 py-2 bg-[#00D4FF] hover:bg-[#00BCE0] text-[#0B0F1A] font-bold rounded-lg text-sm transition-all"
+                                    className="px-4 py-2 bg-[#0099CC] hover:bg-[#00BCE0] text-[#0B0F1A] font-bold rounded-lg text-sm transition-all"
                                 >
                                     <Plus className="w-4 h-4 inline mr-1 stroke-[3]" />
                                     Nueva conexión
@@ -565,7 +565,7 @@ export function IntegrationsPage() {
                                 <select
                                     value={selectedConnectionId ?? ''}
                                     onChange={e => setSelectedConnectionId(e.target.value || undefined)}
-                                    className="text-sm border border-border bg-[hsl(var(--card))] text-foreground/[0.85] rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-[#00D4FF] outline-none"
+                                    className="text-sm border border-border bg-[hsl(var(--card))] text-foreground/[0.85] rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-[#0099CC] outline-none"
                                 >
                                     <option value="" className="bg-[hsl(var(--card))]">Todas las conexiones</option>
                                     {connections.map(c => (

@@ -116,7 +116,7 @@ export function UserFormModal({ isOpen, onClose, initialData }: UserFormModalPro
                             type="text"
                             required
                             placeholder="Ej. Juan Pérez"
-                            className="w-full px-4 py-2 bg-card/[0.8] border border-border rounded-xl text-foreground placeholder-slate-500 focus:border-[#00D4FF] focus:ring-1 focus:ring-[#00D4FF] outline-none transition-all"
+                            className="w-full px-4 py-2 bg-card/[0.8] border border-border rounded-xl text-foreground placeholder-slate-500 focus:border-[#0099CC] focus:ring-1 focus:ring-[#0099CC] outline-none transition-all"
                             value={formData.name}
                             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                         />
@@ -128,7 +128,7 @@ export function UserFormModal({ isOpen, onClose, initialData }: UserFormModalPro
                             type="email"
                             required
                             placeholder="juan@nexopos.cl"
-                            className="w-full px-4 py-2 bg-card/[0.8] border border-border rounded-xl text-foreground placeholder-slate-500 focus:border-[#00D4FF] focus:ring-1 focus:ring-[#00D4FF] outline-none transition-all"
+                            className="w-full px-4 py-2 bg-card/[0.8] border border-border rounded-xl text-foreground placeholder-slate-500 focus:border-[#0099CC] focus:ring-1 focus:ring-[#0099CC] outline-none transition-all"
                             value={formData.email}
                             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                         />
@@ -140,7 +140,7 @@ export function UserFormModal({ isOpen, onClose, initialData }: UserFormModalPro
                             type="password"
                             required={!initialData}
                             placeholder={initialData ? "Dejar en blanco para conservar" : "••••••••"}
-                            className="w-full px-4 py-2 bg-card/[0.8] border border-border rounded-xl text-foreground placeholder-slate-500 focus:border-[#00D4FF] focus:ring-1 focus:ring-[#00D4FF] outline-none transition-all"
+                            className="w-full px-4 py-2 bg-card/[0.8] border border-border rounded-xl text-foreground placeholder-slate-500 focus:border-[#0099CC] focus:ring-1 focus:ring-[#0099CC] outline-none transition-all"
                             value={formData.password}
                             onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                         />
@@ -151,7 +151,7 @@ export function UserFormModal({ isOpen, onClose, initialData }: UserFormModalPro
                         <div>
                             <label className="block text-sm font-semibold text-gray-400 mb-1">Rol</label>
                             <select
-                                className="w-full px-4 py-2 bg-card/[0.8] border border-border rounded-xl text-foreground focus:border-[#00D4FF] focus:ring-1 focus:ring-[#00D4FF] outline-none transition-all"
+                                className="w-full px-4 py-2 bg-card/[0.8] border border-border rounded-xl text-foreground focus:border-[#0099CC] focus:ring-1 focus:ring-[#0099CC] outline-none transition-all"
                                 value={formData.role}
                                 onChange={(e) => setFormData({ ...formData, role: e.target.value })}
                             >
@@ -164,7 +164,7 @@ export function UserFormModal({ isOpen, onClose, initialData }: UserFormModalPro
                         <div>
                             <label className="block text-sm font-semibold text-gray-400 mb-1">Sucursal</label>
                             <select
-                                className="w-full px-4 py-2 bg-card/[0.8] border border-border rounded-xl text-foreground focus:border-[#00D4FF] focus:ring-1 focus:ring-[#00D4FF] outline-none transition-all disabled:opacity-50"
+                                className="w-full px-4 py-2 bg-card/[0.8] border border-border rounded-xl text-foreground focus:border-[#0099CC] focus:ring-1 focus:ring-[#0099CC] outline-none transition-all disabled:opacity-50"
                                 value={formData.branchId}
                                 onChange={(e) => setFormData({ ...formData, branchId: e.target.value })}
                                 disabled={branches.length === 0}
@@ -188,7 +188,7 @@ export function UserFormModal({ isOpen, onClose, initialData }: UserFormModalPro
                         <button
                             type="submit"
                             disabled={createMutation.isPending || updateMutation.isPending}
-                            className="px-5 py-2.5 text-sm font-semibold text-[#0B0F1A] bg-[#00D4FF] rounded-xl hover:bg-[#00BCE0] hover:shadow-[0_0_15px_rgba(0,212,255,0.3)] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="px-5 py-2.5 text-sm font-semibold text-[#0B0F1A] bg-[#0099CC] rounded-xl hover:bg-[#00BCE0] hover:shadow-[0_0_15px_rgba(0,153,204,0.3)] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             {(createMutation.isPending || updateMutation.isPending) ? 'Guardando...' : initialData ? 'Actualizar Cambios' : 'Guardar Empleado'}
                         </button>

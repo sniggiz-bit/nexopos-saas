@@ -78,7 +78,7 @@ export function TransfersPage() {
                     </div>
                     <button
                         onClick={() => setIsNewModalOpen(true)}
-                        className="inline-flex items-center px-4 py-2 bg-[#00D4FF] hover:bg-[#00BCE0] text-[#0B0F1A] text-sm font-bold rounded-lg shadow-[0_0_15px_rgba(0,212,255,0.2)] hover:shadow-[0_0_25px_rgba(0,212,255,0.4)] transition-all"
+                        className="inline-flex items-center px-4 py-2 bg-[#0099CC] hover:bg-[#00BCE0] text-[#0B0F1A] text-sm font-bold rounded-lg shadow-[0_0_15px_rgba(0,153,204,0.2)] hover:shadow-[0_0_25px_rgba(0,153,204,0.4)] transition-all"
                     >
                         <Plus className="w-5 h-5 mr-2 stroke-[3]" />
                         Nuevo Traspaso
@@ -94,7 +94,7 @@ export function TransfersPage() {
                                 placeholder="Buscar por sucursal o producto..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full pl-10 pr-4 py-2 bg-card border border-border text-foreground rounded-lg focus:ring-2 focus:ring-[#00D4FF] focus:border-transparent outline-none placeholder:text-muted-foreground/[0.3] transition-all"
+                                className="w-full pl-10 pr-4 py-2 bg-card border border-border text-foreground rounded-lg focus:ring-2 focus:ring-[#0099CC] focus:border-transparent outline-none placeholder:text-muted-foreground/[0.3] transition-all"
                             />
                         </div>
                     </div>
@@ -124,7 +124,7 @@ export function TransfersPage() {
                                 {loading ? (
                                     <tr>
                                         <td colSpan={5} className="px-6 py-12 text-center text-muted-foreground/[0.5]">
-                                            <Loader2 className="w-6 h-6 animate-spin mx-auto text-[#00D4FF]" />
+                                            <Loader2 className="w-6 h-6 animate-spin mx-auto text-[#0099CC]" />
                                             <p className="mt-2 text-sm">Cargando traspasos...</p>
                                         </td>
                                     </tr>
@@ -153,7 +153,7 @@ export function TransfersPage() {
                                                 <div className="flex items-center space-x-2">
                                                     <span className="text-xs text-foreground/[0.85] bg-card border border-border px-2.5 py-1 rounded-md line-clamp-1 max-w-[120px]" title={transfer.originBranch.name}>{transfer.originBranch.name}</span>
                                                     <ArrowLeftRight className="w-4 h-4 text-muted-foreground/[0.4] flex-shrink-0" />
-                                                    <span className="text-xs text-[#00D4FF] bg-[#00D4FF]/10 border border-[#00D4FF]/20 px-2.5 py-1 rounded-md font-semibold line-clamp-1 max-w-[120px]" title={transfer.destinationBranch.name}>{transfer.destinationBranch.name}</span>
+                                                    <span className="text-xs text-[#0099CC] bg-[#0099CC]/10 border border-[#0099CC]/20 px-2.5 py-1 rounded-md font-semibold line-clamp-1 max-w-[120px]" title={transfer.destinationBranch.name}>{transfer.destinationBranch.name}</span>
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">

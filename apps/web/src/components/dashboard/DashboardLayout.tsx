@@ -124,13 +124,13 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                     <div className="flex items-center gap-2">
                         <Logo variant="full" mode={theme} />
                         <span className="text-[9px] font-bold px-1.5 py-0.5 rounded tracking-widest uppercase"
-                            style={{ background: 'rgba(0,212,255,0.1)', color: '#00D4FF', border: '1px solid rgba(0,212,255,0.2)' }}>
+                            style={{ background: 'rgba(0,153,204,0.1)', color: '#0099CC', border: '1px solid rgba(0,153,204,0.2)' }}>
                             Pro
                         </span>
                     </div>
                     {/* Mobile close button */}
                     <button 
-                        className="lg:hidden p-1.5 rounded-lg text-white/50 hover:bg-white/5 hover:text-white transition-colors"
+                        className="lg:hidden p-1.5 rounded-lg text-foreground/50 hover:bg-foreground/5 hover:text-foreground transition-colors"
                         onClick={() => setIsSidebarOpen(false)}
                     >
                         <X className="w-5 h-5" />
@@ -142,7 +142,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                     {navigationGroups.map((group) => (
                         <div key={group.title}>
                             <p className="px-3 mb-1.5 text-[9px] font-bold uppercase tracking-[0.12em]"
-                                style={{ color: theme === 'dark' ? 'rgba(0,212,255,0.35)' : 'rgba(71,85,105,0.6)' }}>
+                                style={{ color: theme === 'dark' ? 'rgba(0,153,204,0.35)' : 'rgba(71,85,105,0.6)' }}>
                                 {group.title}
                             </p>
                             <div className="space-y-0.5">
@@ -158,14 +158,14 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                                                 isActive ? 'nav-active-bar' : '',
                                             ].join(' ')}
                                             style={isActive ? {
-                                                background: 'linear-gradient(90deg, rgba(0,212,255,0.12) 0%, rgba(0,212,255,0.04) 100%)',
-                                                color: '#00D4FF',
+                                                background: 'linear-gradient(90deg, rgba(0,153,204,0.12) 0%, rgba(0,153,204,0.04) 100%)',
+                                                color: '#0099CC',
                                             } : {
                                                 color: theme === 'dark' ? 'rgba(180,195,220,0.6)' : 'rgba(55,65,81,0.95)',
                                             }}
                                             onMouseEnter={e => {
                                                 if (!isActive) {
-                                                    (e.currentTarget as HTMLElement).style.background = theme === 'dark' ? 'rgba(0,212,255,0.05)' : 'rgba(0,212,255,0.08)';
+                                                    (e.currentTarget as HTMLElement).style.background = theme === 'dark' ? 'rgba(0,153,204,0.05)' : 'rgba(0,153,204,0.08)';
                                                     (e.currentTarget as HTMLElement).style.color = theme === 'dark' ? 'rgba(210,225,245,0.95)' : 'rgba(15,23,42,0.95)';
                                                 }
                                             }}
@@ -179,7 +179,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                                         >
                                             <Icon
                                                 className="w-4 h-4 shrink-0 transition-all duration-150"
-                                                style={isActive ? { filter: 'drop-shadow(0 0 6px rgba(0,212,255,0.7))' } : {}}
+                                                style={isActive ? { filter: 'drop-shadow(0 0 6px rgba(0,153,204,0.7))' } : {}}
                                             />
                                             <span className="truncate">{item.name}</span>
                                             {isActive && (
@@ -195,22 +195,22 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
                 {/* ── User footer ── */}
                 <div className="p-3 shrink-0"
-                    style={{ borderTop: theme === 'dark' ? '1px solid rgba(0,212,255,0.08)' : '1px solid rgba(0,0,0,0.06)' }}>
+                    style={{ borderTop: theme === 'dark' ? '1px solid rgba(0,153,204,0.08)' : '1px solid rgba(0,0,0,0.06)' }}>
                     <div className="flex items-center gap-2.5 px-2 py-2 rounded-xl transition-colors"
                         style={{
-                            background: theme === 'dark' ? 'rgba(0,212,255,0.04)' : 'rgba(0,212,255,0.06)',
-                            border: theme === 'dark' ? '1px solid rgba(0,212,255,0.08)' : '1px solid rgba(0,212,255,0.15)'
+                            background: theme === 'dark' ? 'rgba(0,153,204,0.04)' : 'rgba(0,153,204,0.06)',
+                            border: theme === 'dark' ? '1px solid rgba(0,153,204,0.08)' : '1px solid rgba(0,153,204,0.15)'
                         }}>
                         {/* Avatar */}
                         <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 font-bold text-sm"
-                            style={{ background: 'linear-gradient(135deg,#00D4FF 0%,#0099BB 100%)', color: '#0B0F1A' }}>
+                            style={{ background: 'linear-gradient(135deg,#0099CC 0%,#0099BB 100%)', color: '#0B0F1A' }}>
                             {(user?.name || user?.email || 'A').charAt(0).toUpperCase()}
                         </div>
                         <div className="flex-1 min-w-0">
                             <p className="text-[13px] font-semibold truncate" style={{ color: theme === 'dark' ? 'rgba(210,225,245,0.95)' : 'rgba(15,23,42,0.95)' }}>
                                 {user?.name || user?.email}
                             </p>
-                            <p className="text-[10px] capitalize truncate" style={{ color: '#00D4FF' }}>
+                            <p className="text-[10px] capitalize truncate" style={{ color: '#0099CC' }}>
                                 {user?.role?.replace(/_/g, ' ').toLowerCase()}
                             </p>
                         </div>
@@ -245,7 +245,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                         background: theme === 'dark' ? 'rgba(11,15,26,0.85)' : 'rgba(255,255,255,0.85)',
                         backdropFilter: 'blur(20px)',
                         WebkitBackdropFilter: 'blur(20px)',
-                        borderBottom: theme === 'dark' ? '1px solid rgba(0,212,255,0.08)' : '1px solid rgba(0,0,0,0.08)',
+                        borderBottom: theme === 'dark' ? '1px solid rgba(0,153,204,0.08)' : '1px solid rgba(0,0,0,0.08)',
                     }}>
 
                     {/* Mobile menu toggle */}
@@ -258,7 +258,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
                     {/* Page breadcrumb */}
                     <div className="flex items-center gap-2 flex-1 min-w-0">
-                        <CurrentIcon className="w-4 h-4 shrink-0 hidden sm:block" style={{ color: '#00D4FF' }} />
+                        <CurrentIcon className="w-4 h-4 shrink-0 hidden sm:block" style={{ color: '#0099CC' }} />
                         <h2 className="text-[15px] font-semibold truncate" style={{ color: theme === 'dark' ? 'rgba(210,225,245,0.9)' : 'rgba(15,23,42,0.9)' }}>
                             {currentPage?.name || 'Dashboard'}
                         </h2>
@@ -267,17 +267,17 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                     {/* Search bar */}
                     <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg w-52"
                         style={{
-                            background: theme === 'dark' ? 'rgba(0,212,255,0.05)' : 'rgba(0,212,255,0.08)',
-                            border: theme === 'dark' ? '1px solid rgba(0,212,255,0.1)' : '1px solid rgba(0,212,255,0.2)'
+                            background: theme === 'dark' ? 'rgba(0,153,204,0.05)' : 'rgba(0,153,204,0.08)',
+                            border: theme === 'dark' ? '1px solid rgba(0,153,204,0.1)' : '1px solid rgba(0,153,204,0.2)'
                         }}>
-                        <Search className="w-3.5 h-3.5 shrink-0" style={{ color: 'rgba(0,212,255,0.4)' }} />
+                        <Search className="w-3.5 h-3.5 shrink-0" style={{ color: 'rgba(0,153,204,0.4)' }} />
                         <input
                             type="text"
                             placeholder="Buscar..."
                             value={searchQuery}
                             onChange={e => setSearchQuery(e.target.value)}
                             className="bg-transparent text-[13px] outline-none w-full placeholder:text-opacity-40"
-                            style={{ color: theme === 'dark' ? 'rgba(210,225,245,0.8)' : 'rgba(15,23,42,0.8)', caretColor: '#00D4FF' }}
+                            style={{ color: theme === 'dark' ? 'rgba(210,225,245,0.8)' : 'rgba(15,23,42,0.8)', caretColor: '#0099CC' }}
                         />
                     </div>
 
@@ -288,10 +288,10 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                         style={{
                             color: theme === 'dark' ? 'rgba(180,195,220,0.5)' : 'rgba(75,85,99,0.7)',
                             background: 'hsl(var(--background))',
-                            border: theme === 'dark' ? '1px solid rgba(0,212,255,0.08)' : '1px solid rgba(0,212,255,0.2)'
+                            border: theme === 'dark' ? '1px solid rgba(0,153,204,0.08)' : '1px solid rgba(0,153,204,0.2)'
                         }}
                         onMouseEnter={e => {
-                            (e.currentTarget as HTMLElement).style.color = '#00D4FF';
+                            (e.currentTarget as HTMLElement).style.color = '#0099CC';
                         }}
                         onMouseLeave={e => {
                             (e.currentTarget as HTMLElement).style.color = theme === 'dark' ? 'rgba(180,195,220,0.5)' : 'rgba(75,85,99,0.7)';
@@ -306,9 +306,9 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                         style={{
                             color: theme === 'dark' ? 'rgba(180,195,220,0.5)' : 'rgba(75,85,99,0.7)',
                             background: 'hsl(var(--background))',
-                            border: theme === 'dark' ? '1px solid rgba(0,212,255,0.08)' : '1px solid rgba(0,212,255,0.2)'
+                            border: theme === 'dark' ? '1px solid rgba(0,153,204,0.08)' : '1px solid rgba(0,153,204,0.2)'
                         }}
-                        onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = '#00D4FF'}
+                        onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = '#0099CC'}
                         onMouseLeave={e => (e.currentTarget as HTMLElement).style.color = theme === 'dark' ? 'rgba(180,195,220,0.5)' : 'rgba(75,85,99,0.7)'}
                     >
                         <Bell className="w-4 h-4" />

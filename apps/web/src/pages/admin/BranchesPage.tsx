@@ -27,7 +27,7 @@ export default function BranchesPage() {
             await createBranch(newBranchData);
             setIsModalOpen(false);
             setNewBranchData({ name: '', address: '', isMain: false });
-        } catch (error) {
+        } catch (_error) {
             // Error handled in hook
         } finally {
             setSubmitting(false);
@@ -44,7 +44,7 @@ export default function BranchesPage() {
                     </div>
                     <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
                         <DialogTrigger asChild>
-                            <Button className="bg-[#00D4FF] hover:bg-[#00BCE0] text-[#0B0F1A] hover:shadow-[0_0_15px_rgba(0,212,255,0.3)] transition-all font-semibold rounded-lg">
+                            <Button className="bg-[#0099CC] hover:bg-[#00BCE0] text-[#0B0F1A] hover:shadow-[0_0_15px_rgba(0,153,204,0.3)] transition-all font-semibold rounded-lg">
                                 <Plus className="mr-2 h-4 w-4" /> Nueva Sucursal
                             </Button>
                         </DialogTrigger>
@@ -60,7 +60,7 @@ export default function BranchesPage() {
                                         value={newBranchData.name}
                                         onChange={(e) => setNewBranchData({ ...newBranchData, name: e.target.value })}
                                         placeholder="Ej: Sucursal Centro"
-                                        className="bg-card/[0.8] border border-border text-foreground focus:border-[#00D4FF] focus:ring-1 focus:ring-[#00D4FF]"
+                                        className="bg-card/[0.8] border border-border text-foreground focus:border-[#0099CC] focus:ring-1 focus:ring-[#0099CC]"
                                         required
                                     />
                                 </div>
@@ -71,14 +71,14 @@ export default function BranchesPage() {
                                         value={newBranchData.address}
                                         onChange={(e) => setNewBranchData({ ...newBranchData, address: e.target.value })}
                                         placeholder="Ej: Av. Principal 123"
-                                        className="bg-card/[0.8] border border-border text-foreground focus:border-[#00D4FF] focus:ring-1 focus:ring-[#00D4FF]"
+                                        className="bg-card/[0.8] border border-border text-foreground focus:border-[#0099CC] focus:ring-1 focus:ring-[#0099CC]"
                                     />
                                 </div>
                                 <DialogFooter>
                                     <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)} className="border-border text-gray-400 hover:bg-card hover:text-foreground">
                                         Cancelar
                                     </Button>
-                                    <Button type="submit" disabled={submitting} className="bg-[#00D4FF] hover:bg-[#00BCE0] text-[#0B0F1A] hover:shadow-[0_0_15px_rgba(0,212,255,0.3)] transition-all font-semibold">
+                                    <Button type="submit" disabled={submitting} className="bg-[#0099CC] hover:bg-[#00BCE0] text-[#0B0F1A] hover:shadow-[0_0_15px_rgba(0,153,204,0.3)] transition-all font-semibold">
                                         {submitting ? 'Creando...' : 'Crear Sucursal'}
                                     </Button>
                                 </DialogFooter>
@@ -96,9 +96,9 @@ export default function BranchesPage() {
                         </div>
                     ) : (
                         branches.map((branch) => (
-                            <div key={branch.id} className="bg-card/[0.5] border border-border backdrop-blur-md rounded-xl p-6 hover:border-border hover:shadow-[0_0_15px_rgba(0,212,255,0.05)] transition-all duration-300">
+                            <div key={branch.id} className="bg-card/[0.5] border border-border backdrop-blur-md rounded-xl p-6 hover:border-border hover:shadow-[0_0_15px_rgba(0,153,204,0.05)] transition-all duration-300">
                                 <div className="flex items-start justify-between mb-4">
-                                    <div className="p-3 bg-muted/30 border border-border rounded-lg text-[#00D4FF]">
+                                    <div className="p-3 bg-muted/30 border border-border rounded-lg text-[#0099CC]">
                                         <Store size={24} />
                                     </div>
                                     {branch.isMain && (

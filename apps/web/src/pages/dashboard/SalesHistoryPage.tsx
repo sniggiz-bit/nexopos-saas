@@ -16,8 +16,8 @@ import {
 
 // ── Palette ────────────────────────────────────────────────────────────────────
 const C = {
-    cyan:    '#00D4FF',
-    cyanA:   (a: number) => `rgba(0,212,255,${a})`,
+    cyan:    '#0099CC',
+    cyanA:   (a: number) => `rgba(0,153,204,${a})`,
     green:   '#34D399',
     greenA:  (a: number) => `rgba(52,211,153,${a})`,
     red:     '#F87171',
@@ -208,7 +208,7 @@ export function SalesHistoryPage() {
                             <input type="date" value={filters.startDate} max={filters.endDate || todayISO()}
                                 onChange={e => set('startDate', e.target.value)} style={inputStyle}
                                 onFocus={e => (e.currentTarget.style.borderColor = C.cyanA(0.4))}
-                                onBlur={e => (e.currentTarget.style.borderColor = 'rgba(0,212,255,0.12)')} />
+                                onBlur={e => (e.currentTarget.style.borderColor = 'rgba(0,153,204,0.12)')} />
                         </div>
 
                         {/* Hasta */}
@@ -220,7 +220,7 @@ export function SalesHistoryPage() {
                             <input type="date" value={filters.endDate} min={filters.startDate} max={todayISO()}
                                 onChange={e => set('endDate', e.target.value)} style={inputStyle}
                                 onFocus={e => (e.currentTarget.style.borderColor = C.cyanA(0.4))}
-                                onBlur={e => (e.currentTarget.style.borderColor = 'rgba(0,212,255,0.12)')} />
+                                onBlur={e => (e.currentTarget.style.borderColor = 'rgba(0,153,204,0.12)')} />
                         </div>
 
                         {/* Sucursal */}

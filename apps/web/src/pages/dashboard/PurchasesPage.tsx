@@ -33,7 +33,7 @@ interface PurchaseLineItem {
 // ─── Status Badge ─────────────────────────────────────────────────────────────
 
 const STATUS_CONFIG: Record<string, { label: string; className: string }> = {
-    COMPLETED: { label: 'Completada', className: 'bg-muted/30 text-[#00D4FF] border border-border' },
+    COMPLETED: { label: 'Completada', className: 'bg-muted/30 text-[#0099CC] border border-border' },
     PENDING: { label: 'Pendiente', className: 'bg-[rgba(245,158,11,0.06)] text-[#F59E0B] border border-[rgba(245,158,11,0.15)]' },
     CANCELLED: { label: 'Cancelada', className: 'bg-[rgba(239,68,68,0.06)] text-[#EF4444] border border-[rgba(239,68,68,0.15)]' },
 };
@@ -157,7 +157,7 @@ export function PurchasesPage() {
                         </p>
                         <button
                             onClick={() => setShowForm(true)}
-                            className="px-4 py-2 bg-[#00D4FF] hover:bg-[#00BCE0] text-[#0B0F1A] hover:shadow-[0_0_15px_rgba(0,212,255,0.3)] transition-all rounded-lg flex items-center gap-2 font-semibold whitespace-nowrap"
+                            className="px-4 py-2 bg-[#0099CC] hover:bg-[#00BCE0] text-[#0B0F1A] hover:shadow-[0_0_15px_rgba(0,153,204,0.3)] transition-all rounded-lg flex items-center gap-2 font-semibold whitespace-nowrap"
                         >
                             <Plus className="w-4 h-4" />
                             Registrar Compra
@@ -174,7 +174,7 @@ export function PurchasesPage() {
                         <div className="px-6 py-4 bg-muted/30 border-b border-border flex items-center justify-between">
                             <div className="flex items-center gap-3">
                                 <div className="w-9 h-9 bg-muted/30 border border-border rounded-lg flex items-center justify-center">
-                                    <PackagePlus className="w-5 h-5 text-[#00D4FF]" />
+                                    <PackagePlus className="w-5 h-5 text-[#0099CC]" />
                                 </div>
                                 <div>
                                     <h3 className="font-bold text-foreground">Nueva Compra</h3>
@@ -202,7 +202,7 @@ export function PurchasesPage() {
                                         required
                                         value={branchId}
                                         onChange={(e) => setBranchId(e.target.value)}
-                                        className="w-full px-4 py-2.5 bg-card/[0.8] border border-border text-foreground rounded-lg focus:border-[#00D4FF] focus:ring-1 focus:ring-[#00D4FF] outline-none text-sm"
+                                        className="w-full px-4 py-2.5 bg-card/[0.8] border border-border text-foreground rounded-lg focus:border-[#0099CC] focus:ring-1 focus:ring-[#0099CC] outline-none text-sm"
                                     >
                                         <option value="" className="bg-[hsl(220,30%,8%)] text-gray-400">— Seleccionar sucursal —</option>
                                         {branches.map((b) => (
@@ -222,7 +222,7 @@ export function PurchasesPage() {
                                     <select
                                         value={supplierId}
                                         onChange={(e) => setSupplierId(e.target.value)}
-                                        className="w-full px-4 py-2.5 bg-card/[0.8] border border-border text-foreground rounded-lg focus:border-[#00D4FF] focus:ring-1 focus:ring-[#00D4FF] outline-none text-sm"
+                                        className="w-full px-4 py-2.5 bg-card/[0.8] border border-border text-foreground rounded-lg focus:border-[#0099CC] focus:ring-1 focus:ring-[#0099CC] outline-none text-sm"
                                     >
                                         <option value="" className="bg-[hsl(220,30%,8%)] text-gray-400">— Sin proveedor —</option>
                                         {(suppliers ?? []).map((s) => (
@@ -246,7 +246,7 @@ export function PurchasesPage() {
                                         value={productSearch}
                                         onChange={(e) => setProductSearch(e.target.value)}
                                         placeholder="Buscar por nombre o SKU..."
-                                        className="w-full px-4 py-2.5 pl-10 bg-card/[0.8] border border-border text-foreground placeholder-slate-500 rounded-lg focus:border-[#00D4FF] focus:ring-1 focus:ring-[#00D4FF] outline-none text-sm"
+                                        className="w-full px-4 py-2.5 pl-10 bg-card/[0.8] border border-border text-foreground placeholder-slate-500 rounded-lg focus:border-[#0099CC] focus:ring-1 focus:ring-[#0099CC] outline-none text-sm"
                                     />
                                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none" />
 
@@ -268,7 +268,7 @@ export function PurchasesPage() {
                                                     </div>
                                                     <div className="text-right shrink-0 ml-4">
                                                         <p className="text-xs text-gray-400">Costo actual</p>
-                                                        <p className="text-sm font-semibold text-[#00D4FF]">
+                                                        <p className="text-sm font-semibold text-[#0099CC]">
                                                             {formatPrice(product.costPrice)}
                                                         </p>
                                                     </div>
@@ -335,7 +335,7 @@ export function PurchasesPage() {
                                                                         e.target.value === '' ? '' : parseFloat(e.target.value)
                                                                     )
                                                                 }
-                                                                className="w-full text-center px-2 py-1.5 bg-card/[0.6] border border-border text-foreground rounded-lg focus:border-[#00D4FF] focus:ring-1 focus:ring-[#00D4FF] outline-none text-sm font-mono"
+                                                                className="w-full text-center px-2 py-1.5 bg-card/[0.6] border border-border text-foreground rounded-lg focus:border-[#0099CC] focus:ring-1 focus:ring-[#0099CC] outline-none text-sm font-mono"
                                                             />
                                                         </td>
                                                         <td className="px-4 py-3">
@@ -353,7 +353,7 @@ export function PurchasesPage() {
                                                                             e.target.value === '' ? '' : parseFloat(e.target.value)
                                                                         )
                                                                     }
-                                                                    className="w-full pl-6 pr-2 py-1.5 bg-card/[0.6] border border-border text-foreground rounded-lg focus:border-[#00D4FF] focus:ring-1 focus:ring-[#00D4FF] outline-none text-sm font-mono"
+                                                                    className="w-full pl-6 pr-2 py-1.5 bg-card/[0.6] border border-border text-foreground rounded-lg focus:border-[#0099CC] focus:ring-1 focus:ring-[#0099CC] outline-none text-sm font-mono"
                                                                 />
                                                             </div>
                                                         </td>
@@ -397,7 +397,7 @@ export function PurchasesPage() {
                                     onChange={(e) => setNotes(e.target.value)}
                                     placeholder="Ej: Factura N° 3245, entrega parcial..."
                                     rows={2}
-                                    className="w-full px-4 py-2.5 bg-card/[0.8] border border-border text-foreground placeholder-slate-500 rounded-lg focus:border-[#00D4FF] focus:ring-1 focus:ring-[#00D4FF] outline-none text-sm resize-none"
+                                    className="w-full px-4 py-2.5 bg-card/[0.8] border border-border text-foreground placeholder-slate-500 rounded-lg focus:border-[#0099CC] focus:ring-1 focus:ring-[#0099CC] outline-none text-sm resize-none"
                                 />
                             </div>
 
@@ -409,13 +409,13 @@ export function PurchasesPage() {
                                         <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">
                                             Total Compra
                                         </p>
-                                        <p className="text-2xl font-black text-[#00D4FF] font-mono tracking-tight">
+                                        <p className="text-2xl font-black text-[#0099CC] font-mono tracking-tight">
                                             {formatPrice(totalAmount)}
                                         </p>
                                     </div>
                                     <ChevronRight className="w-5 h-5 text-gray-400 ml-2" />
                                     <div className="text-sm text-gray-300">
-                                        <span className="font-semibold text-[#00D4FF] font-mono">{lineItems.length}</span>{' '}
+                                        <span className="font-semibold text-[#0099CC] font-mono">{lineItems.length}</span>{' '}
                                         {lineItems.length === 1 ? 'producto' : 'productos'}
                                     </div>
                                 </div>
@@ -432,7 +432,7 @@ export function PurchasesPage() {
                                     <button
                                         type="submit"
                                         disabled={!canSubmit || createPurchase.isPending}
-                                        className="flex-1 sm:flex-none px-6 py-2.5 bg-[#00D4FF] hover:bg-[#00BCE0] text-[#0B0F1A] hover:shadow-[0_0_15px_rgba(0,212,255,0.3)] transition-all disabled:opacity-50 disabled:cursor-not-allowed rounded-lg font-semibold flex items-center justify-center gap-2 text-sm"
+                                        className="flex-1 sm:flex-none px-6 py-2.5 bg-[#0099CC] hover:bg-[#00BCE0] text-[#0B0F1A] hover:shadow-[0_0_15px_rgba(0,153,204,0.3)] transition-all disabled:opacity-50 disabled:cursor-not-allowed rounded-lg font-semibold flex items-center justify-center gap-2 text-sm"
                                     >
                                         {createPurchase.isPending ? (
                                             <>
@@ -492,7 +492,7 @@ export function PurchasesPage() {
                                 {loadingPurchases ? (
                                     <tr>
                                         <td colSpan={6} className="px-6 py-16 text-center">
-                                            <Loader2 className="w-8 h-8 animate-spin text-[#00D4FF] mx-auto" />
+                                            <Loader2 className="w-8 h-8 animate-spin text-[#0099CC] mx-auto" />
                                             <p className="mt-2 text-gray-400 text-sm">Cargando historial...</p>
                                         </td>
                                     </tr>
@@ -504,7 +504,7 @@ export function PurchasesPage() {
                                             {!showForm && (
                                                 <button
                                                     onClick={() => setShowForm(true)}
-                                                    className="mt-3 text-[#00D4FF] hover:underline text-sm font-medium"
+                                                    className="mt-3 text-[#0099CC] hover:underline text-sm font-medium"
                                                 >
                                                     + Registrar primera compra
                                                 </button>
@@ -533,7 +533,7 @@ export function PurchasesPage() {
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400">
-                                                <span className="bg-muted/30 text-[#00D4FF] border border-border px-2 py-0.5 rounded-full text-xs font-semibold font-mono">
+                                                <span className="bg-muted/30 text-[#0099CC] border border-border px-2 py-0.5 rounded-full text-xs font-semibold font-mono">
                                                     {purchase._count?.items ?? '—'} items
                                                 </span>
                                             </td>

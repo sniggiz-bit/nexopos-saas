@@ -240,7 +240,7 @@ function ShiftHistoryTab({ tenantId }: { tenantId: string }) {
           <input
             type="date" value={from}
             onChange={e => setFrom(e.target.value)}
-            className="border border-border bg-card/[0.8] rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:border-[#00D4FF] focus:ring-1 focus:ring-[#00D4FF] font-mono"
+            className="border border-border bg-card/[0.8] rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:border-[#0099CC] focus:ring-1 focus:ring-[#0099CC] font-mono"
           />
         </div>
         <div>
@@ -248,12 +248,12 @@ function ShiftHistoryTab({ tenantId }: { tenantId: string }) {
           <input
             type="date" value={to}
             onChange={e => setTo(e.target.value)}
-            className="border border-border bg-card/[0.8] rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:border-[#00D4FF] focus:ring-1 focus:ring-[#00D4FF] font-mono"
+            className="border border-border bg-card/[0.8] rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:border-[#0099CC] focus:ring-1 focus:ring-[#0099CC] font-mono"
           />
         </div>
         <button
           onClick={applyFilter}
-          className="px-4 py-2 bg-[#00D4FF] hover:bg-[#00BCE0] text-[#0B0F1A] hover:shadow-[0_0_15px_rgba(0,212,255,0.3)] text-sm font-semibold rounded-lg transition-all"
+          className="px-4 py-2 bg-[#0099CC] hover:bg-[#00BCE0] text-[#0B0F1A] hover:shadow-[0_0_15px_rgba(0,153,204,0.3)] text-sm font-semibold rounded-lg transition-all"
         >
           Filtrar
         </button>
@@ -273,7 +273,7 @@ function ShiftHistoryTab({ tenantId }: { tenantId: string }) {
       {/* List */}
       {loading ? (
         <div className="flex items-center justify-center py-16 gap-2 text-gray-400">
-          <Loader2 size={20} className="animate-spin text-[#00D4FF]" />Cargando historial...
+          <Loader2 size={20} className="animate-spin text-[#0099CC]" />Cargando historial...
         </div>
       ) : !history || history.data.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-gray-400 bg-card/[0.5] border border-border rounded-xl">
@@ -354,7 +354,7 @@ export function TreasuryPage() {
                 onClick={() => setActiveTab(key)}
                 className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors -mb-px
                   ${activeTab === key
-                    ? 'border-[#00D4FF] text-[#00D4FF]'
+                    ? 'border-[#0099CC] text-[#0099CC]'
                     : 'border-transparent text-gray-400 hover:text-white'}`}
               >
                 <Icon size={15} />{label}
@@ -367,7 +367,7 @@ export function TreasuryPage() {
         {activeTab === 'resumen' && (
           loadingResumen ? (
             <div className="flex items-center justify-center py-16 gap-2 text-gray-400">
-              <Loader2 size={20} className="animate-spin text-[#00D4FF]" />Cargando...
+              <Loader2 size={20} className="animate-spin text-[#0099CC]" />Cargando...
             </div>
           ) : (
             <div className="space-y-6">
@@ -384,7 +384,7 @@ export function TreasuryPage() {
                   value={formatCurrency(totalCashFlow)}
                   subtitle="Ingresos del día"
                   icon={TrendingUp}
-                  color="bg-muted/30 text-[#00D4FF] border border-border"
+                  color="bg-muted/30 text-[#0099CC] border border-border"
                 />
                 <KpiCard
                   title="Próximos Vencimientos"
@@ -397,7 +397,7 @@ export function TreasuryPage() {
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div className="bg-card/[0.5] border border-border backdrop-blur-md shadow-sm p-5 rounded-xl">
-                  <h2 className="text-sm font-semibold text-[#00D4FF] uppercase tracking-wider mb-4">Flujo de Caja — Hoy</h2>
+                  <h2 className="text-sm font-semibold text-[#0099CC] uppercase tracking-wider mb-4">Flujo de Caja — Hoy</h2>
                   <div className="space-y-3">
                     {!cashFlow?.length ? (
                       <p className="text-sm text-gray-500">No hay movimientos hoy.</p>
@@ -413,14 +413,14 @@ export function TreasuryPage() {
                     {cashFlow && cashFlow.length > 0 && (
                       <div className="pt-2 flex justify-between text-sm font-bold text-foreground border-t border-border">
                         <span>Total</span>
-                        <span className="font-mono text-[#00D4FF]">{formatCurrency(totalCashFlow)}</span>
+                        <span className="font-mono text-[#0099CC]">{formatCurrency(totalCashFlow)}</span>
                       </div>
                     )}
                   </div>
                 </div>
 
                 <div className="bg-card/[0.5] border border-border backdrop-blur-md shadow-sm p-5 rounded-xl">
-                  <h2 className="text-sm font-semibold text-[#00D4FF] uppercase tracking-wider mb-4">Vencimientos Próximos (7 días)</h2>
+                  <h2 className="text-sm font-semibold text-[#0099CC] uppercase tracking-wider mb-4">Vencimientos Próximos (7 días)</h2>
                   <div className="overflow-x-auto">
                     <table className="min-w-full text-sm">
                       <thead>

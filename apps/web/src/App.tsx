@@ -85,11 +85,11 @@ function LoadingScreen() {
     <div className="min-h-screen flex items-center justify-center" style={{ background: 'hsl(var(--background))' }}>
       <div className="text-center">
         <div className="relative w-14 h-14 mx-auto mb-5">
-          <div className="absolute inset-0 rounded-full" style={{ border: '2px solid rgba(0,212,255,0.1)' }} />
-          <div className="absolute inset-0 rounded-full animate-spin" style={{ border: '2px solid transparent', borderTopColor: '#00D4FF' }} />
-          <div className="absolute inset-2 rounded-full" style={{ background: 'rgba(0,212,255,0.05)', border: '1px solid rgba(0,212,255,0.15)' }} />
+          <div className="absolute inset-0 rounded-full" style={{ border: '2px solid rgba(0,153,204,0.1)' }} />
+          <div className="absolute inset-0 rounded-full animate-spin" style={{ border: '2px solid transparent', borderTopColor: '#0099CC' }} />
+          <div className="absolute inset-2 rounded-full" style={{ background: 'rgba(0,153,204,0.05)', border: '1px solid rgba(0,153,204,0.15)' }} />
         </div>
-        <p className="text-sm font-medium" style={{ color: 'rgba(0,212,255,0.6)' }}>Cargando NexoPOS...</p>
+        <p className="text-sm font-medium" style={{ color: 'rgba(0,153,204,0.6)' }}>Cargando NexoPOS...</p>
       </div>
     </div>
   );

@@ -14,8 +14,8 @@ import toast from 'react-hot-toast';
 
 // ── Palette ────────────────────────────────────────────────────────────────────
 const C = {
-    cyan:   '#00D4FF',
-    cyanA:  (a: number) => `rgba(0,212,255,${a})`,
+    cyan:   '#0099CC',
+    cyanA:  (a: number) => `rgba(0,153,204,${a})`,
     green:  '#34D399',
     greenA: (a: number) => `rgba(52,211,153,${a})`,
     red:    '#F87171',
@@ -223,7 +223,7 @@ function DteStatsPanel({ tenantId }: { tenantId: string }) {
                             const isEven = idx % 2 === 0;
                             return (
                                 <div key={doc.id} className="flex items-center gap-3 px-4 py-3 transition-colors"
-                                    style={{ borderBottom: '1px solid rgba(0,212,255,0.05)', background: isEven ? 'transparent' : C.cyanA(0.015) }}
+                                    style={{ borderBottom: '1px solid rgba(0,153,204,0.05)', background: isEven ? 'transparent' : C.cyanA(0.015) }}
                                     onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = C.cyanA(0.04)}
                                     onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = isEven ? 'transparent' : C.cyanA(0.015)}>
                                     <span className="text-[9px] font-bold px-2 py-0.5 rounded-full shrink-0"
@@ -450,9 +450,9 @@ export function SettingsPage() {
                             <div className="pt-1">
                                 <button onClick={() => saveConfig()} disabled={isPending || !tenantId}
                                     className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-[13px] font-bold transition-all duration-150 disabled:opacity-50"
-                                    style={{ background: 'linear-gradient(135deg,rgba(0,212,255,0.25) 0%,rgba(0,212,255,0.1) 100%)', border: `1px solid ${C.cyanA(0.35)}`, color: C.cyan }}
-                                    onMouseEnter={e => !isPending && ((e.currentTarget as HTMLElement).style.background = 'linear-gradient(135deg,rgba(0,212,255,0.35) 0%,rgba(0,212,255,0.18) 100%)')}
-                                    onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'linear-gradient(135deg,rgba(0,212,255,0.25) 0%,rgba(0,212,255,0.1) 100%)'}>
+                                    style={{ background: 'linear-gradient(135deg,rgba(0,153,204,0.25) 0%,rgba(0,153,204,0.1) 100%)', border: `1px solid ${C.cyanA(0.35)}`, color: C.cyan }}
+                                    onMouseEnter={e => !isPending && ((e.currentTarget as HTMLElement).style.background = 'linear-gradient(135deg,rgba(0,153,204,0.35) 0%,rgba(0,153,204,0.18) 100%)')}
+                                    onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'linear-gradient(135deg,rgba(0,153,204,0.25) 0%,rgba(0,153,204,0.1) 100%)'}>
                                     {isPending
                                         ? <><Loader2 className="w-4 h-4 animate-spin" />Guardando...</>
                                         : <><Save className="w-4 h-4" />Guardar configuración</>}

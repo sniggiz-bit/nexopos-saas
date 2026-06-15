@@ -58,7 +58,7 @@ export function QuotesPage() {
                     </div>
                     <Button 
                         onClick={() => navigate('/dashboard/quotes/new')} 
-                        className="bg-[#00D4FF] hover:bg-[#00BCE0] text-[#0B0F1A] font-bold shadow-[0_0_15px_rgba(0,212,255,0.2)] hover:shadow-[0_0_25px_rgba(0,212,255,0.4)] transition-all duration-200"
+                        className="bg-[#0099CC] hover:bg-[#00BCE0] text-[#0B0F1A] font-bold shadow-[0_0_15px_rgba(0,153,204,0.2)] hover:shadow-[0_0_25px_rgba(0,153,204,0.4)] transition-all duration-200"
                     >
                         <Plus className="w-4 h-4 mr-2 stroke-[3]" />
                         Nueva Cotización
@@ -81,7 +81,7 @@ export function QuotesPage() {
                                 <tr>
                                     <td colSpan={5} className="px-6 py-8 text-center text-muted-foreground/[0.5]">
                                         <div className="flex items-center justify-center gap-2">
-                                            <div className="w-4 h-4 border-2 border-[#00D4FF] border-t-transparent rounded-full animate-spin" />
+                                            <div className="w-4 h-4 border-2 border-[#0099CC] border-t-transparent rounded-full animate-spin" />
                                             <span>Cargando cotizaciones...</span>
                                         </div>
                                     </td>
@@ -112,7 +112,7 @@ export function QuotesPage() {
                                                 quote.status === 'DRAFT'
                                                     ? 'bg-gray-500/10 text-gray-400 border-gray-500/20'
                                                     : quote.status === 'SENT'
-                                                    ? 'bg-[#00D4FF]/10 text-[#00D4FF] border-[#00D4FF]/20'
+                                                    ? 'bg-[#0099CC]/10 text-[#0099CC] border-[#0099CC]/20'
                                                     : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' // ACCEPTED
                                             }`}>
                                                 {quote.status === 'DRAFT' ? 'Borrador' : quote.status === 'SENT' ? 'Emitida' : 'Vendida'}
@@ -121,7 +121,7 @@ export function QuotesPage() {
                                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
                                             <button
                                                 onClick={() => navigate(`/dashboard/quotes/${quote.id}/print`)}
-                                                className="text-[#00D4FF] hover:text-white inline-flex items-center p-2 rounded-lg hover:bg-[#00D4FF]/10 transition-colors"
+                                                className="text-[#0099CC] hover:text-white inline-flex items-center p-2 rounded-lg hover:bg-[#0099CC]/10 transition-colors"
                                                 title="Ver Detalles"
                                             >
                                                 <Eye className="w-4 h-4" />

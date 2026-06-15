@@ -44,10 +44,10 @@ export function CriticalStockPage() {
                         </span>
                         <Link
                             to="/dashboard/inventory"
-                            className="bg-card border border-border text-foreground/[0.85] px-4 py-2 rounded-lg text-sm font-bold hover:bg-[#00D4FF]/5 flex items-center shadow-sm transition-all"
+                            className="bg-card border border-border text-foreground/[0.85] px-4 py-2 rounded-lg text-sm font-bold hover:bg-[#0099CC]/5 flex items-center shadow-sm transition-all"
                         >
                             Ver Inventario General
-                            <ArrowRight className="w-4 h-4 ml-2 text-[#00D4FF]" />
+                            <ArrowRight className="w-4 h-4 ml-2 text-[#0099CC]" />
                         </Link>
                     </div>
                 </div>
@@ -92,7 +92,7 @@ export function CriticalStockPage() {
                                                 </div>
                                                 <div className="ml-4">
                                                     <div className="text-sm font-bold text-foreground/[0.95]">{product.name}</div>
-                                                    <div className="text-xs text-[#00D4FF] font-semibold">{product.category?.name || 'Snacks'}</div>
+                                                    <div className="text-xs text-[#0099CC] font-semibold">{product.category?.name || 'Snacks'}</div>
                                                 </div>
                                             </div>
                                         </td>
@@ -128,8 +128,8 @@ export function CriticalStockPage() {
 
                 {/* Reposición Tips */}
                 {products && products.length > 0 && (
-                    <div className="rounded-xl p-6 border border-[#00D4FF]/15 bg-[#00D4FF]/5 flex items-start gap-4 animate-fade-up">
-                        <div className="p-2.5 bg-[#00D4FF] rounded-lg text-[#0B0F1A]">
+                    <div className="rounded-xl p-6 border border-[#0099CC]/15 bg-[#0099CC]/5 flex items-start gap-4 animate-fade-up">
+                        <div className="p-2.5 bg-[#0099CC] rounded-lg text-[#0B0F1A]">
                             <Package className="w-5 h-5 stroke-[2.5]" />
                         </div>
                         <div>

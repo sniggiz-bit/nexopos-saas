@@ -102,7 +102,7 @@ export function CreditsPage() {
                         placeholder="Buscar por cliente o RUT..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full pl-10 pr-4 py-2 bg-card/[0.8] border border-border text-foreground placeholder-slate-500 rounded-lg focus:border-[#00D4FF] focus:ring-1 focus:ring-[#00D4FF] outline-none transition-all text-sm"
+                        className="w-full pl-10 pr-4 py-2 bg-card/[0.8] border border-border text-foreground placeholder-slate-500 rounded-lg focus:border-[#0099CC] focus:ring-1 focus:ring-[#0099CC] outline-none transition-all text-sm"
                     />
                 </div>
 
@@ -142,7 +142,7 @@ export function CreditsPage() {
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                             {credit.status === 'OPEN' && (
-                                                <Button size="sm" onClick={() => handleOpenPaymentModal(credit)} className="bg-[#00D4FF] hover:bg-[#00BCE0] text-[#0B0F1A] hover:shadow-[0_0_15px_rgba(0,212,255,0.3)] font-semibold transition-all">
+                                                <Button size="sm" onClick={() => handleOpenPaymentModal(credit)} className="bg-[#0099CC] hover:bg-[#00BCE0] text-[#0B0F1A] hover:shadow-[0_0_15px_rgba(0,153,204,0.3)] font-semibold transition-all">
                                                     <CreditCard className="w-4 h-4 mr-2" />
                                                     Abonar
                                                 </Button>
@@ -177,7 +177,7 @@ export function CreditsPage() {
                                 type="number"
                                 value={paymentAmount}
                                 onChange={(e) => setPaymentAmount(e.target.value)}
-                                className="w-full px-4 py-2 bg-card/[0.8] border border-border text-foreground placeholder-slate-500 rounded-lg focus:border-[#00D4FF] focus:ring-1 focus:ring-[#00D4FF] outline-none font-mono"
+                                className="w-full px-4 py-2 bg-card/[0.8] border border-border text-foreground placeholder-slate-500 rounded-lg focus:border-[#0099CC] focus:ring-1 focus:ring-[#0099CC] outline-none font-mono"
                                 max={selectedCredit?.balance}
                                 min="1"
                                 required
@@ -188,7 +188,7 @@ export function CreditsPage() {
                             <select
                                 value={paymentMethod}
                                 onChange={(e) => setPaymentMethod(e.target.value)}
-                                className="w-full px-4 py-2 bg-card/[0.8] border border-border text-foreground rounded-lg focus:border-[#00D4FF] focus:ring-1 focus:ring-[#00D4FF] outline-none"
+                                className="w-full px-4 py-2 bg-card/[0.8] border border-border text-foreground rounded-lg focus:border-[#0099CC] focus:ring-1 focus:ring-[#0099CC] outline-none"
                             >
                                 <option value="CASH" className="bg-[hsl(220,30%,8%)] text-white">Efectivo</option>
                                 <option value="CARD" className="bg-[hsl(220,30%,8%)] text-white">Tarjeta</option>
@@ -197,7 +197,7 @@ export function CreditsPage() {
                         </div>
                         <DialogFooter>
                             <Button type="button" variant="outline" onClick={() => setSelectedCredit(null)} className="border-border text-gray-400 hover:bg-card hover:text-foreground">Cancelar</Button>
-                            <Button type="submit" disabled={addPayment.isPending} className="bg-[#00D4FF] hover:bg-[#00BCE0] text-[#0B0F1A] hover:shadow-[0_0_15px_rgba(0,212,255,0.3)] font-semibold transition-all">
+                            <Button type="submit" disabled={addPayment.isPending} className="bg-[#0099CC] hover:bg-[#00BCE0] text-[#0B0F1A] hover:shadow-[0_0_15px_rgba(0,153,204,0.3)] font-semibold transition-all">
                                 {addPayment.isPending ? 'Procesando...' : 'Confirmar Abono'}
                             </Button>
                         </DialogFooter>

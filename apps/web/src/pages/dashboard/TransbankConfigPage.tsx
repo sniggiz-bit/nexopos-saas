@@ -95,7 +95,7 @@ export function TransbankConfigPage() {
                 <div className="bg-card/[0.5] border border-border backdrop-blur-md rounded-2xl p-6 space-y-4 shadow-sm">
                     <div className="flex items-center justify-between">
                         <h2 className="font-bold text-foreground flex items-center gap-2">
-                            <Wifi className="w-4 h-4 text-[#00D4FF]" /> Estado del agente local
+                            <Wifi className="w-4 h-4 text-[#0099CC]" /> Estado del agente local
                         </h2>
                         <Button variant="ghost" size="sm" onClick={checkAgent} disabled={agentChecking} className="text-gray-400 hover:text-foreground hover:bg-card transition-colors">
                             <RefreshCw className={`w-4 h-4 mr-1.5 ${agentChecking ? 'animate-spin' : ''}`} />
@@ -171,7 +171,7 @@ export function TransbankConfigPage() {
                                     onChange={e => setComPort(e.target.value)}
                                     placeholder="COM3"
                                     disabled={mockMode}
-                                    className="max-w-xs bg-card/[0.8] border border-border text-foreground focus:border-[#00D4FF] focus:ring-1 focus:ring-[#00D4FF] font-mono outline-none"
+                                    className="max-w-xs bg-card/[0.8] border border-border text-foreground focus:border-[#0099CC] focus:ring-1 focus:ring-[#0099CC] font-mono outline-none"
                                 />
                             </div>
 
@@ -182,7 +182,7 @@ export function TransbankConfigPage() {
                                     value={baudRate}
                                     onChange={e => setBaudRate(Number(e.target.value))}
                                     disabled={mockMode}
-                                    className="max-w-xs block px-3 py-2 text-sm border border-border rounded-lg bg-card/[0.8] text-foreground focus:outline-none focus:ring-1 focus:ring-[#00D4FF] focus:border-[#00D4FF] disabled:opacity-50"
+                                    className="max-w-xs block px-3 py-2 text-sm border border-border rounded-lg bg-card/[0.8] text-foreground focus:outline-none focus:ring-1 focus:ring-[#0099CC] focus:border-[#0099CC] disabled:opacity-50"
                                 >
                                     {BAUD_OPTIONS.map(b => (
                                         <option key={b} value={b} className="bg-[hsl(220,30%,8%)] text-white">{b.toLocaleString()}</option>
@@ -202,12 +202,12 @@ export function TransbankConfigPage() {
                                     onChange={e => setAgentPort(Number(e.target.value))}
                                     min={1024}
                                     max={65535}
-                                    className="max-w-xs bg-card/[0.8] border border-border text-foreground focus:border-[#00D4FF] focus:ring-1 focus:ring-[#00D4FF] font-mono outline-none"
+                                    className="max-w-xs bg-card/[0.8] border border-border text-foreground focus:border-[#0099CC] focus:ring-1 focus:ring-[#0099CC] font-mono outline-none"
                                 />
                             </div>
 
                             <div className="pt-2">
-                                <Button onClick={handleSave} disabled={saving || !branchId} className="gap-2 bg-[#00D4FF] hover:bg-[#00BCE0] text-[#0B0F1A] hover:shadow-[0_0_15px_rgba(0,212,255,0.3)] transition-all font-semibold rounded-lg">
+                                <Button onClick={handleSave} disabled={saving || !branchId} className="gap-2 bg-[#0099CC] hover:bg-[#00BCE0] text-[#0B0F1A] hover:shadow-[0_0_15px_rgba(0,153,204,0.3)] transition-all font-semibold rounded-lg">
                                     {saved
                                         ? <><CheckCircle2 className="w-4 h-4" /> Guardado</>
                                         : <><Save className="w-4 h-4" /> {saving ? 'Guardando…' : 'Guardar configuración'}</>}
@@ -220,10 +220,10 @@ export function TransbankConfigPage() {
                 {/* ── Comando de inicio ── */}
                 <div className="bg-card/[0.5] border border-border backdrop-blur-md rounded-2xl p-6 space-y-3 shadow-sm">
                     <h2 className="font-bold text-foreground flex items-center gap-2">
-                        <Terminal className="w-4 h-4 text-[#00D4FF]" /> Comando de inicio (PowerShell)
+                        <Terminal className="w-4 h-4 text-[#0099CC]" /> Comando de inicio (PowerShell)
                     </h2>
                     <p className="text-xs text-gray-400">
-                        Ejecuta esto en la PC del cajero, dentro de la carpeta <code className="bg-slate-900 border border-border text-[#00D4FF] font-mono px-1 rounded">apps/transbank-agent</code>:
+                        Ejecuta esto en la PC del cajero, dentro de la carpeta <code className="bg-slate-900 border border-border text-[#0099CC] font-mono px-1 rounded">apps/transbank-agent</code>:
                     </p>
                     <pre className="bg-[hsl(220,30%,4%)] text-gray-300 border border-border text-xs rounded-xl p-4 overflow-x-auto leading-relaxed font-mono">
                         <code>{startCmd}</code>

@@ -9,8 +9,8 @@ import {
 
 // ── Palette ────────────────────────────────────────────────────────────────────
 const C = {
-    cyan:    '#00D4FF',
-    cyanA:   (a: number) => `rgba(0,212,255,${a})`,
+    cyan:    '#0099CC',
+    cyanA:   (a: number) => `rgba(0,153,204,${a})`,
     green:   '#34D399',
     greenA:  (a: number) => `rgba(52,211,153,${a})`,
     red:     '#F87171',
@@ -73,7 +73,7 @@ function SkeletonRow() {
         <tr className="animate-pulse">
             {Array.from({ length: 7 }).map((_, i) => (
                 <td key={i} className="px-5 py-4">
-                    <div className="h-3.5 rounded-lg" style={{ background: 'rgba(0,212,255,0.06)', width: `${55 + (i % 3) * 15}%` }} />
+                    <div className="h-3.5 rounded-lg" style={{ background: 'rgba(0,153,204,0.06)', width: `${55 + (i % 3) * 15}%` }} />
                 </td>
             ))}
         </tr>
@@ -153,7 +153,7 @@ export function SalesHistoryTable({ sales, isLoading, onEmitNotaCredito, emittin
                                 return (
                                     <tr key={sale.id}
                                         style={{ borderBottom: '1px solid hsl(var(--border))', background: isEven ? 'transparent' : 'hsl(var(--muted) / 0.4)' }}
-                                        onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'rgba(0,212,255,0.04)'}
+                                        onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'rgba(0,153,204,0.04)'}
                                         onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = isEven ? 'transparent' : 'hsl(var(--muted) / 0.4)'}>
 
                                         {/* Folio / ID */}
