@@ -271,7 +271,7 @@ export function LandingPage() {
                 </div>
                 {/* Mobile dropdown */}
                 {isMenuOpen && (
-                    <div className="md:hidden bg-[#0d1226]/95 border-b border-white/[0.08] px-4 pt-2 pb-6 space-y-3 shadow-2xl absolute w-full backdrop-blur-xl">
+                    <div className="md:hidden bg-[#0d1226]/95 border-b border-white/[0.08] px-4 pt-2 pb-6 space-y-3 shadow-2xl absolute w-full backdrop-blur-xl z-50">
                         <a href="#features" onClick={() => setIsMenuOpen(false)} className="block text-slate-300 font-medium py-2 px-3 rounded-lg hover:bg-white/[0.04]">Características</a>
                         <a href="#use-cases" onClick={() => setIsMenuOpen(false)} className="block text-slate-300 font-medium py-2 px-3 rounded-lg hover:bg-white/[0.04]">Casos</a>
                         <a href="#comparison" onClick={() => setIsMenuOpen(false)} className="block text-slate-300 font-medium py-2 px-3 rounded-lg hover:bg-white/[0.04]">Comparativa</a>
@@ -292,7 +292,7 @@ export function LandingPage() {
             </nav>
 
             {/* Hero Section */}
-            <section className="relative pt-24 lg:pt-36 pb-20 lg:pb-32 z-10">
+            <section className="relative pt-20 lg:pt-36 pb-16 lg:pb-32 z-10">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
                     <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
                         {/* Hero Text */}
@@ -303,7 +303,7 @@ export function LandingPage() {
                                 {hero.badge}
                             </div>
                             
-                            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight text-foreground leading-[1.1]">
+                            <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight text-foreground leading-[1.1]">
                                 {hero.title}{' '}
                                 <span className="bg-gradient-to-r from-cyan-400 via-indigo-400 to-emerald-400 bg-clip-text text-transparent block mt-2">
                                     {hero.titleHighlight}
@@ -318,7 +318,7 @@ export function LandingPage() {
                                 <Link 
                                     to="/register" 
                                     className="
-                                        inline-flex items-center justify-center px-8 py-3.5 text-sm font-bold text-white 
+                                        w-full sm:w-auto inline-flex items-center justify-center px-8 py-3.5 text-sm font-bold text-white 
                                         bg-gradient-to-r from-cyan-500 via-indigo-500 to-emerald-500 rounded-xl
                                         shadow-[0_0_20px_rgba(6,182,212,0.2)] hover:shadow-[0_0_30px_rgba(6,182,212,0.35)]
                                         hover:scale-[1.02] active:scale-[0.98] transition-all duration-300
@@ -330,7 +330,7 @@ export function LandingPage() {
                                 <a 
                                     href="#pricing" 
                                     className="
-                                        inline-flex items-center justify-center px-8 py-3.5 text-sm font-semibold text-slate-200 
+                                        w-full sm:w-auto inline-flex items-center justify-center px-8 py-3.5 text-sm font-semibold text-slate-200 
                                         bg-white/[0.03] border border-white/[0.08] rounded-xl hover:bg-white/[0.06] 
                                         hover:border-white/[0.15] transition-all duration-200
                                     "
@@ -391,15 +391,15 @@ export function LandingPage() {
 
             {/* Pain Points Section */}
             {pain && (
-                <section id="pain" className="py-24 lg:py-32 relative z-10 border-t border-white/[0.05] bg-gradient-to-b from-[#070913] to-slate-950/20">
+                <section id="pain" className="py-16 md:py-24 lg:py-32 relative z-10 border-t border-white/[0.05] bg-gradient-to-b from-[#070913] to-slate-950/20">
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                        <div className="text-center max-w-3xl mx-auto mb-20 space-y-4">
+                        <div className="text-center max-w-3xl mx-auto mb-12 md:mb-20 space-y-4">
                             {pain.subtitle && (
                                 <span className="text-xs font-bold tracking-wider uppercase bg-gradient-to-r from-red-500 to-amber-500 bg-clip-text text-transparent">
                                     {pain.subtitle}
                                 </span>
                             )}
-                            <h2 className="text-3xl font-black text-foreground sm:text-4xl tracking-tight leading-tight">
+                            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-foreground tracking-tight leading-tight">
                                 {pain.title}
                             </h2>
                         </div>
@@ -407,7 +407,7 @@ export function LandingPage() {
                             {(pain.items || []).map((item, i) => (
                                 <div 
                                     key={i} 
-                                    className="p-8 rounded-3xl bg-white/[0.01] border border-white/[0.05] hover:border-red-500/20 hover:bg-red-500/[0.01] backdrop-blur-md transition-all duration-300 group hover:-translate-y-1"
+                                    className="p-6 md:p-8 rounded-3xl bg-white/[0.01] border border-white/[0.05] hover:border-red-500/20 hover:bg-red-500/[0.01] backdrop-blur-md transition-all duration-300 group hover:-translate-y-1"
                                 >
                                     <div className="w-12 h-12 bg-red-500/10 border border-red-500/20 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
                                         <AlertTriangle className="w-5 h-5 text-red-400" />
@@ -423,7 +423,7 @@ export function LandingPage() {
 
             {/* Solution Section */}
             {solution && (
-                <section id="solution" className="py-24 lg:py-32 relative z-10 border-t border-white/[0.05] bg-slate-950/40">
+                <section id="solution" className="py-16 md:py-24 lg:py-32 relative z-10 border-t border-white/[0.05] bg-slate-950/40">
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                         <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
                             {/* Visual Graphic Mockup */}
@@ -460,7 +460,7 @@ export function LandingPage() {
                                         {solution.subtitle}
                                     </span>
                                 )}
-                                <h2 className="text-3xl sm:text-4xl font-black text-foreground tracking-tight leading-tight">
+                                <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-foreground tracking-tight leading-tight">
                                     {solution.title}
                                 </h2>
                                 <p className="text-slate-400 leading-relaxed text-sm sm:text-base">
@@ -470,7 +470,7 @@ export function LandingPage() {
                                     <Link 
                                         to="/register" 
                                         className="
-                                            inline-flex items-center justify-center px-6 py-3 text-sm font-bold text-white 
+                                            w-full sm:w-auto inline-flex items-center justify-center px-6 py-3 text-sm font-bold text-white 
                                             bg-gradient-to-r from-cyan-500 to-indigo-500 rounded-xl
                                             hover:opacity-95 shadow-[0_0_20px_rgba(6,182,212,0.15)] hover:scale-[1.02] transition-all duration-200
                                         "
@@ -486,10 +486,10 @@ export function LandingPage() {
             )}
 
             {/* Features Section */}
-            <section id="features" className="py-24 lg:py-32 relative z-10 border-t border-white/[0.05]">
+            <section id="features" className="py-16 md:py-24 lg:py-32 relative z-10 border-t border-white/[0.05]">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="text-center max-w-3xl mx-auto mb-20 space-y-4">
-                        <h2 className="text-3xl font-black text-foreground sm:text-4xl tracking-tight">
+                    <div className="text-center max-w-3xl mx-auto mb-12 md:mb-20 space-y-4">
+                        <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-foreground tracking-tight">
                             {features.sectionTitle}
                         </h2>
                         <p className="text-slate-400 text-sm sm:text-base leading-relaxed">
@@ -503,7 +503,7 @@ export function LandingPage() {
                                 <div 
                                     key={i} 
                                     className={`
-                                        p-8 md:p-10 rounded-3xl bg-white/[0.01] border border-white/[0.05] 
+                                        p-6 md:p-10 rounded-3xl bg-white/[0.01] border border-white/[0.05] 
                                         ${hover} backdrop-blur-md transition-all duration-300 group hover:-translate-y-1
                                     `}
                                 >
@@ -526,15 +526,15 @@ export function LandingPage() {
 
             {/* Use Cases Section */}
             {useCases && (
-                <section id="use-cases" className="py-24 lg:py-32 relative z-10 border-t border-white/[0.05] bg-[#070913]/60">
+                <section id="use-cases" className="py-16 md:py-24 lg:py-32 relative z-10 border-t border-white/[0.05] bg-[#070913]/60">
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                        <div className="text-center max-w-3xl mx-auto mb-20 space-y-4">
+                        <div className="text-center max-w-3xl mx-auto mb-12 md:mb-20 space-y-4">
                             {useCases.subtitle && (
                                 <span className="text-xs font-bold tracking-wider uppercase bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
                                     {useCases.subtitle}
                                 </span>
                             )}
-                            <h2 className="text-3xl font-black text-foreground sm:text-4xl tracking-tight">
+                            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-foreground tracking-tight">
                                 {useCases.title}
                             </h2>
                         </div>
@@ -560,13 +560,13 @@ export function LandingPage() {
 
             {/* Stats & Testimonials Section */}
             {((stats && stats.items && stats.items.length > 0) || (testimonials && testimonials.items && testimonials.items.length > 0)) && (
-                <section id="proof" className="py-24 lg:py-32 relative z-10 border-t border-white/[0.05] bg-gradient-to-b from-[#070913] to-slate-950/40">
+                <section id="proof" className="py-16 md:py-24 lg:py-32 relative z-10 border-t border-white/[0.05] bg-gradient-to-b from-[#070913] to-slate-950/40">
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                         {/* Stats grid */}
                         {stats && stats.items && stats.items.length > 0 && (
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto mb-20">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto mb-12 md:mb-20">
                                 {stats.items.map((stat, i) => (
-                                    <div key={i} className="p-8 rounded-3xl bg-white/[0.01] border border-white/[0.05] backdrop-blur-md text-center">
+                                    <div key={i} className="p-6 md:p-8 rounded-3xl bg-white/[0.01] border border-white/[0.05] backdrop-blur-md text-center">
                                         <div className="text-4xl sm:text-5xl font-black bg-gradient-to-r from-cyan-400 via-indigo-400 to-emerald-400 bg-clip-text text-transparent mb-2">
                                             {stat.value}
                                         </div>
@@ -582,7 +582,7 @@ export function LandingPage() {
                         {testimonials && testimonials.items && testimonials.items.length > 0 && (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
                                 {testimonials.items.map((testimonial, i) => (
-                                    <div key={i} className="p-8 rounded-3xl bg-white/[0.02] border border-white/[0.06] flex flex-col justify-between relative">
+                                    <div key={i} className="p-6 md:p-8 rounded-3xl bg-white/[0.02] border border-white/[0.06] flex flex-col justify-between relative">
                                         {/* Quotation icon decoration */}
                                         <div className="absolute top-6 right-8 text-foreground/[0.02] text-7xl font-serif pointer-events-none">“</div>
                                         <p className="text-slate-300 leading-relaxed text-sm italic relative z-10 mb-6">
@@ -607,15 +607,15 @@ export function LandingPage() {
 
             {/* Visual Comparison Section */}
             {comparison && comparison.rows && comparison.rows.length > 0 && (
-                <section id="comparison" className="py-24 lg:py-32 relative z-10 border-t border-white/[0.05] bg-[#070913]/40">
+                <section id="comparison" className="py-16 md:py-24 lg:py-32 relative z-10 border-t border-white/[0.05] bg-[#070913]/40">
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                        <div className="text-center max-w-3xl mx-auto mb-20 space-y-4">
+                        <div className="text-center max-w-3xl mx-auto mb-12 md:mb-20 space-y-4">
                             {comparison.subtitle && (
                                 <span className="text-xs font-bold tracking-wider uppercase bg-gradient-to-r from-purple-400 to-indigo-400 bg-clip-text text-transparent">
                                     {comparison.subtitle}
                                 </span>
                             )}
-                            <h2 className="text-3xl font-black text-foreground sm:text-4xl tracking-tight">
+                            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-foreground tracking-tight">
                                 {comparison.title}
                             </h2>
                         </div>
@@ -623,19 +623,19 @@ export function LandingPage() {
                             <table className="w-full text-left border-collapse text-xs sm:text-sm">
                                 <thead>
                                     <tr className="border-b border-white/[0.08] bg-slate-950/40">
-                                        <th className="p-5 font-bold text-slate-300 uppercase tracking-wider">Característica</th>
-                                        <th className="p-5 font-bold text-cyan-400 uppercase tracking-wider">NexoPOS Cloud</th>
-                                        <th className="p-5 font-bold text-slate-400 uppercase tracking-wider">Excel / Planillas</th>
-                                        <th className="p-5 font-bold text-slate-400 uppercase tracking-wider">Sistemas Tradicionales</th>
+                                        <th className="p-3 sm:p-5 font-bold text-slate-300 uppercase tracking-wider">Característica</th>
+                                        <th className="p-3 sm:p-5 font-bold text-cyan-400 uppercase tracking-wider">NexoPOS Cloud</th>
+                                        <th className="p-3 sm:p-5 font-bold text-slate-400 uppercase tracking-wider">Excel / Planillas</th>
+                                        <th className="p-3 sm:p-5 font-bold text-slate-400 uppercase tracking-wider">Sistemas Tradicionales</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-white/[0.04]">
                                     {comparison.rows.map((row, i) => (
                                         <tr key={i} className="hover:bg-white/[0.01] transition-colors">
-                                            <td className="p-5 font-bold text-slate-200">{row.feature}</td>
-                                            <td className="p-5 font-semibold text-cyan-300">{row.nexopos}</td>
-                                            <td className="p-5 text-slate-400">{row.excel}</td>
-                                            <td className="p-5 text-slate-400">{row.traditional}</td>
+                                            <td className="p-3 sm:p-5 font-bold text-slate-200">{row.feature}</td>
+                                            <td className="p-3 sm:p-5 font-semibold text-cyan-300">{row.nexopos}</td>
+                                            <td className="p-3 sm:p-5 text-slate-400">{row.excel}</td>
+                                            <td className="p-3 sm:p-5 text-slate-400">{row.traditional}</td>
                                         </tr>
                                     ))}
                                 </tbody>
@@ -646,10 +646,10 @@ export function LandingPage() {
             )}
 
             {/* Pricing Section */}
-            <section id="pricing" className="py-24 lg:py-32 relative z-10 border-t border-white/[0.05]">
+            <section id="pricing" className="py-16 md:py-24 lg:py-32 relative z-10 border-t border-white/[0.05]">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="text-center max-w-3xl mx-auto mb-20 space-y-4">
-                        <h2 className="text-3xl font-black text-foreground sm:text-4xl tracking-tight">{pricing.title}</h2>
+                    <div className="text-center max-w-3xl mx-auto mb-12 md:mb-20 space-y-4">
+                        <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-foreground tracking-tight">{pricing.title}</h2>
                         <p className="text-slate-400 text-sm sm:text-base">{pricing.subtitle}</p>
                     </div>
                     
@@ -663,7 +663,7 @@ export function LandingPage() {
                                 <div 
                                     key={plan.id} 
                                     className={`
-                                        rounded-3xl p-8 relative flex flex-col justify-between backdrop-blur-md transition-all duration-300 
+                                        rounded-3xl p-6 sm:p-8 relative flex flex-col justify-between backdrop-blur-md transition-all duration-300 
                                         ${plan.isRecommended 
                                             ? 'bg-slate-900/60 border-2 border-cyan-500/80 shadow-[0_0_40px_rgba(6,182,212,0.15)] transform lg:scale-105 z-10 ring-4 ring-cyan-500/5' 
                                             : 'bg-white/[0.02] border border-white/[0.06] hover:border-white/[0.12] hover:bg-[#0d1226]/40 shadow-lg'
@@ -720,15 +720,15 @@ export function LandingPage() {
 
             {/* FAQ Accordion Section */}
             {faqs && faqs.items && faqs.items.length > 0 && (
-                <section id="faqs" className="py-24 lg:py-32 relative z-10 border-t border-white/[0.05] bg-gradient-to-b from-[#070913] to-slate-950/30">
+                <section id="faqs" className="py-16 md:py-24 lg:py-32 relative z-10 border-t border-white/[0.05] bg-gradient-to-b from-[#070913] to-slate-950/30">
                     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-                        <div className="text-center mb-16 space-y-4">
+                        <div className="text-center mb-10 md:mb-16 space-y-4">
                             {faqs.subtitle && (
                                 <span className="text-xs font-bold tracking-wider uppercase bg-gradient-to-r from-cyan-400 to-indigo-400 bg-clip-text text-transparent">
                                     {faqs.subtitle}
                                 </span>
                             )}
-                            <h2 className="text-3xl font-black text-foreground tracking-tight leading-tight">{faqs.title}</h2>
+                            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-foreground tracking-tight leading-tight">{faqs.title}</h2>
                         </div>
                         <div className="space-y-4">
                             {faqs.items.map((item, i) => (
@@ -740,15 +740,15 @@ export function LandingPage() {
             )}
 
             {/* CTA Final */}
-            <section className="relative z-10 border-t border-b border-white/[0.06] bg-gradient-to-br from-indigo-950/20 via-[#070913] to-emerald-950/20 py-20 sm:py-24">
+            <section className="relative z-10 border-t border-b border-white/[0.06] bg-gradient-to-br from-indigo-950/20 via-[#070913] to-emerald-950/20 py-16 sm:py-24">
                 <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
-                    <h2 className="text-3xl font-black tracking-tight sm:text-4xl text-foreground">{cta.title}</h2>
+                    <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-foreground">{cta.title}</h2>
                     <p className="text-slate-400 text-sm sm:text-base leading-relaxed max-w-xl mx-auto">{cta.subtitle}</p>
                     <div className="pt-2">
                         <Link 
                             to="/register" 
                             className="
-                                inline-flex items-center justify-center px-8 py-4 text-sm font-bold text-white 
+                                w-full sm:w-auto inline-flex items-center justify-center px-8 py-4 text-sm font-bold text-white 
                                 bg-gradient-to-r from-cyan-500 via-indigo-500 to-emerald-500 rounded-xl
                                 shadow-[0_0_20px_rgba(6,182,212,0.2)] hover:shadow-[0_0_30px_rgba(6,182,212,0.35)]
                                 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300
