@@ -347,7 +347,7 @@ export function LandingPage() {
                         </div>
 
                         {/* Hero Demo Graphic */}
-                        <div className="relative mt-8 lg:mt-0 hidden lg:block">
+                        <div className="relative mt-10 lg:mt-0 block">
                             {/* Glowing light background backing */}
                             <div className="absolute -inset-2 bg-gradient-to-r from-cyan-500/20 via-indigo-500/20 to-emerald-500/20 rounded-2xl blur-3xl opacity-30"></div>
                             
@@ -359,15 +359,23 @@ export function LandingPage() {
                                     <div className="w-3 h-3 rounded-full bg-green-500/40"></div>
                                 </div>
                                 <div className="flex-1 bg-slate-950/20 relative p-4">
-                                    <img 
-                                        src={hero.image || "/dashboard-hero-nexopos.png"} 
-                                        alt="Dashboard NexoPOS" 
-                                        className="w-full h-full object-cover rounded-xl shadow-md border border-white/[0.05]"
-                                        onError={e => { 
-                                            (e.target as HTMLImageElement).style.display = 'none'; 
-                                            (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden'); 
-                                        }} 
-                                    />
+                                    {hero.image && (hero.image.endsWith('.mp4') || hero.image.endsWith('.webm')) ? (
+                                        <video 
+                                            src={hero.image} 
+                                            autoPlay loop muted playsInline 
+                                            className="w-full h-full object-cover rounded-xl shadow-md border border-white/[0.05]"
+                                        />
+                                    ) : (
+                                        <img 
+                                            src={hero.image || "/dashboard-hero-nexopos.png"} 
+                                            alt="Dashboard NexoPOS" 
+                                            className="w-full h-full object-cover rounded-xl shadow-md border border-white/[0.05]"
+                                            onError={e => { 
+                                                (e.target as HTMLImageElement).style.display = 'none'; 
+                                                (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden'); 
+                                            }} 
+                                        />
+                                    )}
                                     <div className="hidden absolute inset-0 m-4 border border-dashed border-white/[0.1] rounded-xl bg-white/[0.01] flex flex-col items-center justify-center text-slate-400">
                                         <Building2 className="w-12 h-12 mb-3 opacity-40 text-cyan-400" />
                                         <p className="font-semibold text-sm tracking-wide text-slate-200">Plataforma B2B Unificada</p>
@@ -377,16 +385,7 @@ export function LandingPage() {
                         </div>
                     </div>
 
-                    {/* Bottom Main Graphic (visible on all) */}
-                    <div className="mt-16 sm:mt-28 flex justify-center relative z-10">
-                        <div className="absolute -inset-3 bg-gradient-to-r from-cyan-500/10 to-indigo-500/10 rounded-2xl blur-3xl opacity-40"></div>
-                        <img 
-                            src={hero.image || "/dashboard-hero-nexopos.png"} 
-                            alt="Dashboard NexoPOS" 
-                            className="w-full max-w-5xl rounded-2xl shadow-[0_30px_70px_rgba(0,0,0,0.6)] border border-white/[0.08] object-cover object-center relative z-10" 
-                            loading="eager" 
-                        />
-                    </div>
+
                 </div>
             </section>
 
