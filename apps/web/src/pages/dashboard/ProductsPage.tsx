@@ -10,8 +10,8 @@ import { useAuth } from '../../context/AuthContext';
 
 // ── Palette ────────────────────────────────────────────────────────────────────
 const C = {
-    cyan:   '#00D4FF',
-    cyanA:  (a: number) => `rgba(0,212,255,${a})`,
+    cyan:   '#0099CC',
+    cyanA:  (a: number) => `rgba(0,153,204,${a})`,
     red:    '#F87171',
     redA:   (a: number) => `rgba(248,113,113,${a})`,
     amber:  '#F59E0B',
@@ -77,7 +77,7 @@ export function ProductsPage() {
                             onChange={e => setSearchTerm(e.target.value)}
                             style={inputStyle}
                             onFocus={e  => (e.currentTarget.style.borderColor = C.cyanA(0.4))}
-                            onBlur={e   => (e.currentTarget.style.borderColor = 'rgba(0,212,255,0.12)')}
+                            onBlur={e   => (e.currentTarget.style.borderColor = 'rgba(0,153,204,0.12)')}
                         />
                     </div>
 
@@ -85,9 +85,9 @@ export function ProductsPage() {
                     <button
                         onClick={() => { setProductToEdit(null); setIsModalOpen(true); }}
                         className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-[13px] font-bold transition-all duration-150 shrink-0"
-                        style={{ background: 'linear-gradient(135deg,rgba(0,212,255,0.2) 0%,rgba(0,212,255,0.08) 100%)', border: `1px solid ${C.cyanA(0.3)}`, color: C.cyan }}
-                        onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'linear-gradient(135deg,rgba(0,212,255,0.28) 0%,rgba(0,212,255,0.14) 100%)'}
-                        onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'linear-gradient(135deg,rgba(0,212,255,0.2) 0%,rgba(0,212,255,0.08) 100%)'}>
+                        style={{ background: 'linear-gradient(135deg,rgba(0,153,204,0.2) 0%,rgba(0,153,204,0.08) 100%)', border: `1px solid ${C.cyanA(0.3)}`, color: C.cyan }}
+                        onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'linear-gradient(135deg,rgba(0,153,204,0.28) 0%,rgba(0,153,204,0.14) 100%)'}
+                        onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'linear-gradient(135deg,rgba(0,153,204,0.2) 0%,rgba(0,153,204,0.08) 100%)'}>
                         <Plus className="w-4 h-4" style={{ filter: `drop-shadow(0 0 4px ${C.cyan})` }} />
                         Nuevo Producto
                     </button>
@@ -112,7 +112,7 @@ export function ProductsPage() {
                             <tbody>
                                 {isLoading ? (
                                     Array.from({ length: 5 }).map((_, i) => (
-                                        <tr key={i} className="animate-pulse" style={{ borderBottom: '1px solid rgba(0,212,255,0.05)' }}>
+                                        <tr key={i} className="animate-pulse" style={{ borderBottom: '1px solid rgba(0,153,204,0.05)' }}>
                                             {COLS.map(c => (
                                                 <td key={c} className="px-5 py-4">
                                                     <div className="h-3.5 rounded-lg" style={{ background: C.cyanA(0.06), width: '65%' }} />

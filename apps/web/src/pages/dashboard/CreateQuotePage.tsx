@@ -81,7 +81,7 @@ export function CreateQuotePage() {
                             variant="ghost" 
                             size="icon" 
                             onClick={() => navigate('/dashboard/quotes')} 
-                            className="text-muted-foreground/[0.6] hover:text-[#00D4FF] hover:bg-[#00D4FF]/10"
+                            className="text-muted-foreground/[0.6] hover:text-[#0099CC] hover:bg-[#0099CC]/10"
                         >
                             <ArrowLeft className="w-5 h-5" />
                         </Button>
@@ -95,7 +95,7 @@ export function CreateQuotePage() {
                             variant="outline" 
                             onClick={() => handleCreateQuote(false)} 
                             disabled={createQuote.isPending}
-                            className="border-border text-foreground/[0.85] hover:bg-[#00D4FF]/5 hover:text-white"
+                            className="border-border text-foreground/[0.85] hover:bg-[#0099CC]/5 hover:text-white"
                         >
                             <Save className="w-4 h-4 mr-2" />
                             Guardar Borrador
@@ -103,7 +103,7 @@ export function CreateQuotePage() {
                         <Button 
                             onClick={() => handleCreateQuote(true)} 
                             disabled={createQuote.isPending}
-                            className="bg-[#00D4FF] hover:bg-[#00BCE0] text-[#0B0F1A] font-bold shadow-[0_0_15px_rgba(0,212,255,0.2)]"
+                            className="bg-[#0099CC] hover:bg-[#00BCE0] text-[#0B0F1A] font-bold shadow-[0_0_15px_rgba(0,153,204,0.2)]"
                         >
                             <Printer className="w-4 h-4 mr-2" />
                             Guardar y PDF
@@ -112,7 +112,7 @@ export function CreateQuotePage() {
                 </div>
 
                 {/* Main "Document" Card */}
-                <Card className="max-w-5xl mx-auto w-full border-border bg-card border-t-4 border-t-[#00D4FF] shadow-[0_0_30px_rgba(0,212,255,0.05)]">
+                <Card className="max-w-5xl mx-auto w-full border-border bg-card border-t-4 border-t-[#0099CC] shadow-[0_0_30px_rgba(0,153,204,0.05)]">
                     <CardHeader className="pb-6">
                         <div className="flex justify-between items-start gap-8">
                             {/* Client Section - Left */}
@@ -131,7 +131,7 @@ export function CreateQuotePage() {
                                         type="date"
                                         value={issueDate}
                                         onChange={(e) => setIssueDate(e.target.value)}
-                                        className="bg-card border-border text-foreground focus:border-[#00D4FF]"
+                                        className="bg-card border-border text-foreground focus:border-[#0099CC]"
                                     />
                                 </div>
                                 <div className="space-y-2">
@@ -140,7 +140,7 @@ export function CreateQuotePage() {
                                         type="date"
                                         value={validUntil}
                                         onChange={(e) => setValidUntil(e.target.value)}
-                                        className="bg-card border-border text-foreground focus:border-[#00D4FF]"
+                                        className="bg-card border-border text-foreground focus:border-[#0099CC]"
                                     />
                                 </div>
                                 <div className="col-span-2 space-y-2">
@@ -149,7 +149,7 @@ export function CreateQuotePage() {
                                         placeholder="QT-####"
                                         value={quoteNumber}
                                         onChange={(e) => setQuoteNumber(e.target.value)}
-                                        className="bg-card border-border text-foreground focus:border-[#00D4FF]"
+                                        className="bg-card border-border text-foreground focus:border-[#0099CC]"
                                     />
                                 </div>
                             </div>
@@ -178,11 +178,11 @@ export function CreateQuotePage() {
                             {/* Notes Section - Left */}
                             <div className="flex-1 space-y-2">
                                 <Label className="text-base font-semibold flex items-center gap-2 text-foreground">
-                                    <FileText className="w-4 h-4 text-[#00D4FF]" /> Notas o Condiciones Comerciales
+                                    <FileText className="w-4 h-4 text-[#0099CC]" /> Notas o Condiciones Comerciales
                                 </Label>
                                 <Textarea
                                     placeholder="Ingrese notas adicionales, términos de pago, o condiciones de entrega..."
-                                    className="min-h-[120px] resize-none bg-card border-border text-foreground focus:border-[#00D4FF]"
+                                    className="min-h-[120px] resize-none bg-card border-border text-foreground focus:border-[#0099CC]"
                                     value={notes}
                                     onChange={(e) => setNotes(e.target.value)}
                                 />
@@ -205,7 +205,7 @@ export function CreateQuotePage() {
                                     </div>
                                 )}
                                 <Separator className="my-2 bg-muted/30" />
-                                <div className="flex justify-between text-2xl font-bold text-[#00D4FF] text-glow-cyan">
+                                <div className="flex justify-between text-2xl font-bold text-[#0099CC] text-glow-cyan">
                                     <span>TOTAL</span>
                                     <span className="tabular-nums">${totals.total.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</span>
                                 </div>

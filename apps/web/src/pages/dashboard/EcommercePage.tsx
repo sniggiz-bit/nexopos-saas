@@ -49,7 +49,7 @@ const DEFAULT_CONFIG: StoreConfig = {
     storeSlug: '',
     isActive: false,
     whatsappNumber: '',
-    brandColor: '#00D4FF',
+    brandColor: '#0099CC',
     bannerUrl: '',
     logoUrl: '',
     announcementEnabled: false,
@@ -72,7 +72,7 @@ const Toggle = ({ value, onChange }: { value: boolean; onChange: (v: boolean) =>
         type="button"
         onClick={() => onChange(!value)}
         className={`relative w-12 h-6 rounded-full transition-all duration-200 flex-shrink-0 outline-none ${
-            value ? 'bg-[#00D4FF] shadow-[0_0_10px_rgba(0,212,255,0.3)]' : 'bg-slate-800 border border-border'
+            value ? 'bg-[#0099CC] shadow-[0_0_10px_rgba(0,153,204,0.3)]' : 'bg-slate-800 border border-border'
         }`}
     >
         <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full transition-transform duration-200 ${
@@ -97,7 +97,7 @@ const Input = ({ value, onChange, placeholder, type = 'text' }: {
         value={value}
         onChange={e => onChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full px-3 py-2.5 bg-card/[0.8] border border-border text-foreground focus:border-[#00D4FF] focus:ring-1 focus:ring-[#00D4FF] rounded-xl text-sm outline-none transition-all placeholder:text-gray-600"
+        className="w-full px-3 py-2.5 bg-card/[0.8] border border-border text-foreground focus:border-[#0099CC] focus:ring-1 focus:ring-[#0099CC] rounded-xl text-sm outline-none transition-all placeholder:text-gray-600"
     />
 );
 
@@ -151,9 +151,9 @@ const ImageUploadField = ({ value, onChange, label, hint, previewClass = 'h-32' 
                     <button
                         type="button"
                         onClick={() => inputRef.current?.click()}
-                        className="w-full border-2 border-dashed border-border bg-card/[0.3] rounded-xl flex flex-col items-center justify-center gap-2 py-8 cursor-pointer hover:border-[#00D4FF] hover:bg-muted/30 transition-all group"
+                        className="w-full border-2 border-dashed border-border bg-card/[0.3] rounded-xl flex flex-col items-center justify-center gap-2 py-8 cursor-pointer hover:border-[#0099CC] hover:bg-muted/30 transition-all group"
                     >
-                        <ImageIcon className="w-8 h-8 text-gray-600 group-hover:text-[#00D4FF] transition-colors" />
+                        <ImageIcon className="w-8 h-8 text-gray-600 group-hover:text-[#0099CC] transition-colors" />
                         <span className="text-sm font-medium text-gray-400 group-hover:text-gray-300">Haz clic para subir imagen</span>
                         <span className="text-xs text-gray-600">JPG, PNG, WebP — máx 5MB</span>
                     </button>
@@ -175,7 +175,7 @@ const ImageUploadField = ({ value, onChange, label, hint, previewClass = 'h-32' 
                         value={value}
                         onChange={e => onChange(e.target.value)}
                         placeholder="O pega una URL..."
-                        className="flex-1 px-3 py-2 bg-card/[0.8] border border-border text-foreground focus:border-[#00D4FF] focus:ring-1 focus:ring-[#00D4FF] rounded-xl text-xs outline-none transition-all placeholder:text-gray-600"
+                        className="flex-1 px-3 py-2 bg-card/[0.8] border border-border text-foreground focus:border-[#0099CC] focus:ring-1 focus:ring-[#0099CC] rounded-xl text-xs outline-none transition-all placeholder:text-gray-600"
                     />
                 </div>
                 <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={handleFile} />
@@ -194,7 +194,7 @@ const StorePromoPanel = ({ slug, brandColor }: { slug: string; brandColor: strin
 
     const publicUrl = slug ? `https://nexopos.cl/store/${slug}` : '';
     const shareUrl = shortUrl || publicUrl;
-    const fgColor = /^#[0-9a-fA-F]{6}$/.test(brandColor) ? brandColor : '#00D4FF';
+    const fgColor = /^#[0-9a-fA-F]{6}$/.test(brandColor) ? brandColor : '#0099CC';
 
     // Render QR into the canvas whenever slug or color changes
     useEffect(() => {
@@ -282,7 +282,7 @@ const StorePromoPanel = ({ slug, brandColor }: { slug: string; brandColor: strin
             {/* Header */}
             <div className="flex items-center gap-3 px-4 py-3 border-b border-border">
                 <div className="p-2 bg-muted/30 rounded-lg">
-                    <QrCode className="w-4 h-4 text-[#00D4FF]" />
+                    <QrCode className="w-4 h-4 text-[#0099CC]" />
                 </div>
                 <div>
                     <p className="text-sm font-bold text-foreground">Promociona tu tienda</p>
@@ -310,7 +310,7 @@ const StorePromoPanel = ({ slug, brandColor }: { slug: string; brandColor: strin
                             type="button"
                             onClick={handleDownloadQr}
                             disabled={downloadingQr}
-                            className="flex items-center gap-1.5 px-3 py-1.5 bg-card border border-border rounded-lg text-xs font-semibold text-gray-300 hover:border-[#00D4FF] hover:text-[#00D4FF] transition-colors shadow-sm disabled:opacity-50"
+                            className="flex items-center gap-1.5 px-3 py-1.5 bg-card border border-border rounded-lg text-xs font-semibold text-gray-300 hover:border-[#0099CC] hover:text-[#0099CC] transition-colors shadow-sm disabled:opacity-50"
                         >
                             {downloadingQr ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
                             Descargar PNG
@@ -325,10 +325,10 @@ const StorePromoPanel = ({ slug, brandColor }: { slug: string; brandColor: strin
                             <div className="flex items-center gap-1.5 bg-card/[0.8] rounded-xl border border-border px-3 py-2 shadow-sm">
                                 <Globe className="w-3.5 h-3.5 text-gray-500 flex-shrink-0" />
                                 <span className="text-xs text-gray-300 flex-1 truncate font-mono">{publicUrl}</span>
-                                <button type="button" onClick={() => handleCopy(publicUrl, 'URL copiada')} className="p-1 text-gray-400 hover:text-[#00D4FF] transition-colors flex-shrink-0">
+                                <button type="button" onClick={() => handleCopy(publicUrl, 'URL copiada')} className="p-1 text-gray-400 hover:text-[#0099CC] transition-colors flex-shrink-0">
                                     <Copy className="w-3.5 h-3.5" />
                                 </button>
-                                <a href={publicUrl} target="_blank" rel="noreferrer" className="p-1 text-gray-400 hover:text-[#00D4FF] transition-colors flex-shrink-0">
+                                <a href={publicUrl} target="_blank" rel="noreferrer" className="p-1 text-gray-400 hover:text-[#0099CC] transition-colors flex-shrink-0">
                                     <ExternalLink className="w-3.5 h-3.5" />
                                 </a>
                             </div>
@@ -350,9 +350,9 @@ const StorePromoPanel = ({ slug, brandColor }: { slug: string; brandColor: strin
                                     type="button"
                                     onClick={handleGenerateShortUrl}
                                     disabled={generatingShort}
-                                    className="flex items-center gap-1.5 px-3 py-2 bg-card border border-border rounded-xl text-xs font-semibold text-gray-300 hover:border-[#00D4FF] hover:text-[#00D4FF] transition-colors shadow-sm disabled:opacity-50 w-full justify-center"
+                                    className="flex items-center gap-1.5 px-3 py-2 bg-card border border-border rounded-xl text-xs font-semibold text-gray-300 hover:border-[#0099CC] hover:text-[#0099CC] transition-colors shadow-sm disabled:opacity-50 w-full justify-center"
                                 >
-                                    {generatingShort ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Zap className="w-3.5 h-3.5 text-[#00D4FF]" />}
+                                    {generatingShort ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Zap className="w-3.5 h-3.5 text-[#0099CC]" />}
                                     {generatingShort ? 'Generando...' : 'Generar link corto (TinyURL)'}
                                 </button>
                             )}
@@ -373,7 +373,7 @@ const StorePromoPanel = ({ slug, brandColor }: { slug: string; brandColor: strin
                                 <button
                                     type="button"
                                     onClick={handleNativeShare}
-                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-card border border-border rounded-lg text-xs font-semibold text-gray-300 hover:border-[#00D4FF] hover:text-[#00D4FF] transition-colors shadow-sm"
+                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-card border border-border rounded-lg text-xs font-semibold text-gray-300 hover:border-[#0099CC] hover:text-[#0099CC] transition-colors shadow-sm"
                                 >
                                     <Share2 className="w-3.5 h-3.5" />
                                     Compartir
@@ -381,7 +381,7 @@ const StorePromoPanel = ({ slug, brandColor }: { slug: string; brandColor: strin
                                 <button
                                     type="button"
                                     onClick={() => handleCopy(shareUrl, 'Link copiado')}
-                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-card border border-border rounded-lg text-xs font-semibold text-gray-300 hover:border-[#00D4FF] hover:text-[#00D4FF] transition-colors shadow-sm"
+                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-card border border-border rounded-lg text-xs font-semibold text-gray-300 hover:border-[#0099CC] hover:text-[#0099CC] transition-colors shadow-sm"
                                 >
                                     <Copy className="w-3.5 h-3.5" />
                                     Copiar link
@@ -421,7 +421,7 @@ const GeneralTab = ({ cfg, onChange, storeLink, onCopyLink }: {
         </Field>
 
         <Field label="URL de tu tienda">
-            <div className="flex rounded-xl overflow-hidden border border-border focus-within:border-[#00D4FF] focus-within:ring-1 focus-within:ring-[#00D4FF] transition-all bg-card/[0.8]">
+            <div className="flex rounded-xl overflow-hidden border border-border focus-within:border-[#0099CC] focus-within:ring-1 focus-within:ring-[#0099CC] transition-all bg-card/[0.8]">
                 <span className="flex items-center px-3 bg-card/[0.5] text-gray-400 text-xs border-r border-border whitespace-nowrap font-semibold">
                     nexopos.cl/store/
                 </span>
@@ -436,10 +436,10 @@ const GeneralTab = ({ cfg, onChange, storeLink, onCopyLink }: {
             {storeLink && (
                 <div className="mt-2 flex items-center gap-2 p-2.5 bg-card/[0.3] border border-border rounded-xl">
                     <span className="text-xs text-gray-400 truncate flex-1 font-mono">{storeLink}</span>
-                    <button type="button" onClick={onCopyLink} className="p-1.5 text-gray-400 hover:text-[#00D4FF] transition-colors" title="Copiar">
+                    <button type="button" onClick={onCopyLink} className="p-1.5 text-gray-400 hover:text-[#0099CC] transition-colors" title="Copiar">
                         <Copy className="w-3.5 h-3.5" />
                     </button>
-                    <a href={storeLink} target="_blank" rel="noreferrer" className="p-1.5 text-gray-400 hover:text-[#00D4FF] transition-colors" title="Abrir">
+                    <a href={storeLink} target="_blank" rel="noreferrer" className="p-1.5 text-gray-400 hover:text-[#0099CC] transition-colors" title="Abrir">
                         <ExternalLink className="w-3.5 h-3.5" />
                     </a>
                 </div>
@@ -454,7 +454,7 @@ const GeneralTab = ({ cfg, onChange, storeLink, onCopyLink }: {
                     value={cfg.whatsappNumber}
                     onChange={e => onChange({ whatsappNumber: e.target.value.replace(/\D/g, '') })}
                     placeholder="56912345678"
-                    className="w-full pl-9 pr-3 py-2.5 bg-card/[0.8] border border-border text-foreground focus:border-[#00D4FF] focus:ring-1 focus:ring-[#00D4FF] rounded-xl text-sm outline-none transition-all placeholder:text-gray-600"
+                    className="w-full pl-9 pr-3 py-2.5 bg-card/[0.8] border border-border text-foreground focus:border-[#0099CC] focus:ring-1 focus:ring-[#0099CC] rounded-xl text-sm outline-none transition-all placeholder:text-gray-600"
                 />
             </div>
         </Field>
@@ -530,7 +530,7 @@ const AparienciaTab = ({ cfg, onChange }: { cfg: StoreConfig; onChange: (p: Part
                         type="text"
                         value={cfg.brandColor}
                         onChange={e => /^#[0-9a-fA-F]{0,6}$/.test(e.target.value) && onChange({ brandColor: e.target.value })}
-                        className="w-28 px-3 py-2 bg-card/[0.8] border border-border text-foreground focus:border-[#00D4FF] rounded-xl text-sm font-mono outline-none text-center"
+                        className="w-28 px-3 py-2 bg-card/[0.8] border border-border text-foreground focus:border-[#0099CC] rounded-xl text-sm font-mono outline-none text-center"
                     />
                 </div>
             </div>
@@ -590,7 +590,7 @@ const AparienciaTab = ({ cfg, onChange }: { cfg: StoreConfig; onChange: (p: Part
                     <button
                         type="button"
                         onClick={addSlider}
-                        className="flex items-center gap-1.5 px-3 py-2 bg-[#00D4FF] hover:bg-[#00BCE0] text-[#0B0F1A] rounded-xl text-xs font-bold transition-all hover:shadow-[0_0_15px_rgba(0,212,255,0.2)]"
+                        className="flex items-center gap-1.5 px-3 py-2 bg-[#0099CC] hover:bg-[#00BCE0] text-[#0B0F1A] rounded-xl text-xs font-bold transition-all hover:shadow-[0_0_15px_rgba(0,153,204,0.2)]"
                     >
                         <Plus className="w-3.5 h-3.5" />
                         Agregar slide
@@ -642,7 +642,7 @@ const AparienciaTab = ({ cfg, onChange }: { cfg: StoreConfig; onChange: (p: Part
                                             type="text"
                                             value={(slide as any)[key]}
                                             onChange={e => updateSlider(slide.id, { [key]: e.target.value })}
-                                            className="px-3 py-2 bg-card/[0.8] border border-border text-foreground focus:border-[#00D4FF] rounded-xl text-sm outline-none transition-all placeholder:text-gray-600"
+                                            className="px-3 py-2 bg-card/[0.8] border border-border text-foreground focus:border-[#0099CC] rounded-xl text-sm outline-none transition-all placeholder:text-gray-600"
                                             placeholder={ph}
                                         />
                                     ))}
@@ -740,7 +740,7 @@ const CatalogoTab = ({ cfg, onChange, products }: {
                 <div className="flex items-center gap-2 p-3 bg-[rgba(245,158,11,0.04)] border border-[rgba(245,158,11,0.15)] rounded-xl text-xs text-amber-500">
                     <EyeOff className="w-3.5 h-3.5 flex-shrink-0" />
                     <span>
-                        <strong>{localProducts.length - publicCount}</strong> producto{localProducts.length - publicCount !== 1 ? 's' : ''} oculto{localProducts.length - publicCount !== 1 ? 's' : ''} en la tienda — usa el ícono <Eye className="w-3 h-3 inline text-[#00D4FF]" /> para publicarlos
+                        <strong>{localProducts.length - publicCount}</strong> producto{localProducts.length - publicCount !== 1 ? 's' : ''} oculto{localProducts.length - publicCount !== 1 ? 's' : ''} en la tienda — usa el ícono <Eye className="w-3 h-3 inline text-[#0099CC]" /> para publicarlos
                     </span>
                 </div>
             )}
@@ -754,7 +754,7 @@ const CatalogoTab = ({ cfg, onChange, products }: {
                         value={search}
                         onChange={e => setSearch(e.target.value)}
                         placeholder="Buscar productos..."
-                        className="w-full pl-9 pr-3 py-2 bg-card/[0.8] border border-border text-foreground focus:border-[#00D4FF] rounded-xl text-sm outline-none placeholder:text-gray-600"
+                        className="w-full pl-9 pr-3 py-2 bg-card/[0.8] border border-border text-foreground focus:border-[#0099CC] rounded-xl text-sm outline-none placeholder:text-gray-600"
                     />
                 </div>
                 <div className="flex rounded-xl border border-border overflow-hidden bg-slate-900">
@@ -764,7 +764,7 @@ const CatalogoTab = ({ cfg, onChange, products }: {
                             type="button"
                             onClick={() => setView(v)}
                             className={`px-3 py-2 text-xs font-semibold transition-colors border-r border-border last:border-0 ${
-                                view === v ? 'bg-[#00D4FF] text-[#0B0F1A] font-bold' : 'text-gray-400 hover:bg-white/5'
+                                view === v ? 'bg-[#0099CC] text-[#0B0F1A] font-bold' : 'text-gray-400 hover:bg-white/5'
                             }`}
                         >
                             {v === 'all' ? 'Todos' : '⭐ Destacados'}
@@ -822,7 +822,7 @@ const CatalogoTab = ({ cfg, onChange, products }: {
                                     <td className="px-4 py-3 text-gray-400 text-sm hidden sm:table-cell">{formatCLP(p.price)}</td>
                                     <td className="px-4 py-3 hidden md:table-cell">
                                         {p.category?.name
-                                            ? <span className="text-xs font-semibold text-[#00D4FF] bg-muted/30 border border-border px-2 py-0.5 rounded-full">{p.category.name}</span>
+                                            ? <span className="text-xs font-semibold text-[#0099CC] bg-muted/30 border border-border px-2 py-0.5 rounded-full">{p.category.name}</span>
                                             : <span className="text-gray-600 text-xs">—</span>
                                         }
                                     </td>
@@ -835,7 +835,7 @@ const CatalogoTab = ({ cfg, onChange, products }: {
                                                 className="p-1.5 rounded-lg transition-all hover:scale-110"
                                             >
                                                 {p.isPublic
-                                                    ? <Eye className="w-4 h-4 text-[#00D4FF]" />
+                                                    ? <Eye className="w-4 h-4 text-[#0099CC]" />
                                                     : <EyeOff className="w-4 h-4 text-gray-600" />
                                                 }
                                             </button>
@@ -869,7 +869,7 @@ const SeoTab = ({ cfg, onChange, storeName }: {
 }) => (
     <div className="space-y-6">
         <div className="flex items-start gap-3 p-4 bg-muted/30 border border-border rounded-2xl">
-            <Globe className="w-4 h-4 text-[#00D4FF] flex-shrink-0 mt-0.5" />
+            <Globe className="w-4 h-4 text-[#0099CC] flex-shrink-0 mt-0.5" />
             <p className="text-sm text-gray-300">
                 Controla cómo aparece tu tienda en Google y al compartir en redes sociales.
             </p>
@@ -900,7 +900,7 @@ const SeoTab = ({ cfg, onChange, storeName }: {
                 value={cfg.seoDescription}
                 onChange={e => onChange({ seoDescription: e.target.value })}
                 rows={3}
-                className="w-full px-3 py-2.5 bg-card/[0.8] border border-border text-foreground focus:border-[#00D4FF] focus:ring-1 focus:ring-[#00D4FF] rounded-xl text-sm outline-none resize-none transition-all placeholder:text-gray-600"
+                className="w-full px-3 py-2.5 bg-card/[0.8] border border-border text-foreground focus:border-[#0099CC] focus:ring-1 focus:ring-[#0099CC] rounded-xl text-sm outline-none resize-none transition-all placeholder:text-gray-600"
                 placeholder="Compra en nuestra tienda online. Amplio catálogo con los mejores precios."
             />
         </div>
@@ -925,7 +925,7 @@ const SeoTab = ({ cfg, onChange, storeName }: {
             <div>
                 <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-3">Vista previa en Google</p>
                 <div className="border border-border rounded-2xl p-5 bg-card/[0.3] shadow-sm">
-                    <p className="text-[#00D4FF] text-lg font-semibold leading-snug cursor-pointer hover:underline">
+                    <p className="text-[#0099CC] text-lg font-semibold leading-snug cursor-pointer hover:underline">
                         {cfg.seoTitle || `${storeName} — Tienda Online`}
                     </p>
                     <p className="text-emerald-400/80 text-sm mt-0.5 font-mono">nexopos.cl/store/{cfg.storeSlug || '...'}</p>
@@ -963,7 +963,7 @@ export const EcommercePage = () => {
                     storeSlug: data.storeSlug || '',
                     isActive: ss.isActive || false,
                     whatsappNumber: ss.whatsappNumber || '',
-                    brandColor: ss.brandColor || '#00D4FF',
+                    brandColor: ss.brandColor || '#0099CC',
                     bannerUrl: ss.bannerUrl || '',
                     logoUrl: ss.logoUrl || '',
                     announcementEnabled: ss.announcementEnabled || false,
@@ -1039,7 +1039,7 @@ export const EcommercePage = () => {
                         {storeLink && (
                             <a href={storeLink} target="_blank" rel="noreferrer"
                                 className="flex items-center gap-1.5 px-3 py-2 border border-border rounded-xl text-xs font-semibold text-gray-300 hover:bg-card hover:text-foreground transition-all">
-                                <ExternalLink className="w-3.5 h-3.5 text-[#00D4FF]" />
+                                <ExternalLink className="w-3.5 h-3.5 text-[#0099CC]" />
                                 <span className="hidden sm:inline">Ver tienda</span>
                             </a>
                         )}
@@ -1048,7 +1048,7 @@ export const EcommercePage = () => {
                             disabled={saving}
                             className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all disabled:opacity-60 ${
                                 dirty
-                                    ? 'bg-[#00D4FF] hover:bg-[#00BCE0] text-[#0B0F1A] shadow-[0_0_15px_rgba(0,212,255,0.2)]'
+                                    ? 'bg-[#0099CC] hover:bg-[#00BCE0] text-[#0B0F1A] shadow-[0_0_15px_rgba(0,153,204,0.2)]'
                                     : 'bg-card border border-border text-gray-300 hover:bg-card'
                             }`}
                         >
@@ -1081,7 +1081,7 @@ export const EcommercePage = () => {
                                 onClick={() => setActiveTab(id)}
                                 className={`flex items-center gap-2 px-4 py-4 text-xs font-bold transition-all border-b-2 -mb-px flex-1 justify-center ${
                                     activeTab === id
-                                        ? 'text-[#00D4FF] border-[#00D4FF] bg-card/[0.35]'
+                                        ? 'text-[#0099CC] border-[#0099CC] bg-card/[0.35]'
                                         : 'text-gray-400 border-transparent hover:text-gray-200 hover:bg-card'
                                 }`}
                             >
@@ -1095,7 +1095,7 @@ export const EcommercePage = () => {
                     <div className="p-6">
                         {loading ? (
                             <div className="flex flex-col items-center justify-center py-16 gap-3 text-gray-400">
-                                <Loader2 className="w-6 h-6 animate-spin text-[#00D4FF]" />
+                                <Loader2 className="w-6 h-6 animate-spin text-[#0099CC]" />
                                 <span className="text-sm">Cargando configuración...</span>
                             </div>
                         ) : (

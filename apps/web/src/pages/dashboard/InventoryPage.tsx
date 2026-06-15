@@ -188,7 +188,7 @@ export function InventoryPage() {
                     <div className="flex items-center gap-2 flex-wrap">
                         <button
                             onClick={handleDownloadTemplate}
-                            className="inline-flex items-center px-3 py-2 border border-border rounded-lg text-sm text-foreground/[0.85] bg-card hover:bg-[#00D4FF]/5 transition-colors shadow-sm"
+                            className="inline-flex items-center px-3 py-2 border border-border rounded-lg text-sm text-foreground/[0.85] bg-card hover:bg-[#0099CC]/5 transition-colors shadow-sm"
                             title="Descargar plantilla Excel para carga masiva"
                         >
                             <Download className="w-4 h-4 mr-1.5 text-muted-foreground/[0.5]" />
@@ -197,7 +197,7 @@ export function InventoryPage() {
                         <button
                             onClick={() => fileInputRef.current?.click()}
                             disabled={isImporting}
-                            className="inline-flex items-center px-3 py-2 border border-[#00D4FF]/30 rounded-lg text-sm text-[#00D4FF] bg-[#00D4FF]/5 hover:bg-[#00D4FF]/10 transition-colors shadow-sm disabled:opacity-50"
+                            className="inline-flex items-center px-3 py-2 border border-[#0099CC]/30 rounded-lg text-sm text-[#0099CC] bg-[#0099CC]/5 hover:bg-[#0099CC]/10 transition-colors shadow-sm disabled:opacity-50"
                             title="Importar productos desde Excel"
                         >
                             {isImporting ? (
@@ -234,13 +234,13 @@ export function InventoryPage() {
                             placeholder="Buscar por nombre, SKU o código..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full pl-9 pr-4 py-2 bg-card border border-border text-foreground rounded-lg focus:ring-2 focus:ring-[#00D4FF] focus:border-transparent outline-none transition-all shadow-sm text-sm placeholder:text-muted-foreground/[0.3]"
+                            className="w-full pl-9 pr-4 py-2 bg-card border border-border text-foreground rounded-lg focus:ring-2 focus:ring-[#0099CC] focus:border-transparent outline-none transition-all shadow-sm text-sm placeholder:text-muted-foreground/[0.3]"
                         />
                     </div>
                     <select
                         value={categoryFilter}
                         onChange={(e) => setCategoryFilter(e.target.value)}
-                        className="px-3 py-2 border border-border rounded-lg text-sm text-foreground/[0.85] bg-[hsl(var(--card))] shadow-sm focus:ring-2 focus:ring-[#00D4FF] outline-none min-w-[160px]"
+                        className="px-3 py-2 border border-border rounded-lg text-sm text-foreground/[0.85] bg-[hsl(var(--card))] shadow-sm focus:ring-2 focus:ring-[#0099CC] outline-none min-w-[160px]"
                     >
                         <option value="" className="bg-[hsl(var(--card))]">Todas las familias</option>
                         {(categories || []).map(cat => (
@@ -250,7 +250,7 @@ export function InventoryPage() {
                     <select
                         value={brandFilter}
                         onChange={(e) => setBrandFilter(e.target.value)}
-                        className="px-3 py-2 border border-border rounded-lg text-sm text-foreground/[0.85] bg-[hsl(var(--card))] shadow-sm focus:ring-2 focus:ring-[#00D4FF] outline-none min-w-[140px]"
+                        className="px-3 py-2 border border-border rounded-lg text-sm text-foreground/[0.85] bg-[hsl(var(--card))] shadow-sm focus:ring-2 focus:ring-[#0099CC] outline-none min-w-[140px]"
                     >
                         <option value="" className="bg-[hsl(var(--card))]">Todas las marcas</option>
                         {(brands || []).map(brand => (
@@ -291,7 +291,7 @@ export function InventoryPage() {
                             {isLoading ? (
                                 <tr>
                                     <td colSpan={6} className="px-6 py-12 text-center">
-                                        <Loader2 className="w-8 h-8 animate-spin text-[#00D4FF] mx-auto" />
+                                        <Loader2 className="w-8 h-8 animate-spin text-[#0099CC] mx-auto" />
                                         <p className="mt-2 text-sm text-muted-foreground/[0.5]">Cargando inventario...</p>
                                     </td>
                                 </tr>
@@ -345,7 +345,7 @@ export function InventoryPage() {
                                                             {product.inventoryLevels.map((lvl) => (
                                                                 <div key={lvl.branchId} className="flex justify-between">
                                                                     <span>{lvl.branchName}:</span>
-                                                                    <span className="font-mono text-[#00D4FF]">{lvl.quantity}</span>
+                                                                    <span className="font-mono text-[#0099CC]">{lvl.quantity}</span>
                                                                 </div>
                                                             ))}
                                                         </div>
@@ -381,7 +381,7 @@ export function InventoryPage() {
                                                 <button
                                                     onClick={() => handleKardex(product)}
                                                     title="Ver Kardex"
-                                                    className="p-2 rounded-lg text-[#00D4FF] hover:text-white hover:bg-[#00D4FF]/10 border border-transparent transition-all"
+                                                    className="p-2 rounded-lg text-[#0099CC] hover:text-white hover:bg-[#0099CC]/10 border border-transparent transition-all"
                                                 >
                                                     <History className="w-4 h-4" />
                                                 </button>

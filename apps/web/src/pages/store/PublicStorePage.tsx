@@ -293,7 +293,7 @@ const ProductModal = ({
                     onClick={() => setActiveImage(img)}
                     className={`w-14 h-14 rounded-lg overflow-hidden border-2 transition-all flex-shrink-0 bg-white dark:bg-slate-900 ${
                       activeImage === img
-                        ? 'border-[#00D4FF]'
+                        ? 'border-[#0099CC]'
                         : 'border-gray-200 dark:border-slate-800 hover:border-gray-300 dark:hover:border-slate-700'
                     }`}
                   >

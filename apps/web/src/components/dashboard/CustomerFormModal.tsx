@@ -21,10 +21,10 @@ const getPalette = (theme: string) => {
         bg:      isDark ? 'rgba(8,12,24,0.98)' : 'rgba(255,255,255,0.98)',
         surface: isDark ? 'rgba(16,24,44,0.95)' : 'rgba(245,247,250,0.95)',
         card:    isDark ? 'rgba(20,30,58,0.8)' : 'rgba(235,240,248,0.8)',
-        border:  isDark ? 'rgba(0,212,255,0.12)' : 'rgba(0,212,255,0.22)',
-        borderH: isDark ? 'rgba(0,212,255,0.28)' : 'rgba(0,212,255,0.48)',
-        cyan:    '#00D4FF',
-        cyanA:   (a: number) => `rgba(0,212,255,${a})`,
+        border:  isDark ? 'rgba(0,153,204,0.12)' : 'rgba(0,153,204,0.22)',
+        borderH: isDark ? 'rgba(0,153,204,0.28)' : 'rgba(0,153,204,0.48)',
+        cyan:    '#0099CC',
+        cyanA:   (a: number) => `rgba(0,153,204,${a})`,
         text:    isDark ? 'rgba(210,225,245,0.92)' : 'rgba(15,23,42,0.92)',
         muted:   isDark ? 'rgba(180,195,220,0.5)' : 'rgba(75,85,99,0.7)',
         subtle:  isDark ? 'rgba(180,195,220,0.2)' : 'rgba(75,85,99,0.2)',
@@ -409,14 +409,14 @@ export function CustomerFormModal({ isOpen, onClose, initialData }: CustomerForm
                             disabled={createCustomer.isPending || updateCustomer.isPending}
                             style={{
                                 padding: '9px 24px', borderRadius: '10px', fontSize: '13px', fontWeight: 800,
-                                background: 'linear-gradient(135deg, rgba(0,212,255,0.25) 0%, rgba(0,212,255,0.12) 100%)',
+                                background: 'linear-gradient(135deg, rgba(0,153,204,0.25) 0%, rgba(0,153,204,0.12) 100%)',
                                 border: `1px solid ${C.cyanA(0.4)}`,
                                 color: C.cyan, cursor: 'pointer', transition: 'all 0.15s',
                                 boxShadow: `0 0 20px ${C.cyanA(0.12)}`,
                                 opacity: (createCustomer.isPending || updateCustomer.isPending) ? 0.6 : 1,
                             }}
-                            onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'linear-gradient(135deg, rgba(0,212,255,0.35) 0%, rgba(0,212,255,0.2) 100%)'}
-                            onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'linear-gradient(135deg, rgba(0,212,255,0.25) 0%, rgba(0,212,255,0.12) 100%)'}
+                            onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'linear-gradient(135deg, rgba(0,153,204,0.35) 0%, rgba(0,153,204,0.2) 100%)'}
+                            onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'linear-gradient(135deg, rgba(0,153,204,0.25) 0%, rgba(0,153,204,0.12) 100%)'}
                         >
                             {createCustomer.isPending || updateCustomer.isPending
                                 ? 'Guardando...'

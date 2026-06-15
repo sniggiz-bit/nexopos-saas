@@ -60,7 +60,7 @@ export function BrandsPage() {
                         {isError && (
                             <button
                                 onClick={() => refetch()}
-                                className="flex items-center gap-1.5 px-3 py-2 text-sm border border-border text-foreground/[0.85] rounded-lg hover:bg-[#00D4FF]/5 transition-colors"
+                                className="flex items-center gap-1.5 px-3 py-2 text-sm border border-border text-foreground/[0.85] rounded-lg hover:bg-[#0099CC]/5 transition-colors"
                             >
                                 <RefreshCw className="w-4 h-4" />
                                 Reintentar
@@ -68,7 +68,7 @@ export function BrandsPage() {
                         )}
                         <button
                             onClick={() => setIsModalOpen(true)}
-                            className="px-4 py-2 bg-[#00D4FF] hover:bg-[#00BCE0] text-[#0B0F1A] font-bold rounded-lg transition-all flex items-center shadow-[0_0_15px_rgba(0,212,255,0.2)] hover:shadow-[0_0_25px_rgba(0,212,255,0.4)]"
+                            className="px-4 py-2 bg-[#0099CC] hover:bg-[#00BCE0] text-[#0B0F1A] font-bold rounded-lg transition-all flex items-center shadow-[0_0_15px_rgba(0,153,204,0.2)] hover:shadow-[0_0_25px_rgba(0,153,204,0.4)]"
                         >
                             <Plus className="w-5 h-5 mr-2 stroke-[3]" />
                             Nueva Marca
@@ -89,7 +89,7 @@ export function BrandsPage() {
                             {isLoading ? (
                                 <tr>
                                     <td colSpan={3} className="px-6 py-12 text-center">
-                                        <Loader2 className="w-8 h-8 animate-spin text-[#00D4FF] mx-auto" />
+                                        <Loader2 className="w-8 h-8 animate-spin text-[#0099CC] mx-auto" />
                                         <p className="mt-2 text-sm text-muted-foreground/[0.5]">Cargando marcas...</p>
                                     </td>
                                 </tr>
@@ -98,7 +98,7 @@ export function BrandsPage() {
                                     <td colSpan={3} className="px-6 py-12 text-center text-muted-foreground/[0.5]">
                                         <Tag className="w-12 h-12 text-red-400/20 mx-auto mb-3" />
                                         <p className="text-red-400 font-medium">Error al cargar las marcas</p>
-                                        <button onClick={() => refetch()} className="mt-3 text-sm text-[#00D4FF] hover:underline">
+                                        <button onClick={() => refetch()} className="mt-3 text-sm text-[#0099CC] hover:underline">
                                             Intentar nuevamente
                                         </button>
                                     </td>
@@ -114,20 +114,20 @@ export function BrandsPage() {
                                 brands.map((brand) => (
                                     <tr key={brand.id} className="hover:bg-muted/30 transition-colors">
                                         <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-foreground/[0.9] flex items-center">
-                                            <div className="w-8 h-8 rounded-lg bg-[#00D4FF]/10 text-[#00D4FF] border border-[#00D4FF]/20 flex items-center justify-center mr-3 font-bold text-xs">
+                                            <div className="w-8 h-8 rounded-lg bg-[#0099CC]/10 text-[#0099CC] border border-[#0099CC]/20 flex items-center justify-center mr-3 font-bold text-xs">
                                                 {brand.name.substring(0, 2).toUpperCase()}
                                             </div>
                                             {brand.name}
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-50">
-                                            <span className="bg-[#00D4FF]/10 text-[#00D4FF] px-2.5 py-0.5 rounded-full text-xs font-semibold border border-[#00D4FF]/20">
+                                            <span className="bg-[#0099CC]/10 text-[#0099CC] px-2.5 py-0.5 rounded-full text-xs font-semibold border border-[#0099CC]/20">
                                                 {brand.productCount || 0} productos
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                             <button
                                                 onClick={() => handleEdit(brand)}
-                                                className="text-[#00D4FF] hover:text-white mr-4 p-2 hover:bg-[#00D4FF]/10 rounded-lg transition-colors"
+                                                className="text-[#0099CC] hover:text-white mr-4 p-2 hover:bg-[#0099CC]/10 rounded-lg transition-colors"
                                             >
                                                 <Edit className="w-4 h-4" />
                                             </button>
@@ -176,21 +176,21 @@ export function BrandsPage() {
                                     value={name}
                                     onChange={(e) => setName(e.target.value)}
                                     placeholder="Ej: CCU, Nestlé, Evercrisp..."
-                                    className="w-full px-4 py-2 bg-card border border-border text-foreground rounded-lg focus:ring-2 focus:ring-[#00D4FF] focus:border-transparent outline-none transition-all placeholder:text-muted-foreground/[0.3]"
+                                    className="w-full px-4 py-2 bg-card border border-border text-foreground rounded-lg focus:ring-2 focus:ring-[#0099CC] focus:border-transparent outline-none transition-all placeholder:text-muted-foreground/[0.3]"
                                 />
                             </div>
                             <div className="mt-8 flex justify-end gap-3">
                                 <button
                                     type="button"
                                     onClick={handleClose}
-                                    className="px-4 py-2 border border-border text-foreground/[0.85] hover:bg-[#00D4FF]/5 rounded-lg font-medium transition-colors"
+                                    className="px-4 py-2 border border-border text-foreground/[0.85] hover:bg-[#0099CC]/5 rounded-lg font-medium transition-colors"
                                 >
                                     Cancelar
                                 </button>
                                 <button
                                     type="submit"
                                     disabled={isSaving}
-                                    className="px-6 py-2 bg-[#00D4FF] hover:bg-[#00BCE0] text-[#0B0F1A] rounded-lg font-bold transition-all disabled:opacity-50 flex items-center shadow-[0_0_15px_rgba(0,212,255,0.15)]"
+                                    className="px-6 py-2 bg-[#0099CC] hover:bg-[#00BCE0] text-[#0B0F1A] rounded-lg font-bold transition-all disabled:opacity-50 flex items-center shadow-[0_0_15px_rgba(0,153,204,0.15)]"
                                 >
                                     {isSaving && <Loader2 className="w-4 h-4 mr-2 animate-spin text-[#0B0F1A]" />}
                                     {editingBrand ? 'Guardar Cambios' : 'Crear Marca'}
