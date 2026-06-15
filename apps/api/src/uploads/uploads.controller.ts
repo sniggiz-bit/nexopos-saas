@@ -8,8 +8,8 @@ import { extname, join } from 'path';
 import { existsSync, mkdirSync } from 'fs';
 
 const UPLOAD_DIR = join(process.cwd(), '..', '..', 'uploads', 'products');
-const MAX_SIZE   = 5 * 1024 * 1024; // 5 MB
-const ALLOWED    = ['.jpg', '.jpeg', '.png', '.webp', '.gif'];
+const MAX_SIZE   = 25 * 1024 * 1024; // 25 MB
+const ALLOWED    = ['.jpg', '.jpeg', '.png', '.webp', '.gif', '.mp4', '.webm'];
 
 function ensureDir(dir: string) {
   if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
@@ -35,7 +35,7 @@ export class UploadsController {
       fileFilter: (_req, file, cb) => {
         const ext = extname(file.originalname).toLowerCase();
         if (!ALLOWED.includes(ext)) {
-          return cb(new BadRequestException(`Formato no permitido: ${ext}. Usa JPG, PNG o WebP.`), false);
+          return cb(new BadRequestException(`Formato no permitido: ${ext}. Usa JPG, PNG, WebP, MP4 o WEBM.`), false);
         }
         cb(null, true);
       },

@@ -180,7 +180,7 @@ const Field = ({ label, value, onChange, multiline = false, placeholder = '' }: 
   </div>
 );
 
-const ImageUploadField = ({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) => {
+const MediaUploadField = ({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) => {
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -193,11 +193,13 @@ const ImageUploadField = ({ label, value, onChange }: { label: string; value: st
       const { data } = await api.post('/uploads/image', form);
       onChange(data.url);
     } catch {
-      toast.error('Error al subir la imagen');
+      toast.error('Error al subir el archivo');
     } finally {
       setUploading(false);
     }
   };
+
+  const isVideo = value && (value.endsWith('.mp4') || value.endsWith('.webm'));
 
   return (
     <div>
@@ -206,7 +208,11 @@ const ImageUploadField = ({ label, value, onChange }: { label: string; value: st
         <div className="w-24 h-24 rounded-xl border border-dashed border-neutral-700 bg-neutral-800/50 flex items-center justify-center shrink-0 overflow-hidden relative group">
           {value ? (
             <>
-              <img src={value} alt="Preview" className="w-full h-full object-cover" />
+              {isVideo ? (
+                <video src={value} autoPlay loop muted playsInline className="w-full h-full object-cover" />
+              ) : (
+                <img src={value} alt="Preview" className="w-full h-full object-cover" />
+              )}
               <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                 <button type="button" onClick={() => onChange('')} className="p-1.5 bg-red-500/20 text-red-400 rounded-xl hover:bg-red-500/40 transition-colors"><Trash2 size={16} /></button>
               </div>
@@ -219,7 +225,7 @@ const ImageUploadField = ({ label, value, onChange }: { label: string; value: st
           <input
             ref={fileInputRef}
             type="file"
-            accept="image/*"
+            accept="image/*,video/mp4,video/webm"
             className="hidden"
             onChange={e => {
               const file = e.target.files?.[0];
@@ -234,9 +240,9 @@ const ImageUploadField = ({ label, value, onChange }: { label: string; value: st
             className="flex items-center gap-2 px-4 py-2.5 bg-neutral-800 border border-neutral-700 text-neutral-300 hover:text-white hover:bg-neutral-700 rounded-xl transition-colors text-sm font-medium disabled:opacity-50"
           >
             {uploading ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
-            {uploading ? 'Subiendo...' : 'Subir Imagen'}
+            {uploading ? 'Subiendo...' : 'Subir Media'}
           </button>
-          <p className="text-xs text-neutral-500">Formato recomendado: PNG, JPG, WEBP. Máx: 2MB.</p>
+          <p className="text-xs text-neutral-500">Formato recomendado: PNG, JPG, WEBP, MP4, WEBM. Máx: 25MB.</p>
         </div>
       </div>
     </div>
@@ -484,7 +490,7 @@ export default function AdminLandingPage() {
             </div>
             <Field label="Banner DTE" value={cfg.hero.dteBanner} onChange={v => set('hero', { dteBanner: v })} placeholder="Texto del banner inferior del hero..." />
             <div className="pt-4 border-t border-neutral-700">
-              <ImageUploadField label="Imagen Principal (Dashboard)" value={cfg.hero.image || ''} onChange={v => set('hero', { image: v })} />
+              <MediaUploadField label="Imagen/Video Principal (Dashboard)" value={cfg.hero.image || ''} onChange={v => set('hero', { image: v })} />
             </div>
           </div>
         </div>
@@ -539,7 +545,7 @@ export default function AdminLandingPage() {
           <Field label="Título de sección" value={cfg.solution?.title || ''} onChange={v => set('solution', { title: v })} />
           <Field label="Descripción principal" value={cfg.solution?.description || ''} onChange={v => set('solution', { description: v })} multiline />
           <div className="pt-4 border-t border-neutral-700">
-            <ImageUploadField label="Imagen Descriptiva (Dashboard)" value={cfg.solution.image || ''} onChange={v => set('solution', { image: v })} />
+            <MediaUploadField label="Imagen/Video Descriptivo" value={cfg.solution.image || ''} onChange={v => set('solution', { image: v })} />
           </div>
         </div>
       )}
