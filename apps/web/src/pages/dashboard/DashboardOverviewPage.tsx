@@ -4,7 +4,7 @@ import {
     Users, Truck, Store, FileText, ArrowUpRight,
     TrendingDown, Minus, Activity, DollarSign, Zap, Globe,
 } from 'lucide-react';
-import { NexoPosAccessButton } from '../../components/NexoPosAccessButton';
+
 import { useDashboardStats } from '../../hooks/useDashboard';
 import { useAuth } from '../../context/AuthContext';
 import { useProducts } from '../../hooks/useProducts';
@@ -492,10 +492,6 @@ export function DashboardOverviewPage() {
 
             </div>
 
-            {/* Acceso al POS */}
-            <div className="flex justify-end mt-6">
-                <NexoPosAccessButton userId={user?.id || ''} tenantId={user?.tenantId || ''} />
-            </div>
         </DashboardLayout>
     );
 }
