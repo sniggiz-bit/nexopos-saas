@@ -69,10 +69,15 @@ export function CheckoutPanel({
         }
     }, [activeStep]);
 
+    // Detect if credit is involved in the current payment selection
+    const hasCreditSingle = paymentType === 'SINGLE' && singleMethod === PaymentMethod.CARD;
+    const hasCreditMixed  = paymentType === 'MIXED' && (Number(mixedPayments[PaymentMethod.CARD]) || 0) > 0;
+    const isCreditPayment = hasCreditSingle || hasCreditMixed;
+
     const { data: customers = [] } = useQuery({
         queryKey: ['customers', user?.tenantId],
         queryFn: () => getCustomers(user?.tenantId),
-        enabled: dteType === 33 && !!user?.tenantId,
+        enabled: (dteType === 33 || isCreditPayment) && !!user?.tenantId,
         staleTime: 5 * 60 * 1000,
     });
 
@@ -110,7 +115,7 @@ export function CheckoutPanel({
         return 0;
     }, [paymentType, singleMethod, cashReceived, total]);
 
-    const canConfirm = dteType === 33 ? !!selectedCustomer : true;
+    const canConfirm = (dteType === 33 || isCreditPayment) ? !!selectedCustomer : true;
 
     const handleConfirm = useCallback(async () => {
         const customerId = selectedCustomer?.id;
@@ -130,7 +135,7 @@ export function CheckoutPanel({
                 // Impresión silenciosa con QZ Tray si está disponible, fallback iframe
                 printSaleAction(result, defaultFormat, tenant, printerName || undefined, useQzTray);
             }
-        } catch (err) {
+        } catch (_err) {
             // Handled in mutation/toast
         } finally {
             setIsSubmitting(false);
@@ -421,6 +426,62 @@ export function CheckoutPanel({
                         </div>
                     )}
                 </div>
+
+                {/* Customer picker for CREDITO payment (single or mixed) — only shown if dteType !== 33 to avoid duplication */}
+                {isCreditPayment && dteType !== 33 && (
+                    <div className={`rounded-xl transition-all duration-200 ring-2 ring-amber-400 p-2 bg-amber-50/30 dark:bg-amber-900/10`}>
+                        <p className="text-[10px] font-bold uppercase tracking-wider mb-2 text-amber-500">
+                            Cliente (requerido para Crédito)
+                        </p>
+                        <div className="relative">
+                            <Input
+                                placeholder="Buscar cliente por RUT o nombre..."
+                                value={selectedCustomer
+                                    ? `${selectedCustomer.name} (${selectedCustomer.rut})`
+                                    : customerSearch}
+                                onChange={(e) => {
+                                    if (selectedCustomer) setSelectedCustomer(null);
+                                    setCustomerSearch(e.target.value);
+                                    setShowCustomerDropdown(true);
+                                }}
+                                onFocus={() => setShowCustomerDropdown(true)}
+                                onBlur={() => setTimeout(() => setShowCustomerDropdown(false), 200)}
+                                className="text-sm pr-8"
+                            />
+                            {selectedCustomer && (
+                                <button
+                                    className="absolute right-2 top-1/2 -translate-y-1/2"
+                                    onClick={() => { setSelectedCustomer(null); setCustomerSearch(''); }}
+                                >
+                                    <XCircle className="w-4 h-4 text-slate-400 hover:text-slate-600" />
+                                </button>
+                            )}
+                            {showCustomerDropdown && !selectedCustomer && filteredCustomers.length > 0 && (
+                                <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg max-h-40 overflow-y-auto">
+                                    {filteredCustomers.map(c => (
+                                        <button
+                                            key={c.id}
+                                            onMouseDown={(e) => e.preventDefault()}
+                                            onClick={() => {
+                                                setSelectedCustomer(c);
+                                                setShowCustomerDropdown(false);
+                                            }}
+                                            className="w-full text-left px-3 py-2 text-sm hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors border-b border-slate-100 dark:border-slate-800 last:border-0"
+                                        >
+                                            <div className="font-medium text-slate-800 dark:text-slate-200">{c.name}</div>
+                                            <div className="text-xs text-slate-400">{c.rut}</div>
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+                            {!selectedCustomer && (
+                                <p className="text-xs text-amber-600 mt-1">
+                                    Se requiere cliente para registrar el crédito
+                                </p>
+                            )}
+                        </div>
+                    </div>
+                )}
 
                 {/* Payment mode tabs */}
                 <div className={`rounded-xl transition-all duration-200 ${activeStep === 'payment' ? 'ring-2 ring-indigo-400 p-2 bg-indigo-50/30 dark:bg-indigo-900/10' : 'opacity-75'}`}>
