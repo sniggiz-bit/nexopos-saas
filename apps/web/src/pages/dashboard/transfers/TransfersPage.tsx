@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeftRight, Plus, Search, Loader2 } from 'lucide-react';
+import { ArrowLeftRight, Plus, Search, Loader2, Eye } from 'lucide-react';
 import { api } from '../../../api/client';
 import { Badge } from '../../../components/ui/badge';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { NewTransferModal } from './components/NewTransferModal';
+import { TransferDetailsModal } from './components/TransferDetailsModal';
 import { DashboardLayout } from '../../../components/dashboard/DashboardLayout';
 
 interface Transfer {
@@ -14,6 +15,7 @@ interface Transfer {
     requestedBy: { name: string };
     status: string;
     createdAt: string;
+    note?: string | null;
     items: Array<{
         id: string;
         quantity: number;
@@ -25,6 +27,8 @@ export function TransfersPage() {
     const [transfers, setTransfers] = useState<Transfer[]>([]);
     const [loading, setLoading] = useState(true);
     const [isNewModalOpen, setIsNewModalOpen] = useState(false);
+    const [selectedTransfer, setSelectedTransfer] = useState<Transfer | null>(null);
+    const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
 
     const fetchTransfers = async () => {
@@ -118,19 +122,22 @@ export function TransfersPage() {
                                     <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-muted-foreground uppercase tracking-wider">
                                         Estado
                                     </th>
+                                    <th scope="col" className="px-6 py-4 text-right text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                                        Acciones
+                                    </th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-border">
                                 {loading ? (
                                     <tr>
-                                        <td colSpan={5} className="px-6 py-12 text-center text-muted-foreground/[0.5]">
+                                        <td colSpan={6} className="px-6 py-12 text-center text-muted-foreground/[0.5]">
                                             <Loader2 className="w-6 h-6 animate-spin mx-auto text-[#0099CC]" />
                                             <p className="mt-2 text-sm">Cargando traspasos...</p>
                                         </td>
                                     </tr>
                                 ) : filteredTransfers.length === 0 ? (
                                     <tr>
-                                        <td colSpan={5} className="px-6 py-12 text-center text-muted-foreground/[0.5]">
+                                        <td colSpan={6} className="px-6 py-12 text-center text-muted-foreground/[0.5]">
                                             <div className="mx-auto w-12 h-12 bg-card border border-border rounded-full flex items-center justify-center mb-3">
                                                 <ArrowLeftRight className="w-6 h-6 text-muted-foreground" />
                                             </div>
@@ -172,6 +179,18 @@ export function TransfersPage() {
                                                     {transfer.status === 'COMPLETED' ? 'Completado' : transfer.status === 'PENDING' ? 'Pendiente' : 'Cancelado'}
                                                 </Badge>
                                             </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                                <button
+                                                    onClick={() => {
+                                                        setSelectedTransfer(transfer);
+                                                        setIsDetailModalOpen(true);
+                                                    }}
+                                                    className="inline-flex items-center px-3 py-1.5 bg-card border border-border text-foreground hover:bg-muted text-xs font-bold rounded-lg shadow-sm hover:shadow-md transition-all space-x-1.5"
+                                                >
+                                                    <Eye className="w-3.5 h-3.5 text-muted-foreground" />
+                                                    <span>Ver Detalle</span>
+                                                </button>
+                                            </td>
                                         </tr>
                                     ))
                                 )}
@@ -187,6 +206,15 @@ export function TransfersPage() {
                         setIsNewModalOpen(false);
                         fetchTransfers();
                     }}
+                />
+
+                <TransferDetailsModal
+                    isOpen={isDetailModalOpen}
+                    onClose={() => {
+                        setIsDetailModalOpen(false);
+                        setSelectedTransfer(null);
+                    }}
+                    transfer={selectedTransfer}
                 />
             </div>
         </DashboardLayout>
