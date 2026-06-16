@@ -1,4 +1,4 @@
-import { Eye, FileX, ReceiptText, RefreshCw } from 'lucide-react';
+import { Eye, FileX, ReceiptText, RefreshCw, Trash2 } from 'lucide-react';
 import type { SaleRecord } from '../../services/sales.service';
 import {
     formatSaleDate,
@@ -97,15 +97,18 @@ function EmptyState() {
 
 // ── Main table ─────────────────────────────────────────────────────────────────
 interface SalesHistoryTableProps {
-    sales:              SaleRecord[];
-    isLoading:          boolean;
-    onEmitNotaCredito?: (saleId: string) => void;
-    emittingNcId?:      string | null;
+    sales:                 SaleRecord[];
+    isLoading:             boolean;
+    onEmitNotaCredito?:    (saleId: string) => void;
+    emittingNcId?:         string | null;
+    onDeleteInternalSale?: (saleId: string) => void;
+    deletingSaleId?:       string | null;
+    userRole?:             string;
 }
 
 const COLS = ['Folio / ID', 'Fecha y Hora', 'Sucursal', 'Método de Pago', 'Total', 'Estado', 'Acciones'];
 
-export function SalesHistoryTable({ sales, isLoading, onEmitNotaCredito, emittingNcId }: SalesHistoryTableProps) {
+export function SalesHistoryTable({ sales, isLoading, onEmitNotaCredito, emittingNcId, onDeleteInternalSale, deletingSaleId, userRole }: SalesHistoryTableProps) {
     const handleViewPdf = (sale: SaleRecord) => {
         const pdfUrl = resolvePdfUrl(sale);
         if (!pdfUrl) return;
@@ -148,6 +151,8 @@ export function SalesHistoryTable({ sales, isLoading, onEmitNotaCredito, emittin
                             sales.map((sale, idx) => {
                                 const pdfAvailable = !!resolvePdfUrl(sale);
                                 const canEmitNC    = sale.status === 'COMPLETED' && !!sale.dteFolio && !!onEmitNotaCredito;
+                                const isAdmin      = userRole === 'TENANT_ADMIN' || userRole === 'SUPER_ADMIN';
+                                const canDeleteInternal = sale.status === 'COMPLETED' && !sale.dteFolio && isAdmin && !!onDeleteInternalSale;
                                 const isEven       = idx % 2 === 0;
 
                                 return (
@@ -225,6 +230,27 @@ export function SalesHistoryTable({ sales, isLoading, onEmitNotaCredito, emittin
                                                             ? <RefreshCw className="w-3.5 h-3.5 animate-spin" />
                                                             : <ReceiptText className="w-3.5 h-3.5" />}
                                                         NC
+                                                    </button>
+                                                )}
+
+                                                {/* Eliminar Venta Interna */}
+                                                {canDeleteInternal && (
+                                                    <button
+                                                        onClick={() => {
+                                                            if (window.confirm('¿Estás seguro de que deseas eliminar esta venta de control interno? Se devolverá el stock y el dinero de caja.')) {
+                                                                onDeleteInternalSale!(sale.id);
+                                                            }
+                                                        }}
+                                                        disabled={deletingSaleId === sale.id}
+                                                        title="Eliminar venta de control interno"
+                                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all duration-150 disabled:opacity-50"
+                                                        style={{ background: C.redA(0.08), border: `1px solid ${C.redA(0.25)}`, color: C.red }}
+                                                        onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = C.redA(0.16)}
+                                                        onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = C.redA(0.08)}>
+                                                        {deletingSaleId === sale.id
+                                                            ? <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                                                            : <Trash2 className="w-3.5 h-3.5" />}
+                                                        Eliminar
                                                     </button>
                                                 )}
                                             </div>

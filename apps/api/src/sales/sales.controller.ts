@@ -8,7 +8,10 @@ import {
   Query,
   Param,
   UseGuards,
+  Delete,
+  ForbiddenException,
 } from '@nestjs/common';
+import { UserRole } from '@prisma/client';
 import { SalesService } from './sales.service';
 import { CreateSaleDto, CreatePaymentDto } from './dto/create-sale.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -114,5 +117,16 @@ export class SalesController {
     @Body() body: { email: string },
   ) {
     return this.salesService.sendSaleReceiptEmail(id, body.email);
+  }
+
+  @Delete(':id')
+  @HttpCode(HttpStatus.OK)
+  async deleteInternalSale(@Param('id') id: string, @CurrentUser() user: any) {
+    if (user.role !== UserRole.TENANT_ADMIN && user.role !== UserRole.SUPER_ADMIN) {
+      throw new ForbiddenException(
+        'Solo los administradores pueden eliminar ventas de control interno.',
+      );
+    }
+    return this.salesService.cancelInternalSale(id, user.tenantId, user.id);
   }
 }
