@@ -64,7 +64,8 @@ export function NewTransferModal({ isOpen, onClose, onSuccess }: NewTransferModa
             const response = await api.get('/products', {
                 params: { search: query, branchId: originBranchId } // Pass originBranchId to filter products by inventory
             });
-            setProductResults(response.data);
+            // Fixed bug: response.data is paginated object with structure { data: Product[], total: number, ... }
+            setProductResults(response.data.data || []);
         } catch (error) {
             console.error('Error searching products:', error);
             toast.error('Error al buscar productos');
@@ -111,7 +112,7 @@ export function NewTransferModal({ isOpen, onClose, onSuccess }: NewTransferModa
 
         // Check if already added
         if (items.some(item => item.product.id === product.id)) {
-            toast.error('Gelişti ya está en la lista');
+            toast.error('El producto ya está en la lista');
             return;
         }
 
@@ -198,56 +199,64 @@ export function NewTransferModal({ isOpen, onClose, onSuccess }: NewTransferModa
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
-            <div className="flex items-end justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-                <div className="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75" onClick={onClose} />
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div
+                className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
+                onClick={onClose}
+            />
 
-                <div className="inline-block w-full max-w-4xl p-6 my-8 overflow-hidden text-left align-middle transition-all transform bg-white shadow-xl rounded-2xl">
-                    <div className="flex justify-between items-center mb-5">
-                        <div>
-                            <h3 className="text-xl font-bold text-gray-900">Nuevo Traspaso de Stock</h3>
-                            <p className="text-sm text-gray-500 mt-1">Mueve inventario entre tus sucursales de forma segura.</p>
-                        </div>
-                        <button onClick={onClose} className="text-gray-400 hover:text-gray-500 transition-colors">
-                            <X className="w-6 h-6" />
-                        </button>
+            <div className="relative bg-card/[0.95] border border-border rounded-2xl shadow-xl w-full max-w-4xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 max-h-[90vh] flex flex-col">
+                {/* Header */}
+                <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-muted/30 flex-shrink-0">
+                    <div>
+                        <h3 className="text-xl font-bold text-foreground">Nuevo Traspaso de Stock</h3>
+                        <p className="text-xs text-gray-400 mt-0.5">Mueve inventario entre tus sucursales de forma segura.</p>
                     </div>
+                    <button onClick={onClose} className="text-gray-400 hover:text-foreground hover:bg-card p-2 rounded-full transition-colors">
+                        <X size={20} />
+                    </button>
+                </div>
 
-                    <form onSubmit={handleSubmit} className="space-y-6">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 bg-gray-50 rounded-xl border border-gray-100">
+                <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
+                    {/* Scrollable Body */}
+                    <div className="p-6 space-y-6 overflow-y-auto flex-1">
+                        {/* Branches Selection */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 bg-card/[0.5] rounded-xl border border-border">
                             <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-2">Sucursal Origen</label>
+                                <label className="block text-sm font-semibold text-gray-400 mb-2">Sucursal Origen</label>
                                 <select
                                     value={originBranchId}
                                     onChange={(e) => {
                                         setOriginBranchId(e.target.value);
                                         setItems([]); // Reset items because available stock changes
                                     }}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm"
+                                    className="w-full px-4 py-2.5 bg-card/[0.8] border border-border rounded-xl text-foreground focus:border-[#0099CC] focus:ring-1 focus:ring-[#0099CC] outline-none transition-all"
                                     required
                                 >
-                                    <option value="">Selecciona origen...</option>
+                                    <option value="" className="bg-[hsl(220,30%,8%)] text-gray-400">Selecciona origen...</option>
                                     {branches.map(b => (
-                                        <option key={b.id} value={b.id}>{b.name} {b.isMain ? '(Principal)' : ''}</option>
+                                        <option key={b.id} value={b.id} className="bg-[hsl(220,30%,8%)] text-white">
+                                            {b.name} {b.isMain ? '(Principal)' : ''}
+                                        </option>
                                     ))}
                                 </select>
                                 <p className="text-xs text-gray-500 mt-1.5 flex items-center">
-                                    <AlertCircle className="w-3 h-3 mr-1" />
+                                    <AlertCircle className="w-3.5 h-3.5 mr-1 text-gray-400" />
                                     El origen determina el stock disponible
                                 </p>
                             </div>
 
                             <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-2">Sucursal Destino</label>
+                                <label className="block text-sm font-semibold text-gray-400 mb-2">Sucursal Destino</label>
                                 <select
                                     value={destBranchId}
                                     onChange={(e) => setDestBranchId(e.target.value)}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm"
+                                    className="w-full px-4 py-2.5 bg-card/[0.8] border border-border rounded-xl text-foreground focus:border-[#0099CC] focus:ring-1 focus:ring-[#0099CC] outline-none transition-all"
                                     required
                                 >
-                                    <option value="">Selecciona destino...</option>
+                                    <option value="" className="bg-[hsl(220,30%,8%)] text-gray-400">Selecciona destino...</option>
                                     {branches.map(b => (
-                                        <option key={b.id} value={b.id} disabled={b.id === originBranchId}>
+                                        <option key={b.id} value={b.id} disabled={b.id === originBranchId} className="bg-[hsl(220,30%,8%)] text-white">
                                             {b.name} {b.isMain ? '(Principal)' : ''}
                                         </option>
                                     ))}
@@ -255,9 +264,9 @@ export function NewTransferModal({ isOpen, onClose, onSuccess }: NewTransferModa
                             </div>
                         </div>
 
-                        {/* Product Search - Only enable if origin is selected */}
+                        {/* Product Search */}
                         <div className={`relative ${!originBranchId ? 'opacity-50 pointer-events-none' : ''}`}>
-                            <label className="block text-sm font-semibold text-gray-700 mb-2">Agregar Productos</label>
+                            <label className="block text-sm font-semibold text-gray-400 mb-2">Agregar Productos</label>
                             <div className="relative">
                                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
                                 <input
@@ -265,27 +274,28 @@ export function NewTransferModal({ isOpen, onClose, onSuccess }: NewTransferModa
                                     placeholder={!originBranchId ? "Selecciona la sucursal de origen primero..." : "Buscar producto por nombre o SKU..."}
                                     value={productSearch}
                                     onChange={(e) => setProductSearch(e.target.value)}
-                                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm text-sm"
+                                    className="w-full pl-10 pr-4 py-3 bg-card/[0.8] border border-border rounded-xl text-foreground placeholder-slate-500 focus:border-[#0099CC] focus:ring-1 focus:ring-[#0099CC] outline-none transition-all text-sm"
                                 />
                                 {isSearching && (
-                                    <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 animate-spin text-blue-500" />
+                                    <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 animate-spin text-[#0099CC]" />
                                 )}
                             </div>
 
                             {/* Search Results */}
                             {productResults.length > 0 && (
-                                <div className="absolute z-10 w-full mt-1 bg-white rounded-lg shadow-lg border border-gray-200 max-h-60 overflow-auto">
+                                <div className="absolute z-10 w-full mt-1 bg-card/[0.98] border border-border rounded-xl shadow-2xl max-h-60 overflow-auto backdrop-blur-md">
                                     {productResults.map((product) => {
                                         const available = getAvailableStock(product, originBranchId);
                                         return (
                                             <div
                                                 key={product.id}
                                                 onClick={() => available > 0 && addProduct(product)}
-                                                className={`flex items-center justify-between px-4 py-3 border-b last:border-0 ${available > 0 ? 'hover:bg-blue-50 cursor-pointer' : 'opacity-60 bg-gray-50'
-                                                    } transition-colors`}
+                                                className={`flex items-center justify-between px-4 py-3 border-b border-border last:border-0 ${
+                                                    available > 0 ? 'hover:bg-muted/50 cursor-pointer' : 'opacity-60 bg-muted/20 cursor-not-allowed'
+                                                } transition-colors`}
                                             >
                                                 <div>
-                                                    <p className={`text-sm font-medium ${available > 0 ? 'text-gray-900' : 'text-gray-500 line-through'}`}>{product.name}</p>
+                                                    <p className={`text-sm font-medium ${available > 0 ? 'text-foreground' : 'text-gray-500 line-through'}`}>{product.name}</p>
                                                     <p className="text-xs text-gray-500 flex items-center gap-2 mt-0.5">
                                                         {product.sku && <span>SKU: {product.sku}</span>}
                                                         {product.barcode && <span>EAN: {product.barcode}</span>}
@@ -296,16 +306,16 @@ export function NewTransferModal({ isOpen, onClose, onSuccess }: NewTransferModa
                                                         {available > 0 ? (
                                                             <>
                                                                 <span className="text-gray-500 block">Stock Disponible</span>
-                                                                <span className="font-bold text-green-600 block text-sm">{available}</span>
+                                                                <span className="font-bold text-emerald-400 block text-sm">{available}</span>
                                                             </>
                                                         ) : (
-                                                            <span className="text-red-500 font-semibold px-2 py-1 bg-red-50 rounded-md">Sin stock</span>
+                                                            <span className="text-red-400 font-semibold px-2.5 py-1 bg-red-950/20 border border-red-500/20 rounded-md">Sin stock</span>
                                                         )}
                                                     </div>
                                                     {available > 0 && (
                                                         <button
                                                             type="button"
-                                                            className="p-1.5 bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200"
+                                                            className="p-1.5 bg-[#0099CC]/10 text-[#0099CC] hover:bg-[#0099CC]/20 border border-[#0099CC]/20 rounded-md transition-colors"
                                                         >
                                                             <Plus className="w-4 h-4" />
                                                         </button>
@@ -319,59 +329,64 @@ export function NewTransferModal({ isOpen, onClose, onSuccess }: NewTransferModa
 
                             {/* Empty Results Case */}
                             {productSearch.length >= 2 && !isSearching && productResults.length === 0 && (
-                                <div className="absolute z-10 w-full mt-1 bg-white rounded-lg shadow-lg border border-gray-200 p-4 text-center text-gray-500">
+                                <div className="absolute z-10 w-full mt-1 bg-card border border-border rounded-xl shadow-2xl p-4 text-center text-gray-400">
                                     No se encontraron productos con "{productSearch}"
                                 </div>
                             )}
-                        </div>    {/* Items Table */}
+                        </div>
+
+                        {/* Items Table */}
                         {items.length > 0 && (
-                            <div className="border border-gray-200 rounded-xl overflow-hidden shadow-sm">
-                                <table className="min-w-full divide-y divide-gray-200">
-                                    <thead className="bg-gray-50">
+                            <div className="border border-border rounded-xl overflow-hidden bg-card/[0.2]">
+                                <table className="min-w-full divide-y divide-border">
+                                    <thead className="bg-muted/30">
                                         <tr>
-                                            <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                            <th scope="col" className="px-6 py-3 text-left text-xs font-bold text-muted-foreground uppercase tracking-wider">
                                                 Producto
                                             </th>
-                                            <th scope="col" className="px-6 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                            <th scope="col" className="px-6 py-3 text-center text-xs font-bold text-muted-foreground uppercase tracking-wider">
                                                 Stock Origen
                                             </th>
-                                            <th scope="col" className="px-6 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                            <th scope="col" className="px-6 py-3 text-center text-xs font-bold text-muted-foreground uppercase tracking-wider">
                                                 Cant. a Transferir
                                             </th>
-                                            <th scope="col" className="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                            <th scope="col" className="px-6 py-3 text-right text-xs font-bold text-muted-foreground uppercase tracking-wider">
                                                 Acción
                                             </th>
                                         </tr>
                                     </thead>
-                                    <tbody className="bg-white divide-y divide-gray-200">
+                                    <tbody className="divide-y divide-border">
                                         {items.map((item, index) => (
-                                            <tr key={index}>
+                                            <tr key={index} className="hover:bg-muted/10 transition-colors">
                                                 <td className="px-6 py-4 whitespace-nowrap">
-                                                    <p className="text-sm font-medium text-gray-900">{item.product.name}</p>
+                                                    <p className="text-sm font-medium text-foreground">{item.product.name}</p>
                                                     {(item.product.sku || item.product.barcode) && (
-                                                        <p className="text-xs text-gray-500">
+                                                        <p className="text-xs text-gray-500 mt-0.5">
                                                             {item.product.sku} {item.product.barcode ? `| ${item.product.barcode}` : ''}
                                                         </p>
                                                     )}
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-center">
-                                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-muted border border-border text-foreground">
                                                         {item.availableStock} un.
                                                     </span>
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-center">
-                                                    <div>
+                                                    <div className="inline-block relative">
                                                         <input
                                                             type="number"
                                                             min="1"
                                                             max={item.availableStock}
                                                             value={item.quantity}
                                                             onChange={(e) => updateQuantity(index, e.target.value)}
-                                                            className={`w-24 px-3 py-1.5 text-center text-sm border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm transition-colors ${Number(item.quantity) > item.availableStock ? 'border-red-500 bg-red-50 text-red-900 focus:ring-red-500 focus:border-red-500' : 'border-gray-300'
-                                                                }`}
+                                                            className={`w-24 px-3 py-1.5 text-center text-sm bg-card border rounded-lg focus:border-[#0099CC] focus:ring-1 focus:ring-[#0099CC] outline-none transition-colors text-foreground ${
+                                                                Number(item.quantity) > item.availableStock 
+                                                                    ? 'border-red-500 bg-red-500/10 text-red-400 focus:border-red-500 focus:ring-red-500' 
+                                                                    : 'border-border'
+                                                            }`}
                                                         />
                                                         {Number(item.quantity) > item.availableStock && (
-                                                            <p className="text-[10px] text-red-600 font-medium absolute mt-1 w-full text-center">Excede stock!</p>
+                                                            <p className="text-[10px] text-red-400 font-medium absolute mt-1 w-full text-center">Excede stock!</p>
                                                         )}
                                                     </div>
                                                 </td>
@@ -379,7 +394,7 @@ export function NewTransferModal({ isOpen, onClose, onSuccess }: NewTransferModa
                                                     <button
                                                         type="button"
                                                         onClick={() => removeItem(index)}
-                                                        className="text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 p-2 rounded-lg transition-colors"
+                                                        className="text-red-400 hover:text-red-300 hover:bg-red-500/10 bg-transparent border border-red-500/15 p-2 rounded-lg transition-colors"
                                                     >
                                                         <X className="w-4 h-4" />
                                                     </button>
@@ -391,45 +406,47 @@ export function NewTransferModal({ isOpen, onClose, onSuccess }: NewTransferModa
                             </div>
                         )}
 
+                        {/* Note */}
                         <div>
-                            <label className="block text-sm font-semibold text-gray-700 mb-2">Nota de Traspaso (Opcional)</label>
+                            <label className="block text-sm font-semibold text-gray-400 mb-2">Nota de Traspaso (Opcional)</label>
                             <textarea
                                 value={note}
                                 onChange={(e) => setNote(e.target.value)}
                                 rows={2}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm"
+                                className="w-full px-4 py-3 bg-card/[0.8] border border-border rounded-xl text-foreground placeholder-slate-500 focus:border-[#0099CC] focus:ring-1 focus:ring-[#0099CC] outline-none transition-all text-sm"
                                 placeholder="Motivo o detalle adicional del traspaso..."
                             />
                         </div>
+                    </div>
 
-                        <div className="flex justify-end gap-3 pt-5 border-t border-gray-100">
-                            <button
-                                type="button"
-                                onClick={onClose}
-                                className="px-4 py-2 bg-white text-gray-700 font-medium text-sm rounded-lg hover:bg-gray-50 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-200 transition-colors"
-                            >
-                                Cancelar
-                            </button>
-                            <button
-                                type="submit"
-                                disabled={isSubmitting || items.length === 0}
-                                className="inline-flex items-center px-6 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-medium text-sm rounded-lg hover:from-blue-700 hover:to-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed shadow-md transition-all"
-                            >
-                                {isSubmitting ? (
-                                    <>
-                                        <RefreshCw className="w-5 h-5 mr-2 animate-spin" />
-                                        Ejecutando...
-                                    </>
-                                ) : (
-                                    <>
-                                        <Check className="w-5 h-5 mr-2" />
-                                        Ejecutar Traspaso
-                                    </>
-                                )}
-                            </button>
-                        </div>
-                    </form>
-                </div>
+                    {/* Footer */}
+                    <div className="flex justify-end gap-3 px-6 py-4 border-t border-border bg-muted/30 flex-shrink-0">
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            className="px-5 py-2.5 text-sm font-medium text-gray-400 bg-transparent hover:bg-card hover:text-foreground rounded-xl transition-colors"
+                        >
+                            Cancelar
+                        </button>
+                        <button
+                            type="submit"
+                            disabled={isSubmitting || items.length === 0}
+                            className="inline-flex items-center px-6 py-2.5 bg-[#0099CC] text-[#0B0F1A] font-bold text-sm rounded-xl hover:bg-[#00BCE0] hover:shadow-[0_0_15px_rgba(0,153,204,0.3)] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            {isSubmitting ? (
+                                <>
+                                    <RefreshCw className="w-5 h-5 mr-2 animate-spin" />
+                                    Ejecutando...
+                                </>
+                            ) : (
+                                <>
+                                    <Check className="w-5 h-5 mr-2" />
+                                    Ejecutar Traspaso
+                                </>
+                            )}
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     );
