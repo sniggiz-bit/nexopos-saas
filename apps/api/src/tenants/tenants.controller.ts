@@ -1,6 +1,7 @@
 import {
   Controller,
   Get,
+  Post,
   Patch,
   Param,
   Body,
@@ -71,4 +72,35 @@ export class TenantsController {
   updatePlan(@Param('id') id: string, @Body('planId') planId: string | null) {
     return this.tenantsService.updatePlan(id, planId);
   }
+
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Actualizar datos de facturación de inquilino' })
+  @Patch(':id/billing')
+  async updateBilling(
+    @Param('id') id: string,
+    @Request() req: any,
+    @Body() body: { name: string; phone?: string; rut?: string; giro?: string; address?: string },
+  ) {
+    const isSuperAdmin = req.user?.role === 'SUPER_ADMIN';
+    if (!isSuperAdmin && req.user?.tenantId !== id) {
+      throw new ForbiddenException('Solo puedes actualizar los datos de tu propio tenant.');
+    }
+    return this.tenantsService.updateBasic(id, body);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Cambiar de plan (Simulado)' })
+  @Post(':id/change-plan-simulate')
+  async changePlanSimulate(
+    @Param('id') id: string,
+    @Request() req: any,
+    @Body('planId') planId: string | null,
+  ) {
+    const isSuperAdmin = req.user?.role === 'SUPER_ADMIN';
+    if (!isSuperAdmin && req.user?.tenantId !== id) {
+      throw new ForbiddenException('Solo puedes cambiar el plan de tu propio tenant.');
+    }
+    return this.tenantsService.changePlanSimulate(id, planId);
+  }
 }
+

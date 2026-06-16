@@ -188,4 +188,9 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
   get tenantModuleAddon() {
     return this.prisma.tenantModuleAddon;
   }
+
+  get invoice() {
+    return this.prisma.invoice;
+  }
 }
+

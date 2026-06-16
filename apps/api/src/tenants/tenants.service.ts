@@ -172,4 +172,37 @@ export class TenantsService {
       return updatedTenant;
     });
   }
+
+  async updateBasic(id: string, data: { name: string; phone?: string; rut?: string; giro?: string; address?: string }) {
+    const tenant = await this.prisma.tenant.findUnique({
+      where: { id },
+    });
+    if (!tenant) throw new NotFoundException(`Tenant ${id} not found`);
+
+    return this.prisma.tenant.update({
+      where: { id },
+      data,
+    });
+  }
+
+  async changePlanSimulate(id: string, planId: string | null) {
+    // Update plan and settings limits first
+    await this.updatePlan(id, planId);
+
+    // Set simulated billing status as ACTIVE and set next payment to 30 days from now
+    const nextDate = new Date();
+    nextDate.setDate(nextDate.getDate() + 30);
+
+    return this.prisma.tenant.update({
+      where: { id },
+      data: {
+        billingStatus: 'ACTIVE',
+        nextPayment: nextDate,
+      },
+      include: {
+        plan: true,
+        settings: true,
+      } as any,
+    });
+  }
 }

@@ -15,3 +15,9 @@ export const getPublicPlans = async (): Promise<PublicPlan[]> => {
     const response = await api.get('/plans/public');
     return response.data;
 };
+
+export const changePlanSimulate = async (tenantId: string, planId: string | null): Promise<any> => {
+    const response = await api.post(`/tenants/${tenantId}/change-plan-simulate`, { planId });
+    return response.data;
+};
+

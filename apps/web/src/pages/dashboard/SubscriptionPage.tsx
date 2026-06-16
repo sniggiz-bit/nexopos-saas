@@ -1,8 +1,25 @@
 import { useState, useEffect } from 'react';
 import { api } from '@/lib/api';
-import { Zap, CheckCircle2, Crown, Store, Plug, FileText, Loader2, ArrowRight, ShieldCheck, Sparkles } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
+import {
+  Zap,
+  CheckCircle2,
+  Crown,
+  Store,
+  Plug,
+  FileText,
+  Loader2,
+  ArrowRight,
+  ShieldCheck,
+  Sparkles,
+  Building2,
+  Save,
+  AlertCircle,
+  RefreshCw
+} from 'lucide-react';
 import toast from 'react-hot-toast';
 import { DashboardLayout } from '../../components/dashboard/DashboardLayout';
+import { formatCurrency, formatDate } from '../../utils/format';
 
 interface ModuleDef {
   id: string;
@@ -25,10 +42,32 @@ interface TenantModulesResponse {
 }
 
 export function SubscriptionPage() {
+  const { user } = useAuth();
+  const tenantId = user?.tenantId;
+  const [activeTab, setActiveTab] = useState<'modules' | 'subscription'>('modules');
+
+  // Module store state
   const [allModules, setAllModules] = useState<ModuleDef[]>([]);
   const [activeModules, setActiveModules] = useState<TenantModulesResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [hiring, setHiring] = useState<string | null>(null);
+
+  // Subscription & Billing details state
+  const [tenantInfo, setTenantInfo] = useState<any>(null);
+  const [invoices, setInvoices] = useState<any[]>([]);
+  const [publicPlans, setPublicPlans] = useState<any[]>([]);
+  const [savingBilling, setSavingBilling] = useState(false);
+  const [changingPlan, setChangingPlan] = useState<string | null>(null);
+  const [payingInvoice, setPayingInvoice] = useState<string | null>(null);
+
+  // Billing profile form state
+  const [billingForm, setBillingForm] = useState({
+    name: '',
+    rut: '',
+    giro: '',
+    address: '',
+    phone: '',
+  });
 
   // Group definitions matching the admin panel
   const coreCodes = ['POS', 'QUOTES', 'CUSTOMERS', 'EXTRA_BRANCH', 'CREDITS'];
@@ -38,12 +77,28 @@ export function SubscriptionPage() {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [modulesRes, activeRes] = await Promise.all([
+      const [modulesRes, activeRes, tenantRes, invoicesRes, plansRes] = await Promise.all([
         api.get('/modules'),
-        api.get('/modules/me')
+        api.get('/modules/me'),
+        tenantId ? api.get(`/tenants/${tenantId}`) : Promise.resolve({ data: null }),
+        api.get('/billing/invoices'),
+        api.get('/plans/public')
       ]);
       setAllModules(modulesRes.data);
       setActiveModules(activeRes.data);
+
+      if (tenantRes.data) {
+        setTenantInfo(tenantRes.data);
+        setBillingForm({
+          name: tenantRes.data.name || '',
+          rut: tenantRes.data.rut || '',
+          giro: tenantRes.data.giro || '',
+          address: tenantRes.data.address || '',
+          phone: tenantRes.data.phone || '',
+        });
+      }
+      setInvoices(invoicesRes.data || []);
+      setPublicPlans(plansRes.data || []);
     } catch (err: any) {
       toast.error(err.response?.data?.message || 'Error al cargar la información de suscripción');
     } finally {
@@ -74,6 +129,70 @@ export function SubscriptionPage() {
       toast.error(err.response?.data?.message || 'Error al conectar con Mercado Pago');
     } finally {
       setHiring(null);
+    }
+  };
+
+  const handleSaveBilling = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!tenantId) return;
+
+    try {
+      setSavingBilling(true);
+      const response = await api.patch(`/tenants/${tenantId}/billing`, billingForm);
+      setTenantInfo((prev: any) => ({ ...prev, ...response.data }));
+      toast.success('Datos de facturación actualizados correctamente');
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Error al actualizar los datos de facturación');
+    } finally {
+      setSavingBilling(false);
+    }
+  };
+
+  const handleChangePlan = async (planId: string | null, planName: string) => {
+    if (!tenantId) return;
+    if (!window.confirm(`¿Estás seguro de cambiar al plan "${planName}"? Esta operación simulará la facturación y el cambio de límites.`)) {
+      return;
+    }
+
+    try {
+      setChangingPlan(planId);
+      const response = await api.post(`/tenants/${tenantId}/change-plan-simulate`, { planId });
+      setTenantInfo(response.data);
+      toast.success(`Plan cambiado a "${planName}" con éxito`);
+      
+      // Refresh related data
+      const [invoicesRes, activeRes] = await Promise.all([
+        api.get('/billing/invoices'),
+        api.get('/modules/me')
+      ]);
+      setInvoices(invoicesRes.data || []);
+      setActiveModules(activeRes.data);
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Error al cambiar de plan');
+    } finally {
+      setChangingPlan(null);
+    }
+  };
+
+  const handlePayInvoice = async (invoiceId: string) => {
+    try {
+      setPayingInvoice(invoiceId);
+      await api.post(`/billing/invoices/${invoiceId}/pay-simulate`);
+      toast.success('Pago simulado procesado con éxito');
+      
+      // Reload invoices & tenant state
+      const [invoicesRes, tenantRes] = await Promise.all([
+        api.get('/billing/invoices'),
+        api.get(`/tenants/${tenantId}`)
+      ]);
+      setInvoices(invoicesRes.data || []);
+      if (tenantRes.data) {
+        setTenantInfo(tenantRes.data);
+      }
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Error al procesar el pago');
+    } finally {
+      setPayingInvoice(null);
     }
   };
 
@@ -199,7 +318,7 @@ export function SubscriptionPage() {
               <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 border border-white/20 mb-6 backdrop-blur-md">
                 <Sparkles className="w-4 h-4 text-amber-400" />
                 <span className="text-xs font-bold tracking-widest uppercase text-slate-200">
-                  {activeModules?.tenant?.name || 'Cargando negocio...'} {activeModules?.tenant?.rut && `(${activeModules.tenant.rut})`}
+                  {tenantInfo?.name || activeModules?.tenant?.name || 'Cargando negocio...'} {tenantInfo?.rut && `(${tenantInfo.rut})`}
                 </span>
               </div>
               <h2 className="text-3xl md:text-4xl font-black text-white mb-4 tracking-tight leading-tight">
@@ -229,47 +348,417 @@ export function SubscriptionPage() {
           </div>
         </div>
 
-        {/* ── App Store Interno ── */}
-        <div className="space-y-16">
-          
-          {/* Core Modules */}
-          <section className="relative">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20">
-                <Store className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-              </div>
-              <h3 className="text-xl font-bold text-foreground tracking-tight">Operación Base y Ventas</h3>
-            </div>
-            <p className="text-sm text-muted-foreground ml-11 mb-2">Expande la gestión comercial y operativa del Punto de Venta.</p>
-            {renderModuleGrid(coreCodes, Store, "from-blue-500 to-cyan-500", "shadow-blue-500/30")}
-          </section>
-
-          {/* Integraciones */}
-          <section className="relative">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="p-2 rounded-lg bg-amber-100 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20">
-                <Plug className="w-5 h-5 text-amber-600 dark:text-amber-400" />
-              </div>
-              <h3 className="text-xl font-bold text-foreground tracking-tight">E-commerce e Integraciones</h3>
-            </div>
-            <p className="text-sm text-muted-foreground ml-11 mb-2">Conecta tu tienda física con Shopify, WooCommerce y Transbank.</p>
-            {renderModuleGrid(integrationsCodes, Plug, "from-amber-500 to-orange-500", "shadow-amber-500/30")}
-          </section>
-
-          {/* DTE */}
-          <section className="relative">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="p-2 rounded-lg bg-purple-100 dark:bg-purple-500/10 border border-purple-200 dark:border-purple-500/20">
-                <FileText className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-              </div>
-              <h3 className="text-xl font-bold text-foreground tracking-tight">Documentos Tributarios (SII)</h3>
-            </div>
-            <p className="text-sm text-muted-foreground ml-11 mb-2">Emisión automática de Boletas, Facturas y Notas de Crédito.</p>
-            {renderModuleGrid(dteCodes, FileText, "from-purple-500 to-pink-500", "shadow-purple-500/30")}
-          </section>
-
+        {/* Tabs Navigation */}
+        <div className="border-b border-slate-200 dark:border-white/[0.05] mb-8">
+          <nav className="flex gap-2">
+            <button
+              onClick={() => setActiveTab('modules')}
+              className={`flex items-center gap-2 px-6 py-3.5 text-sm font-semibold border-b-2 transition-all -mb-px
+                ${activeTab === 'modules'
+                  ? 'border-indigo-500 text-indigo-500 dark:text-indigo-400'
+                  : 'border-transparent text-slate-400 hover:text-slate-600 dark:hover:text-white'}`}
+            >
+              <Store size={16} />
+              Módulos y Add-ons
+            </button>
+            <button
+              onClick={() => setActiveTab('subscription')}
+              className={`flex items-center gap-2 px-6 py-3.5 text-sm font-semibold border-b-2 transition-all -mb-px
+                ${activeTab === 'subscription'
+                  ? 'border-indigo-500 text-indigo-500 dark:text-indigo-400'
+                  : 'border-transparent text-slate-400 hover:text-slate-600 dark:hover:text-white'}`}
+            >
+              <Crown size={16} />
+              Mi Suscripción
+            </button>
+          </nav>
         </div>
+
+        {/* Tab: App Store / Modules */}
+        {activeTab === 'modules' && (
+          <div className="space-y-16">
+            {/* Core Modules */}
+            <section className="relative">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20">
+                  <Store className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                </div>
+                <h3 className="text-xl font-bold text-foreground tracking-tight">Operación Base y Ventas</h3>
+              </div>
+              <p className="text-sm text-muted-foreground ml-11 mb-2">Expande la gestión comercial y operativa del Punto de Venta.</p>
+              {renderModuleGrid(coreCodes, Store, "from-blue-500 to-cyan-500", "shadow-blue-500/30")}
+            </section>
+
+            {/* Integraciones */}
+            <section className="relative">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="p-2 rounded-lg bg-amber-100 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20">
+                  <Plug className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+                </div>
+                <h3 className="text-xl font-bold text-foreground tracking-tight">E-commerce e Integraciones</h3>
+              </div>
+              <p className="text-sm text-muted-foreground ml-11 mb-2">Conecta tu tienda física con Shopify, WooCommerce y Transbank.</p>
+              {renderModuleGrid(integrationsCodes, Plug, "from-amber-500 to-orange-500", "shadow-amber-500/30")}
+            </section>
+
+            {/* DTE */}
+            <section className="relative">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="p-2 rounded-lg bg-purple-100 dark:bg-purple-500/10 border border-purple-200 dark:border-purple-500/20">
+                  <FileText className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                </div>
+                <h3 className="text-xl font-bold text-foreground tracking-tight">Documentos Tributarios (SII)</h3>
+              </div>
+              <p className="text-sm text-muted-foreground ml-11 mb-2">Emisión automática de Boletas, Facturas y Notas de Crédito.</p>
+              {renderModuleGrid(dteCodes, FileText, "from-purple-500 to-pink-500", "shadow-purple-500/30")}
+            </section>
+          </div>
+        )}
+
+        {/* Tab: Subscription Details */}
+        {activeTab === 'subscription' && (
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 relative z-10">
+            
+            {/* Left Column (Plan & Billing Profile) */}
+            <div className="lg:col-span-5 space-y-8">
+              
+              {/* Card Plan Activo */}
+              <div className="relative overflow-hidden rounded-2xl border p-6 shadow-lg bg-white/[0.02] border-slate-200 dark:border-white/[0.05] backdrop-blur-md">
+                <div className="absolute top-0 right-0 p-4">
+                  <Crown className="w-8 h-8 text-indigo-500/20" />
+                </div>
+                
+                <h3 className="text-xs font-bold uppercase tracking-widest text-indigo-400 mb-2">Plan Contratado</h3>
+                <div className="flex items-baseline gap-2 mb-4">
+                  <span className="text-3xl font-black text-foreground">
+                    {tenantInfo?.plan?.name || 'Sin Plan'}
+                  </span>
+                  {tenantInfo?.plan?.price !== undefined && (
+                    <span className="text-sm text-muted-foreground">
+                      ({formatCurrency(tenantInfo.plan.price)}/mes)
+                    </span>
+                  )}
+                </div>
+
+                {/* Billing Status Badge */}
+                <div className="mb-6">
+                  {tenantInfo?.billingStatus === 'ACTIVE' && (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      Suscripción Activa
+                    </span>
+                  )}
+                  {tenantInfo?.billingStatus === 'PAST_DUE' && (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-red-500/10 text-red-400 border border-red-500/20">
+                      <AlertCircle className="w-3.5 h-3.5" />
+                      Pago Atrasado
+                    </span>
+                  )}
+                  {tenantInfo?.billingStatus === 'CANCELED' && (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-slate-500/10 text-slate-400 border border-slate-500/20">
+                      <AlertCircle className="w-3.5 h-3.5" />
+                      Cancelada
+                    </span>
+                  )}
+                </div>
+
+                <div className="border-t border-slate-100 dark:border-white/[0.05] pt-4 space-y-3.5 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Próximo Cobro:</span>
+                    <span className="font-semibold text-foreground">
+                      {tenantInfo?.nextPayment ? formatDate(tenantInfo.nextPayment) : '—'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Límite Usuarios:</span>
+                    <span className="font-semibold text-foreground font-mono">
+                      {tenantInfo?.users?.length ?? 0} / {tenantInfo?.settings?.maxUsers ?? '∞'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Límite Sucursales:</span>
+                    <span className="font-semibold text-foreground font-mono">
+                      {tenantInfo?.branches?.length ?? 0} / {tenantInfo?.settings?.maxBranches ?? '∞'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Formulario Perfil de Facturación */}
+              <div className="rounded-2xl border p-6 shadow-lg bg-white/[0.02] border-slate-200 dark:border-white/[0.05] backdrop-blur-md">
+                <div className="flex items-center gap-2 mb-2">
+                  <Building2 className="w-5 h-5 text-indigo-400" />
+                  <h3 className="text-lg font-bold text-foreground">Perfil de Facturación</h3>
+                </div>
+                <p className="text-xs text-muted-foreground mb-6">
+                  Registra los datos legales para la facturación mensual del servicio de NexoPOS.
+                </p>
+
+                <form onSubmit={handleSaveBilling} className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-400 mb-1.5">Razón Social / Nombre Legal</label>
+                    <input
+                      type="text"
+                      required
+                      value={billingForm.name}
+                      onChange={e => setBillingForm(prev => ({ ...prev, name: e.target.value }))}
+                      className="w-full border border-slate-200 dark:border-white/[0.08] bg-card/[0.5] rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                      placeholder="Ej. Comercializadora Limitada"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-400 mb-1.5">RUT</label>
+                      <input
+                        type="text"
+                        required
+                        value={billingForm.rut}
+                        onChange={e => setBillingForm(prev => ({ ...prev, rut: e.target.value }))}
+                        className="w-full border border-slate-200 dark:border-white/[0.08] bg-card/[0.5] rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                        placeholder="Ej. 76.123.456-7"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-400 mb-1.5">Teléfono</label>
+                      <input
+                        type="text"
+                        value={billingForm.phone}
+                        onChange={e => setBillingForm(prev => ({ ...prev, phone: e.target.value }))}
+                        className="w-full border border-slate-200 dark:border-white/[0.08] bg-card/[0.5] rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                        placeholder="Ej. +56912345678"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-400 mb-1.5">Giro Comercial</label>
+                    <input
+                      type="text"
+                      value={billingForm.giro}
+                      onChange={e => setBillingForm(prev => ({ ...prev, giro: e.target.value }))}
+                      className="w-full border border-slate-200 dark:border-white/[0.08] bg-card/[0.5] rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                      placeholder="Ej. Venta al por menor de abarrotes"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-400 mb-1.5">Dirección Comercial</label>
+                    <input
+                      type="text"
+                      value={billingForm.address}
+                      onChange={e => setBillingForm(prev => ({ ...prev, address: e.target.value }))}
+                      className="w-full border border-slate-200 dark:border-white/[0.08] bg-card/[0.5] rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                      placeholder="Ej. Av. Providencia 1234, Oficina 501"
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={savingBilling}
+                    className="w-full relative overflow-hidden flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold transition-all duration-200 disabled:opacity-50"
+                  >
+                    {savingBilling ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin text-white" /> Guardando...
+                      </>
+                    ) : (
+                      <>
+                        <Save className="w-4 h-4" /> Guardar Perfil
+                      </>
+                    )}
+                  </button>
+                </form>
+              </div>
+            </div>
+
+            {/* Right Column (Plans List & Invoices Table) */}
+            <div className="lg:col-span-7 space-y-8">
+              
+              {/* Comparador de Planes */}
+              <div className="rounded-2xl border p-6 shadow-lg bg-white/[0.02] border-slate-200 dark:border-white/[0.05] backdrop-blur-md">
+                <div className="flex items-center gap-2 mb-2">
+                  <Zap className="w-5 h-5 text-indigo-400" />
+                  <h3 className="text-lg font-bold text-foreground">Planes de Suscripción</h3>
+                </div>
+                <p className="text-xs text-muted-foreground mb-6">
+                  Cambia de plan en cualquier momento. El cambio recalcula los límites del sistema al instante de forma simulada.
+                </p>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  {publicPlans.map(plan => {
+                    const isCurrent = tenantInfo?.planId === plan.id;
+                    const isChanging = changingPlan === plan.id;
+                    const features = Array.isArray(plan.features) ? plan.features : [];
+
+                    return (
+                      <div
+                        key={plan.id}
+                        className={`flex flex-col p-5 rounded-2xl border transition-all duration-300 ${
+                          isCurrent
+                            ? 'bg-indigo-500/[0.02] border-indigo-500/40 shadow-[0_0_20px_-5px_rgba(99,102,241,0.1)]'
+                            : 'bg-card/[0.3] border-slate-200 dark:border-white/[0.05] hover:border-slate-300 dark:hover:border-white/[0.1]'
+                        }`}
+                      >
+                        <div className="flex justify-between items-start mb-2">
+                          <h4 className="font-bold text-foreground text-base">{plan.name}</h4>
+                          {plan.isRecommended && (
+                            <span className="text-[9px] uppercase tracking-wider font-extrabold px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                              Recomendado
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs text-muted-foreground mb-4 leading-relaxed min-h-[32px]">
+                          {plan.description || 'Sin descripción.'}
+                        </p>
+                        <div className="mb-5">
+                          <span className="text-2xl font-black text-foreground">
+                            {formatCurrency(plan.price)}
+                          </span>
+                          <span className="text-xs text-muted-foreground ml-1">/mes</span>
+                        </div>
+
+                        {/* Bullet list of benefits */}
+                        <ul className="space-y-2 mb-6 flex-1">
+                          <li className="flex items-start gap-2 text-xs text-slate-300">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0 mt-0.5" />
+                            <span>Máx. Usuarios: {plan.maxUsers}</span>
+                          </li>
+                          <li className="flex items-start gap-2 text-xs text-slate-300">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0 mt-0.5" />
+                            <span>Máx. Productos: {plan.maxProducts}</span>
+                          </li>
+                          {features.map((feature: string, idx: number) => (
+                            <li key={idx} className="flex items-start gap-2 text-xs text-slate-300">
+                              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0 mt-0.5" />
+                              <span>{feature}</span>
+                            </li>
+                          ))}
+                        </ul>
+
+                        <button
+                          onClick={() => handleChangePlan(plan.id, plan.name)}
+                          disabled={isCurrent || changingPlan !== null}
+                          className={`w-full py-2.5 rounded-xl text-xs font-bold transition-all duration-200 ${
+                            isCurrent
+                              ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 cursor-default font-bold'
+                              : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-md hover:shadow-indigo-500/10'
+                          }`}
+                        >
+                          {isChanging ? (
+                            <Loader2 className="w-4 h-4 animate-spin mx-auto text-white" />
+                          ) : isCurrent ? (
+                            'Plan Activo'
+                          ) : (
+                            'Activar Plan'
+                          )}
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Historial de Cobros (Invoices) */}
+              <div className="rounded-2xl border p-6 shadow-lg bg-white/[0.02] border-slate-200 dark:border-white/[0.05] backdrop-blur-md">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <FileText className="w-5 h-5 text-indigo-400" />
+                    <h3 className="text-lg font-bold text-foreground">Historial de Cobros</h3>
+                  </div>
+                  <button
+                    onClick={async () => {
+                      const res = await api.get('/billing/invoices');
+                      setInvoices(res.data || []);
+                      toast.success('Historial actualizado');
+                    }}
+                    className="p-1.5 rounded-lg border border-slate-200 dark:border-white/[0.05] hover:bg-card text-slate-400 hover:text-white transition-colors"
+                  >
+                    <RefreshCw size={13} />
+                  </button>
+                </div>
+                <p className="text-xs text-muted-foreground mb-6">
+                  Consulta el estado de tus facturas de cobro recurrentes generadas para tu cuenta.
+                </p>
+
+                {invoices.length === 0 ? (
+                  <div className="text-center py-12 text-muted-foreground bg-card/[0.2] border border-dashed border-slate-200 dark:border-white/[0.05] rounded-xl">
+                    <FileText className="w-8 h-8 mx-auto mb-2 opacity-25" />
+                    <p className="text-sm font-semibold">Sin facturas emitidas</p>
+                    <p className="text-xs">Las facturas de cobro mensuales se generarán en la fecha de tu próximo pago.</p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm text-left">
+                      <thead>
+                        <tr className="border-b border-slate-200 dark:border-white/[0.05] text-xs font-bold text-slate-400 uppercase">
+                          <th className="pb-3 pr-2">ID Factura</th>
+                          <th className="pb-3 px-2">Vencimiento</th>
+                          <th className="pb-3 px-2">Monto</th>
+                          <th className="pb-3 px-2">Estado</th>
+                          <th className="pb-3 pl-2 text-right">Acción</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 dark:divide-white/[0.05]">
+                        {invoices.map(invoice => {
+                          const isPaying = payingInvoice === invoice.id;
+                          return (
+                            <tr key={invoice.id} className="hover:bg-white/[0.01]">
+                              <td className="py-3 pr-2 font-mono text-xs truncate max-w-[120px] text-slate-300" title={invoice.id}>
+                                {invoice.id}
+                              </td>
+                              <td className="py-3 px-2 text-slate-400 text-xs">
+                                {formatDate(invoice.dueDate)}
+                              </td>
+                              <td className="py-3 px-2 font-bold text-foreground">
+                                {formatCurrency(invoice.amount)}
+                              </td>
+                              <td className="py-3 px-2">
+                                {invoice.status === 'PAID' && (
+                                  <span className="inline-flex px-2 py-0.5 text-[10px] font-bold rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                                    Pagado
+                                  </span>
+                                )}
+                                {invoice.status === 'PENDING' && (
+                                  <span className="inline-flex px-2 py-0.5 text-[10px] font-bold rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                                    Pendiente
+                                  </span>
+                                )}
+                                {invoice.status === 'FAILED' && (
+                                  <span className="inline-flex px-2 py-0.5 text-[10px] font-bold rounded-full bg-red-500/10 text-red-400 border border-red-500/20">
+                                    Fallido
+                                  </span>
+                                )}
+                              </td>
+                              <td className="py-3 pl-2 text-right">
+                                {invoice.status !== 'PAID' ? (
+                                  <button
+                                    onClick={() => handlePayInvoice(invoice.id)}
+                                    disabled={payingInvoice !== null}
+                                    className="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition-colors"
+                                  >
+                                    {isPaying ? (
+                                      <Loader2 className="w-3.5 h-3.5 animate-spin mx-auto text-white" />
+                                    ) : (
+                                      'Simular Pago'
+                                    )}
+                                  </button>
+                                ) : (
+                                  <span className="text-slate-500 text-xs">—</span>
+                                )}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+
+            </div>
+          </div>
+        )}
+
       </div>
     </DashboardLayout>
   );
 }
+
