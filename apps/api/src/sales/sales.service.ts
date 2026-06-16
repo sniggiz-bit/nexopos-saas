@@ -548,4 +548,55 @@ export class SalesService {
       filename,
     );
   }
+
+  async cancelInternalSale(saleId: string, tenantId: string, userId: string) {
+    const sale = await this.prisma.sale.findUnique({
+      where: { id: saleId },
+      include: { items: true },
+    });
+
+    if (!sale) {
+      throw new NotFoundException('Venta no encontrada');
+    }
+
+    if (sale.tenantId !== tenantId) {
+      throw new BadRequestException('La venta no pertenece a este inquilino');
+    }
+
+    if (sale.dteFolio) {
+      throw new BadRequestException(
+        'No se puede eliminar una venta con folio DTE asignado. Utilice Nota de Crédito.',
+      );
+    }
+
+    if (sale.status === 'CANCELLED') {
+      throw new BadRequestException('Esta venta ya se encuentra anulada.');
+    }
+
+    await this.prisma.$transaction(async (prisma) => {
+      // 1. Marcar venta como ANULADA (CANCELLED)
+      await prisma.sale.update({
+        where: { id: saleId },
+        data: { status: 'CANCELLED' },
+      });
+
+      // 2. Devolver productos al inventario
+      for (const item of sale.items) {
+        await this.inventoryService.logMovement(
+          {
+            productId: item.productId,
+            branchId: sale.branchId,
+            quantity: Number(item.quantity), // Positivo = Ingreso
+            type: MovementType.RETURN,
+            reference: `Anulación venta de control interno ${saleId.substring(0, 8).toUpperCase()}`,
+            userId: userId,
+          },
+          prisma,
+        );
+      }
+    });
+
+    return { success: true };
+  }
 }
+

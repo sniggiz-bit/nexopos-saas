@@ -137,3 +137,9 @@ export async function sendSaleReceiptEmail(id: string, email: string): Promise<v
     await apiClient.post(`/sales/${id}/send-email`, { email });
 }
 
+export async function deleteInternalSale(id: string): Promise<{ success: boolean }> {
+    const response = await apiClient.delete<{ success: boolean }>(`/sales/${id}`);
+    return response.data;
+}
+
+

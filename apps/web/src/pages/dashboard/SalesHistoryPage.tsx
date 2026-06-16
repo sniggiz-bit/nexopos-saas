@@ -8,7 +8,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { formatCLP } from '../../services/sales.service';
 import type { SaleStatus } from '../../services/sales.service';
-import { emitNotaCredito } from '../../api/sales';
+import { emitNotaCredito, deleteInternalSale } from '../../api/sales';
 import {
     TrendingUp, CalendarDays,
     Store, RefreshCw, ShoppingCart, XCircle,
@@ -132,6 +132,22 @@ export function SalesHistoryPage() {
             }
         },
         onError: () => toast({ variant: 'destructive', title: 'Error', description: 'No se pudo emitir la Nota de Crédito' }),
+    });
+
+    const { mutate: deleteSale, isPending: isDeleting, variables: deletingSaleId } = useMutation({
+        mutationFn: (saleId: string) => deleteInternalSale(saleId),
+        onSuccess: (data) => {
+            if (data.success) {
+                toast({ title: 'Venta eliminada', description: 'El dinero fue retirado de caja y el stock devuelto.' });
+                refetch();
+            } else {
+                toast({ variant: 'destructive', title: 'Error al eliminar venta', description: 'No se pudo eliminar la venta de control interno.' });
+            }
+        },
+        onError: (err: any) => {
+            const msg = err?.response?.data?.message || 'No se pudo eliminar la venta de control interno.';
+            toast({ variant: 'destructive', title: 'Error', description: msg });
+        },
     });
 
     const sales          = useMemo(() => !filters.status ? salesRaw : salesRaw.filter(s => s.status === filters.status), [salesRaw, filters.status]);
@@ -275,6 +291,9 @@ export function SalesHistoryPage() {
                     isLoading={isLoading}
                     onEmitNotaCredito={saleId => emitNC(saleId)}
                     emittingNcId={isEmittingNC ? ncSaleId : null}
+                    onDeleteInternalSale={saleId => deleteSale(saleId)}
+                    deletingSaleId={isDeleting ? deletingSaleId : null}
+                    userRole={user?.role}
                 />
             </div>
         </DashboardLayout>
