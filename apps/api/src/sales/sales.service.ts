@@ -12,6 +12,8 @@ import { CreditsService } from '../credits/credits.service';
 import { InventoryService } from '../inventory/inventory.service';
 import { EventsService } from '../events/events.service';
 import { MovementType } from '@prisma/client';
+import { EmailService } from '../email/email.service';
+import * as fs from 'fs';
 
 interface GetSalesFilters {
   startDate?: string;
@@ -31,6 +33,7 @@ export class SalesService {
     private creditsService: CreditsService,
     private inventoryService: InventoryService,
     private eventsService: EventsService,
+    private emailService: EmailService,
   ) {}
 
   /**
@@ -482,5 +485,67 @@ export class SalesService {
     } catch (e) {
       this.logger.error(`Failed to generate receipt for sale ${saleId}`, e);
     }
+  }
+
+  async sendSaleReceiptEmail(saleId: string, email: string): Promise<void> {
+    const sale = await this.prisma.sale.findUnique({
+      where: { id: saleId },
+    });
+
+    if (!sale) {
+      throw new NotFoundException(`Venta con ID ${saleId} no encontrada`);
+    }
+
+    let pdfBuffer: Buffer | null = null;
+    let filename = `comprobante-${saleId}.pdf`;
+    let docTypeLabel = 'Comprobante';
+
+    if (sale.dteType === 39) docTypeLabel = 'Boleta';
+    else if (sale.dteType === 33) docTypeLabel = 'Factura';
+    else if (sale.dteType === 52) docTypeLabel = 'Guía de Despacho';
+
+    const folio = sale.dteFolio ? String(sale.dteFolio) : sale.id.substring(0, 8).toUpperCase();
+    filename = `${docTypeLabel.toLowerCase().replace(/ /g, '_')}-${folio}.pdf`;
+
+    // 1. Try DTE PDF if present
+    if (sale.dtePdfUrl && !sale.dtePdfUrl.includes('ejemplo-mock')) {
+      try {
+        const response = await fetch(sale.dtePdfUrl);
+        if (response.ok) {
+          const arrayBuffer = await response.arrayBuffer();
+          pdfBuffer = Buffer.from(arrayBuffer);
+        }
+      } catch (err) {
+        this.logger.error(`Error downloading DTE PDF from ${sale.dtePdfUrl}:`, err);
+      }
+    }
+
+    // 2. Fallback to Internal Receipt PDF
+    if (!pdfBuffer) {
+      let filepath = this.internalReceiptService.getReceiptPath(saleId);
+      if (!filepath || !fs.existsSync(filepath)) {
+        // Generate dynamically if missing
+        try {
+          await this.internalReceiptService.generateReceipt(saleId);
+          filepath = this.internalReceiptService.getReceiptPath(saleId);
+        } catch (e) {
+          this.logger.error(`Failed to generate receipt during email dispatch fallback for sale ${saleId}`, e);
+        }
+      }
+
+      if (filepath && fs.existsSync(filepath)) {
+        pdfBuffer = fs.readFileSync(filepath);
+      } else {
+        throw new BadRequestException('No se pudo encontrar ni generar el comprobante PDF para esta venta.');
+      }
+    }
+
+    await this.emailService.sendSaleReceiptEmail(
+      email,
+      docTypeLabel,
+      folio,
+      pdfBuffer!,
+      filename,
+    );
   }
 }

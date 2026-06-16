@@ -25,6 +25,7 @@ import { useAuth } from '@/context/AuthContext';
 import type { Customer } from '@/api/types';
 import { TransbankPaymentModal } from './TransbankPaymentModal';
 import type { TransbankPaymentResult } from '@/hooks/useTransbankPayment';
+import { toast } from 'react-hot-toast';
 
 interface PaymentModalProps {
     isOpen: boolean;
@@ -122,6 +123,37 @@ export function PaymentModal({
     }, [isSuccess, countdown, onClose, autoPrint, saleResult, hasAttemptedAutoPrint, defaultFormat, tenant, printerName, useQzTray]);
 
 
+    const [receiptEmail, setReceiptEmail] = useState('');
+    const [isSendingReceiptEmail, setIsSendingReceiptEmail] = useState(false);
+
+    // Pre-fill email when selectedCustomer changes or when saleResult is available
+    useEffect(() => {
+        if (selectedCustomer?.email) {
+            setReceiptEmail(selectedCustomer.email);
+        }
+    }, [selectedCustomer]);
+
+    useEffect(() => {
+        if (saleResult?.customer?.email) {
+            setReceiptEmail(saleResult.customer.email);
+        }
+    }, [saleResult]);
+
+    const handleSendReceiptEmail = async () => {
+        if (!saleResult?.id || !receiptEmail) return;
+        setIsSendingReceiptEmail(true);
+        try {
+            const { sendSaleReceiptEmail } = await import('@/api/sales');
+            await sendSaleReceiptEmail(saleResult.id, receiptEmail);
+            toast.success('Comprobante enviado exitosamente');
+        } catch (error: any) {
+            console.error(error);
+            toast.error(error.response?.data?.message || 'Error al enviar el comprobante');
+        } finally {
+            setIsSendingReceiptEmail(false);
+        }
+    };
+
     // Reset all states when modal opens
     useEffect(() => {
         if (isOpen) {
@@ -139,6 +171,8 @@ export function PaymentModal({
             setCustomerSearch('');
             setSelectedCustomer(null);
             setShowCustomerDropdown(false);
+            setReceiptEmail('');
+            setIsSendingReceiptEmail(false);
         }
     }, [isOpen]);
 
@@ -279,6 +313,37 @@ export function PaymentModal({
                                     <option value="A4">A4</option>
                                 </select>
                             )}
+                        </div>
+
+                        {/* Send receipt by email */}
+                        <Separator className="my-2" />
+                        <div className="space-y-2">
+                            <Label htmlFor="receipt-email" className="text-xs font-bold text-slate-500 dark:text-slate-400">
+                                Enviar comprobante por Email
+                            </Label>
+                            <div className="flex gap-2">
+                                <Input
+                                    id="receipt-email"
+                                    type="email"
+                                    placeholder="correo@cliente.com"
+                                    value={receiptEmail}
+                                    onChange={(e) => setReceiptEmail(e.target.value)}
+                                    className="flex-1 text-xs h-9 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800"
+                                />
+                                <Button
+                                    type="button"
+                                    onClick={handleSendReceiptEmail}
+                                    disabled={isSendingReceiptEmail || !receiptEmail}
+                                    size="sm"
+                                    className="bg-[#0099CC] hover:bg-[#00BCE0] text-[#0B0F1A] font-bold h-9 text-xs px-4"
+                                >
+                                    {isSendingReceiptEmail ? (
+                                        <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                                    ) : (
+                                        'Enviar'
+                                    )}
+                                </Button>
+                            </div>
                         </div>
                     </div>
 

@@ -106,4 +106,13 @@ export class SalesController {
   async emitNotaCredito(@Param('id') id: string, @CurrentUser() user: any) {
     return this.salesService.emitirNotaCreditoForSale(id, user.tenantId);
   }
+
+  @Post(':id/send-email')
+  @HttpCode(HttpStatus.OK)
+  async sendEmail(
+    @Param('id') id: string,
+    @Body() body: { email: string },
+  ) {
+    return this.salesService.sendSaleReceiptEmail(id, body.email);
+  }
 }

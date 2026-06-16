@@ -6,9 +6,10 @@ import { InternalReceiptService } from '../dte/internal-receipt.service';
 import { CreditsService } from '../credits/credits.service';
 import { DteService } from '../dte/dte.service';
 import { InventoryService } from '../inventory/inventory.service';
+import { EmailModule } from '../email/email.module';
 
 @Module({
-  imports: [EventsModule],
+  imports: [EventsModule, EmailModule],
   controllers: [SalesController],
   providers: [
     SalesService,

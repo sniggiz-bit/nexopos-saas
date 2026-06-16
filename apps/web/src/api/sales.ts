@@ -133,3 +133,7 @@ export async function emitNotaCredito(id: string): Promise<{ success: boolean; f
     return response.data;
 }
 
+export async function sendSaleReceiptEmail(id: string, email: string): Promise<void> {
+    await apiClient.post(`/sales/${id}/send-email`, { email });
+}
+
