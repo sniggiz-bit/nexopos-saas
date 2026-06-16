@@ -9,12 +9,14 @@ import { UpdateQuoteDto } from './dto/update-quote.dto';
 import { SalesService } from '../sales/sales.service';
 import { QuoteStatus } from '@prisma/client';
 import PDFDocument from 'pdfkit';
+import { EmailService } from '../email/email.service';
 
 @Injectable()
 export class QuotesService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly salesService: SalesService,
+    private readonly emailService: EmailService,
   ) { }
 
   private calculateTotals(items: any[]) {
@@ -264,11 +266,31 @@ export class QuotesService {
     return sale;
   }
 
+  async sendQuoteEmail(id: string, email: string, personalMessage?: string): Promise<void> {
+    const quote = await this.findOne(id);
+    const pdfBuffer = await this.generatePdf(id);
+
+    await this.emailService.sendQuoteEmail(
+      email,
+      quote.number || '',
+      pdfBuffer,
+      personalMessage,
+    );
+
+    // Update status to SENT if it was DRAFT
+    if (quote.status === QuoteStatus.DRAFT) {
+      await this.prisma.quote.update({
+        where: { id },
+        data: { status: QuoteStatus.SENT },
+      });
+    }
+  }
+
   async generatePdf(id: string): Promise<Buffer> {
     const quote = (await this.findOne(id)) as any;
 
     return new Promise((resolve) => {
-      const doc = new PDFDocument({ margin: 50 });
+      const doc = new PDFDocument({ margin: 50, size: 'A4' });
       const buffers: Buffer[] = [];
 
       doc.on('data', buffers.push.bind(buffers));
@@ -277,76 +299,129 @@ export class QuotesService {
         resolve(data);
       });
 
-      // Header
-      doc.fontSize(20).text('COTIZACIÓN', { align: 'center' });
-      doc.moveDown();
-      doc.fontSize(12).text(`Fecha: ${quote.issueDate.toLocaleDateString()}`, {
-        align: 'right',
-      });
-      doc.text(`Cotización #: ${quote.number}`, { align: 'right' });
+      // Accent color definitions
+      const primaryColor = '#0099CC';
+      const textColor = '#1F2937';
+      const lightGray = '#F9FAFB';
+      const borderGray = '#E5E7EB';
 
-      // Customer Info
-      doc.moveDown();
-      doc.text('Cliente:', { underline: true });
-      if (quote.customer) {
-        doc.text(`Nombre: ${quote.customer.name}`);
-        doc.text(`RUT: ${quote.customer.rut}`);
-        if (quote.customer.address)
-          doc.text(`Dirección: ${quote.customer.address}`);
-        if (quote.customer.phone) doc.text(`Teléfono: ${quote.customer.phone}`);
-      } else {
-        doc.text('Cliente General');
+      // Header Brand bar
+      doc.rect(50, 45, 495, 4).fill(primaryColor);
+
+      // Business details
+      doc.fillColor(textColor);
+      doc.fontSize(16).font('Helvetica-Bold').text('COTIZACIÓN', 50, 65);
+      
+      doc.fontSize(9).font('Helvetica').fillColor('#6B7280');
+      doc.text('Documento de control interno', 50, 85);
+
+      // Quote metadata (top right)
+      doc.fillColor(textColor);
+      doc.fontSize(10).font('Helvetica-Bold').text(`Cotización #:`, 360, 65, { width: 100, align: 'left' });
+      doc.font('Helvetica-Bold').fillColor(primaryColor).text(quote.number, 460, 65, { width: 85, align: 'right' });
+
+      doc.fontSize(9).font('Helvetica').fillColor('#6B7280');
+      doc.text(`Fecha Emisión:`, 360, 80, { width: 100, align: 'left' });
+      doc.fillColor(textColor).text(quote.issueDate ? quote.issueDate.toLocaleDateString('es-CL') : '—', 460, 80, { width: 85, align: 'right' });
+
+      doc.fillColor('#6B7280').text(`Válida hasta:`, 360, 93, { width: 100, align: 'left' });
+      doc.fillColor(textColor).text(quote.validUntil ? quote.validUntil.toLocaleDateString('es-CL') : '—', 460, 93, { width: 85, align: 'right' });
+
+      doc.fillColor('#6B7280').text(`Estado:`, 360, 106, { width: 100, align: 'left' });
+      const statusText = quote.status === 'ACCEPTED' ? 'VENDIDA' : quote.status === 'SENT' ? 'EMITIDA' : 'BORRADOR';
+      const statusColor = quote.status === 'ACCEPTED' ? '#10B981' : quote.status === 'SENT' ? primaryColor : '#6B7280';
+      doc.font('Helvetica-Bold').fillColor(statusColor).text(statusText, 460, 106, { width: 85, align: 'right' });
+
+      // Customer Info Box
+      doc.rect(50, 130, 495, 75).fill(lightGray);
+      doc.rect(50, 130, 495, 75).lineWidth(1).stroke(borderGray);
+
+      doc.fillColor('#6B7280').fontSize(8).font('Helvetica-Bold').text('COTIZADO PARA:', 65, 140);
+      
+      doc.fillColor(textColor).fontSize(11).font('Helvetica-Bold').text(quote.customer?.name || 'Cliente Casual', 65, 153);
+      
+      doc.fontSize(9).font('Helvetica').fillColor('#4B5563');
+      if (quote.customer?.rut) {
+        doc.text(`RUT: ${quote.customer.rut}`, 65, 170);
+      }
+      if (quote.customer?.address) {
+        doc.text(`Dirección: ${quote.customer.address}`, 65, 185);
+      }
+      
+      if (quote.customer?.phone || quote.customer?.email) {
+        let contact = '';
+        if (quote.customer?.phone) contact += `Tel: ${quote.customer.phone}`;
+        if (quote.customer?.email) contact += `${contact ? '  |  ' : ''}Email: ${quote.customer.email}`;
+        doc.text(contact, 280, 170);
       }
 
       // Items Table
-      doc.moveDown();
-      const tableTop = 250;
-      doc.font('Helvetica-Bold');
-      doc.text('Producto', 50, tableTop);
-      doc.text('Cant.', 280, tableTop);
-      doc.text('Precio', 350, tableTop);
-      doc.text('Total', 450, tableTop);
-      doc.font('Helvetica');
+      const tableTop = 230;
+      
+      // Draw Table Header Background
+      doc.rect(50, tableTop, 495, 22).fill(primaryColor);
+      
+      // Table Header Text
+      doc.fillColor('white').fontSize(9).font('Helvetica-Bold');
+      doc.text('Descripción del Producto', 60, tableTop + 7, { width: 230, align: 'left' });
+      doc.text('Precio Unit.', 290, tableTop + 7, { width: 80, align: 'right' });
+      doc.text('Cant.', 380, tableTop + 7, { width: 50, align: 'center' });
+      doc.text('Total', 440, tableTop + 7, { width: 95, align: 'right' });
 
-      let y = tableTop + 25;
-      quote.items.forEach((item) => {
-        doc.text(
-          (item.productName || item.product.name).substring(0, 35),
-          50,
-          y,
-        );
-        doc.text(item.quantity.toString(), 280, y);
-        doc.text(`$${item.price.toLocaleString()}`, 350, y);
-        doc.text(`$${item.total.toLocaleString()}`, 450, y);
-        y += 20;
+      let y = tableTop + 22;
+      doc.font('Helvetica').fontSize(9);
+
+      quote.items.forEach((item, index) => {
+        // Alternating row background
+        if (index % 2 === 0) {
+          doc.rect(50, y, 495, 22).fill('#FFFFFF');
+        } else {
+          doc.rect(50, y, 495, 22).fill(lightGray);
+        }
+        
+        // Bottom row border
+        doc.rect(50, y, 495, 22).lineWidth(0.5).stroke(borderGray);
+
+        doc.fillColor(textColor);
+        const name = (item.productName || item.product?.name || 'Producto').substring(0, 48);
+        doc.text(name, 60, y + 7, { width: 230, align: 'left' });
+        doc.text(`$${item.price.toLocaleString('es-CL')}`, 290, y + 7, { width: 80, align: 'right' });
+        doc.text(Number(item.quantity).toString(), 380, y + 7, { width: 50, align: 'center' });
+        doc.font('Helvetica-Bold').text(`$${item.total.toLocaleString('es-CL')}`, 440, y + 7, { width: 95, align: 'right' });
+        doc.font('Helvetica');
+
+        y += 22;
       });
 
-      // Totals
-      y += 20;
-      doc.fontSize(10);
-      doc.text(`Subtotal: $${quote.subtotal.toLocaleString()}`, 350, y);
+      // Totals section (right side alignment)
       y += 15;
-      doc.text(`IVA (19%): $${quote.tax.toLocaleString()}`, 350, y);
-      y += 20;
-      doc
-        .font('Helvetica-Bold')
-        .fontSize(14)
-        .text(`TOTAL: $${quote.total.toLocaleString()}`, 350, y);
+      
+      // Draw a clean box for totals
+      doc.rect(320, y, 225, 65).fill(lightGray);
+      doc.rect(320, y, 225, 65).lineWidth(1).stroke(borderGray);
 
+      doc.fillColor('#6B7280').fontSize(9);
+      doc.text('Subtotal (neto):', 335, y + 10, { width: 100, align: 'left' });
+      doc.fillColor(textColor).text(`$${quote.subtotal.toLocaleString('es-CL')}`, 445, y + 10, { width: 85, align: 'right' });
+
+      doc.fillColor('#6B7280').text('IVA (19%):', 335, y + 25, { width: 100, align: 'left' });
+      doc.fillColor(textColor).text(`$${quote.tax.toLocaleString('es-CL')}`, 445, y + 25, { width: 85, align: 'right' });
+
+      doc.fillColor(textColor).font('Helvetica-Bold').fontSize(11);
+      doc.text('TOTAL:', 335, y + 42, { width: 100, align: 'left' });
+      doc.fillColor(primaryColor).text(`$${quote.total.toLocaleString('es-CL')}`, 445, y + 42, { width: 85, align: 'right' });
+      doc.font('Helvetica').fontSize(9);
+
+      // Notes
       if (quote.notes) {
-        doc.moveDown();
-        doc.fontSize(10).font('Helvetica-Bold').text('Notas:');
-        doc.font('Helvetica').text(quote.notes);
+        y += 85;
+        doc.fillColor('#6B7280').font('Helvetica-Bold').fontSize(8).text('NOTAS Y CONDICIONES:', 50, y);
+        doc.fillColor(textColor).font('Helvetica').fontSize(9).text(quote.notes, 50, y + 12, { width: 495 });
       }
 
-      doc.moveDown();
-      doc
-        .fontSize(10)
-        .font('Helvetica')
-        .text(
-          'Nota: Este documento es una cotización y no representa una boleta o factura fiscal.',
-          { align: 'center' },
-        );
+      // PDF Footer notice
+      doc.fillColor('#9CA3AF').fontSize(8).text('Esta cotización es solo informativa y no constituye un comprobante de venta o documento fiscal.', 50, 740, { width: 495, align: 'center' });
+      doc.text('Generado por nexopos.cl', 50, 752, { width: 495, align: 'center' });
 
       doc.end();
     });

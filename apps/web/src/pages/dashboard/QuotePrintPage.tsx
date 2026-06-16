@@ -1,12 +1,17 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getQuote } from '@/api/quotes';
+import { getQuote, sendQuoteEmail } from '@/api/quotes';
 import { Button } from '@/components/ui/button';
-import { Printer, ArrowLeft, Download } from 'lucide-react';
+import { Printer, ArrowLeft, Download, Mail, Loader2 } from 'lucide-react';
 import { formatPrice } from '@/utils/formatters';
 import { useQuotePdf } from '@/hooks/useQuotes';
 import { useAuth } from '@/context/AuthContext';
 import { useTenant } from '@/hooks/useTenant';
+import { toast } from 'react-hot-toast';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 
 export function QuotePrintPage() {
     const { id } = useParams<{ id: string }>();
@@ -17,10 +22,21 @@ export function QuotePrintPage() {
     const generatePdf = useQuotePdf();
     const { data: tenant } = useTenant(user?.tenantId);
 
+    // Email Modal States
+    const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
+    const [emailRecipient, setEmailRecipient] = useState('');
+    const [emailMessage, setEmailMessage] = useState('');
+    const [isSendingEmail, setIsSendingEmail] = useState(false);
+
     useEffect(() => {
         if (id) {
             getQuote(id)
-                .then(setQuote)
+                .then((data) => {
+                    setQuote(data);
+                    if (data?.customer?.email) {
+                        setEmailRecipient(data.customer.email);
+                    }
+                })
                 .catch(() => setQuote(null))
                 .finally(() => setLoading(false));
         }
@@ -43,6 +59,26 @@ export function QuotePrintPage() {
         }
     };
 
+    const handleSendEmail = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!id || !emailRecipient) return;
+
+        setIsSendingEmail(true);
+        try {
+            await sendQuoteEmail(id, emailRecipient, emailMessage);
+            toast.success('Cotización enviada por correo exitosamente');
+            setIsEmailModalOpen(false);
+            setEmailMessage('');
+            // Reload quote to show updated status (SENT)
+            getQuote(id).then(setQuote).catch(() => {});
+        } catch (error: any) {
+            console.error(error);
+            toast.error(error.response?.data?.message || 'Error al enviar la cotización');
+        } finally {
+            setIsSendingEmail(false);
+        }
+    };
+
     const formatDate = (dateStr: string | null | undefined) => {
         if (!dateStr) return '—';
         try {
@@ -56,6 +92,7 @@ export function QuotePrintPage() {
     if (!quote) return <div className="p-8 text-center text-red-500">Cotización no encontrada</div>;
 
     const tenantInitial = (tenant?.name || 'N').charAt(0).toUpperCase();
+    
     // Prices are IVA-inclusive. Compute totals from items directly.
     const total = quote.items.reduce((sum: number, item: any) =>
         sum + (item.total ?? item.price * Number(item.quantity)), 0);
@@ -68,24 +105,28 @@ export function QuotePrintPage() {
 
                 {/* Toolbar — hidden on print */}
                 <div className="flex items-center justify-between print:hidden">
-                    <Button variant="outline" onClick={() => navigate('/dashboard/quotes')}>
+                    <Button variant="outline" onClick={() => navigate('/dashboard/quotes')} className="border-slate-300 hover:bg-slate-50 text-slate-700 bg-white">
                         <ArrowLeft className="w-4 h-4 mr-2" />
                         Volver
                     </Button>
                     <div className="flex gap-2">
-                        <Button variant="outline" onClick={handleDownload} disabled={generatePdf.isPending}>
+                        <Button variant="outline" onClick={() => setIsEmailModalOpen(true)} className="border-slate-300 hover:bg-slate-50 text-slate-700 bg-white">
+                            <Mail className="w-4 h-4 mr-2" />
+                            Enviar por Email
+                        </Button>
+                        <Button variant="outline" onClick={handleDownload} disabled={generatePdf.isPending} className="border-slate-300 hover:bg-slate-50 text-slate-700 bg-white">
                             <Download className="w-4 h-4 mr-2" />
                             Descargar PDF
                         </Button>
-                        <Button onClick={handlePrint}>
-                            <Printer className="w-4 h-4 mr-2" />
+                        <Button onClick={handlePrint} className="bg-[#0099CC] hover:bg-[#00BCE0] text-[#0B0F1A] font-bold shadow-sm">
+                            <Printer className="w-4 h-4 mr-2 stroke-[3]" />
                             Imprimir
                         </Button>
                     </div>
                 </div>
 
                 {/* Document */}
-                <div className="bg-white shadow-xl rounded-lg print:shadow-none print:rounded-none overflow-hidden">
+                <div className="bg-white shadow-xl rounded-lg print:shadow-none print:rounded-none overflow-hidden border border-slate-200 print:border-none">
 
                     {/* Header */}
                     <div className="p-10 pb-6">
@@ -93,8 +134,8 @@ export function QuotePrintPage() {
 
                             {/* Left: business info + logo */}
                             <div className="flex items-start gap-4">
-                                <div className="w-16 h-16 bg-indigo-600 rounded-xl flex items-center justify-center shrink-0 print:bg-indigo-600">
-                                    <span className="text-2xl font-black text-foreground">{tenantInitial}</span>
+                                <div className="w-16 h-16 bg-[#0099CC] rounded-xl flex items-center justify-center shrink-0 print:bg-[#0099CC]">
+                                    <span className="text-2xl font-black text-white">{tenantInitial}</span>
                                 </div>
                                 <div>
                                     <p className="text-lg font-bold text-gray-900 leading-tight">{tenant?.name || ''}</p>
@@ -109,7 +150,7 @@ export function QuotePrintPage() {
                             <div className="text-right shrink-0">
                                 <h1 className="text-4xl font-black text-gray-900 tracking-tight">COTIZACIÓN</h1>
                                 {quote.number && (
-                                    <p className="text-lg font-bold text-indigo-600 mt-1">{quote.number}</p>
+                                    <p className="text-lg font-bold text-[#0099CC] mt-1">{quote.number}</p>
                                 )}
                                 <div className="mt-2 space-y-0.5">
                                     <p className="text-sm text-gray-500">Fecha: {formatDate(quote.issueDate || quote.createdAt)}</p>
@@ -117,19 +158,21 @@ export function QuotePrintPage() {
                                         <p className="text-sm text-gray-500">Válida hasta: {formatDate(quote.validUntil)}</p>
                                     )}
                                 </div>
-                                <span className={`mt-3 inline-block px-3 py-1 rounded-full text-xs font-bold ${
+                                <span className={`mt-3 inline-block px-3 py-1 rounded-full text-xs font-bold border ${
                                     quote.status === 'ACCEPTED'
-                                        ? 'bg-green-100 text-green-800'
-                                        : 'bg-blue-100 text-blue-800'
+                                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                        : quote.status === 'SENT'
+                                        ? 'bg-[#0099CC]/10 text-[#0099CC] border-[#0099CC]/20'
+                                        : 'bg-slate-100 text-slate-700 border-slate-200'
                                 }`}>
-                                    {quote.status === 'ACCEPTED' ? 'VENDIDA' : 'PENDIENTE'}
+                                    {quote.status === 'ACCEPTED' ? 'VENDIDA' : quote.status === 'SENT' ? 'EMITIDA' : 'BORRADOR'}
                                 </span>
                             </div>
                         </div>
                     </div>
 
                     {/* Customer block */}
-                    <div className="mx-10 border-t border-gray-100" />
+                    <div className="mx-10 border-t border-slate-100" />
                     <div className="px-10 py-6">
                         <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2">Cotización para</p>
                         <p className="text-base font-bold text-gray-900">{quote.customer?.name || 'Cliente Casual'}</p>
@@ -142,7 +185,7 @@ export function QuotePrintPage() {
                     {/* Items table */}
                     <table className="w-full">
                         <thead>
-                            <tr className="bg-indigo-600 text-white">
+                            <tr className="bg-[#0099CC] text-white print:bg-[#0099CC]">
                                 <th className="text-left py-3 px-10 text-xs font-semibold uppercase tracking-wider">Descripción</th>
                                 <th className="text-right py-3 px-4 text-xs font-semibold uppercase tracking-wider">Precio Unit.</th>
                                 <th className="text-center py-3 px-4 text-xs font-semibold uppercase tracking-wider">Cant.</th>
@@ -151,7 +194,7 @@ export function QuotePrintPage() {
                         </thead>
                         <tbody>
                             {quote.items.map((item: any, i: number) => (
-                                <tr key={item.id} className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                                <tr key={item.id} className={i % 2 === 0 ? 'bg-white' : 'bg-slate-50'}>
                                     <td className="py-3 px-10 text-sm text-gray-800">
                                         {item.productName || item.product?.name || 'Producto'}
                                     </td>
@@ -178,7 +221,7 @@ export function QuotePrintPage() {
                             </div>
                             <div className="border-t border-gray-200 pt-3 flex justify-between text-xl font-black text-gray-900">
                                 <span>TOTAL</span>
-                                <span>{formatPrice(total)}</span>
+                                <span className="text-[#0099CC]">{formatPrice(total)}</span>
                             </div>
                         </div>
                     </div>
@@ -195,12 +238,79 @@ export function QuotePrintPage() {
                     )}
 
                     {/* Footer */}
-                    <div className="bg-gray-50 border-t border-gray-100 px-10 py-5 text-center">
+                    <div className="bg-slate-50 border-t border-slate-100 px-10 py-5 text-center">
                         <p className="text-xs text-gray-400">Esta cotización tiene validez de 15 días desde la fecha de emisión.</p>
                         <p className="text-xs text-gray-300 mt-1">Documento generado por nexopos.cl</p>
                     </div>
                 </div>
             </div>
+
+            {/* Email Modal */}
+            <Dialog open={isEmailModalOpen} onOpenChange={setIsEmailModalOpen}>
+                <DialogContent className="max-w-md bg-card border border-border text-foreground shadow-2xl rounded-2xl">
+                    <DialogHeader>
+                        <DialogTitle className="text-xl font-bold text-foreground">Enviar Cotización por Correo</DialogTitle>
+                        <DialogDescription className="text-sm text-gray-400">
+                            Envía esta cotización directamente al correo de tu cliente. Se adjuntará el documento en formato PDF.
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <form onSubmit={handleSendEmail} className="space-y-4 py-2">
+                        <div className="space-y-1">
+                            <Label htmlFor="email" className="text-xs font-semibold text-gray-400">Correo Electrónico Destinatario</Label>
+                            <Input
+                                id="email"
+                                type="email"
+                                required
+                                value={emailRecipient}
+                                onChange={(e) => setEmailRecipient(e.target.value)}
+                                placeholder="ejemplo@correo.com"
+                                className="w-full bg-card border-border rounded-xl focus:border-[#0099CC] focus:ring-1 focus:ring-[#0099CC] outline-none text-foreground placeholder-slate-500"
+                            />
+                        </div>
+
+                        <div className="space-y-1">
+                            <Label htmlFor="message" className="text-xs font-semibold text-gray-400">Mensaje Personalizado (Opcional)</Label>
+                            <Textarea
+                                id="message"
+                                value={emailMessage}
+                                onChange={(e) => setEmailMessage(e.target.value)}
+                                placeholder="Escribe un mensaje que acompañará a la cotización..."
+                                rows={4}
+                                className="w-full bg-card border-border rounded-xl focus:border-[#0099CC] focus:ring-1 focus:ring-[#0099CC] outline-none text-foreground placeholder-slate-500 text-sm"
+                            />
+                        </div>
+
+                        <DialogFooter className="pt-4 border-t border-border gap-2 sm:gap-0">
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                onClick={() => setIsEmailModalOpen(false)}
+                                className="text-gray-400 hover:text-foreground hover:bg-muted font-medium text-sm rounded-xl"
+                            >
+                                Cancelar
+                            </Button>
+                            <Button
+                                type="submit"
+                                disabled={isSendingEmail || !emailRecipient}
+                                className="bg-[#0099CC] text-[#0B0F1A] font-bold rounded-xl hover:bg-[#00BCE0] hover:shadow-[0_0_15px_rgba(0,153,204,0.3)] transition-all disabled:opacity-50"
+                            >
+                                {isSendingEmail ? (
+                                    <>
+                                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                        Enviando...
+                                    </>
+                                ) : (
+                                    <>
+                                        <Mail className="w-4 h-4 mr-2" />
+                                        Enviar Correo
+                                    </>
+                                )}
+                            </Button>
+                        </DialogFooter>
+                    </form>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }

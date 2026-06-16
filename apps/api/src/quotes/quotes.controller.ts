@@ -60,4 +60,12 @@ export class QuotesController {
   convert(@Param('id') id: string) {
     return this.quotesService.convertToSale(id);
   }
+
+  @Post(':id/send-email')
+  sendEmail(
+    @Param('id') id: string,
+    @Body() body: { email: string; message?: string },
+  ) {
+    return this.quotesService.sendQuoteEmail(id, body.email, body.message);
+  }
 }

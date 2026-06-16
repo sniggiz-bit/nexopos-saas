@@ -57,3 +57,7 @@ export async function generateQuotePdf(id: string): Promise<Blob> {
     const response = await apiClient.get(`/quotes/${id}/pdf`, { responseType: 'blob' });
     return response.data;
 }
+
+export async function sendQuoteEmail(id: string, email: string, message?: string): Promise<void> {
+    await apiClient.post(`/quotes/${id}/send-email`, { email, message });
+}
