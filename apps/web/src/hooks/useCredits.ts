@@ -3,10 +3,13 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getCredits, createCredit, addCreditPayment, AddPaymentData } from '../api/credits';
 import { useAuth } from '@/context/AuthContext';
 
-export function useCredits(tenantId: string = 'tenant-1', customerId?: string) {
+export function useCredits(customerId?: string) {
+    const { user } = useAuth();
+    const tenantId = user?.tenantId || 'tenant-1';
     return useQuery({
         queryKey: ['credits', tenantId, customerId],
         queryFn: () => getCredits(tenantId, customerId),
+        enabled: !!user?.tenantId,
     });
 }
 
