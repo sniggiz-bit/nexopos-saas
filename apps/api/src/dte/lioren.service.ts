@@ -241,15 +241,28 @@ export class LiorenService {
         timeout: 10000
       });
 
+      this.logger.log(`[RUT Lookup] Respuesta SRE: ${JSON.stringify(response.data)}`);
+
       if (response.data && response.data.result) {
+        // Fallbacks for common SRE API response structures
+        const actividades = response.data.actividades_economicas || response.data.actividades || [];
+        const extractedGiro = response.data.glosa_giro 
+                           || response.data.giro 
+                           || (actividades.length > 0 ? (actividades[0].descripcion || actividades[0].giro || actividades[0].actividad) : '');
+
+        const extractedAddress = response.data.direccion 
+                              || response.data.direccion_postal 
+                              || response.data.domicilio 
+                              || '';
+
         return {
           success: true,
           data: {
-            reasonSocial: response.data.razon_social,
-            giro: response.data.glosa_giro,
-            address: response.data.direccion,
-            comuna: response.data.ciudad || response.data.comuna,
-            city: response.data.ciudad,
+            reasonSocial: response.data.razon_social || response.data.nombre,
+            giro: extractedGiro,
+            address: extractedAddress,
+            comuna: response.data.comuna || response.data.ciudad || response.data.region || '',
+            city: response.data.ciudad || response.data.comuna || '',
           },
         };
       }
