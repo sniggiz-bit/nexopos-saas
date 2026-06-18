@@ -47,6 +47,7 @@ export class ProductsService {
     filters: {
       search?: string;
       categoryId?: string;
+      supplierId?: string;
       branchId?: string;
       page?: number;
       limit?: number;
@@ -66,6 +67,7 @@ export class ProductsService {
       tenantId,
       isActive: true,
       ...(filters.categoryId ? { categoryId: filters.categoryId } : {}),
+      ...(filters.supplierId ? { supplierId: filters.supplierId } : {}),
       ...(filters.search
         ? {
             OR: [
@@ -81,6 +83,7 @@ export class ProductsService {
       inventory: { include: { branch: true } },
       category: true,
       brand: true,
+      supplier: true,
       priceTiers: { orderBy: { minQuantity: 'asc' as const } },
     };
 
@@ -123,6 +126,9 @@ export class ProductsService {
       brand: product.brand
         ? { id: product.brand.id, name: product.brand.name }
         : undefined,
+      supplier: product.supplier
+        ? { id: product.supplier.id, name: product.supplier.name }
+        : undefined,
       priceTiers: product.priceTiers || [],
     }));
 
@@ -156,6 +162,7 @@ export class ProductsService {
         },
         category: true,
         brand: true,
+        supplier: true,
         priceTiers: {
           orderBy: { minQuantity: 'asc' },
         },
@@ -199,6 +206,12 @@ export class ProductsService {
           name: product.brand.name,
         }
         : undefined,
+      supplier: product.supplier
+        ? {
+          id: product.supplier.id,
+          name: product.supplier.name,
+        }
+        : undefined,
       priceTiers: product.priceTiers || [],
     };
   }
@@ -233,6 +246,15 @@ export class ProductsService {
       });
       if (!brand) {
         throw new NotFoundException('Marca no encontrada o no pertenece al inquilino');
+      }
+    }
+
+    if (productData.supplierId) {
+      const supplier = await this.prisma.supplier.findFirst({
+        where: { id: productData.supplierId, tenantId },
+      });
+      if (!supplier) {
+        throw new NotFoundException('Proveedor no encontrado o no pertenece al inquilino');
       }
     }
 
@@ -294,6 +316,7 @@ export class ProductsService {
       include: {
         category: true,
         brand: true,
+        supplier: true,
         inventory: true,
         priceTiers: true,
       },
@@ -329,6 +352,12 @@ export class ProductsService {
         ? {
           id: product.brand.id,
           name: product.brand.name,
+        }
+        : undefined,
+      supplier: product.supplier
+        ? {
+          id: product.supplier.id,
+          name: product.supplier.name,
         }
         : undefined,
       priceTiers: product.priceTiers || [],
@@ -371,6 +400,15 @@ export class ProductsService {
       });
       if (!brand) {
         throw new NotFoundException('Marca no encontrada o no pertenece al inquilino');
+      }
+    }
+
+    if (updateProductDto.supplierId) {
+      const supplier = await this.prisma.supplier.findFirst({
+        where: { id: updateProductDto.supplierId, tenantId },
+      });
+      if (!supplier) {
+        throw new NotFoundException('Proveedor no encontrado o no pertenece al inquilino');
       }
     }
 
@@ -426,6 +464,7 @@ export class ProductsService {
         isActive: updateProductDto.isActive,
         categoryId: updateProductDto.categoryId,
         brandId: updateProductDto.brandId,
+        supplierId: updateProductDto.supplierId,
         priceTiers: updateProductDto.priceTiers
           ? {
             deleteMany: {}, // Delete old tiers
@@ -439,6 +478,7 @@ export class ProductsService {
       include: {
         category: true,
         brand: true,
+        supplier: true,
         inventory: true, // Keep this include to get tenantId for findOne call
       },
     });

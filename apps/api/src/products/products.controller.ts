@@ -45,12 +45,14 @@ export class ProductsController {
     @CurrentUser() user: any,
     @Query('search')     search?: string,
     @Query('categoryId') categoryId?: string,
+    @Query('supplierId') supplierId?: string,
     @Query('page')       page?: string,
     @Query('limit')      limit?: string,
   ) {
     return this.productsService.findAll(user.tenantId, {
       search,
       categoryId,
+      supplierId,
       branchId: user.branchId,
       page:  page  ? parseInt(page,  10) : undefined,
       limit: limit ? parseInt(limit, 10) : undefined,
