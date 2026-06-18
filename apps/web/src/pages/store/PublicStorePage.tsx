@@ -782,6 +782,17 @@ export const PublicStorePage = () => {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<StoreProduct | null>(null);
+  
+  // Helper para contraste de texto
+  const getContrastYIQ = (hexcolor: string) => {
+    const hex = hexcolor.replace("#", "");
+    const r = parseInt(hex.substr(0, 2), 16);
+    const g = parseInt(hex.substr(2, 2), 16);
+    const b = parseInt(hex.substr(4, 2), 16);
+    const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
+    return (yiq >= 128) ? '#000000' : '#ffffff';
+  };
+
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
 
   const [searchInput, setSearchInput] = useState('');
@@ -977,8 +988,11 @@ export const PublicStorePage = () => {
         {/* Announcement Bar */}
         {store?.storeSettings.announcementEnabled && store.storeSettings.announcementText && (
           <div
-            className="w-full py-2 px-4 text-center text-xs font-semibold text-foreground tracking-wide"
-            style={{ backgroundColor: store.storeSettings.announcementColor || '#10b981' }}
+            className="w-full py-2 px-4 text-center text-xs font-semibold tracking-wide"
+            style={{ 
+              backgroundColor: store.storeSettings.announcementColor || '#10b981',
+              color: getContrastYIQ(store.storeSettings.announcementColor || '#10b981')
+            }}
           >
             {store.storeSettings.announcementText}
           </div>
