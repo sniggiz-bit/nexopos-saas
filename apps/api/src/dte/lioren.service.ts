@@ -263,6 +263,7 @@ export class LiorenService {
             address: extractedAddress,
             comuna: response.data.comuna || response.data.ciudad || response.data.region || '',
             city: response.data.ciudad || response.data.comuna || '',
+            _raw: response.data // Agregado temporalmente para poder ver el JSON completo desde el navegador
           },
         };
       }
