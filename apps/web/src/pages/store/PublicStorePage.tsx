@@ -179,11 +179,16 @@ const ProductCard = ({ product, brandColor, onAddToCart, onViewDetail }: Product
 
       {/* Info — compacto */}
       <div className="p-2.5 flex flex-col gap-1">
-        {product.brand && (
-          <p className="text-[9px] uppercase tracking-widest font-semibold text-gray-400 dark:text-slate-500 leading-none">
-            {product.brand.name}
+        <div className="flex justify-between items-start">
+          {product.brand ? (
+            <p className="text-[9px] uppercase tracking-widest font-semibold text-gray-400 dark:text-slate-500 leading-none">
+              {product.brand.name}
+            </p>
+          ) : <div />}
+          <p className="text-[9px] font-medium text-gray-500 dark:text-slate-400 leading-none">
+            Stock: {product.stock}
           </p>
-        )}
+        </div>
         <h3
           className="text-xs font-semibold text-gray-800 dark:text-slate-200 leading-snug line-clamp-2 cursor-pointer hover:text-gray-600 dark:text-slate-350 transition-colors"
           onClick={() => onViewDetail(product)}
@@ -191,10 +196,12 @@ const ProductCard = ({ product, brandColor, onAddToCart, onViewDetail }: Product
           {product.name}
         </h3>
         <div className="flex items-center justify-between mt-0.5">
-          <p className="text-sm font-bold text-gray-900 dark:text-white">{formatCLP(product.price)}</p>
-          {product.unitType === 'WEIGHT' && (
-            <p className="text-[9px] text-gray-400 dark:text-slate-500">/kg</p>
-          )}
+          <div className="flex items-baseline gap-0.5">
+            <p className="text-sm font-bold text-gray-900 dark:text-white">{formatCLP(product.price)}</p>
+            {product.unitType === 'WEIGHT' && (
+              <p className="text-[9px] text-gray-400 dark:text-slate-500">/kg</p>
+            )}
+          </div>
         </div>
       </div>
     </div>
