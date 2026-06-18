@@ -473,7 +473,20 @@ const GeneralTab = ({ cfg, onChange, storeLink, onCopyLink }: {
 
 // ── Tab: Apariencia ───────────────────────────────────────────────────────────
 
-const AparienciaTab = ({ cfg, onChange }: { cfg: StoreConfig; onChange: (p: Partial<StoreConfig>) => void }) => {
+const AparienciaTab = ({ cfg, onChange }: {
+    cfg: StoreConfig;
+    onChange: (p: Partial<StoreConfig>) => void;
+}) => {
+    const getContrastYIQ = (hexcolor: string) => {
+        if (!hexcolor) return '#000000';
+        const hex = hexcolor.replace("#", "");
+        const r = parseInt(hex.substr(0, 2), 16);
+        const g = parseInt(hex.substr(2, 2), 16);
+        const b = parseInt(hex.substr(4, 2), 16);
+        const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
+        return (yiq >= 128) ? '#000000' : '#ffffff';
+    };
+
     const addSlider = () => onChange({
         sliders: [...cfg.sliders, {
             id: Date.now().toString(),
@@ -569,8 +582,11 @@ const AparienciaTab = ({ cfg, onChange }: { cfg: StoreConfig; onChange: (p: Part
                             />
                             {cfg.announcementText && (
                                 <div
-                                    className="flex-1 text-xs px-3 py-2 rounded-lg text-foreground text-center font-bold"
-                                    style={{ backgroundColor: cfg.announcementColor }}
+                                    className="flex-1 text-xs px-3 py-2 rounded-lg text-center font-bold"
+                                    style={{ 
+                                        backgroundColor: cfg.announcementColor,
+                                        color: getContrastYIQ(cfg.announcementColor)
+                                    }}
                                 >
                                     {cfg.announcementText}
                                 </div>

@@ -3,6 +3,7 @@ import { DashboardLayout } from '../../components/dashboard/DashboardLayout';
 import { useProducts } from '../../hooks/useProducts';
 import { useCategories } from '../../hooks/useCategories';
 import { useBrands } from '../../hooks/useBrands';
+import { useSuppliers } from '../../hooks/useSuppliers';
 import { InventoryKardexModal } from '../../components/dashboard/InventoryKardexModal';
 import { StockAdjustModal } from '../../components/dashboard/StockAdjustModal';
 import { Search, History, Loader2, Warehouse, AlertCircle, Download, Upload, X, PackagePlus } from 'lucide-react';
@@ -17,6 +18,7 @@ export function InventoryPage() {
     const [searchTerm, setSearchTerm] = useState('');
     const [categoryFilter, setCategoryFilter] = useState('');
     const [brandFilter, setBrandFilter] = useState('');
+    const [supplierFilter, setSupplierFilter] = useState('');
     const [isKardexOpen, setIsKardexOpen] = useState(false);
     const [productForKardex, setProductForKardex] = useState<Product | null>(null);
     const [isAdjustOpen, setIsAdjustOpen] = useState(false);
@@ -29,6 +31,7 @@ export function InventoryPage() {
     const { data: products, isLoading } = useProducts(user?.tenantId);
     const { data: categories } = useCategories(user?.tenantId || '');
     const { data: brands } = useBrands(user?.tenantId || '');
+    const { data: suppliers } = useSuppliers(user?.tenantId || '');
 
     const filteredProducts = (products || []).filter(product => {
         const matchesSearch =
@@ -37,7 +40,8 @@ export function InventoryPage() {
             product.sku?.toLowerCase().includes(searchTerm.toLowerCase());
         const matchesCategory = !categoryFilter || product.category?.id === categoryFilter;
         const matchesBrand = !brandFilter || product.brand?.id === brandFilter;
-        return matchesSearch && matchesCategory && matchesBrand;
+        const matchesSupplier = !supplierFilter || product.supplier?.id === supplierFilter;
+        return matchesSearch && matchesCategory && matchesBrand && matchesSupplier;
     });
 
     const handleKardex = (product: Product) => {
@@ -57,6 +61,7 @@ export function InventoryPage() {
             'Código de Barras': p.barcode || '',
             'Categoría': p.category?.name || '',
             'Marca': p.brand?.name || '',
+            'Proveedor': p.supplier?.name || '',
             'Precio': p.price,
             'Costo': p.costPrice,
             'Stock Actual': p.stock,
@@ -172,7 +177,7 @@ export function InventoryPage() {
         }
     };
 
-    const hasFilters = searchTerm || categoryFilter || brandFilter;
+    const hasFilters = searchTerm || categoryFilter || brandFilter || supplierFilter;
 
     return (
         <DashboardLayout>
@@ -257,9 +262,19 @@ export function InventoryPage() {
                             <option key={brand.id} value={brand.id} className="bg-[hsl(var(--card))]">{brand.name}</option>
                         ))}
                     </select>
+                    <select
+                        value={supplierFilter}
+                        onChange={(e) => setSupplierFilter(e.target.value)}
+                        className="px-3 py-2 border border-border rounded-lg text-sm text-foreground/[0.85] bg-[hsl(var(--card))] shadow-sm focus:ring-2 focus:ring-[#0099CC] outline-none min-w-[140px]"
+                    >
+                        <option value="" className="bg-[hsl(var(--card))]">Todos los proveedores</option>
+                        {(suppliers || []).map(supplier => (
+                            <option key={supplier.id} value={supplier.id} className="bg-[hsl(var(--card))]">{supplier.name}</option>
+                        ))}
+                    </select>
                     {hasFilters && (
                         <button
-                            onClick={() => { setSearchTerm(''); setCategoryFilter(''); setBrandFilter(''); }}
+                            onClick={() => { setSearchTerm(''); setCategoryFilter(''); setBrandFilter(''); setSupplierFilter(''); }}
                             className="inline-flex items-center px-3 py-2 text-sm text-muted-foreground/[0.6] hover:text-foreground border border-border rounded-lg hover:bg-card transition-colors"
                         >
                             <X className="w-4 h-4 mr-1" /> Limpiar
@@ -281,7 +296,7 @@ export function InventoryPage() {
                             <tr>
                                 <th className="px-6 py-4 text-left text-xs font-bold text-muted-foreground uppercase tracking-wider">Producto</th>
                                 <th className="px-6 py-4 text-left text-xs font-bold text-muted-foreground uppercase tracking-wider">Identificadores</th>
-                                <th className="px-6 py-4 text-left text-xs font-bold text-muted-foreground uppercase tracking-wider">Familia / Marca</th>
+                                <th className="px-6 py-4 text-left text-xs font-bold text-muted-foreground uppercase tracking-wider">Familia / Marca / Proveedor</th>
                                 <th className="px-6 py-4 text-center text-xs font-bold text-muted-foreground uppercase tracking-wider">Stock Actual</th>
                                 <th className="px-6 py-4 text-center text-xs font-bold text-muted-foreground uppercase tracking-wider">Estado</th>
                                 <th className="px-6 py-4 text-right text-xs font-bold text-muted-foreground uppercase tracking-wider">Acciones</th>
@@ -328,7 +343,7 @@ export function InventoryPage() {
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <div className="text-xs text-foreground/[0.85] font-semibold">{product.category?.name || <span className="text-muted-foreground/[0.3]">Sin familia</span>}</div>
-                                            <div className="text-xs text-muted-foreground/[0.4]">{product.brand?.name || <span className="text-muted-foreground/[0.3]">Sin marca</span>}</div>
+                                            <div className="text-xs text-muted-foreground/[0.4]">{product.brand?.name || <span className="text-muted-foreground/[0.3]">Sin marca</span>} • {product.supplier?.name || <span className="text-muted-foreground/[0.3]">Sin proveedor</span>}</div>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-center">
                                             <div className="relative group cursor-help inline-block">

@@ -20,6 +20,7 @@ const navigationGroups = [
     {
         title: 'Principal',
         items: [
+            { name: 'Suscripción',    href: '/dashboard/subscription',           icon: Award },
             { name: 'Resumen',        href: '/dashboard',                        icon: LayoutDashboard },
         ],
     },
@@ -55,7 +56,6 @@ const navigationGroups = [
     {
         title: 'Administración',
         items: [
-            { name: 'Suscripción',    href: '/dashboard/subscription',           icon: Award },
             { name: 'Sucursales',     href: '/dashboard/branches',               icon: Store },
             { name: 'Personal',       href: '/dashboard/users',                  icon: UserCog },
             { name: 'Créditos',       href: '/dashboard/credits',                icon: CreditCard },

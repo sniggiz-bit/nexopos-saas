@@ -60,6 +60,11 @@ export class CreateProductDto {
   @IsString()
   brandId?: string;
 
+
+  @IsOptional()
+  @IsString()
+  supplierId?: string;
+
   @IsOptional()
   @IsString()
   image?: string;

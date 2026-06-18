@@ -167,7 +167,7 @@ const ProductCard = ({ product, brandColor, onAddToCart, onViewDetail }: Product
           <div className="absolute bottom-0 left-0 right-0 translate-y-full group-hover:translate-y-0 transition-transform duration-200">
             <button
               onClick={e => { e.stopPropagation(); onAddToCart(product); }}
-              className="w-full py-2 text-foreground text-xs font-bold tracking-wide flex items-center justify-center gap-1.5 hover:brightness-90 transition-all active:scale-98"
+              className="w-full py-2 text-white text-xs font-bold tracking-wide flex items-center justify-center gap-1.5 hover:brightness-90 transition-all active:scale-98"
               style={{ backgroundColor: brandColor }}
             >
               <Plus className="w-3.5 h-3.5" />
@@ -179,11 +179,16 @@ const ProductCard = ({ product, brandColor, onAddToCart, onViewDetail }: Product
 
       {/* Info — compacto */}
       <div className="p-2.5 flex flex-col gap-1">
-        {product.brand && (
-          <p className="text-[9px] uppercase tracking-widest font-semibold text-gray-400 dark:text-slate-500 leading-none">
-            {product.brand.name}
+        <div className="flex justify-between items-start">
+          {product.brand ? (
+            <p className="text-[9px] uppercase tracking-widest font-semibold text-gray-400 dark:text-slate-500 leading-none">
+              {product.brand.name}
+            </p>
+          ) : <div />}
+          <p className="text-[9px] font-medium text-gray-500 dark:text-slate-400 leading-none">
+            Stock: {product.stock}
           </p>
-        )}
+        </div>
         <h3
           className="text-xs font-semibold text-gray-800 dark:text-slate-200 leading-snug line-clamp-2 cursor-pointer hover:text-gray-600 dark:text-slate-350 transition-colors"
           onClick={() => onViewDetail(product)}
@@ -191,10 +196,12 @@ const ProductCard = ({ product, brandColor, onAddToCart, onViewDetail }: Product
           {product.name}
         </h3>
         <div className="flex items-center justify-between mt-0.5">
-          <p className="text-sm font-bold text-gray-900 dark:text-white">{formatCLP(product.price)}</p>
-          {product.unitType === 'WEIGHT' && (
-            <p className="text-[9px] text-gray-400 dark:text-slate-500">/kg</p>
-          )}
+          <div className="flex items-baseline gap-0.5">
+            <p className="text-sm font-bold text-gray-900 dark:text-white">{formatCLP(product.price)}</p>
+            {product.unitType === 'WEIGHT' && (
+              <p className="text-[9px] text-gray-400 dark:text-slate-500">/kg</p>
+            )}
+          </div>
         </div>
       </div>
     </div>
@@ -395,7 +402,7 @@ const ProductModal = ({
                   onClose();
                 }}
                 disabled={!stock.available}
-                className="w-full py-3.5 rounded-2xl text-white dark:text-[#0B0F1A] font-bold text-sm transition-all duration-150 disabled:opacity-40 active:scale-98 hover:brightness-90"
+                className="w-full py-3.5 rounded-2xl text-white font-bold text-sm transition-all duration-150 disabled:opacity-40 active:scale-98 hover:brightness-90"
                 style={{ backgroundColor: stock.available ? brandColor : '#9ca3af' }}
               >
                 {stock.available
@@ -775,6 +782,17 @@ export const PublicStorePage = () => {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<StoreProduct | null>(null);
+  
+  // Helper para contraste de texto
+  const getContrastYIQ = (hexcolor: string) => {
+    const hex = hexcolor.replace("#", "");
+    const r = parseInt(hex.substr(0, 2), 16);
+    const g = parseInt(hex.substr(2, 2), 16);
+    const b = parseInt(hex.substr(4, 2), 16);
+    const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
+    return (yiq >= 128) ? '#000000' : '#ffffff';
+  };
+
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
 
   const [searchInput, setSearchInput] = useState('');
@@ -970,8 +988,11 @@ export const PublicStorePage = () => {
         {/* Announcement Bar */}
         {store?.storeSettings.announcementEnabled && store.storeSettings.announcementText && (
           <div
-            className="w-full py-2 px-4 text-center text-xs font-semibold text-foreground tracking-wide"
-            style={{ backgroundColor: store.storeSettings.announcementColor || '#10b981' }}
+            className="w-full py-2 px-4 text-center text-xs font-semibold tracking-wide"
+            style={{ 
+              backgroundColor: store.storeSettings.announcementColor || '#10b981',
+              color: getContrastYIQ(store.storeSettings.announcementColor || '#10b981')
+            }}
           >
             {store.storeSettings.announcementText}
           </div>

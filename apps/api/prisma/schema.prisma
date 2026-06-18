@@ -167,6 +167,8 @@ model Product {
   stock             Int? // @deprecated - Used for migration only
   unitType          UnitType           @default(UNIT)
   inventory         Inventory[]
+  supplierId        String?
+  supplier          Supplier?          @relation(fields: [supplierId], references: [id])
   brand             Brand?             @relation(fields: [brandId], references: [id])
   category          Category?          @relation(fields: [categoryId], references: [id])
   tenant            Tenant             @relation(fields: [tenantId], references: [id])
@@ -182,6 +184,7 @@ model Product {
   @@index([tenantId])
   @@index([categoryId])
   @@index([brandId])
+  @@index([supplierId])
 }
 
 model ProductPriceTier {
@@ -576,6 +579,7 @@ model Supplier {
   updatedAt DateTime   @updatedAt
   tenant    Tenant     @relation(fields: [tenantId], references: [id])
   purchases Purchase[]
+  products  Product[]
 
   @@index([tenantId])
 }

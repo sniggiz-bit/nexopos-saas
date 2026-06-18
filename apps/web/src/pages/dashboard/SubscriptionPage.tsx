@@ -15,7 +15,8 @@ import {
   Building2,
   Save,
   AlertCircle,
-  RefreshCw
+  RefreshCw,
+  CreditCard
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { DashboardLayout } from '../../components/dashboard/DashboardLayout';
@@ -191,6 +192,22 @@ export function SubscriptionPage() {
       }
     } catch (err: any) {
       toast.error(err.response?.data?.message || 'Error al procesar el pago');
+    } finally {
+      setPayingInvoice(null);
+    }
+  };
+
+  const handlePayServiceInvoices = async () => {
+    try {
+      setPayingInvoice('all');
+      const response = await api.post('/mercadopago/pay-invoices');
+      if (response.data && response.data.init_point) {
+        window.location.href = response.data.init_point;
+      } else {
+        toast.error('No se pudo generar el link de pago para las facturas');
+      }
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Aún no está implementado el endpoint de pago masivo en el backend');
     } finally {
       setPayingInvoice(null);
     }
@@ -661,18 +678,35 @@ export function SubscriptionPage() {
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
                     <FileText className="w-5 h-5 text-indigo-400" />
-                    <h3 className="text-lg font-bold text-foreground">Historial de Cobros</h3>
+                    <h3 className="text-lg font-bold text-foreground">Facturas de Servicio</h3>
                   </div>
-                  <button
-                    onClick={async () => {
-                      const res = await api.get('/billing/invoices');
-                      setInvoices(res.data || []);
-                      toast.success('Historial actualizado');
-                    }}
-                    className="p-1.5 rounded-lg border border-slate-200 dark:border-white/[0.05] hover:bg-card text-slate-400 hover:text-white transition-colors"
-                  >
-                    <RefreshCw size={13} />
-                  </button>
+                  <div className="flex items-center gap-2">
+                    {invoices.some(inv => inv.status === 'PENDING') && (
+                      <button
+                        onClick={handlePayServiceInvoices}
+                        disabled={payingInvoice === 'all'}
+                        className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-bold flex items-center gap-2 shadow-md hover:shadow-indigo-500/20 transition-all"
+                      >
+                        {payingInvoice === 'all' ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <CreditCard className="w-4 h-4" />
+                        )}
+                        Pagar Facturas Pendientes
+                      </button>
+                    )}
+                    <button
+                      onClick={async () => {
+                        const res = await api.get('/billing/invoices');
+                        setInvoices(res.data || []);
+                        toast.success('Historial actualizado');
+                      }}
+                      className="p-2 rounded-lg border border-slate-200 dark:border-white/[0.05] hover:bg-card text-slate-400 hover:text-white transition-colors"
+                      title="Actualizar Historial"
+                    >
+                      <RefreshCw size={16} />
+                    </button>
+                  </div>
                 </div>
                 <p className="text-xs text-muted-foreground mb-6">
                   Consulta el estado de tus facturas de cobro recurrentes generadas para tu cuenta.
