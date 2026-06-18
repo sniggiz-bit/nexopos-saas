@@ -167,7 +167,7 @@ const ProductCard = ({ product, brandColor, onAddToCart, onViewDetail }: Product
           <div className="absolute bottom-0 left-0 right-0 translate-y-full group-hover:translate-y-0 transition-transform duration-200">
             <button
               onClick={e => { e.stopPropagation(); onAddToCart(product); }}
-              className="w-full py-2 text-foreground text-xs font-bold tracking-wide flex items-center justify-center gap-1.5 hover:brightness-90 transition-all active:scale-98"
+              className="w-full py-2 text-white text-xs font-bold tracking-wide flex items-center justify-center gap-1.5 hover:brightness-90 transition-all active:scale-98"
               style={{ backgroundColor: brandColor }}
             >
               <Plus className="w-3.5 h-3.5" />
@@ -395,7 +395,7 @@ const ProductModal = ({
                   onClose();
                 }}
                 disabled={!stock.available}
-                className="w-full py-3.5 rounded-2xl text-white dark:text-[#0B0F1A] font-bold text-sm transition-all duration-150 disabled:opacity-40 active:scale-98 hover:brightness-90"
+                className="w-full py-3.5 rounded-2xl text-white font-bold text-sm transition-all duration-150 disabled:opacity-40 active:scale-98 hover:brightness-90"
                 style={{ backgroundColor: stock.available ? brandColor : '#9ca3af' }}
               >
                 {stock.available
