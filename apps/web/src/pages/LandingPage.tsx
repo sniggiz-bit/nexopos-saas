@@ -232,7 +232,10 @@ function deepMerge(base: any, override: any): any {
     for (const key of Object.keys(override ?? {})) {
         if (override[key] && typeof override[key] === 'object' && !Array.isArray(override[key])) {
             result[key] = deepMerge(base[key] ?? {}, override[key]);
-        } else if (override[key] !== undefined && override[key] !== null) {
+        } else if (Array.isArray(override[key]) && override[key].length === 0) {
+            // Fallback to base array if the override array is empty (e.g. no items added in admin)
+            result[key] = base[key] || [];
+        } else if (override[key] !== undefined && override[key] !== null && override[key] !== '') {
             result[key] = override[key];
         }
     }
