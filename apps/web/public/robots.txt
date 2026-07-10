@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Allow: /landing
+Allow: /login
+Allow: /register
+Disallow: /dashboard/
+Disallow: /admin/
+Disallow: /reset-password/
+
+Sitemap: https://nexopos.cl/sitemap.xml

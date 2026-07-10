@@ -210,8 +210,8 @@ const DEFAULT_CFG: LandingConfig = {
     footer: { description: 'El sistema POS más rápido de Chile. Control total de tu inventario, caja y sucursales en tiempo real.' },
     seo: {
         title: 'NexoPOS | Sistema POS Chile — Control Total de tu Comercio',
-        description: 'Software punto de venta para PYMES chilenas. Sincronización de stock en tiempo real, caja ultrarrápida y control total desde un panel. Sin filas. Sin descuadres. Prueba 15 días gratis.',
-        keywords: 'sistema pos chile, software punto de venta, control inventario tiempo real, caja registradora software, sistema ventas pyme chile'
+        description: 'Software punto de venta líder para PYMES chilenas. Ideal para minimarkets, ferreterías y almacenes. Sincronización de stock en tiempo real y caja ultrarrápida.',
+        keywords: 'sistema pos chile, software punto de venta, software para ferreterías, punto de venta minimarket, control inventario tiempo real, sistema ventas pyme chile, software inventario'
     },
     chatbot: {
         enabled: false,
