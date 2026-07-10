@@ -383,7 +383,7 @@ export function LandingPage() {
                         {/* Hero Text */}
                         <div className="max-w-2xl text-center lg:text-left space-y-6">
                             {/* Glowing Badge */}
-                            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-xs font-bold tracking-wider uppercase">
+                            <div className="hidden md:inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-xs font-bold tracking-wider uppercase">
                                 <Sparkles className="w-3.5 h-3.5" />
                                 {hero.badge}
                             </div>
@@ -425,7 +425,7 @@ export function LandingPage() {
                             </div>
 
                             {/* DTE Notice Banner */}
-                            <div className="flex items-center justify-center lg:justify-start gap-3 text-xs sm:text-sm text-slate-400 bg-white/[0.02] border border-white/[0.06] py-3 px-5 rounded-2xl shadow-inner inline-flex backdrop-blur-md">
+                            <div className="hidden md:inline-flex items-center justify-center lg:justify-start gap-3 text-xs sm:text-sm text-slate-400 bg-white/[0.02] border border-white/[0.06] py-3 px-5 rounded-2xl shadow-inner backdrop-blur-md">
                                 <CheckCircle className="w-5 h-5 text-emerald-400 flex-shrink-0" />
                                 <span dangerouslySetInnerHTML={{ __html: hero.dteBanner.replace('Facturación Electrónica DTE', '<strong class="text-cyan-300 font-bold">Facturación Electrónica DTE</strong>') }} />
                             </div>
