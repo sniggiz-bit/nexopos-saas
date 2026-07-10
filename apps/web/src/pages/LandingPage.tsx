@@ -463,17 +463,17 @@ export function LandingPage() {
                             {/* Visual Graphic Mockup */}
                             <div className="relative order-2 lg:order-1">
                                 <div className="absolute -inset-3 bg-gradient-to-r from-cyan-500/10 to-indigo-500/10 rounded-2xl blur-3xl opacity-40"></div>
-                                <div className="relative rounded-2xl bg-slate-900/30 border border-white/[0.08] shadow-[0_24px_50px_rgba(0,0,0,0.5)] overflow-hidden aspect-[4/3] flex flex-col backdrop-blur-xl">
-                                    <div className="h-9 border-b border-white/[0.06] bg-slate-950/40 flex items-center px-4 space-x-2">
-                                        <div className="w-3 h-3 rounded-full bg-red-500/40"></div>
-                                        <div className="w-3 h-3 rounded-full bg-yellow-500/40"></div>
-                                        <div className="w-3 h-3 rounded-full bg-green-500/40"></div>
+                                <div className="relative rounded-2xl bg-[#0a0a0a] border border-white/[0.15] shadow-[0_30px_60px_rgba(0,0,0,0.6)] overflow-hidden aspect-video flex flex-col backdrop-blur-xl">
+                                    <div className="h-9 border-b border-white/[0.08] bg-[#1a1b1e] flex items-center px-4 space-x-2">
+                                        <div className="w-3 h-3 rounded-full bg-red-500/80"></div>
+                                        <div className="w-3 h-3 rounded-full bg-yellow-500/80"></div>
+                                        <div className="w-3 h-3 rounded-full bg-green-500/80"></div>
                                     </div>
-                                    <div className="flex-1 bg-slate-950/20 relative p-4 flex items-center justify-center">
+                                    <div className="flex-1 bg-black relative">
                                         <img 
                                             src={solution.image || "/real-dashboard.png"} 
                                             alt="Panel de Control NexoPOS" 
-                                            className="w-full h-full object-cover object-top rounded-xl border border-white/[0.05]"
+                                            className="w-full h-full object-cover object-left-top"
                                             onError={e => {
                                                 (e.target as HTMLImageElement).style.display = 'none';
                                                 (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
