@@ -321,8 +321,13 @@ export function LandingPage() {
             </nav>
 
             {/* Hero Section */}
-            <section className="relative pt-20 lg:pt-36 pb-16 lg:pb-32 z-10">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+            <section className="relative pt-20 lg:pt-36 pb-16 lg:pb-32 z-10" style={{
+                backgroundImage: 'url(/hero-bg-store.png)',
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+            }}>
+                <div className="absolute inset-0 bg-[#070913]/85 backdrop-blur-[2px] z-0"></div>
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
                     <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
                         {/* Hero Text */}
                         <div className="max-w-2xl text-center lg:text-left space-y-6">
@@ -381,24 +386,24 @@ export function LandingPage() {
                             <div className="absolute -inset-2 bg-gradient-to-r from-cyan-500/20 via-indigo-500/20 to-emerald-500/20 rounded-2xl blur-3xl opacity-30"></div>
                             
                             {/* Outer Glass Card */}
-                            <div className="relative rounded-2xl bg-slate-900/30 border border-white/[0.08] shadow-[0_24px_50px_rgba(0,0,0,0.5)] overflow-hidden aspect-[4/3] flex flex-col backdrop-blur-xl">
-                                <div className="h-9 border-b border-white/[0.06] bg-slate-950/40 flex items-center px-4 space-x-2">
-                                    <div className="w-3 h-3 rounded-full bg-red-500/40"></div>
-                                    <div className="w-3 h-3 rounded-full bg-yellow-500/40"></div>
-                                    <div className="w-3 h-3 rounded-full bg-green-500/40"></div>
+                            <div className="relative rounded-2xl bg-[#0a0a0a] border border-white/[0.15] shadow-[0_30px_60px_rgba(0,0,0,0.6)] overflow-hidden aspect-video flex flex-col backdrop-blur-xl">
+                                <div className="h-9 border-b border-white/[0.08] bg-[#1a1b1e] flex items-center px-4 space-x-2">
+                                    <div className="w-3 h-3 rounded-full bg-red-500/80"></div>
+                                    <div className="w-3 h-3 rounded-full bg-yellow-500/80"></div>
+                                    <div className="w-3 h-3 rounded-full bg-green-500/80"></div>
                                 </div>
-                                <div className="flex-1 bg-slate-950/20 relative p-4">
+                                <div className="flex-1 bg-black relative">
                                     {hero.image && (hero.image.endsWith('.mp4') || hero.image.endsWith('.webm')) ? (
                                         <video 
                                             src={hero.image} 
                                             autoPlay loop muted playsInline 
-                                            className="w-full h-full object-cover rounded-xl shadow-md border border-white/[0.05]"
+                                            className="w-full h-full object-cover"
                                         />
                                     ) : (
                                         <img 
                                             src={hero.image || "/real-pos.png"} 
                                             alt="NexoPOS Caja" 
-                                            className="w-full h-full object-cover object-top rounded-xl shadow-md border border-white/[0.05]"
+                                            className="w-full h-full object-cover object-left-top"
                                             onError={e => { 
                                                 (e.target as HTMLImageElement).style.display = 'none'; 
                                                 (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden'); 
