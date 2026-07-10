@@ -861,15 +861,15 @@ export function LandingPage() {
                         <div>
                             <h4 className="text-slate-200 font-bold mb-4 text-xs tracking-wider uppercase">Compañía</h4>
                             <ul className="space-y-3 text-xs">
-                                <li><a href="#" className="text-slate-400 hover:text-cyan-400 transition-colors">Contacto</a></li>
-                                <li><a href="#" className="text-slate-400 hover:text-cyan-400 transition-colors">Soporte</a></li>
+                                <li><a href="mailto:contacto@nexopos.cl" className="text-slate-400 hover:text-cyan-400 transition-colors">Contacto</a></li>
+                                <li><a href="mailto:soporte@nexopos.cl" className="text-slate-400 hover:text-cyan-400 transition-colors">Soporte</a></li>
                             </ul>
                         </div>
                         <div>
                             <h4 className="text-slate-200 font-bold mb-4 text-xs tracking-wider uppercase">Legal</h4>
                             <ul className="space-y-3 text-xs">
-                                <li><a href="#" className="text-slate-400 hover:text-cyan-400 transition-colors">Términos de Servicio</a></li>
-                                <li><a href="#" className="text-slate-400 hover:text-cyan-400 transition-colors">Privacidad</a></li>
+                                <li><Link to="/terminos" className="text-slate-400 hover:text-cyan-400 transition-colors">Términos de Servicio</Link></li>
+                                <li><Link to="/privacidad" className="text-slate-400 hover:text-cyan-400 transition-colors">Privacidad</Link></li>
                             </ul>
                         </div>
                     </div>
