@@ -4,7 +4,6 @@ import { useCreateProduct } from '../../hooks/useCreateProduct';
 import { useUpdateProduct } from '../../hooks/useUpdateProduct';
 import { useCategories } from '../../hooks/useCategories';
 import { useBrands } from '../../hooks/useBrands';
-import { useSuppliers } from '../../hooks/useSuppliers';
 import { useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import type { Product } from '../../api/types';
@@ -257,7 +256,6 @@ export function ProductFormModal({ isOpen, onClose, initialData }: ProductFormMo
     const updateProduct = useUpdateProduct();
     const { data: categories } = useCategories(user?.tenantId ?? '');
     const { data: brands }     = useBrands(user?.tenantId ?? '');
-    const { data: suppliers }  = useSuppliers(user?.tenantId ?? '');
 
     // ── Init form when modal opens ───────────────────────────────────────────
     useEffect(() => {
@@ -277,7 +275,6 @@ export function ProductFormModal({ isOpen, onClose, initialData }: ProductFormMo
                 unitType:   initialData.unitType,
                 categoryId: initialData.category?.id || '',
                 brandId:    initialData.brand?.id || '',
-                supplierId: initialData.supplier?.id || '',
                 image:      initialData.image || '',
                 isActive:   initialData.isActive,
             });
@@ -297,7 +294,7 @@ export function ProductFormModal({ isOpen, onClose, initialData }: ProductFormMo
             setFormData({
                 name: '', sku: '', barcode: '', price: '', costPrice: '',
                 stock: '0', minStock: '0', unitType: 'UNIT',
-                categoryId: '', brandId: '', supplierId: '', image: '', isActive: true,
+                categoryId: '', brandId: '', image: '', isActive: true,
             });
             setGalleryImages([null, null, null, null]);
             setPriceTiers([]);
@@ -384,7 +381,6 @@ export function ProductFormModal({ isOpen, onClose, initialData }: ProductFormMo
                     unitType:     formData.unitType,
                     categoryId:   formData.categoryId || undefined,
                     brandId:      formData.brandId || undefined,
-                    supplierId:   formData.supplierId || undefined,
                     image:        formData.image || undefined,
                     galleryImages: gallery,
                     isActive:     formData.isActive,
@@ -404,7 +400,6 @@ export function ProductFormModal({ isOpen, onClose, initialData }: ProductFormMo
                     unitType:      formData.unitType,
                     categoryId:    formData.categoryId || undefined,
                     brandId:       formData.brandId || undefined,
-                    supplierId:    formData.supplierId || undefined,
                     image:         formData.image || undefined,
                     galleryImages: gallery,
                     isActive:      formData.isActive,
@@ -415,7 +410,7 @@ export function ProductFormModal({ isOpen, onClose, initialData }: ProductFormMo
                 toast.success('Producto creado exitosamente');
                 queryClient.invalidateQueries({ queryKey: ['products-all'] });
                 onClose();
-                setFormData({ name: '', sku: '', barcode: '', price: '', costPrice: '', stock: '0', minStock: '0', unitType: 'UNIT', categoryId: '', brandId: '', supplierId: '', image: '', isActive: true });
+                setFormData({ name: '', sku: '', barcode: '', price: '', costPrice: '', stock: '0', minStock: '0', unitType: 'UNIT', categoryId: '', brandId: '', image: '', isActive: true });
                 setGalleryImages([null, null, null, null]);
                 setPriceTiers([]);
             }
@@ -618,8 +613,8 @@ export function ProductFormModal({ isOpen, onClose, initialData }: ProductFormMo
                         </span>
                     </label>
 
-                    {/* Category, Brand, Supplier */}
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
+                    {/* Category, Brand */}
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                         <div>
                             <label style={labelStyle}>Categoría</label>
                             <FocusSelect value={formData.categoryId} onChange={e => setFormData({ ...formData, categoryId: e.target.value })}>
@@ -632,13 +627,6 @@ export function ProductFormModal({ isOpen, onClose, initialData }: ProductFormMo
                             <FocusSelect value={formData.brandId} onChange={e => setFormData({ ...formData, brandId: e.target.value })}>
                                 <option value="">Sin marca</option>
                                 {brands?.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
-                            </FocusSelect>
-                        </div>
-                        <div>
-                            <label style={labelStyle}>Proveedor</label>
-                            <FocusSelect value={formData.supplierId} onChange={e => setFormData({ ...formData, supplierId: e.target.value })}>
-                                <option value="">Sin proveedor</option>
-                                {suppliers?.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                             </FocusSelect>
                         </div>
                     </div>
