@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
     CheckCircle, Building2, FileText, Menu, Globe, Truck, ArrowRight, Sparkles,
@@ -36,6 +36,53 @@ interface LandingConfig {
     seo?: { title: string; description: string; keywords: string };
     chatbot?: { enabled: boolean; welcomeMessage: string; options: string[] };
 }
+
+const HeroCarousel = () => {
+    const images = [
+        "/real-pos.png",
+        "/real-dashboard.png",
+        "/real-inventario.png",
+        "/real-tesoreria.png",
+        "/real-store online.png",
+        "/real-historial de ventas.png"
+    ];
+    
+    const [currentIndex, setCurrentIndex] = useState(0);
+
+    useEffect(() => {
+        const timer = setInterval(() => {
+            setCurrentIndex((prev) => (prev + 1) % images.length);
+        }, 4000);
+        return () => clearInterval(timer);
+    }, [images.length]);
+
+    return (
+        <div className="w-full h-full relative group overflow-hidden bg-black">
+            {images.map((img, idx) => (
+                <img
+                    key={img}
+                    src={img}
+                    alt={`NexoPOS Interface ${idx}`}
+                    className={`
+                        absolute inset-0 w-full h-full object-cover object-left-top transition-all duration-1000 ease-in-out
+                        ${idx === currentIndex ? 'opacity-100 scale-100 z-10' : 'opacity-0 scale-105 z-0 pointer-events-none'}
+                    `}
+                />
+            ))}
+            
+            {/* Carousel Indicators */}
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 flex space-x-2 bg-black/60 px-3 py-2 rounded-full backdrop-blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                {images.map((_, idx) => (
+                    <button
+                        key={idx}
+                        onClick={() => setCurrentIndex(idx)}
+                        className={`w-2 h-2 rounded-full transition-all duration-300 ${idx === currentIndex ? 'bg-cyan-400 w-4' : 'bg-white/40 hover:bg-white/70'}`}
+                    />
+                ))}
+            </div>
+        </div>
+    );
+};
 
 const DEFAULT_CFG: LandingConfig = {
     hero: {
@@ -393,23 +440,7 @@ export function LandingPage() {
                                     <div className="w-3 h-3 rounded-full bg-green-500/80"></div>
                                 </div>
                                 <div className="flex-1 bg-black relative">
-                                    {hero.image && (hero.image.endsWith('.mp4') || hero.image.endsWith('.webm')) ? (
-                                        <video 
-                                            src={hero.image} 
-                                            autoPlay loop muted playsInline 
-                                            className="w-full h-full object-cover"
-                                        />
-                                    ) : (
-                                        <img 
-                                            src={hero.image || "/real-pos.png"} 
-                                            alt="NexoPOS Caja" 
-                                            className="w-full h-full object-cover object-left-top"
-                                            onError={e => { 
-                                                (e.target as HTMLImageElement).style.display = 'none'; 
-                                                (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden'); 
-                                            }} 
-                                        />
-                                    )}
+                                    <HeroCarousel />
                                     <div className="hidden absolute inset-0 m-4 border border-dashed border-white/[0.1] rounded-xl bg-white/[0.01] flex flex-col items-center justify-center text-slate-400">
                                         <Building2 className="w-12 h-12 mb-3 opacity-40 text-cyan-400" />
                                         <p className="font-semibold text-sm tracking-wide text-slate-200">Plataforma B2B Unificada</p>
