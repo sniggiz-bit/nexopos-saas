@@ -166,7 +166,7 @@ const DEFAULT_CFG: LandingConfig = {
         keywords: 'sistema pos chile, software punto de venta, control inventario tiempo real, caja registradora software, sistema ventas pyme chile'
     },
     chatbot: {
-        enabled: true,
+        enabled: false,
         welcomeMessage: '¡Hola! Soy el asistente de NexoPOS. ¿Tienes alguna pregunta sobre el sistema o quieres agendar una demo gratuita?',
         options: ['Quiero una Demo', 'Ver Planes y Precios', 'Soporte Técnico']
     }
@@ -396,8 +396,8 @@ export function LandingPage() {
                                         />
                                     ) : (
                                         <img 
-                                            src={hero.image || "/dashboard-hero-nexopos.png"} 
-                                            alt="Dashboard NexoPOS" 
+                                            src={hero.image || "/pos-cashier-ui.png"} 
+                                            alt="NexoPOS Caja" 
                                             className="w-full h-full object-cover rounded-xl shadow-md border border-white/[0.05]"
                                             onError={e => { 
                                                 (e.target as HTMLImageElement).style.display = 'none'; 
@@ -466,8 +466,8 @@ export function LandingPage() {
                                     </div>
                                     <div className="flex-1 bg-slate-950/20 relative p-4 flex items-center justify-center">
                                         <img 
-                                            src={solution.image || "/dashboard-hero-nexopos.png"} 
-                                            alt="Dashboard NexoPOS" 
+                                            src={solution.image || "/dashboard-admin-ui.png"} 
+                                            alt="Panel de Control NexoPOS" 
                                             className="w-full h-full object-cover rounded-xl border border-white/[0.05]"
                                             onError={e => {
                                                 (e.target as HTMLImageElement).style.display = 'none';
