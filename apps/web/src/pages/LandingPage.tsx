@@ -10,6 +10,14 @@ import { usePublicPlans } from '../hooks/usePublicPlans';
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '../api/client';
 
+const FEATURE_ICONS = [
+    { icon: Building2, color: 'text-cyan-400', bg: 'bg-cyan-500/10', border: 'border-cyan-500/20', hover: 'hover:border-cyan-500/30' },
+    { icon: Truck, color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20', hover: 'hover:border-emerald-500/30' },
+    { icon: Globe, color: 'text-indigo-400', bg: 'bg-indigo-500/10', border: 'border-indigo-500/20', hover: 'hover:border-indigo-500/30' },
+    { icon: Sparkles, color: 'text-fuchsia-400', bg: 'bg-fuchsia-500/10', border: 'border-fuchsia-500/20', hover: 'hover:border-fuchsia-500/30' },
+];
+
+
 interface PainItem { title: string; description: string }
 interface UseCaseItem { title: string; description: string }
 interface StatItem { label: string; value: string }
