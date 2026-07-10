@@ -396,9 +396,9 @@ export function LandingPage() {
                                         />
                                     ) : (
                                         <img 
-                                            src={hero.image || "/pos-cashier-ui.png"} 
+                                            src={hero.image || "/real-pos.png"} 
                                             alt="NexoPOS Caja" 
-                                            className="w-full h-full object-cover rounded-xl shadow-md border border-white/[0.05]"
+                                            className="w-full h-full object-cover object-top rounded-xl shadow-md border border-white/[0.05]"
                                             onError={e => { 
                                                 (e.target as HTMLImageElement).style.display = 'none'; 
                                                 (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden'); 
@@ -432,17 +432,17 @@ export function LandingPage() {
                                 {pain.title}
                             </h2>
                         </div>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 max-w-6xl mx-auto">
                             {(pain.items || []).map((item, i) => (
                                 <div 
                                     key={i} 
-                                    className="p-6 md:p-8 rounded-3xl bg-white/[0.01] border border-white/[0.05] hover:border-red-500/20 hover:bg-red-500/[0.01] backdrop-blur-md transition-all duration-300 group hover:-translate-y-1"
+                                    className="p-8 rounded-3xl bg-gradient-to-b from-red-950/20 to-black/40 border border-red-500/10 hover:border-red-500/30 backdrop-blur-xl transition-all duration-300 group hover:-translate-y-2 hover:shadow-[0_10px_40px_-10px_rgba(220,38,38,0.15)] flex flex-col"
                                 >
-                                    <div className="w-12 h-12 bg-red-500/10 border border-red-500/20 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-                                        <AlertTriangle className="w-5 h-5 text-red-400" />
+                                    <div className="w-14 h-14 bg-red-500/10 border border-red-500/20 rounded-2xl flex items-center justify-center mb-8 group-hover:scale-110 transition-transform duration-300 group-hover:bg-red-500/20">
+                                        <AlertTriangle className="w-6 h-6 text-red-400 group-hover:text-red-300 transition-colors" />
                                     </div>
-                                    <h3 className="text-lg font-bold text-slate-100 mb-3">{item.title}</h3>
-                                    <p className="text-slate-400 leading-relaxed text-sm">{item.description}</p>
+                                    <h3 className="text-xl font-bold text-white mb-4 tracking-tight leading-snug">{item.title}</h3>
+                                    <p className="text-red-200/60 leading-relaxed text-sm flex-1">{item.description}</p>
                                 </div>
                             ))}
                         </div>
@@ -466,9 +466,9 @@ export function LandingPage() {
                                     </div>
                                     <div className="flex-1 bg-slate-950/20 relative p-4 flex items-center justify-center">
                                         <img 
-                                            src={solution.image || "/dashboard-admin-ui.png"} 
+                                            src={solution.image || "/real-dashboard.png"} 
                                             alt="Panel de Control NexoPOS" 
-                                            className="w-full h-full object-cover rounded-xl border border-white/[0.05]"
+                                            className="w-full h-full object-cover object-top rounded-xl border border-white/[0.05]"
                                             onError={e => {
                                                 (e.target as HTMLImageElement).style.display = 'none';
                                                 (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
@@ -525,27 +525,41 @@ export function LandingPage() {
                             {features.sectionSubtitle}
                         </p>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-10">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
                         {(features.items || []).map((item, i) => {
                             const { icon: Icon, color, bg, border, hover } = FEATURE_ICONS[i] ?? FEATURE_ICONS[0];
+                            const isLarge = i === 0 || i === 3; // Make 1st and 4th items large
+                            const bentoImages = ['/real-pos.png', '/real-inventario.png', '/real-tesoreria.png', '/real-store online.png'];
+                            
                             return (
                                 <div 
                                     key={i} 
                                     className={`
-                                        p-6 md:p-10 rounded-3xl bg-white/[0.01] border border-white/[0.05] 
-                                        ${hover} backdrop-blur-md transition-all duration-300 group hover:-translate-y-1
+                                        relative overflow-hidden p-6 md:p-8 rounded-3xl bg-slate-900/40 border border-white/[0.08] 
+                                        ${hover} backdrop-blur-xl transition-all duration-300 group hover:-translate-y-1
+                                        flex flex-col justify-between min-h-[360px]
+                                        ${isLarge ? 'md:col-span-2' : 'md:col-span-1'}
                                     `}
                                 >
-                                    <div 
-                                        className={`
-                                            w-14 h-14 ${bg} ${border} border rounded-2xl flex items-center justify-center mb-6 
-                                            group-hover:scale-110 transition-transform duration-300
-                                        `}
-                                    >
-                                        <Icon className={`w-6 h-6 ${color}`} />
+                                    <div className="absolute inset-0 bg-gradient-to-br from-white/[0.02] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                                    <div className="relative z-10">
+                                        <div 
+                                            className={`
+                                                w-12 h-12 ${bg} ${border} border rounded-2xl flex items-center justify-center mb-6 
+                                                group-hover:scale-110 transition-transform duration-300
+                                            `}
+                                        >
+                                            <Icon className={`w-6 h-6 ${color}`} />
+                                        </div>
+                                        <h3 className="text-2xl font-black text-white mb-3 tracking-tight">{item.title}</h3>
+                                        <p className="text-slate-400 leading-relaxed text-sm">{item.description}</p>
                                     </div>
-                                    <h3 className="text-xl font-bold text-slate-100 mb-3">{item.title}</h3>
-                                    <p className="text-slate-400 leading-relaxed text-sm">{item.description}</p>
+                                    
+                                    {/* Mockup decoration for bento boxes */}
+                                    <div className={`relative mt-8 -mx-8 -mb-8 ${isLarge ? 'h-64' : 'h-48'} overflow-hidden border-t border-white/[0.08] bg-black/40`}>
+                                        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/20 to-transparent z-10 pointer-events-none"></div>
+                                        <img src={bentoImages[i] || bentoImages[0]} alt={item.title} className="w-full h-full object-cover object-top opacity-70 group-hover:opacity-100 transition-all duration-500 group-hover:scale-105 group-hover:translate-y-2" />
+                                    </div>
                                 </div>
                             );
                         })}
