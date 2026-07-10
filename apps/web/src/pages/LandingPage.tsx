@@ -861,8 +861,8 @@ export function LandingPage() {
                         <div>
                             <h4 className="text-slate-200 font-bold mb-4 text-xs tracking-wider uppercase">Compañía</h4>
                             <ul className="space-y-3 text-xs">
-                                <li><a href="mailto:contacto@nexopos.cl" className="text-slate-400 hover:text-cyan-400 transition-colors">Contacto</a></li>
-                                <li><a href="mailto:soporte@nexopos.cl" className="text-slate-400 hover:text-cyan-400 transition-colors">Soporte</a></li>
+                                <li><Link to="/contacto" className="text-slate-400 hover:text-cyan-400 transition-colors">Contacto</Link></li>
+                                <li><Link to="/soporte" className="text-slate-400 hover:text-cyan-400 transition-colors">Soporte</Link></li>
                             </ul>
                         </div>
                         <div>

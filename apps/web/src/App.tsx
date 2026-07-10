@@ -9,6 +9,7 @@ import SystemHealthPage from './pages/admin/SystemHealthPage';
 import AnnouncementsPage from './pages/admin/AnnouncementsPage';
 import AdminLandingPage from './pages/admin/AdminLandingPage';
 import AdminModulesPage from './pages/admin/AdminModulesPage';
+import { TerminosPage, PrivacidadPage, ContactoPage, SoportePage } from './pages/public/LegalPages';
 import { PosPage } from './pages/PosPage';
 import { Toaster } from 'react-hot-toast';
 import { Suspense } from 'react';
@@ -110,6 +111,10 @@ function App() {
               <Route path="/auth/sso" element={<SsoLoginPage />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/store/:slug" element={<PublicStorePage />} />
+              <Route path="/terminos" element={<TerminosPage />} />
+              <Route path="/privacidad" element={<PrivacidadPage />} />
+              <Route path="/contacto" element={<ContactoPage />} />
+              <Route path="/soporte" element={<SoportePage />} />
 
               {/* Super Admin Routes */}
               <Route element={<ProtectedRoute allowedRoles={['SUPER_ADMIN']} />}>
