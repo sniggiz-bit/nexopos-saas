@@ -788,6 +788,9 @@ function ShiftClosureCard({ summary }: ShiftClosureCardProps) {
         },
     };
 
+    const BG_CARD = isDark ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.85)';
+    const BORDER = isDark ? 'rgba(0,153,204,0.1)' : 'rgba(0,153,204,0.2)';
+
     return (
         <Link to="/dashboard/treasury" className="block h-full">
             <div className="rounded-xl p-5 h-full transition-all duration-200 group relative overflow-hidden flex flex-col justify-between"
