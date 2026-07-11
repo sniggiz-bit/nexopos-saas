@@ -44,7 +44,7 @@ export function CheckoutPanel({
     const { data: tenant } = useTenant(user?.tenantId);
 
     const [paymentType, setPaymentType] = useState<PaymentType>('SINGLE');
-    const [singleMethod, setSingleMethod] = useState<string>(PaymentMethod.CASH);
+    const [singleMethod, setSingleMethod] = useState<string>(PaymentMethod.DEBIT);
     const [cashReceived, setCashReceived] = useState<string>('');
     const [mixedPayments, setMixedPayments] = useState<Record<string, number | ''>>({
         [PaymentMethod.CASH]: 0,
@@ -59,7 +59,7 @@ export function CheckoutPanel({
     const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
 
     type Step = 'dte' | 'payment' | 'cash' | 'confirm';
-    const [activeStep, setActiveStep] = useState<Step>('dte');
+    const [activeStep, setActiveStep] = useState<Step>('cash');
     const cashInputRef = useRef<HTMLInputElement>(null);
 
     // Auto-focus cash input when step advances to 'cash'
@@ -160,10 +160,10 @@ export function CheckoutPanel({
             if (inInput) return;
 
             // Payment method
-            if (e.key === 'F5') { e.preventDefault(); setPaymentType('SINGLE'); setSingleMethod(PaymentMethod.CASH); setActiveStep('cash'); return; }
-            if (e.key === 'F6') { e.preventDefault(); setPaymentType('SINGLE'); setSingleMethod(PaymentMethod.DEBIT); setActiveStep('confirm'); return; }
-            if (e.key === 'F7') { e.preventDefault(); setPaymentType('SINGLE'); setSingleMethod(PaymentMethod.CARD); setActiveStep('confirm'); return; }
-            if (e.key === 'F8') { e.preventDefault(); setPaymentType('SINGLE'); setSingleMethod(PaymentMethod.TRANSFER); setActiveStep('confirm'); return; }
+            if (e.key === 'F5') { e.preventDefault(); setPaymentType('SINGLE'); setSingleMethod(PaymentMethod.DEBIT); setActiveStep('cash'); return; }
+            if (e.key === 'F6') { e.preventDefault(); setPaymentType('SINGLE'); setSingleMethod(PaymentMethod.CASH); setActiveStep('cash'); return; }
+            if (e.key === 'F7') { e.preventDefault(); setPaymentType('SINGLE'); setSingleMethod(PaymentMethod.CARD); setActiveStep('cash'); return; }
+            if (e.key === 'F8') { e.preventDefault(); setPaymentType('SINGLE'); setSingleMethod(PaymentMethod.TRANSFER); setActiveStep('cash'); return; }
 
             // Confirm — F12 from anywhere, Enter only from cash step
             if (e.key === 'F12' || (e.key === 'Enter' && isInCashStep)) {
@@ -515,8 +515,8 @@ export function CheckoutPanel({
                         <div className="space-y-3">
                             <div className="grid grid-cols-2 gap-2">
                                 {[
-                                    { id: PaymentMethod.CASH, label: 'Efectivo', Icon: Banknote, kbd: 'F5' },
-                                    { id: PaymentMethod.DEBIT, label: 'Débito', Icon: Calculator, kbd: 'F6' },
+                                    { id: PaymentMethod.DEBIT, label: 'Débito', Icon: Calculator, kbd: 'F5' },
+                                    { id: PaymentMethod.CASH, label: 'Efectivo', Icon: Banknote, kbd: 'F6' },
                                     { id: PaymentMethod.CARD, label: 'Crédito', Icon: CreditCard, kbd: 'F7' },
                                     { id: PaymentMethod.TRANSFER, label: 'Transf.', Icon: RefreshCw, kbd: 'F8' },
                                 ].map(({ id, label, Icon, kbd }) => (
@@ -524,7 +524,7 @@ export function CheckoutPanel({
                                         key={id}
                                         onClick={() => {
                                             setSingleMethod(id);
-                                            setActiveStep(id === PaymentMethod.CASH ? 'cash' : 'confirm');
+                                            setActiveStep('cash');
                                         }}
                                         className={`flex flex-col items-center justify-center p-3 rounded-xl border-2 transition-all ${
                                             singleMethod === id
@@ -539,32 +539,30 @@ export function CheckoutPanel({
                                 ))}
                             </div>
 
-                            {singleMethod === 'EFECTIVO' && (
-                                <div className="space-y-1">
-                                    <Label className="text-xs font-bold uppercase text-slate-400">
-                                        Monto Recibido
-                                    </Label>
-                                    <div className="relative">
-                                        <Banknote className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                                        <Input
-                                            ref={cashInputRef}
-                                            type="number"
-                                            value={cashReceived}
-                                            onChange={(e) => setCashReceived(e.target.value)}
-                                            className={`pl-9 h-10 text-base font-bold transition-all ${
-                                                activeStep === 'cash' ? 'ring-2 ring-indigo-400 border-indigo-400' : ''
-                                            }`}
-                                            placeholder="Ej: 5000"
-                                        />
-                                    </div>
-                                    {change > 0 && (
-                                        <div className="flex justify-between items-center pt-1">
-                                            <span className="text-xs font-bold uppercase text-slate-400">Vuelto</span>
-                                            <span className="text-xl font-black text-amber-500">{formatPrice(change)}</span>
-                                        </div>
-                                    )}
+                            <div className="space-y-1">
+                                <Label className="text-xs font-bold uppercase text-slate-400">
+                                    Monto Recibido
+                                </Label>
+                                <div className="relative">
+                                    <Banknote className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                    <Input
+                                        ref={cashInputRef}
+                                        type="number"
+                                        value={cashReceived}
+                                        onChange={(e) => setCashReceived(e.target.value)}
+                                        className={`pl-9 h-10 text-base font-bold transition-all ${
+                                            activeStep === 'cash' ? 'ring-2 ring-indigo-400 border-indigo-400' : ''
+                                        }`}
+                                        placeholder="Ej: 5000"
+                                    />
                                 </div>
-                            )}
+                                {change > 0 && (
+                                    <div className="flex justify-between items-center pt-1">
+                                        <span className="text-xs font-bold uppercase text-slate-400">Vuelto</span>
+                                        <span className="text-xl font-black text-amber-500">{formatPrice(change)}</span>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     ) : (
                         <div className="space-y-2">
