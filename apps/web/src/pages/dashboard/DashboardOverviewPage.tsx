@@ -238,46 +238,8 @@ export function DashboardOverviewPage() {
                 {/* ── Fila 3: Chart + comparativa (Ubicado debajo de las primeras 4 tarjetas) ── */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
 
-                    {/* Comparativa mensual */}
-                    <div className="rounded-2xl p-5 flex flex-col justify-between"
-                        style={{ background: BG_CARD, border: `1px solid ${BORDER}` }}>
-
-                        <div>
-                            <div className="flex items-center gap-2 mb-4">
-                                <div className="w-7 h-7 rounded-lg flex items-center justify-center"
-                                    style={{ background: CYAN_ALPHA(0.1) }}>
-                                    <TrendingUp className="w-3.5 h-3.5" style={{ color: CYAN }} />
-                                </div>
-                                <p className="text-[11px] font-bold uppercase tracking-wider" style={{ color: isDark ? 'rgba(0,153,204,0.5)' : 'rgba(0,120,180,0.8)' }}>
-                                    Comparativa Mensual
-                                </p>
-                            </div>
-                            <p className="text-3xl font-black tabular-nums leading-none mb-1"
-                                style={{ color: isDark ? 'rgba(210,225,245,0.95)' : 'rgba(15,23,42,0.95)', textShadow: isDark ? `0 0 30px ${CYAN_ALPHA(0.15)}` : 'none' }}>
-                                {formatPrice(mc?.currentRevenue ?? 0)}
-                            </p>
-                            <p className="text-xs mt-1" style={{ color: isDark ? 'rgba(180,195,220,0.4)' : 'rgba(71,85,105,0.6)' }}>mes actual</p>
-                        </div>
-
-                        <div className="mt-5 pt-4" style={{ borderTop: isDark ? '1px solid rgba(0,153,204,0.08)' : '1px solid rgba(0,153,204,0.18)' }}>
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-[10px] mb-0.5" style={{ color: isDark ? 'rgba(180,195,220,0.4)' : 'rgba(71,85,105,0.6)' }}>mes anterior</p>
-                                    <p className="text-sm font-bold tabular-nums" style={{ color: isDark ? 'rgba(210,225,245,0.7)' : 'rgba(15,23,42,0.7)' }}>
-                                        {formatPrice(mc?.prevRevenue ?? 0)}
-                                    </p>
-                                </div>
-                                {pctChange !== null && pctChange !== undefined ? (
-                                    <TrendBadge value={pctChange} />
-                                ) : (
-                                    <span className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold"
-                                        style={{ background: isDark ? 'rgba(180,195,220,0.08)' : 'rgba(71,85,105,0.08)', color: isDark ? 'rgba(180,195,220,0.4)' : 'rgba(71,85,105,0.6)' }}>
-                                        <Minus size={10} /> Sin datos
-                                    </span>
-                                )}
-                            </div>
-                        </div>
-                    </div>
+                    {/* Detalles del Cierre (movido a primera fila) */}
+                    <ShiftClosureCard summary={shiftSummary} />
 
                     {/* Bar chart ventas por hora */}
                     <div className="lg:col-span-2 rounded-2xl p-5"
@@ -319,8 +281,39 @@ export function DashboardOverviewPage() {
                     {/* Pedidos Web */}
                     <WebOrdersCard pending={webOrdersPending} total={webOrdersTotal} />
 
-                    {/* Detalles del Cierre */}
-                    <ShiftClosureCard summary={shiftSummary} />
+                    {/* Comparativa mensual (movida a Fila 2) */}
+                    <div className="rounded-xl p-3 flex flex-col justify-between"
+                        style={{ background: BG_CARD, border: `1px solid ${BORDER}` }}>
+
+                        <div>
+                            <div className="flex items-center justify-between mb-2">
+                                <p className="text-[9px] font-bold uppercase tracking-widest text-indigo-500" style={{ color: isDark ? 'rgba(0,153,204,0.5)' : 'rgba(0,120,180,0.8)' }}>
+                                    Comparativa
+                                </p>
+                                <TrendingUp size={12} className="opacity-50" style={{ color: CYAN }} />
+                            </div>
+                            <p className="text-xl font-black tabular-nums leading-none mb-1"
+                                style={{ color: isDark ? 'rgba(210,225,245,0.95)' : 'rgba(15,23,42,0.95)' }}>
+                                {formatPrice(mc?.currentRevenue ?? 0)}
+                            </p>
+                        </div>
+
+                        <div className="mt-2 pt-2" style={{ borderTop: isDark ? '1px solid rgba(0,153,204,0.08)' : '1px solid rgba(0,153,204,0.18)' }}>
+                            <div className="flex items-center justify-between">
+                                <p className="text-[11px] font-bold tabular-nums" style={{ color: isDark ? 'rgba(210,225,245,0.7)' : 'rgba(15,23,42,0.7)' }}>
+                                    {formatPrice(mc?.prevRevenue ?? 0)}
+                                </p>
+                                {pctChange !== null && pctChange !== undefined ? (
+                                    <TrendBadge value={pctChange} />
+                                ) : (
+                                    <span className="flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold"
+                                        style={{ background: isDark ? 'rgba(180,195,220,0.08)' : 'rgba(71,85,105,0.08)', color: isDark ? 'rgba(180,195,220,0.4)' : 'rgba(71,85,105,0.6)' }}>
+                                        <Minus size={8} /> S/D
+                                    </span>
+                                )}
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 {/* ── Fila 2b: KPIs DTE Lioren ── */}
