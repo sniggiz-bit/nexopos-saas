@@ -40,12 +40,12 @@ interface LandingConfig {
 
 const HeroCarousel = () => {
     const images = [
-        "/real-pos.png",
-        "/real-dashboard.png",
-        "/real-inventario.png",
-        "/real-tesoreria.png",
-        "/real-store online.png",
-        "/real-historial de ventas.png"
+        "/real-pos.webp",
+        "/real-dashboard.webp",
+        "/real-inventario.webp",
+        "/real-tesoreria.webp",
+        "/real-store online.webp",
+        "/real-historial de ventas.webp"
     ];
     
     const [currentIndex, setCurrentIndex] = useState(0);
@@ -373,7 +373,7 @@ export function LandingPage() {
 
             {/* Hero Section */}
             <section className="relative pt-20 lg:pt-36 pb-16 lg:pb-32 z-10" style={{
-                backgroundImage: 'url(/hero-bg-store.png)',
+                backgroundImage: 'url(/hero-bg-store.webp)',
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
             }}>
@@ -506,7 +506,7 @@ export function LandingPage() {
                                     </div>
                                     <div className="flex-1 bg-black relative">
                                         <img 
-                                            src={solution.image || "/real-dashboard.png"} 
+                                            src={solution.image || "/real-dashboard.webp"} 
                                             alt="Panel de Control NexoPOS" 
                                             className="w-full h-full object-cover object-left-top"
                                             onError={e => {
@@ -569,7 +569,7 @@ export function LandingPage() {
                         {(features.items || []).map((item, i) => {
                             const { icon: Icon, color, bg, border, hover } = FEATURE_ICONS[i] ?? FEATURE_ICONS[0];
                             const isLarge = i === 0 || i === 3; // Make 1st and 4th items large
-                            const bentoImages = ['/real-pos.png', '/real-inventario.png', '/real-tesoreria.png', '/real-store online.png'];
+                            const bentoImages = ['/real-pos.webp', '/real-inventario.webp', '/real-tesoreria.webp', '/real-store online.webp'];
                             
                             return (
                                 <div 
