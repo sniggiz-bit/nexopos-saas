@@ -3,7 +3,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Logo } from '@/components/ui/Logo';
 import { Badge } from '@/components/ui/badge';
-import { LayoutDashboard, Wifi, WifiOff, Clock, Printer } from 'lucide-react';
+import { LayoutDashboard, Wifi, WifiOff, Clock, Printer, Maximize, Minimize } from 'lucide-react';
 import { Shift } from '@/api/shifts';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -144,6 +144,18 @@ export function PosUserToolbar({ currentShift, branchName }: PosUserToolbarProps
                         </>
                     )}
                 </div>
+
+                {/* Pantalla completa */}
+                <button
+                    onClick={() => {
+                        if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(()=>{});
+                        else document.exitFullscreen().catch(()=>{});
+                    }}
+                    title="Pantalla completa"
+                    className="flex items-center justify-center w-7 h-7 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition-colors"
+                >
+                    <Maximize className="w-3.5 h-3.5" />
+                </button>
 
                 <div className="flex items-center gap-2 pl-2 border-l border-slate-700">
                     {/* Avatar */}

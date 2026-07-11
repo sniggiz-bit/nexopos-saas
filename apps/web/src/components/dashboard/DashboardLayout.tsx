@@ -5,7 +5,7 @@ import {
     Settings, Users, FileText, CreditCard, AlertTriangle,
     BarChart3, History, ShoppingBag, Truck, ShoppingCart,
     UserCog, ArrowRightLeft, Store, LogOut, Wifi, Plug,
-    ChevronRight, Bell, Search, Award, Menu, X, Sun, Moon,
+    ChevronRight, Bell, Search, Award, Menu, X, Sun, Moon, Maximize, Minimize
 } from 'lucide-react';
 import { Logo } from '../ui/Logo';
 import { useAuth } from '@/context/AuthContext';
@@ -280,6 +280,29 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                             style={{ color: theme === 'dark' ? 'rgba(210,225,245,0.8)' : 'rgba(15,23,42,0.8)', caretColor: '#0099CC' }}
                         />
                     </div>
+
+                    {/* Fullscreen toggle */}
+                    <button
+                        onClick={() => {
+                            if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(()=>{});
+                            else document.exitFullscreen().catch(()=>{});
+                        }}
+                        className="p-2 rounded-lg transition-all duration-150 cursor-pointer ml-auto md:ml-0"
+                        style={{
+                            color: theme === 'dark' ? 'rgba(180,195,220,0.5)' : 'rgba(75,85,99,0.7)',
+                            background: 'hsl(var(--background))',
+                            border: theme === 'dark' ? '1px solid rgba(0,153,204,0.08)' : '1px solid rgba(0,153,204,0.2)'
+                        }}
+                        onMouseEnter={e => {
+                            (e.currentTarget as HTMLElement).style.color = '#0099CC';
+                        }}
+                        onMouseLeave={e => {
+                            (e.currentTarget as HTMLElement).style.color = theme === 'dark' ? 'rgba(180,195,220,0.5)' : 'rgba(75,85,99,0.7)';
+                        }}
+                        title="Pantalla completa"
+                    >
+                        <Maximize className="w-4 h-4" />
+                    </button>
 
                     {/* Theme toggle */}
                     <button
