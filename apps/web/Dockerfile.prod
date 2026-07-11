@@ -57,7 +57,7 @@ RUN printf 'server {\n\
     resolver 127.0.0.11 valid=30s ipv6=off;\n\
 \n\
     # SSE endpoint: disable buffering so events stream immediately to the browser\n\
-    location /api/events/stream {\n\
+    location ^~ /api/events/stream {\n\
         set $api_upstream api;\n\
         proxy_pass http://$api_upstream:3000;\n\
         proxy_http_version 1.1;\n\
@@ -70,7 +70,7 @@ RUN printf 'server {\n\
     }\n\
 \n\
     # General API proxy (WebSocket + REST)\n\
-    location /api {\n\
+    location ^~ /api {\n\
         set $api_upstream api;\n\
         proxy_pass http://$api_upstream:3000;\n\
         proxy_http_version 1.1;\n\
