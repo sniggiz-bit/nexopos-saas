@@ -2,7 +2,7 @@ import { DashboardLayout } from '../../components/dashboard/DashboardLayout';
 import {
     Package, ShoppingCart, TrendingUp, AlertTriangle,
     Users, Truck, Store, FileText, ArrowUpRight,
-    TrendingDown, Minus, Activity, DollarSign, Zap, Globe,
+    TrendingDown, Minus, Activity, DollarSign, Zap, Globe, Landmark
 } from 'lucide-react';
 
 import { useDashboardStats } from '../../hooks/useDashboard';
@@ -269,7 +269,7 @@ export function DashboardOverviewPage() {
                 {/* ── Fila 2: KPI secundarias ── */}
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
                     {[
-                        { title: 'Clientes',      value: stats?.totalCustomers?.toString() || '0',  icon: Users,     href: '/dashboard/clients'    },
+                        { title: 'IVA Acumulado', value: formatPrice(Math.round((stats?.monthRevenue || 0) - (stats?.monthRevenue || 0) / 1.19)), icon: Landmark, href: '/dashboard/sales' },
                         { title: 'Cotizaciones',  value: stats?.totalQuotes?.toString() || '0',     icon: FileText,  href: '/dashboard/quotes'     },
                         { title: 'Proveedores',   value: stats?.totalSuppliers?.toString() || '0',  icon: Truck,     href: '/dashboard/suppliers'  },
                         { title: 'Sucursales',    value: stats?.totalBranches?.toString() || '0',   icon: Store,     href: '/dashboard/branches'   },
