@@ -487,7 +487,15 @@ export function ProductFormModal({ isOpen, onClose, initialData }: ProductFormMo
                 </div>
 
                 {/* ── Form ── */}
-                <form onSubmit={handleSubmit} style={{ padding: '20px 24px 24px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+                <form 
+                    onSubmit={handleSubmit}
+                    onKeyDown={e => {
+                        if (e.key === 'Enter' && (e.target as HTMLElement).tagName === 'INPUT') {
+                            e.preventDefault();
+                        }
+                    }}
+                    style={{ padding: '20px 24px 24px', display: 'flex', flexDirection: 'column', gap: 16 }}
+                >
 
                     {/* Name */}
                     <div>
