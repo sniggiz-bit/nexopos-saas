@@ -45,7 +45,7 @@ export function CheckoutPanel({
 
     const [paymentType, setPaymentType] = useState<PaymentType>('SINGLE');
     const [singleMethod, setSingleMethod] = useState<string>(PaymentMethod.DEBIT);
-    const [cashReceived, setCashReceived] = useState<string>('');
+    const [cashReceived, setCashReceived] = useState<string>(total.toString());
     const [mixedPayments, setMixedPayments] = useState<Record<string, number | ''>>({
         [PaymentMethod.CASH]: 0,
         [PaymentMethod.DEBIT]: 0,
