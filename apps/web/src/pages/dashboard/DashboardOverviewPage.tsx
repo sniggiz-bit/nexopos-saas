@@ -26,12 +26,13 @@ import {
     Tooltip,
     Legend,
     Filler,
+    ArcElement,
 } from 'chart.js';
-import { Bar } from 'react-chartjs-2';
+import { Bar, Doughnut } from 'react-chartjs-2';
 
 ChartJS.register(
     CategoryScale, LinearScale, BarElement,
-    PointElement, LineElement, Title, Tooltip, Legend, Filler
+    PointElement, LineElement, Title, Tooltip, Legend, Filler, ArcElement
 );
 
 // ── Color palette ──────────────────────────────────────────────────────────────
@@ -761,28 +762,53 @@ function ShiftClosureCard({ summary }: ShiftClosureCardProps) {
     const cash = summary?.paymentMethods?.EFECTIVO ?? 0;
     const debit = summary?.paymentMethods?.DEBITO ?? 0;
     const transfer = summary?.paymentMethods?.TRANSFERENCIA ?? 0;
+    const total = cash + debit + transfer;
+
+    const chartData = {
+        labels: ['Efectivo', 'Débito', 'Transf.'],
+        datasets: [{
+            data: [cash, debit, transfer],
+            backgroundColor: ['#34D399', '#0099CC', '#C084FC'],
+            borderWidth: 0,
+            hoverOffset: 4
+        }],
+    };
+
+    const chartOptions = {
+        cutout: '75%',
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: { display: false },
+            tooltip: {
+                callbacks: {
+                    label: (context: any) => ` ${formatPrice(context.raw)}`,
+                },
+            },
+        },
+    };
 
     return (
         <Link to="/dashboard/treasury" className="block h-full">
-            <div className="rounded-xl p-3.5 h-full transition-all duration-200 group relative overflow-hidden flex flex-col justify-between"
+            <div className="rounded-xl p-5 h-full transition-all duration-200 group relative overflow-hidden flex flex-col justify-between"
                 style={{
-                    background: isDark ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.85)',
-                    border: isDark ? '1px solid rgba(0,153,204,0.08)' : '1px solid rgba(0,153,204,0.18)'
+                    background: BG_CARD,
+                    border: `1px solid ${BORDER}`
                 }}
                 onMouseEnter={e => {
                     (e.currentTarget as HTMLElement).style.borderColor = 'rgba(0,153,204,0.2)';
                     (e.currentTarget as HTMLElement).style.background  = isDark ? 'rgba(0,153,204,0.04)' : 'rgba(0,153,204,0.06)';
                 }}
                 onMouseLeave={e => {
-                    (e.currentTarget as HTMLElement).style.borderColor = isDark ? 'rgba(0,153,204,0.08)' : 'rgba(0,153,204,0.18)';
-                    (e.currentTarget as HTMLElement).style.background  = isDark ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.85)';
+                    (e.currentTarget as HTMLElement).style.borderColor = `1px solid ${BORDER}`;
+                    (e.currentTarget as HTMLElement).style.background  = BG_CARD;
                 }}>
-                <div className="flex items-center justify-between mb-2">
-                    <p className="text-[9px] font-bold uppercase tracking-widest"
-                        style={{ color: isDark ? 'rgba(0,153,204,0.4)' : 'rgba(0,120,180,0.7)' }}>
+                <div className="flex items-center justify-between mb-4">
+                    <p className="text-[11px] font-bold uppercase tracking-wider"
+                        style={{ color: isDark ? 'rgba(0,153,204,0.5)' : 'rgba(0,120,180,0.8)' }}>
                         Detalles del Cierre
                     </p>
-                    <span className={`text-[8px] px-1.5 py-0.5 rounded font-black uppercase tracking-wider ${
+                    <span className={`text-[9px] px-2 py-1 rounded font-black uppercase tracking-wider ${
                         isActive 
                             ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shadow-sm' 
                             : 'bg-gray-500/10 text-gray-400 border border-gray-500/20'
@@ -791,28 +817,46 @@ function ShiftClosureCard({ summary }: ShiftClosureCardProps) {
                     </span>
                 </div>
 
-                <div className="space-y-1.5 my-1">
-                    <div className="flex items-center justify-between text-[11px]">
-                        <span className="flex items-center gap-1" style={{ color: isDark ? 'rgba(180,195,220,0.45)' : 'rgba(71,85,105,0.75)' }}>
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                <div className="flex-1 flex items-center justify-center min-h-0 py-2 relative">
+                    {total > 0 ? (
+                        <div className="h-full w-full relative max-h-[140px] flex items-center justify-center">
+                            <Doughnut data={chartData} options={chartOptions} />
+                            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                                <span className="text-[10px] uppercase font-bold" style={{ color: isDark ? 'rgba(180,195,220,0.4)' : 'rgba(71,85,105,0.6)' }}>Total</span>
+                                <span className="text-sm font-black tabular-nums" style={{ color: isDark ? 'rgba(210,225,245,0.9)' : 'rgba(15,23,42,0.9)' }}>
+                                    {formatPrice(total)}
+                                </span>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="text-xs text-center" style={{ color: isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.3)' }}>
+                            Sin ventas aún
+                        </div>
+                    )}
+                </div>
+
+                <div className="space-y-2 mt-4 pt-4" style={{ borderTop: isDark ? '1px solid rgba(0,153,204,0.08)' : '1px solid rgba(0,153,204,0.18)' }}>
+                    <div className="flex items-center justify-between text-xs">
+                        <span className="flex items-center gap-1.5" style={{ color: isDark ? 'rgba(180,195,220,0.6)' : 'rgba(71,85,105,0.8)' }}>
+                            <span className="w-2 h-2 rounded-full bg-emerald-400" />
                             Efectivo
                         </span>
                         <span className="font-bold font-mono text-emerald-400 tabular-nums">
                             {formatPrice(cash)}
                         </span>
                     </div>
-                    <div className="flex items-center justify-between text-[11px]">
-                        <span className="flex items-center gap-1" style={{ color: isDark ? 'rgba(180,195,220,0.45)' : 'rgba(71,85,105,0.75)' }}>
-                            <span className="w-1.5 h-1.5 rounded-full bg-[#0099CC]" />
+                    <div className="flex items-center justify-between text-xs">
+                        <span className="flex items-center gap-1.5" style={{ color: isDark ? 'rgba(180,195,220,0.6)' : 'rgba(71,85,105,0.8)' }}>
+                            <span className="w-2 h-2 rounded-full bg-[#0099CC]" />
                             Débito
                         </span>
                         <span className="font-bold font-mono text-[#0099CC] tabular-nums">
                             {formatPrice(debit)}
                         </span>
                     </div>
-                    <div className="flex items-center justify-between text-[11px]">
-                        <span className="flex items-center gap-1" style={{ color: isDark ? 'rgba(180,195,220,0.45)' : 'rgba(71,85,105,0.75)' }}>
-                            <span className="w-1.5 h-1.5 rounded-full bg-purple-400" />
+                    <div className="flex items-center justify-between text-xs">
+                        <span className="flex items-center gap-1.5" style={{ color: isDark ? 'rgba(180,195,220,0.6)' : 'rgba(71,85,105,0.8)' }}>
+                            <span className="w-2 h-2 rounded-full bg-purple-400" />
                             Transf.
                         </span>
                         <span className="font-bold font-mono text-purple-400 tabular-nums">
