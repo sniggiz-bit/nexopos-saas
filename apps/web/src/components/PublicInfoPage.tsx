@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
-import { Logo } from './Logo';
+import { Logo } from './ui/Logo';
 
 interface PublicInfoPageProps {
   title: string;
