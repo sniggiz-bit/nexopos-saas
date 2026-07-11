@@ -293,7 +293,7 @@ export function PosPage() {
             </div>
 
             {/* Modals */}
-            <OpenShiftModal isOpen={!isLoadingShift && !currentShift} />
+            <OpenShiftModal isOpen={!isLoadingShift && !currentShift && !isCloseShiftModalOpen} />
             <CloseShiftModal
                 isOpen={isCloseShiftModalOpen}
                 onClose={() => setIsCloseShiftModalOpen(false)}
