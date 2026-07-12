@@ -65,14 +65,6 @@ export function LoginPage() {
                 
                 {/* Visual content container */}
                 <div className="relative z-10 w-full max-w-lg space-y-8">
-                    {/* Pulsing indicator badge */}
-                    <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/30 backdrop-blur-md shadow-inner">
-                        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping shadow-[0_0_8px_#34d399]" />
-                        <span className="w-2 h-2 rounded-full bg-emerald-400 absolute" />
-                        <span className="text-indigo-200 text-xs font-bold tracking-widest uppercase">
-                            NexoPOS Cloud Core
-                        </span>
-                    </div>
 
                     <div className="space-y-4">
                         <h1 className="text-4xl xl:text-5xl font-black text-foreground leading-tight tracking-tight">
