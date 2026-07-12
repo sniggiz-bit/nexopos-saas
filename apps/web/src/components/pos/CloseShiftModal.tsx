@@ -21,7 +21,9 @@ import { Shift } from '@/api/shifts';
 import { formatDistanceToNow, format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { usePrintSettings } from '@/hooks/usePrintSettings';
-import { printThroughIframe, printWithQz, isQzConnected } from '@/utils/print';
+import { printThroughIframe } from '@/utils/print';
+import { useWebSerialPrinter } from '@/hooks/useWebSerialPrinter';
+import { EscPosEncoder } from '@/utils/EscPosEncoder';
 
 interface CloseShiftModalProps {
     isOpen: boolean;
@@ -62,7 +64,8 @@ export function CloseShiftModal({ isOpen, onClose, shiftId, currentShift }: Clos
     const { user } = useAuth();
     const queryClient = useQueryClient();
     const { data: summary, isLoading: isLoadingSummary } = useShiftLiveSummary(isOpen && !!shiftId ? shiftId : null);
-    const { printerName, useQzTray } = usePrintSettings();
+    const { useWebSerial } = usePrintSettings();
+    const { printBytes } = useWebSerialPrinter();
 
     const calculatedTotal = useMemo(() => {
         return DENOMINATIONS.reduce((sum, d) => {
@@ -120,6 +123,25 @@ export function CloseShiftModal({ isOpen, onClose, shiftId, currentShift }: Clos
     const handlePrintReport = async () => {
         if (!closedShift?.textReport) return;
 
+        // Impresión directa USB (ESC/POS)
+        if (useWebSerial && printBytes) {
+            try {
+                const encoder = new EscPosEncoder();
+                encoder.initialize();
+                encoder.text(closedShift.textReport);
+                encoder.newline(4);
+                encoder.cut();
+                
+                const success = await printBytes(encoder.encode());
+                if (success) {
+                    return;
+                }
+                console.warn('[Web Serial] Falló la impresión del reporte Z, usando fallback');
+            } catch (err) {
+                console.warn('[Web Serial] Error en impresión directa:', err);
+            }
+        }
+
         const reportHtml = `<!DOCTYPE html><html>
 <head>
     <meta charset="utf-8">
@@ -132,16 +154,6 @@ export function CloseShiftModal({ isOpen, onClose, shiftId, currentShift }: Clos
 </head>
 <body>${closedShift.textReport}</body>
 </html>`;
-
-        // Impresión silenciosa con QZ Tray si está disponible
-        if (useQzTray && printerName && isQzConnected()) {
-            try {
-                await printWithQz(closedShift.textReport, printerName, '80mm');
-                return;
-            } catch (err) {
-                console.warn('[QZ Tray] Falló la impresión del reporte Z, usando fallback:', err);
-            }
-        }
 
         // Fallback: iframe
         await printThroughIframe(reportHtml);

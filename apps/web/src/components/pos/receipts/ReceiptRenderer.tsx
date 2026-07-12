@@ -4,9 +4,10 @@ import { Sale } from '@/api/sales';
 import { Ticket80mm } from './Ticket80mm';
 import { Ticket58mm } from './Ticket58mm';
 import { InvoiceA4 } from './InvoiceA4';
-import { printThroughIframe, printWithQz, isQzConnected } from '@/utils/print';
+import { printThroughIframe } from '@/utils/print';
 import { PrintFormat } from '@/hooks/usePrintSettings';
 import { Tenant } from '@nexopos/shared';
+import { generateReceiptEscPos } from './ReceiptToEscPos';
 
 interface ReceiptRendererProps {
     sale: Sale;
@@ -43,22 +44,15 @@ export function isRealDtePdf(url?: string | null): boolean {
  * Comportamiento:
  *  1. Si la venta tiene un PDF oficial de Lioren (DTE real), abre ese PDF en
  *     una nueva pestaña para que el usuario lo imprima desde el visor del navegador.
- *     El PDF ya incluye el TED (Timbre Electrónico Digital) requerido por el SII.
- *  2. En caso contrario (Comprobante de Venta o DTE mock), renderiza el ticket
- *     HTML y lo imprime vía QZ Tray (silencioso) o iframe (diálogo del SO).
- *
- * @param sale         - Datos de la venta
- * @param format       - Formato de ticket ('80mm' | '58mm' | 'A4')
- * @param tenant       - Datos del tenant (nombre, RUT, etc.)
- * @param printerName  - Nombre de la impresora en QZ Tray (vacío → fallback)
- * @param useQzTray    - Si false, siempre usa fallback iframe
+ *  2. Si Web Serial está activo y disponible, genera código ESC/POS y lo envía por USB.
+ *  3. En caso contrario, renderiza el ticket HTML y lo imprime vía iframe (diálogo del SO).
  */
 export async function printSaleAction(
     sale: Sale,
     format: PrintFormat,
     tenant?: Tenant | null,
-    printerName?: string,
-    useQzTray?: boolean,
+    useWebSerial?: boolean,
+    printBytes?: (data: Uint8Array) => Promise<boolean>,
 ): Promise<void> {
     // ── 1. Si hay PDF oficial del DTE, abrir en nueva pestaña (tiene TED) ──
     if (isRealDtePdf(sale.dtePdfUrl)) {
@@ -66,9 +60,23 @@ export async function printSaleAction(
         return;
     }
 
-    // ── 2. Fallback: renderizar ticket HTML (Comprobante de Venta o mock DTE) ──
-    let html = '';
+    // ── 2. Intentar impresión directa vía Web Serial API (ESC/POS) ──
+    if (useWebSerial && printBytes && format !== 'A4') {
+        try {
+            console.log(`[Web Serial] Generando ESC/POS y enviando a impresora USB...`);
+            const bytes = generateReceiptEscPos(sale, tenant || undefined);
+            const success = await printBytes(bytes);
+            if (success) {
+                return; // éxito silencioso
+            }
+            console.warn('[Web Serial] Error o puerto no listo, cayendo a iframe...');
+        } catch (err) {
+            console.warn('[Web Serial] Falló la impresión directa, usando fallback iframe:', err);
+        }
+    }
 
+    // ── 3. Fallback: renderizar ticket HTML y usar diálogo del SO ──
+    let html = '';
     try {
         if (format === '80mm') {
             html = renderToString(<Ticket80mm sale={sale} tenant={tenant ?? undefined} />);
@@ -84,21 +92,6 @@ export async function printSaleAction(
 
     if (!html) return;
 
-    // ── Intentar impresión silenciosa con QZ Tray ──
-    const shouldUseQz = useQzTray !== false && printerName && isQzConnected();
-
-    if (shouldUseQz) {
-        try {
-            console.log(`[QZ Tray] Imprimiendo en "${printerName}" formato ${format}`);
-            await printWithQz(html, printerName!, format === 'A4' ? 'A4' : format);
-            return; // éxito silencioso
-        } catch (err) {
-            console.warn('[QZ Tray] Falló la impresión silenciosa, usando fallback iframe:', err);
-            // continúa al fallback
-        }
-    }
-
-    // ── Fallback: diálogo del navegador ──
     const fullHtml = `<!DOCTYPE html>
 <html>
   <head>

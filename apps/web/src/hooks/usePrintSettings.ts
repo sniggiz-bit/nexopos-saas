@@ -5,44 +5,33 @@ export type PrintFormat = '80mm' | '58mm' | 'A4';
 interface PrintSettings {
     autoPrint: boolean;
     defaultFormat: PrintFormat;
-    /** Nombre de la impresora seleccionada en QZ Tray (vacío = usar impresora por defecto del sistema) */
-    printerName: string;
-    /** Si true, usar QZ Tray cuando esté disponible; si false, siempre usar el diálogo del navegador */
-    useQzTray: boolean;
+    useWebSerial: boolean;
 }
-
-const STORAGE_KEY = 'print_settings_v2';
 
 export function usePrintSettings() {
     const [settings, setSettings] = useState<PrintSettings>(() => {
-        // Migrar desde la clave antigua si existe
-        const oldSaved = localStorage.getItem('print_settings');
-        const newSaved = localStorage.getItem(STORAGE_KEY);
-        const source = newSaved ?? oldSaved;
-
-        if (source) {
+        const saved = localStorage.getItem('nexopos_print_settings');
+        if (saved) {
             try {
-                const parsed = JSON.parse(source);
+                const parsed = JSON.parse(saved);
                 return {
-                    autoPrint: parsed.autoPrint ?? true,
-                    defaultFormat: parsed.defaultFormat ?? '80mm',
-                    printerName: parsed.printerName ?? '',
-                    useQzTray: parsed.useQzTray ?? true,
+                    autoPrint: !!parsed.autoPrint,
+                    defaultFormat: (parsed.defaultFormat as PrintFormat) || '80mm',
+                    useWebSerial: parsed.useWebSerial ?? false,
                 };
             } catch (e) {
-                console.error('Error parsing print settings', e);
+                console.error('Failed to parse print settings', e);
             }
         }
         return {
-            autoPrint: true,
+            autoPrint: false,
             defaultFormat: '80mm',
-            printerName: '',
-            useQzTray: true,
+            useWebSerial: false,
         };
     });
 
     useEffect(() => {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+        localStorage.setItem('nexopos_print_settings', JSON.stringify(settings));
     }, [settings]);
 
     const setAutoPrint = (autoPrint: boolean) =>
@@ -51,18 +40,13 @@ export function usePrintSettings() {
     const setDefaultFormat = (defaultFormat: PrintFormat) =>
         setSettings(prev => ({ ...prev, defaultFormat }));
 
-    const setPrinterName = (printerName: string) =>
-        setSettings(prev => ({ ...prev, printerName }));
-
-    const setUseQzTray = (useQzTray: boolean) =>
-        setSettings(prev => ({ ...prev, useQzTray }));
+    const setUseWebSerial = (useWebSerial: boolean) =>
+        setSettings(prev => ({ ...prev, useWebSerial }));
 
     return {
         ...settings,
         setAutoPrint,
         setDefaultFormat,
-        setPrinterName,
-        setUseQzTray,
+        setUseWebSerial,
     };
 }
-

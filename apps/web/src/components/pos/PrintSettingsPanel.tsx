@@ -2,11 +2,10 @@
  * PrintSettingsPanel
  *
  * Panel de configuración de impresión para el POS.
- * Muestra el estado de QZ Tray, permite seleccionar impresora
- * y configurar el formato del ticket.
+ * Muestra el estado de la conexión USB y configura el formato del ticket.
  */
-import { Printer, Wifi, WifiOff, RefreshCw, CheckCircle2, AlertTriangle, Download } from 'lucide-react';
-import { useQzTray } from '@/hooks/useQzTray';
+import { Printer, Usb, CheckCircle2, AlertTriangle, RefreshCw } from 'lucide-react';
+import { useWebSerialPrinter } from '@/hooks/useWebSerialPrinter';
 import { usePrintSettings } from '@/hooks/usePrintSettings';
 import { Button } from '@/components/ui/button';
 
@@ -16,27 +15,30 @@ interface PrintSettingsPanelProps {
 }
 
 export function PrintSettingsPanel({ compact = false }: PrintSettingsPanelProps) {
-    const {
-        status, printers, isConnected, error,
-        connect, getPrinters,
-    } = useQzTray();
+    const { status, error, isConnected, connect, disconnect } = useWebSerialPrinter();
 
     const {
         autoPrint, setAutoPrint,
         defaultFormat, setDefaultFormat,
-        printerName, setPrinterName,
-        useQzTray: useQzEnabled, setUseQzTray,
+        useWebSerial, setUseWebSerial,
     } = usePrintSettings();
 
     const statusInfo = {
-        connected: { label: 'Conectado', color: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/30', icon: <CheckCircle2 className="w-3.5 h-3.5" /> },
+        connected: { label: 'Conectado (USB)', color: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/30', icon: <CheckCircle2 className="w-3.5 h-3.5" /> },
         connecting: { label: 'Conectando...', color: 'text-amber-400', bg: 'bg-amber-500/10 border-amber-500/30', icon: <RefreshCw className="w-3.5 h-3.5 animate-spin" /> },
-        unavailable: { label: 'No instalado', color: 'text-red-400', bg: 'bg-red-500/10 border-red-500/30', icon: <WifiOff className="w-3.5 h-3.5" /> },
-        disconnected: { label: 'Desconectado', color: 'text-slate-400', bg: 'bg-slate-500/10 border-slate-500/30', icon: <WifiOff className="w-3.5 h-3.5" /> },
-        error: { label: 'Error', color: 'text-red-400', bg: 'bg-red-500/10 border-red-500/30', icon: <AlertTriangle className="w-3.5 h-3.5" /> },
+        unavailable: { label: 'No Soportado', color: 'text-red-400', bg: 'bg-red-500/10 border-red-500/30', icon: <AlertTriangle className="w-3.5 h-3.5" /> },
+        disconnected: { label: 'Desconectado', color: 'text-slate-400', bg: 'bg-slate-500/10 border-slate-500/30', icon: <Usb className="w-3.5 h-3.5" /> },
+        error: { label: 'Error USB', color: 'text-red-400', bg: 'bg-red-500/10 border-red-500/30', icon: <AlertTriangle className="w-3.5 h-3.5" /> },
     };
 
     const si = statusInfo[status];
+
+    const handleConnectClick = async () => {
+        const port = await connect();
+        if (port) {
+            setUseWebSerial(true);
+        }
+    };
 
     return (
         <div className={compact ? 'space-y-4' : 'space-y-5 p-4 rounded-xl border border-border bg-background'}>
@@ -49,10 +51,10 @@ export function PrintSettingsPanel({ compact = false }: PrintSettingsPanelProps)
                 </div>
             )}
 
-            {/* ── Estado QZ Tray ── */}
+            {/* ── Estado Web Serial ── */}
             <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                    <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">QZ Tray</span>
+                    <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Impresora USB</span>
                     <div className={`flex items-center gap-1.5 text-xs font-medium px-2 py-0.5 rounded-full border ${si.bg} ${si.color}`}>
                         {si.icon}
                         {si.label}
@@ -63,15 +65,7 @@ export function PrintSettingsPanel({ compact = false }: PrintSettingsPanelProps)
                     <div className="flex items-start gap-2 p-2.5 rounded-lg bg-amber-500/5 border border-amber-500/20 text-xs text-amber-300">
                         <AlertTriangle className="w-3.5 h-3.5 mt-0.5 shrink-0 text-amber-400" />
                         <span>
-                            QZ Tray no está instalado o no está ejecutándose.{' '}
-                            <a
-                                href="https://qz.io/download"
-                                target="_blank"
-                                rel="noreferrer"
-                                className="underline font-semibold text-amber-400 hover:text-amber-300"
-                            >
-                                Descargar aquí
-                            </a>
+                            Tu navegador no soporta Web Serial API. Para imprimir directamente, usa Google Chrome o Microsoft Edge.
                         </span>
                     </div>
                 )}
@@ -81,76 +75,29 @@ export function PrintSettingsPanel({ compact = false }: PrintSettingsPanelProps)
                 )}
 
                 <div className="flex gap-2">
-                    {!isConnected && status !== 'connecting' && (
+                    {!isConnected && status !== 'unavailable' && (
                         <Button
                             variant="outline"
                             size="sm"
                             className="h-7 text-xs gap-1.5"
-                            onClick={connect}
+                            onClick={handleConnectClick}
+                            disabled={status === 'connecting'}
                         >
-                            <Wifi className="w-3 h-3" />
-                            Conectar QZ Tray
+                            <Usb className="w-3 h-3" />
+                            Vincular Impresora USB
                         </Button>
                     )}
                     {isConnected && (
                         <Button
                             variant="outline"
                             size="sm"
-                            className="h-7 text-xs gap-1.5"
-                            onClick={getPrinters}
+                            className="h-7 text-xs gap-1.5 text-red-400 hover:text-red-300 border-red-500/30 hover:bg-red-500/10"
+                            onClick={disconnect}
                         >
-                            <RefreshCw className="w-3 h-3" />
-                            Actualizar impresoras
+                            Desconectar
                         </Button>
                     )}
-                    {status === 'unavailable' && (
-                        <a
-                            href="https://qz.io/download"
-                            target="_blank"
-                            rel="noreferrer"
-                        >
-                            <Button variant="outline" size="sm" className="h-7 text-xs gap-1.5">
-                                <Download className="w-3 h-3" />
-                                Descargar QZ Tray
-                            </Button>
-                        </a>
-                    )}
                 </div>
-            </div>
-
-            {/* ── Selección de impresora ── */}
-            <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                    Impresora
-                </label>
-                <select
-                    value={printerName}
-                    onChange={e => setPrinterName(e.target.value)}
-                    className="w-full h-8 px-2 text-xs rounded-lg border border-border bg-muted text-foreground focus:outline-none focus:ring-1 focus:ring-primary/50 disabled:opacity-50"
-                    disabled={!isConnected}
-                >
-                    <option value="">
-                        {isConnected
-                            ? printers.length > 0
-                                ? '— Seleccionar impresora —'
-                                : 'No hay impresoras disponibles'
-                            : 'Conecta QZ Tray para ver impresoras'}
-                    </option>
-                    {printers.map(p => (
-                        <option key={p} value={p}>{p}</option>
-                    ))}
-                </select>
-                {printerName && (
-                    <p className="text-[10px] text-emerald-400 flex items-center gap-1">
-                        <CheckCircle2 className="w-3 h-3" />
-                        Impresora seleccionada: <span className="font-medium">{printerName}</span>
-                    </p>
-                )}
-                {isConnected && !printerName && (
-                    <p className="text-[10px] text-amber-400">
-                        Selecciona una impresora para activar la impresión silenciosa
-                    </p>
-                )}
             </div>
 
             {/* ── Formato del ticket ── */}
@@ -190,24 +137,24 @@ export function PrintSettingsPanel({ compact = false }: PrintSettingsPanelProps)
                 />
 
                 <ToggleRow
-                    label="Usar QZ Tray (silencioso)"
-                    description="Si está desactivado, siempre usará el diálogo del navegador"
-                    value={useQzEnabled}
-                    onChange={setUseQzTray}
+                    label="Impresión Directa Silenciosa"
+                    description="Si está desactivado, siempre mostrará el cuadro de diálogo del sistema (PDF/Iframe)"
+                    value={useWebSerial}
+                    onChange={setUseWebSerial}
                 />
             </div>
 
             {/* ── Resumen del modo activo ── */}
             <div className={[
                 'flex items-center gap-2 p-2.5 rounded-lg text-xs border',
-                isConnected && printerName && useQzEnabled
+                isConnected && useWebSerial
                     ? 'bg-emerald-500/5 border-emerald-500/20 text-emerald-300'
                     : 'bg-slate-500/5 border-slate-500/20 text-slate-400',
             ].join(' ')}>
                 <Printer className="w-3.5 h-3.5 shrink-0" />
-                {isConnected && printerName && useQzEnabled
-                    ? <span>✅ Modo silencioso activo — sin diálogo del SO</span>
-                    : <span>⚠️ Modo diálogo — el cajero verá el cuadro de impresión</span>
+                {isConnected && useWebSerial
+                    ? <span>✅ Impresión silenciosa USB activa</span>
+                    : <span>⚠️ Modo diálogo — se mostrará el cuadro de impresión nativo</span>
                 }
             </div>
         </div>

@@ -16,6 +16,7 @@ import type { Customer } from '@/api/types';
 import { usePrintSettings } from '@/hooks/usePrintSettings';
 import { printSaleAction } from './receipts/ReceiptRenderer';
 import { useTenant } from '@/hooks/useTenant';
+import { useWebSerialPrinter } from '@/hooks/useWebSerialPrinter';
 
 interface CheckoutPanelProps {
     subtotal: number;
@@ -37,7 +38,8 @@ export function CheckoutPanel({
     onConfirm, onBack,
     isProcessing, isSuccess, isError, saleResult,
 }: CheckoutPanelProps) {
-    const { autoPrint, defaultFormat, setDefaultFormat, printerName, useQzTray } = usePrintSettings();
+    const { autoPrint, defaultFormat, setDefaultFormat, useWebSerial } = usePrintSettings();
+    const { printBytes } = useWebSerialPrinter();
     const [countdown, setCountdown] = useState(4);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const { user } = useAuth();
@@ -132,15 +134,15 @@ export function CheckoutPanel({
             setIsSubmitting(true);
             const result = await onConfirm(payments, dteType, customerId);
             if (autoPrint && result) {
-                // Impresión silenciosa con QZ Tray si está disponible, fallback iframe
-                printSaleAction(result, defaultFormat, tenant, printerName || undefined, useQzTray);
+                // Impresión silenciosa USB si está disponible, fallback iframe
+                printSaleAction(result, defaultFormat, tenant, useWebSerial, printBytes);
             }
         } catch (_err) {
             // Handled in mutation/toast
         } finally {
             setIsSubmitting(false);
         }
-    }, [selectedCustomer, paymentType, singleMethod, total, dteType, mixedPayments, onConfirm, autoPrint, defaultFormat, tenant, printerName, useQzTray]);
+    }, [selectedCustomer, paymentType, singleMethod, total, dteType, mixedPayments, onConfirm, autoPrint, defaultFormat, tenant, useWebSerial, printBytes]);
 
     useEffect(() => {
         if (isSuccess || isError) return;
@@ -232,7 +234,7 @@ export function CheckoutPanel({
                         <Button
                             className="flex-1"
                             variant="secondary"
-                            onClick={() => printSaleAction(saleResult, defaultFormat, tenant, printerName || undefined, useQzTray)}
+                            onClick={() => printSaleAction(saleResult, defaultFormat, tenant, useWebSerial, printBytes)}
                         >
                             {hasRealDtePdf ? '🖨 Reimprimir PDF DTE' : 'Reimprimir Ticket'}
                         </Button>

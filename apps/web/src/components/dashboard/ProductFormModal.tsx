@@ -275,6 +275,7 @@ export function ProductFormModal({ isOpen, onClose, initialData }: ProductFormMo
                 unitType:   initialData.unitType,
                 categoryId: initialData.category?.id || '',
                 brandId:    initialData.brand?.id || '',
+                supplierId: '', // Default as supplierId is not in initialData or add it if it is
                 image:      initialData.image || '',
                 isActive:   initialData.isActive,
             });
@@ -294,7 +295,7 @@ export function ProductFormModal({ isOpen, onClose, initialData }: ProductFormMo
             setFormData({
                 name: '', sku: '', barcode: '', price: '', costPrice: '',
                 stock: '0', minStock: '0', unitType: 'UNIT',
-                categoryId: '', brandId: '', image: '', isActive: true,
+                categoryId: '', brandId: '', supplierId: '', image: '', isActive: true,
             });
             setGalleryImages([null, null, null, null]);
             setPriceTiers([]);
@@ -410,7 +411,7 @@ export function ProductFormModal({ isOpen, onClose, initialData }: ProductFormMo
                 toast.success('Producto creado exitosamente');
                 queryClient.invalidateQueries({ queryKey: ['products-all'] });
                 onClose();
-                setFormData({ name: '', sku: '', barcode: '', price: '', costPrice: '', stock: '0', minStock: '0', unitType: 'UNIT', categoryId: '', brandId: '', image: '', isActive: true });
+                setFormData({ name: '', sku: '', barcode: '', price: '', costPrice: '', stock: '0', minStock: '0', unitType: 'UNIT', categoryId: '', brandId: '', supplierId: '', image: '', isActive: true });
                 setGalleryImages([null, null, null, null]);
                 setPriceTiers([]);
             }

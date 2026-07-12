@@ -3,12 +3,12 @@ import { useAuth } from '@/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Logo } from '@/components/ui/Logo';
 import { Badge } from '@/components/ui/badge';
-import { LayoutDashboard, Wifi, WifiOff, Clock, Printer, Maximize, Minimize } from 'lucide-react';
+import { LayoutDashboard, Wifi, WifiOff, Clock, Printer, Maximize } from 'lucide-react';
 import { Shift } from '@/api/shifts';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { PrintSettingsPanel } from './PrintSettingsPanel';
-import { useQzTray } from '@/hooks/useQzTray';
+import { useWebSerialPrinter } from '@/hooks/useWebSerialPrinter';
 
 
 const ROLE_LABELS: Record<string, string> = {
@@ -36,7 +36,7 @@ export function PosUserToolbar({ currentShift, branchName }: PosUserToolbarProps
     const [now, setNow]               = useState(new Date());
     const [isOnline, setIsOnline]     = useState(navigator.onLine);
     const [showPrintSettings, setShowPrintSettings] = useState(false);
-    const { isConnected: isQzConnected } = useQzTray();
+    const { isConnected: isWebSerialConnected } = useWebSerialPrinter();
 
     useEffect(() => {
         const tick = setInterval(() => setNow(new Date()), 1000);
@@ -123,10 +123,10 @@ export function PosUserToolbar({ currentShift, branchName }: PosUserToolbarProps
                         ].join(' ')}
                     >
                         <Printer className="w-3.5 h-3.5" />
-                        {/* Indicador QZ */}
+                        {/* Indicador Web Serial */}
                         <span className={[
                             'w-1.5 h-1.5 rounded-full -mt-2 -mr-1',
-                            isQzConnected ? 'bg-emerald-400' : 'bg-red-500',
+                            isWebSerialConnected ? 'bg-emerald-400' : 'bg-red-500',
                         ].join(' ')} />
                     </button>
 
