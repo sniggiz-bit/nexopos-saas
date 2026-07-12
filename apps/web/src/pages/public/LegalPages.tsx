@@ -1,4 +1,4 @@
-import React from 'react';
+// import React from 'react';
 import { PublicInfoPage } from '../../components/PublicInfoPage';
 
 export function TerminosPage() {

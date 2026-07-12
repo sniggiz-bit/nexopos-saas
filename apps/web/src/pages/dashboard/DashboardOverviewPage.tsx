@@ -1,7 +1,7 @@
 import { DashboardLayout } from '../../components/dashboard/DashboardLayout';
 import {
     Package, ShoppingCart, TrendingUp, AlertTriangle,
-    Users, Truck, Store, FileText, ArrowUpRight,
+    Truck, Store, FileText, ArrowUpRight,
     TrendingDown, Minus, Activity, DollarSign, Zap, Globe, Landmark
 } from 'lucide-react';
 

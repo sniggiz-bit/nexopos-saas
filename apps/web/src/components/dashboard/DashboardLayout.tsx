@@ -5,7 +5,7 @@ import {
     Settings, Users, FileText, CreditCard, AlertTriangle,
     BarChart3, History, ShoppingBag, Truck, ShoppingCart,
     UserCog, ArrowRightLeft, Store, LogOut, Wifi, Plug,
-    ChevronRight, Bell, Search, Award, Menu, X, Sun, Moon, Maximize, Minimize
+    ChevronRight, Bell, Search, Award, Menu, X, Sun, Moon, Maximize
 } from 'lucide-react';
 import { Logo } from '../ui/Logo';
 import { useAuth } from '@/context/AuthContext';

@@ -42,6 +42,8 @@ interface PaymentModalProps {
     saleResult?: any;
 }
 
+import { useWebSerialPrinter } from '@/hooks/useWebSerialPrinter';
+
 type PaymentType = 'SINGLE' | 'MIXED';
 
 export function PaymentModal({
@@ -58,7 +60,8 @@ export function PaymentModal({
     isError,
     saleResult,
 }: PaymentModalProps) {
-    const { autoPrint, defaultFormat, setDefaultFormat, printerName, useQzTray } = usePrintSettings();
+    const { autoPrint, defaultFormat, setDefaultFormat, useWebSerial } = usePrintSettings();
+    const { printBytes } = useWebSerialPrinter();
     const [hasAttemptedAutoPrint, setHasAttemptedAutoPrint] = useState(false);
     const [countdown, setCountdown] = useState(4);
     const { user } = useAuth();
@@ -114,13 +117,13 @@ export function PaymentModal({
         // Disparar auto-print UNA SOLA VEZ al éxito
         if (autoPrint && saleResult && !hasAttemptedAutoPrint) {
             setHasAttemptedAutoPrint(true);
-            printSaleAction(saleResult, defaultFormat, tenant, printerName || undefined, useQzTray);
+            printSaleAction(saleResult, defaultFormat, tenant, useWebSerial, printBytes);
         }
 
         if (countdown <= 0) { onClose(); return; }
         const t = setTimeout(() => setCountdown(c => c - 1), 1000);
         return () => clearTimeout(t);
-    }, [isSuccess, countdown, onClose, autoPrint, saleResult, hasAttemptedAutoPrint, defaultFormat, tenant, printerName, useQzTray]);
+    }, [isSuccess, countdown, onClose, autoPrint, saleResult, hasAttemptedAutoPrint, defaultFormat, tenant, useWebSerial, printBytes]);
 
 
     const [receiptEmail, setReceiptEmail] = useState('');
@@ -299,7 +302,7 @@ export function PaymentModal({
                         {/* Reprint + format selector */}
                         <div className="flex gap-2">
                             <Button className="flex-1" variant="secondary"
-                                onClick={() => printSaleAction(saleResult, defaultFormat, tenant, printerName || undefined, useQzTray)}>
+                                onClick={() => printSaleAction(saleResult, defaultFormat, tenant, useWebSerial, printBytes)}>
                                 {hasRealDtePdf ? '🖨 Reimprimir PDF DTE' : 'Reimprimir Ticket'}
                             </Button>
                             {!hasRealDtePdf && (
