@@ -192,5 +192,9 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
   get invoice() {
     return this.prisma.invoice;
   }
+
+  get systemNotification() {
+    return this.prisma.systemNotification;
+  }
 }
 
