@@ -12,12 +12,12 @@ import {
     GitBranch,
     Globe,
     ChevronRight,
-    Bell,
     Search,
     Sun,
     Moon,
 } from 'lucide-react';
 import { Logo } from '../components/ui/Logo';
+import { NotificationBell } from '../components/admin/NotificationBell';
 
 export default function SuperAdminLayout() {
     const { user, logout } = useAuth();
@@ -228,17 +228,7 @@ export default function SuperAdminLayout() {
                     </button>
 
                     {/* Notification bell */}
-                    <button className="relative p-2 rounded-lg transition-all duration-150"
-                        style={{
-                            color: theme === 'dark' ? 'rgba(180,195,220,0.5)' : 'rgba(75,85,99,0.7)',
-                            background: 'hsl(var(--background))',
-                            border: theme === 'dark' ? '1px solid rgba(0,153,204,0.08)' : '1px solid rgba(0,153,204,0.2)'
-                        }}
-                        onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = '#0099CC'}
-                        onMouseLeave={e => (e.currentTarget as HTMLElement).style.color = theme === 'dark' ? 'rgba(180,195,220,0.5)' : 'rgba(75,85,99,0.7)'}
-                    >
-                        <Bell className="w-4 h-4" />
-                    </button>
+                    <NotificationBell />
                 </header>
 
                 {/* ── Page Content ── */}

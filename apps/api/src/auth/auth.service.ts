@@ -13,6 +13,7 @@ import { TenantsService } from '../tenants/tenants.service';
 import * as bcrypt from 'bcrypt';
 import { RegisterTenantDto } from './dto/register-tenant.dto';
 import { formatRut } from '@nexopos/shared';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class AuthService {
@@ -22,6 +23,7 @@ export class AuthService {
     private emailService: EmailService,
     @Inject(forwardRef(() => TenantsService))
     private tenantsService: TenantsService,
+    private notificationsService: NotificationsService,
   ) { }
 
   async validateUser(email: string, pass: string): Promise<any> {
@@ -216,6 +218,13 @@ export class AuthService {
         .catch((err) => {
           console.error('Failed to send welcome email:', err);
         });
+
+      // Notify SuperAdmin
+      this.notificationsService.notifySuperAdmin(
+        'Nuevo Registro',
+        `El comercio "${dto.companyName}" se ha registrado exitosamente. Usuario: ${dto.userName} (${dto.email})`,
+        'REGISTRATION'
+      ).catch(e => console.error('Failed to notify superadmin:', e));
 
       // 5. Generate JWT token for auto-login
       const token = await this.login(result.user);
