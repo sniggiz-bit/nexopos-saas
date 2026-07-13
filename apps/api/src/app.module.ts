@@ -42,6 +42,7 @@ import { BillingModule } from './billing/billing.module';
 import { SupportModule } from './support/support.module';
 import { MercadopagoModule } from './mercadopago/mercadopago.module';
 import { JwtAuthGuard } from './auth/jwt-auth.guard';
+import { NotificationsModule } from './notifications/notifications.module';
 
 @Module({
   imports: [
@@ -87,6 +88,7 @@ import { JwtAuthGuard } from './auth/jwt-auth.guard';
     BillingModule,
     SupportModule,
     MercadopagoModule,
+    NotificationsModule,
   ],
   controllers: [AppController, DebugController],
   providers: [

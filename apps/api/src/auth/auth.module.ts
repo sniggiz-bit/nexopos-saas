@@ -6,6 +6,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { EmailModule } from '../email/email.module';
 import { PrismaModule } from '../prisma/prisma.module';
 import { TenantsModule } from '../tenants/tenants.module';
+import { NotificationsModule } from '../notifications/notifications.module';
 import { FeatureGuard } from './feature.guard';
 import { ResourceLimitGuard } from './resource-limit.guard';
 import { JwtAuthGuard } from './jwt-auth.guard';
@@ -15,6 +16,7 @@ import { JwtAuthGuard } from './jwt-auth.guard';
   imports: [
     PrismaModule,
     EmailModule,
+    NotificationsModule,
     forwardRef(() => TenantsModule),
     JwtModule.registerAsync({
       imports: [ConfigModule],

@@ -836,3 +836,12 @@ model TenantModuleAddon {
 
   @@unique([tenantId, moduleId])
 }
+
+model SystemNotification {
+  id        String   @id @default(uuid())
+  title     String
+  message   String
+  type      String   // 'CHAT', 'REGISTRATION', 'SYSTEM'
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+}

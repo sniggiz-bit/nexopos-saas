@@ -52,9 +52,9 @@ export class EventsGateway
         return;
       }
 
-      const payload = this.jwtService.verify(token) as { tenantId?: string };
+      const payload = this.jwtService.verify(token) as { tenantId?: string; role?: string };
 
-      if (payload.tenantId !== tenantId) {
+      if (payload.tenantId !== tenantId && payload.role !== 'SUPERADMIN' && tenantId !== 'superadmin') {
         this.logger.warn(
           `Connection rejected: Tenant mismatch. Socket ID: ${client.id}`,
         );

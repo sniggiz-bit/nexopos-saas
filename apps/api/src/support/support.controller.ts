@@ -2,10 +2,14 @@ import { Controller, Post, Body, Req, UseGuards, UnauthorizedException } from '@
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { PrismaService } from '../prisma/prisma.service';
 import { Public } from '../auth/decorators/public.decorator';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Controller('support')
 export class SupportController {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private notificationsService: NotificationsService,
+  ) {}
 
   @Post('chat')
   @UseGuards(JwtAuthGuard)
@@ -52,6 +56,13 @@ export class SupportController {
       reply = `¡Hola! Qué gusto saludarte. Soy el bot de soporte de NexoPOS. Veo que tienes tu plan al día en tu tienda ${tenant?.name}. ¿Qué necesitas?`;
     }
 
+    // Notify SuperAdmin
+    await this.notificationsService.notifySuperAdmin(
+      'Nuevo Mensaje de Soporte',
+      `${user.name} (${tenant?.name}): ${message}`,
+      'CHAT'
+    );
+
     return {
       reply,
       contextUsed: context
@@ -73,6 +84,13 @@ export class SupportController {
     } else if (lowercaseMsg.includes('hola')) {
       reply = "¡Hola! Bienvenido a NexoPOS. Por favor selecciona una de las opciones o descríbeme qué necesitas.";
     }
+
+    // Notify SuperAdmin
+    await this.notificationsService.notifySuperAdmin(
+      'Nuevo Mensaje en Chatbot Público',
+      `Visitante anónimo dice: ${message}`,
+      'CHAT'
+    );
 
     return { reply };
   }
