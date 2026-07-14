@@ -15,6 +15,7 @@ import {
     Search,
     Sun,
     Moon,
+    MessageSquare,
 } from 'lucide-react';
 import { Logo } from '../components/ui/Logo';
 import { NotificationBell } from '../components/admin/NotificationBell';
@@ -47,6 +48,7 @@ export default function SuperAdminLayout() {
                 { name: 'System Health', path: '/admin/system-health', icon: Activity },
                 { name: 'Comunicados', path: '/admin/announcements', icon: Megaphone },
                 { name: 'Landing Page', path: '/admin/landing', icon: Globe },
+                { name: 'Chats en Vivo', path: '/admin/live-chats', icon: MessageSquare },
             ],
         },
     ];

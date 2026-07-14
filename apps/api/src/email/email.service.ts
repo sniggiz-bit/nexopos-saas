@@ -749,4 +749,92 @@ export class EmailService {
 </html>
     `.trim();
   }
+
+  async sendSystemNotification(
+    email: string,
+    title: string,
+    message: string,
+    type: string,
+    actionUrl?: string,
+  ): Promise<void> {
+    const htmlContent = this.generateSystemNotificationHtml(title, message, type, actionUrl);
+    const subject = `NexoPOS Alerta: ${title}`;
+
+    try {
+      if (!this.resendApiKey) {
+        this.logger.warn('RESEND_API_KEY not configured. Email will be logged to console.');
+        this.logger.log('='.repeat(80));
+        this.logger.log(`📧 SEND SYSTEM NOTIFICATION`);
+        this.logger.log(`To: ${email}`);
+        this.logger.log(`Subject: ${subject}`);
+        this.logger.log('-'.repeat(80));
+        this.logger.log(htmlContent);
+        this.logger.log('='.repeat(80));
+        return;
+      }
+
+      const response = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${this.resendApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          from: this.fromEmail,
+          to: email,
+          subject,
+          html: htmlContent,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.text();
+        throw new Error(`Resend API error: ${error}`);
+      }
+
+      this.logger.log(`System notification sent successfully to ${email}`);
+    } catch (error) {
+      this.logger.error(`Failed to send system notification to ${email}:`, error);
+    }
+  }
+
+  private generateSystemNotificationHtml(title: string, message: string, type: string, actionUrl?: string): string {
+    const actionHtml = actionUrl
+      ? `<div style="text-align: center; margin-top: 30px;">
+           <a href="${actionUrl}" style="background-color: #0099CC; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">
+             Continuar Conversación
+           </a>
+         </div>`
+      : '';
+
+    return `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Alerta NexoPOS</title>
+</head>
+<body style="font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px;">
+  <div style="max-width: 600px; margin: 0 auto; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+    <div style="background-color: #0B0F1A; color: white; padding: 20px; text-align: center; border-bottom: 4px solid #0099CC;">
+      <h1 style="margin: 0; font-size: 24px;">NexoPOS</h1>
+    </div>
+    <div style="padding: 30px;">
+      <h2 style="margin-top: 0; color: #333;">${title}</h2>
+      <span style="display: inline-block; background-color: #e2e8f0; color: #475569; padding: 4px 10px; border-radius: 9999px; font-size: 12px; font-weight: bold; margin-bottom: 20px;">
+        TIPO: ${type}
+      </span>
+      <p style="color: #4a5568; line-height: 1.6; font-size: 16px; background-color: #f8fafc; padding: 15px; border-left: 4px solid #0099CC; border-radius: 0 8px 8px 0;">
+        ${message}
+      </p>
+      ${actionHtml}
+    </div>
+    <div style="background-color: #f8fafc; padding: 20px; text-align: center; font-size: 12px; color: #64748b; border-top: 1px solid #e2e8f0;">
+      Este es un mensaje automático del sistema NexoPOS.
+    </div>
+  </div>
+</body>
+</html>
+    `.trim();
+  }
 }

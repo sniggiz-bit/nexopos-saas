@@ -3,6 +3,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { EventsGateway } from '../events/events.gateway';
 import axios from 'axios';
 import { ConfigService } from '@nestjs/config';
+import { EmailService } from '../email/email.service';
 
 @Injectable()
 export class NotificationsService {
@@ -12,6 +13,7 @@ export class NotificationsService {
     private prisma: PrismaService,
     private eventsGateway: EventsGateway,
     private configService: ConfigService,
+    private emailService: EmailService,
   ) {}
 
   async notifySuperAdmin(title: string, message: string, type: 'CHAT' | 'REGISTRATION' | 'SYSTEM') {
@@ -28,7 +30,10 @@ export class NotificationsService {
     this.eventsGateway.emitToTenant('superadmin', 'new_notification', notification);
 
     // 3. Send Webhook if configured
-    await this.sendWebhook(title, message, type);
+    this.sendWebhook(title, message, type).catch(e => this.logger.error(e));
+
+    // 4. Send Email if configured
+    this.sendEmailNotification(title, message, type).catch(e => this.logger.error(e));
 
     return notification;
   }
@@ -41,15 +46,29 @@ export class NotificationsService {
     }
 
     try {
-      // Very basic payload format that works for Discord and Slack
+      // Payload format that works for both Discord (content) and Slack (text)
       const payload = {
-        content: `**[${type}] ${title}**\n${message}`
+        content: `**[${type}] ${title}**\n${message}`,
+        text: `*[${type}] ${title}*\n${message}`
       };
 
       await axios.post(webhookUrl, payload);
     } catch (error) {
       this.logger.error(`Failed to send webhook: ${error.message}`);
     }
+  }
+
+  private async sendEmailNotification(title: string, message: string, type: string) {
+    const adminEmail = this.configService.get<string>('ADMIN_EMAIL');
+    if (!adminEmail) return;
+
+    let actionUrl: string | undefined;
+    if (type === 'CHAT') {
+      const frontendUrl = this.configService.get<string>('FRONTEND_URL') || 'http://localhost:5173';
+      actionUrl = `${frontendUrl}/admin/live-chats`;
+    }
+
+    await this.emailService.sendSystemNotification(adminEmail, title, message, type, actionUrl);
   }
 
   async getHistory(limit = 50) {
