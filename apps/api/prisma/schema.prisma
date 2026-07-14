@@ -845,3 +845,24 @@ model SystemNotification {
   isRead    Boolean  @default(false)
   createdAt DateTime @default(now())
 }
+
+model ChatSession {
+  id          String   @id @default(uuid())
+  visitorId   String   // Can be a temporary UUID or an authenticated user ID
+  visitorName String   @default("Visitante Anónimo")
+  status      String   @default("ACTIVE") // ACTIVE, CLOSED
+  messages    ChatMessage[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model ChatMessage {
+  id            String      @id @default(uuid())
+  chatSessionId String
+  sender        String      // VISITOR, ADMIN, BOT
+  content       String
+  createdAt     DateTime    @default(now())
+  chatSession   ChatSession @relation(fields: [chatSessionId], references: [id], onDelete: Cascade)
+
+  @@index([chatSessionId])
+}

@@ -44,19 +44,32 @@ export class EventsGateway
       const token = (client.handshake.auth?.token || client.handshake.query?.token) as string;
       const tenantId = (client.handshake.auth?.tenantId || client.handshake.query?.tenantId) as string;
 
-      if (!token || !tenantId) {
+      if (!tenantId) {
         this.logger.warn(
-          `Connection rejected: Missing token or tenantId. Socket ID: ${client.id}`,
+          `Connection rejected: Missing tenantId. Socket ID: ${client.id}`,
         );
         client.disconnect();
         return;
       }
 
-      const payload = this.jwtService.verify(token) as { tenantId?: string; role?: string };
+      let payload: any = null;
 
-      if (payload.tenantId !== tenantId && payload.role !== 'SUPERADMIN' && tenantId !== 'superadmin') {
+      if (token && token !== 'anonymous' && token !== 'null') {
+        payload = this.jwtService.verify(token) as { tenantId?: string; role?: string };
+        
+        if (payload.tenantId !== tenantId && payload.role !== 'SUPERADMIN' && tenantId !== 'superadmin') {
+          this.logger.warn(
+            `Connection rejected: Tenant mismatch. Socket ID: ${client.id}`,
+          );
+          client.disconnect();
+          return;
+        }
+      } else if (tenantId.startsWith('visitor_') || tenantId === 'public') {
+        // Allow anonymous connections for public chatbot
+        this.logger.log(`Anonymous visitor connection allowed. Socket ID: ${client.id}`);
+      } else {
         this.logger.warn(
-          `Connection rejected: Tenant mismatch. Socket ID: ${client.id}`,
+          `Connection rejected: Valid token required for tenant ${tenantId}. Socket ID: ${client.id}`,
         );
         client.disconnect();
         return;

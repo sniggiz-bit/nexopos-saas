@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { MessageSquare, X, Send, Bot, User, Loader2 } from 'lucide-react';
 import { apiClient } from '../../api/client';
+import { io, Socket } from 'socket.io-client';
 
 interface Message {
   id: string;
@@ -22,6 +23,35 @@ export function PublicChatWidget({ cfg }: { cfg: { welcomeMessage: string; optio
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const endOfMessagesRef = useRef<HTMLDivElement>(null);
+  const [visitorId, setVisitorId] = useState<string>(() => {
+    const saved = localStorage.getItem('nexopos_visitor_id');
+    return saved || ''; // Will be populated by first API call if empty
+  });
+  const [_socket, setSocket] = useState<Socket | null>(null);
+
+  // Setup WebSocket connection to listen for admin replies
+  useEffect(() => {
+    if (!visitorId) return;
+
+    const newSocket = io(import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:3000/events', {
+      auth: { token: 'anonymous', tenantId: `visitor_${visitorId}` },
+      transports: ['websocket']
+    });
+
+    newSocket.on('admin_reply', (payload) => {
+      setMessages(prev => [...prev, {
+        id: Date.now().toString(),
+        sender: 'bot', // We can show admin replies as bot or add 'admin' type
+        text: payload.message
+      }]);
+    });
+
+    setSocket(newSocket);
+
+    return () => {
+      newSocket.disconnect();
+    };
+  }, [visitorId]);
 
   useEffect(() => {
     if (isOpen) {
@@ -39,10 +69,19 @@ export function PublicChatWidget({ cfg }: { cfg: { welcomeMessage: string; optio
 
     try {
       // POST to the new public endpoint
-      const res = await apiClient.post('/support/public-chat', { message: text });
+      const res = await apiClient.post('/support/public-chat', { 
+        message: text,
+        visitorId: visitorId || undefined
+      });
+      
+      if (res.data.visitorId && !visitorId) {
+        setVisitorId(res.data.visitorId);
+        localStorage.setItem('nexopos_visitor_id', res.data.visitorId);
+      }
+
       const botMsg: Message = { id: (Date.now() + 1).toString(), sender: 'bot', text: res.data.reply };
       setMessages(prev => [...prev, botMsg]);
-    } catch (error) {
+    } catch (_error) {
       const errorMsg: Message = { id: (Date.now() + 1).toString(), sender: 'bot', text: 'Disculpa, tuve un error al procesar tu solicitud.' };
       setMessages(prev => [...prev, errorMsg]);
     } finally {

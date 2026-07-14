@@ -3,12 +3,15 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { PrismaService } from '../prisma/prisma.service';
 import { Public } from '../auth/decorators/public.decorator';
 import { NotificationsService } from '../notifications/notifications.service';
+import { EventsGateway } from '../events/events.gateway';
+import { v4 as uuidv4 } from 'uuid';
 
 @Controller('support')
 export class SupportController {
   constructor(
     private prisma: PrismaService,
     private notificationsService: NotificationsService,
+    private eventsGateway: EventsGateway,
   ) {}
 
   @Post('chat')
@@ -56,12 +59,12 @@ export class SupportController {
       reply = `¡Hola! Qué gusto saludarte. Soy el bot de soporte de NexoPOS. Veo que tienes tu plan al día en tu tienda ${tenant?.name}. ¿Qué necesitas?`;
     }
 
-    // Notify SuperAdmin
-    await this.notificationsService.notifySuperAdmin(
+    // Notify SuperAdmin (non-blocking)
+    this.notificationsService.notifySuperAdmin(
       'Nuevo Mensaje de Soporte',
       `${user.name} (${tenant?.name}): ${message}`,
       'CHAT'
-    );
+    ).catch(e => console.error('Failed to notify superadmin:', e));
 
     return {
       reply,
@@ -71,9 +74,31 @@ export class SupportController {
 
   @Public()
   @Post('public-chat')
-  async publicChat(@Body('message') message: string) {
+  async publicChat(@Body('message') message: string, @Body('visitorId') visitorIdBody?: string) {
+    const visitorId = visitorIdBody || uuidv4();
+    
+    // Find or create active session
+    let session = await this.prisma.chatSession.findFirst({
+      where: { visitorId, status: 'ACTIVE' }
+    });
+
+    if (!session) {
+      session = await this.prisma.chatSession.create({
+        data: { visitorId, visitorName: 'Visitante Anónimo' }
+      });
+    }
+
+    // Save visitor message
+    await this.prisma.chatMessage.create({
+      data: {
+        chatSessionId: session.id,
+        sender: 'VISITOR',
+        content: message
+      }
+    });
+
     const lowercaseMsg = message.toLowerCase();
-    let reply = "Soy el asistente inteligente de NexoPOS. ¿En qué te puedo ayudar hoy?";
+    let reply = "Soy el asistente inteligente de NexoPOS. ¿En qué te puedo ayudar hoy? En breve un agente se conectará si necesitas más ayuda.";
 
     if (lowercaseMsg.includes('ventas') || lowercaseMsg.includes('planes')) {
       reply = "¡Excelente! NexoPOS es el sistema de gestión B2B líder. Puedes iniciar una prueba gratis de 15 días o contactar a un ejecutivo de ventas a ventas@nexopos.cl para una demostración personalizada.";
@@ -85,13 +110,73 @@ export class SupportController {
       reply = "¡Hola! Bienvenido a NexoPOS. Por favor selecciona una de las opciones o descríbeme qué necesitas.";
     }
 
-    // Notify SuperAdmin
-    await this.notificationsService.notifySuperAdmin(
-      'Nuevo Mensaje en Chatbot Público',
-      `Visitante anónimo dice: ${message}`,
-      'CHAT'
-    );
+    // Save bot reply
+    await this.prisma.chatMessage.create({
+      data: {
+        chatSessionId: session.id,
+        sender: 'BOT',
+        content: reply
+      }
+    });
 
-    return { reply };
+    // Notify SuperAdmin (non-blocking) about the visitor message
+    this.notificationsService.notifySuperAdmin(
+      'Nuevo Mensaje en Chatbot',
+      `Visitante dice: ${message}`,
+      'CHAT'
+    ).catch(e => console.error('Failed to notify superadmin:', e));
+
+    // Emit to superadmin room so they see the new message in real time
+    this.eventsGateway.emitToTenant('superadmin', 'new_chat_message', {
+      sessionId: session.id,
+      visitorId,
+      message: { sender: 'VISITOR', content: message }
+    });
+
+    return { reply, visitorId, sessionId: session.id };
+  }
+
+  @Post('admin-reply')
+  @UseGuards(JwtAuthGuard)
+  async adminReply(@Req() req: any, @Body('sessionId') sessionId: string, @Body('message') message: string) {
+    const user = req.user;
+    if (!user || user.role !== 'SUPERADMIN') {
+      throw new UnauthorizedException('Only SuperAdmin can reply to public chats');
+    }
+
+    const session = await this.prisma.chatSession.findUnique({ where: { id: sessionId } });
+    if (!session) throw new Error('Session not found');
+
+    // Save admin message
+    const chatMsg = await this.prisma.chatMessage.create({
+      data: {
+        chatSessionId: session.id,
+        sender: 'ADMIN',
+        content: message
+      }
+    });
+
+    // Send to visitor via WebSockets
+    this.eventsGateway.emitToTenant(`visitor_${session.visitorId}`, 'admin_reply', {
+      message: chatMsg.content,
+      sender: 'ADMIN'
+    });
+
+    return chatMsg;
+  }
+  
+  @UseGuards(JwtAuthGuard)
+  @Post('active-sessions')
+  async getActiveSessions(@Req() req: any) {
+    const user = req.user;
+    if (!user || user.role !== 'SUPERADMIN') {
+      throw new UnauthorizedException('Only SuperAdmin can view active chats');
+    }
+    
+    return this.prisma.chatSession.findMany({
+      where: { status: 'ACTIVE' },
+      include: { messages: { orderBy: { createdAt: 'asc' } } },
+      orderBy: { updatedAt: 'desc' }
+    });
   }
 }
