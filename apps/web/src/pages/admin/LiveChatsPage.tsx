@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import api from '../../lib/axios';
+import { apiClient as api } from '../../api/client';
 import { useAuth } from '../../context/AuthContext';
 import { MessageSquare, Send, Clock, User } from 'lucide-react';
 import { io, Socket } from 'socket.io-client';
