@@ -196,5 +196,13 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
   get systemNotification() {
     return this.prisma.systemNotification;
   }
+
+  get chatSession() {
+    return this.prisma.chatSession;
+  }
+
+  get chatMessage() {
+    return this.prisma.chatMessage;
+  }
 }
 
