@@ -10,7 +10,7 @@ import { JwtService } from '@nestjs/jwt';
 import { Reflector } from '@nestjs/core';
 import { Request } from 'express';
 import { PrismaService } from '../prisma/prisma.service';
-import { BillingStatus, TenantStatus } from '@prisma/client';
+import { BillingStatus } from '@prisma/client';
 import { IS_PUBLIC_KEY } from './decorators/public.decorator';
 
 @Injectable()
@@ -53,7 +53,7 @@ export class JwtAuthGuard implements CanActivate {
       });
 
       // Block access entirely if tenant is SUSPENDED
-      if (tenant?.status === TenantStatus.SUSPENDED) {
+      if (tenant?.status === 'SUSPENDED') {
         throw new HttpException(
           'Tu cuenta ha sido suspendida. Contacta al administrador.',
           HttpStatus.FORBIDDEN,
