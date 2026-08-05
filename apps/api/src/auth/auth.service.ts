@@ -98,6 +98,13 @@ export class AuthService {
         });
 
         if (tenant) {
+          // Block login for suspended tenants
+          if (tenant.status === 'SUSPENDED') {
+            throw new UnauthorizedException(
+              'Tu cuenta ha sido suspendida. Contacta al administrador.'
+            );
+          }
+
           const planModules = tenant.plan?.planModules.map(pm => pm.module.code) || [];
           const addonModules = tenant.tenantModuleAddons?.map(addon => addon.module.code) || [];
           activeModules = [...new Set([...planModules, ...addonModules])];

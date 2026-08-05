@@ -65,9 +65,20 @@ api.interceptors.response.use(
                         window.location.href = '/dashboard/subscription?past_due=true';
                     }
                     break;
-                case 403:
-                    console.error('Forbidden - Insufficient permissions');
+                case 403: {
+                    const message: string = data?.message || '';
+                    const isSuspended = message.toLowerCase().includes('suspendida') || message.toLowerCase().includes('suspended');
+                    if (isSuspended) {
+                        console.error('Account suspended - Redirecting to login');
+                        localStorage.removeItem('token');
+                        if (!window.location.pathname.includes('/login')) {
+                            window.location.href = '/login?suspended=true';
+                        }
+                    } else {
+                        console.error('Forbidden - Insufficient permissions');
+                    }
                     break;
+                }
                 case 404:
                     console.error('Resource not found');
                     break;
