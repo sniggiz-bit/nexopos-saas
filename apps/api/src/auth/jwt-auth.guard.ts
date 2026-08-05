@@ -10,7 +10,7 @@ import { JwtService } from '@nestjs/jwt';
 import { Reflector } from '@nestjs/core';
 import { Request } from 'express';
 import { PrismaService } from '../prisma/prisma.service';
-import { BillingStatus } from '@prisma/client';
+import { BillingStatus, TenantStatus } from '@prisma/client';
 import { IS_PUBLIC_KEY } from './decorators/public.decorator';
 
 @Injectable()
@@ -45,12 +45,20 @@ export class JwtAuthGuard implements CanActivate {
       throw new UnauthorizedException();
     }
 
-    // --- Billing Check ---
+    // --- Tenant Status & Billing Check ---
     if (payload?.tenantId && payload?.role !== 'SUPER_ADMIN') {
       const tenant = await this.prisma.tenant.findUnique({
         where: { id: payload.tenantId },
-        select: { billingStatus: true }
+        select: { status: true, billingStatus: true }
       });
+
+      // Block access entirely if tenant is SUSPENDED
+      if (tenant?.status === TenantStatus.SUSPENDED) {
+        throw new HttpException(
+          'Tu cuenta ha sido suspendida. Contacta al administrador.',
+          HttpStatus.FORBIDDEN,
+        );
+      }
 
       if (tenant?.billingStatus === BillingStatus.PAST_DUE) {
         const url = request.url;

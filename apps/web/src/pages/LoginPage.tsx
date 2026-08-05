@@ -1,11 +1,11 @@
 import { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
 import { Logo } from '../components/ui/Logo';
-import { Mail, Lock, Sparkles, Database, ArrowRight, Compass } from 'lucide-react';
+import { Mail, Lock, Sparkles, Database, ArrowRight, Compass, AlertTriangle } from 'lucide-react';
 
 export function LoginPage() {
     const [email, setEmail] = useState('');
@@ -14,9 +14,11 @@ export function LoginPage() {
     const { login } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
+    const [searchParams] = useSearchParams();
     const queryClient = useQueryClient();
 
     const from = location.state?.from?.pathname || '/';
+    const isSuspended = searchParams.get('suspended') === 'true';
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -119,6 +121,16 @@ export function LoginPage() {
                             Ingresa tus credenciales autorizadas
                         </p>
                     </div>
+
+                    {/* Suspended account banner */}
+                    {isSuspended && (
+                        <div className="flex items-start gap-3 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3">
+                            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-red-400" />
+                            <p className="text-xs text-red-300 leading-relaxed">
+                                Tu cuenta ha sido <span className="font-semibold">suspendida</span>. Contacta al administrador para más información.
+                            </p>
+                        </div>
+                    )}
 
                     {/* Form */}
                     <form onSubmit={handleSubmit} className="space-y-4">
