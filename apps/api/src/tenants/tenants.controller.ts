@@ -79,7 +79,7 @@ export class TenantsController {
   async updateBilling(
     @Param('id') id: string,
     @Request() req: any,
-    @Body() body: { name: string; phone?: string; rut?: string; giro?: string; address?: string },
+    @Body() body: { name: string; phone?: string; rut?: string; giro?: string; address?: string; logoUrl?: string },
   ) {
     const isSuperAdmin = req.user?.role === 'SUPER_ADMIN';
     if (!isSuperAdmin && req.user?.tenantId !== id) {

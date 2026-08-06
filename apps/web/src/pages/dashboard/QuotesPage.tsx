@@ -1,18 +1,21 @@
 import { useState } from 'react';
 import { DashboardLayout } from '../../components/dashboard/DashboardLayout';
 import { useQuotes } from '../../hooks/useQuotesQuery';
-import { useConvertQuote } from '../../hooks/useQuotes';
-import { Eye, Plus, ShoppingCart, FileText } from 'lucide-react';
+import { useConvertQuote, useDeleteQuote } from '../../hooks/useQuotes';
+import { Eye, Plus, ShoppingCart, FileText, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { formatPrice } from '@/utils/formatters';
+import { toast } from 'react-hot-toast';
 
 export function QuotesPage() {
     const { data: quotesData, isLoading, isError, refetch } = useQuotes();
     const quotes = Array.isArray(quotesData) ? quotesData : [];
     const convertQuote = useConvertQuote();
+    const deleteQuote = useDeleteQuote();
     const navigate = useNavigate();
     const [convertingId, setConvertingId] = useState<string | null>(null);
+    const [deletingId, setDeletingId] = useState<string | null>(null);
 
     const formatDate = (dateString: string) => {
         if (!dateString) return 'N/A';
@@ -43,6 +46,23 @@ export function QuotesPage() {
             // error shown by useConvertQuote hook toast
         } finally {
             setConvertingId(null);
+        }
+    };
+
+    const handleDelete = async (id: string) => {
+        if (deletingId) return;
+        if (!confirm('¿Está seguro de eliminar esta cotización? Esta acción no se puede deshacer.')) {
+            return;
+        }
+        setDeletingId(id);
+        try {
+            await deleteQuote.mutateAsync(id);
+            toast.success('Cotización eliminada');
+            refetch();
+        } catch (_error) {
+            // error shown by hook
+        } finally {
+            setDeletingId(null);
         }
     };
 
@@ -118,7 +138,7 @@ export function QuotesPage() {
                                                 {quote.status === 'DRAFT' ? 'Borrador' : quote.status === 'SENT' ? 'Emitida' : 'Vendida'}
                                             </span>
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
+                                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-1">
                                             <button
                                                 onClick={() => navigate(`/dashboard/quotes/${quote.id}/print`)}
                                                 className="text-[#0099CC] hover:text-white inline-flex items-center p-2 rounded-lg hover:bg-[#0099CC]/10 transition-colors"
@@ -140,6 +160,18 @@ export function QuotesPage() {
                                                     }
                                                 </button>
                                             )}
+
+                                            <button
+                                                onClick={() => handleDelete(quote.id)}
+                                                className="text-red-400 hover:text-white inline-flex items-center p-2 rounded-lg hover:bg-red-500/10 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                                                title="Eliminar Cotización"
+                                                disabled={!!deletingId}
+                                            >
+                                                {deletingId === quote.id
+                                                    ? <div className="w-4 h-4 border-2 border-red-400 border-t-transparent rounded-full animate-spin" />
+                                                    : <Trash2 className="w-4 h-4" />
+                                                }
+                                            </button>
                                         </td>
                                     </tr>
                                 ))

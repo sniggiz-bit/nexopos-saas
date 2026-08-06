@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { api } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 import {
@@ -16,7 +16,9 @@ import {
   Save,
   AlertCircle,
   RefreshCw,
-  CreditCard
+  CreditCard,
+  Upload,
+  X
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { DashboardLayout } from '../../components/dashboard/DashboardLayout';
@@ -61,6 +63,9 @@ export function SubscriptionPage() {
   const [changingPlan, setChangingPlan] = useState<string | null>(null);
   const [payingInvoice, setPayingInvoice] = useState<string | null>(null);
 
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+  const logoInputRef = useRef<HTMLInputElement>(null);
+
   // Billing profile form state
   const [billingForm, setBillingForm] = useState({
     name: '',
@@ -68,7 +73,26 @@ export function SubscriptionPage() {
     giro: '',
     address: '',
     phone: '',
+    logoUrl: '',
   });
+
+  const handleBusinessLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const formData = new FormData();
+    formData.append('file', file);
+    setUploadingLogo(true);
+    try {
+      const { data } = await api.post('/uploads/logo', formData);
+      setBillingForm(prev => ({ ...prev, logoUrl: data.url }));
+      toast.success('Logo del negocio subido correctamente');
+    } catch {
+      toast.error('Error al subir el logo');
+    } finally {
+      setUploadingLogo(false);
+      if (logoInputRef.current) logoInputRef.current.value = '';
+    }
+  };
 
   // Group definitions matching the admin panel
   const coreCodes = ['POS', 'QUOTES', 'CUSTOMERS', 'EXTRA_BRANCH', 'CREDITS'];
@@ -96,6 +120,7 @@ export function SubscriptionPage() {
           giro: tenantRes.data.giro || '',
           address: tenantRes.data.address || '',
           phone: tenantRes.data.phone || '',
+          logoUrl: tenantRes.data.logoUrl || '',
         });
       }
       setInvoices(invoicesRes.data || []);
@@ -565,6 +590,37 @@ export function SubscriptionPage() {
                       className="w-full border border-slate-200 dark:border-white/[0.08] bg-card/[0.5] rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
                       placeholder="Ej. Av. Providencia 1234, Oficina 501"
                     />
+                  </div>
+
+                  {/* Logo del negocio */}
+                  <div>
+                    <label className="block text-xs font-bold text-slate-400 mb-1.5">
+                      Logo de la Empresa (se muestra en cotizaciones)
+                    </label>
+                    {billingForm.logoUrl ? (
+                      <div className="flex items-center gap-3 p-3 rounded-xl border border-slate-200 dark:border-white/[0.08] bg-card/[0.5]">
+                        <img src={billingForm.logoUrl} alt="Logo Empresa" className="h-12 w-auto object-contain rounded-lg"
+                          onError={e => (e.currentTarget.style.display = 'none')} />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs truncate text-muted-foreground">{billingForm.logoUrl}</p>
+                        </div>
+                        <button type="button" onClick={() => setBillingForm(prev => ({ ...prev, logoUrl: '' }))}
+                          className="p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors">
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ) : (
+                      <button type="button" onClick={() => logoInputRef.current?.click()} disabled={uploadingLogo}
+                        className="w-full flex items-center justify-center gap-2 px-4 py-4 rounded-xl text-sm border-2 border-dashed border-slate-200 dark:border-white/[0.08] text-slate-400 hover:border-indigo-500 hover:text-indigo-400 hover:bg-indigo-500/5 transition-all disabled:opacity-50">
+                        {uploadingLogo ? (
+                          <><Loader2 className="w-4 h-4 animate-spin text-indigo-500" />Subiendo...</>
+                        ) : (
+                          <><Upload className="w-4 h-4 text-indigo-400" />Subir logo <span className="text-xs text-muted-foreground">(JPG, PNG — máx 5MB)</span></>
+                        )}
+                      </button>
+                    )}
+                    <input ref={logoInputRef} type="file" accept="image/jpeg,image/png,image/webp"
+                      className="hidden" onChange={handleBusinessLogoUpload} />
                   </div>
 
                   <button

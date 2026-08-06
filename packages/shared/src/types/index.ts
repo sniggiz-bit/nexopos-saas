@@ -6,7 +6,8 @@ export interface Tenant {
     rut?: string | null;
     giro?: string | null;
     address?: string | null;
-    status: string; // Linking with TenantStatus enum if preferred
+    logoUrl?: string | null;
+    status: string;
     createdAt: string | Date;
     updatedAt: string | Date;
 }

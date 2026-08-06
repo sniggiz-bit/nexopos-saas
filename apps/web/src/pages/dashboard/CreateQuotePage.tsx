@@ -15,6 +15,7 @@ import { ProductSearchCombobox } from '@/components/quotes/ProductSearchCombobox
 import { QuoteItemsTable } from '@/components/quotes/QuoteItemsTable';
 import { Card, CardContent, CardHeader, CardFooter } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+import { Switch } from '@/components/ui/switch';
 
 export function CreateQuotePage() {
     const { user } = useAuth();
@@ -26,6 +27,7 @@ export function CreateQuotePage() {
     );
     const [quoteNumber, setQuoteNumber] = useState('');
     const [notes, setNotes] = useState('');
+    const [includeIva, setIncludeIva] = useState(true);
 
     const navigate = useNavigate();
     const { toast } = useToast();
@@ -53,12 +55,22 @@ export function CreateQuotePage() {
                 issueDate,
                 validUntil,
                 notes: notes || undefined,
-                items: items.map(item => ({
-                    productId: item.productId,
-                    productName: item.name,
-                    quantity: Number(item.quantity) || 0,
-                    price: Number(item.price) || 0
-                }))
+                includeIva,
+                items: items.map(item => {
+                    const qty = Number(item.quantity) || 0;
+                    const price = Number(item.price) || 0;
+                    const discountVal = Number(item.discountValue) || 0;
+                    const discountAmount = item.discountType === 'PERCENTAGE'
+                        ? Math.round((price * qty * discountVal) / 100)
+                        : discountVal;
+                    return {
+                        productId: item.productId,
+                        productName: item.name,
+                        quantity: qty,
+                        price,
+                        discount: discountAmount,
+                    };
+                })
             });
             clearCart();
             if (openPdf && result?.id) {
@@ -190,14 +202,29 @@ export function CreateQuotePage() {
 
                             {/* Financial Summary - Right */}
                             <div className="w-[300px] space-y-3">
+                                {/* IVA Toggle */}
+                                <div className="flex items-center justify-between pb-2 border-b border-border/50">
+                                    <Label className="text-sm font-medium text-foreground/80 cursor-pointer" htmlFor="iva-toggle">
+                                        Incluir IVA (19%)
+                                    </Label>
+                                    <Switch
+                                        id="iva-toggle"
+                                        checked={includeIva}
+                                        onCheckedChange={setIncludeIva}
+                                        className="data-[state=checked]:bg-[#0099CC]"
+                                    />
+                                </div>
+
                                 <div className="flex justify-between text-muted-foreground/[0.5]">
                                     <span>Subtotal</span>
                                     <span className="tabular-nums">${totals.subtotal.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</span>
                                 </div>
-                                <div className="flex justify-between text-muted-foreground/[0.5]">
-                                    <span>IVA (19%)</span>
-                                    <span className="tabular-nums">${totals.tax.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</span>
-                                </div>
+                                {includeIva && (
+                                    <div className="flex justify-between text-muted-foreground/[0.5]">
+                                        <span>IVA (19%)</span>
+                                        <span className="tabular-nums">${totals.tax.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</span>
+                                    </div>
+                                )}
                                 {totals.totalDiscount > 0 && (
                                     <div className="flex justify-between text-emerald-400 font-medium">
                                         <span>Descuento</span>

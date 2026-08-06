@@ -15,6 +15,7 @@ model Tenant {
   rut                   String?
   giro                  String?
   address               String?
+  logoUrl               String?
   createdAt             DateTime              @default(now())
   updatedAt             DateTime              @updatedAt
   branches              Branch[]
@@ -426,6 +427,7 @@ model Quote {
   subtotal   Float       @default(0)
   tax        Float       @default(0)
   total      Float       @default(0)
+  includeIva Boolean     @default(true)
   status     QuoteStatus @default(DRAFT)
   issueDate  DateTime    @default(now())
   validUntil DateTime?

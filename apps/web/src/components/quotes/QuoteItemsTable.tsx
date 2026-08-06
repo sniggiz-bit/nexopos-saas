@@ -113,34 +113,30 @@ function QuoteItemRow({ item, updateQuantity, updatePrice, applyDiscount, remove
                 </div>
             </TableCell>
             <TableCell>
-                <div className="flex gap-1 items-center">
-                    <div className="relative flex-1">
-                        <Input
-                            type="number"
-                            min="0"
-                            className="text-right h-8"
-                            placeholder="0"
-                            value={item.discountValue ?? ''}
-                            onChange={(e) => {
-                                const val = e.target.value === '' ? '' : parseFloat(e.target.value);
-                                applyDiscount(item.productId, item.discountType || 'PERCENTAGE', Number.isNaN(val as number) && val !== '' ? undefined : val)
-                            }}
-                        />
-                    </div>
-                    <div className="w-[70px]">
-                        <Select
-                            value={item.discountType || 'PERCENTAGE'}
-                            onValueChange={(val: DiscountType) => applyDiscount(item.productId, val, item.discountValue)}
-                        >
-                            <SelectTrigger className="h-8">
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="PERCENTAGE">%</SelectItem>
-                                <SelectItem value="FIXED">$</SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div>
+                <div className="flex items-center gap-1">
+                    <Input
+                        type="number"
+                        min="0"
+                        className="text-right h-8 w-16"
+                        placeholder="0"
+                        value={item.discountValue ?? ''}
+                        onChange={(e) => {
+                            const val = e.target.value === '' ? '' : parseFloat(e.target.value);
+                            applyDiscount(item.productId, item.discountType || 'PERCENTAGE', Number.isNaN(val as number) && val !== '' ? undefined : val)
+                        }}
+                    />
+                    <Select
+                        value={item.discountType || 'PERCENTAGE'}
+                        onValueChange={(val: DiscountType) => applyDiscount(item.productId, val, item.discountValue)}
+                    >
+                        <SelectTrigger className="h-8 w-[58px] px-2">
+                            <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="PERCENTAGE">%</SelectItem>
+                            <SelectItem value="FIXED">$</SelectItem>
+                        </SelectContent>
+                    </Select>
                 </div>
             </TableCell>
             <TableCell className="text-right font-medium">

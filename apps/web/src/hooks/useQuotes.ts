@@ -77,10 +77,11 @@ export function useDeleteQuote() {
         mutationFn: (id: string) => deleteQuote(id),
         onSuccess: () => {
             queryClient.refetchQueries({ queryKey: ['quotes', user?.tenantId] });
+            toast.success('Cotización eliminada exitosamente');
         },
         onError: (error: any) => {
             console.error('Error deleting quote:', error);
-            toast.error('Error al eliminar la preventa');
+            toast.error(error.response?.data?.message || 'Error al eliminar la cotización');
         },
     });
 }
