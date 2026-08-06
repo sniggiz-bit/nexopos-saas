@@ -173,7 +173,7 @@ export class TenantsService {
     });
   }
 
-  async updateBasic(id: string, data: { name: string; phone?: string; rut?: string; giro?: string; address?: string }) {
+  async updateBasic(id: string, data: { name: string; phone?: string; rut?: string; giro?: string; address?: string; logoUrl?: string }) {
     const tenant = await this.prisma.tenant.findUnique({
       where: { id },
     });

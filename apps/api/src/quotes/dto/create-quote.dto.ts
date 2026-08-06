@@ -2,6 +2,7 @@ import {
   IsString,
   IsOptional,
   IsNumber,
+  IsBoolean,
   IsDateString,
   ValidateNested,
   IsArray,
@@ -53,6 +54,10 @@ export class CreateQuoteDto {
   @IsOptional()
   @IsString()
   notes?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  includeIva?: boolean;
 
   @IsArray()
   @ValidateNested({ each: true })

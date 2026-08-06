@@ -94,10 +94,12 @@ export function QuotePrintPage() {
     const tenantInitial = (tenant?.name || 'N').charAt(0).toUpperCase();
     
     // Prices are IVA-inclusive. Compute totals from items directly.
+    const includeIva = quote.includeIva !== false; // default true for legacy quotes
+    const totalDiscount = quote.items.reduce((sum: number, item: any) => sum + (item.discount ?? 0), 0);
     const total = quote.items.reduce((sum: number, item: any) =>
-        sum + (item.total ?? item.price * Number(item.quantity)), 0);
-    const subtotal = Math.round(total / 1.19);
-    const tax = total - subtotal;
+        sum + (item.total ?? item.price * Number(item.quantity) - (item.discount ?? 0)), 0);
+    const subtotal = includeIva ? Math.round(total / 1.19) : Math.round(total);
+    const tax = includeIva ? total - subtotal : 0;
 
     return (
         <div className="min-h-screen bg-gray-100 py-8 px-4 print:p-0 print:bg-white">
@@ -134,8 +136,16 @@ export function QuotePrintPage() {
 
                             {/* Left: business info + logo */}
                             <div className="flex items-start gap-4">
-                                <div className="w-16 h-16 bg-[#0099CC] rounded-xl flex items-center justify-center shrink-0 print:bg-[#0099CC]">
-                                    <span className="text-2xl font-black text-white">{tenantInitial}</span>
+                                <div className="w-16 h-16 rounded-xl overflow-hidden shrink-0 flex items-center justify-center bg-[#0099CC] print:bg-[#0099CC]">
+                                    {tenant?.logoUrl ? (
+                                        <img
+                                            src={tenant.logoUrl}
+                                            alt={`Logo ${tenant?.name}`}
+                                            className="w-full h-full object-contain"
+                                        />
+                                    ) : (
+                                        <span className="text-2xl font-black text-white">{tenantInitial}</span>
+                                    )}
                                 </div>
                                 <div>
                                     <p className="text-lg font-bold text-gray-900 leading-tight">{tenant?.name || ''}</p>
@@ -212,13 +222,21 @@ export function QuotePrintPage() {
                     <div className="px-10 py-8 flex justify-end">
                         <div className="w-72 space-y-2">
                             <div className="flex justify-between text-sm text-gray-500">
-                                <span>Subtotal (neto)</span>
+                                <span>Subtotal {includeIva ? '(neto)' : ''}</span>
                                 <span>{formatPrice(subtotal)}</span>
                             </div>
-                            <div className="flex justify-between text-sm text-gray-500">
-                                <span>IVA (19%)</span>
-                                <span>{formatPrice(tax)}</span>
-                            </div>
+                            {includeIva && (
+                                <div className="flex justify-between text-sm text-gray-500">
+                                    <span>IVA (19%)</span>
+                                    <span>{formatPrice(tax)}</span>
+                                </div>
+                            )}
+                            {totalDiscount > 0 && (
+                                <div className="flex justify-between text-sm font-medium text-emerald-600">
+                                    <span>Descuento</span>
+                                    <span>-{formatPrice(totalDiscount)}</span>
+                                </div>
+                            )}
                             <div className="border-t border-gray-200 pt-3 flex justify-between text-xl font-black text-gray-900">
                                 <span>TOTAL</span>
                                 <span className="text-[#0099CC]">{formatPrice(total)}</span>

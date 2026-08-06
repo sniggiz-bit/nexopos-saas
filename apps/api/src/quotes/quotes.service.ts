@@ -19,14 +19,20 @@ export class QuotesService {
     private readonly emailService: EmailService,
   ) { }
 
-  private calculateTotals(items: any[]) {
-    // Prices are IVA-inclusive (Chilean standard). Back-calculate neto and IVA.
-    const total = items.reduce((sum, item) => {
+  private calculateTotals(items: any[], includeIva: boolean = true) {
+    const grossTotal = items.reduce((sum, item) => {
       return sum + item.price * item.quantity - (item.discount || 0);
     }, 0);
-    const subtotal = Math.round(total / 1.19); // neto sin IVA
-    const tax = total - subtotal;              // porción IVA 19%
-    return { subtotal, tax, total };
+
+    if (includeIva) {
+      // Prices are IVA-inclusive (Chilean standard). Back-calculate neto and IVA.
+      const subtotal = Math.round(grossTotal / 1.19);
+      const tax = grossTotal - subtotal;
+      return { subtotal, tax, total: grossTotal };
+    } else {
+      // Prices are neto (no IVA). total = subtotal, tax = 0.
+      return { subtotal: Math.round(grossTotal), tax: 0, total: Math.round(grossTotal) };
+    }
   }
 
   private async generateQuoteNumber(tenantId: string) {
@@ -47,7 +53,7 @@ export class QuotesService {
   }
 
   async create(createQuoteDto: CreateQuoteDto) {
-    const { items, issueDate, validUntil, ...quoteData } = createQuoteDto;
+    const { items, issueDate, validUntil, includeIva = true, ...quoteData } = createQuoteDto;
     const tenantId = createQuoteDto.tenantId;
 
     if (quoteData.customerId) {
@@ -69,7 +75,7 @@ export class QuotesService {
       }
     }
 
-    const { subtotal, tax, total } = this.calculateTotals(items);
+    const { subtotal, tax, total } = this.calculateTotals(items, includeIva);
     const number = await this.generateQuoteNumber(tenantId);
 
     return this.prisma.quote.create({
@@ -79,6 +85,7 @@ export class QuotesService {
         subtotal,
         tax,
         total,
+        includeIva,
         ...(issueDate && { issueDate: new Date(issueDate) }),
         ...(validUntil && { validUntil: new Date(validUntil) }),
         items: {
