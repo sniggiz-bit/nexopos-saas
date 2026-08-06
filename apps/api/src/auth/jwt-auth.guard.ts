@@ -1,10 +1,10 @@
 import {
-  CanActivate,
-  ExecutionContext,
-  Injectable,
-  UnauthorizedException,
-  HttpException,
-  HttpStatus,
+    CanActivate,
+    ExecutionContext,
+    Injectable,
+    UnauthorizedException,
+    HttpException,
+    HttpStatus,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Reflector } from '@nestjs/core';
@@ -36,7 +36,7 @@ export class JwtAuthGuard implements CanActivate {
     if (!token) {
       throw new UnauthorizedException();
     }
-    
+
     let payload;
     try {
       payload = await this.jwtService.verifyAsync(token);
@@ -65,7 +65,6 @@ export class JwtAuthGuard implements CanActivate {
         // Only allow login/logout, modules API, and maybe billing APIs
         const allowedPaths = ['/auth', '/modules'];
         const isAllowedPath = allowedPaths.some(p => url.startsWith(p));
-        
         if (!isAllowedPath) {
           throw new HttpException('Tenant subscription is PAST_DUE. Payment required.', HttpStatus.PAYMENT_REQUIRED);
         }
@@ -80,3 +79,4 @@ export class JwtAuthGuard implements CanActivate {
     return type === 'Bearer' ? token : undefined;
   }
 }
+
