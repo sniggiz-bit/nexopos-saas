@@ -71,9 +71,9 @@ async function main() {
     for (const mod of modules) {
       await client.query(`
         INSERT INTO "Module" (id, code, name, description)
-        VALUES (gen_random_uuid(), $1, $2, $3)
-        ON CONFLICT (code) DO UPDATE SET name = $2, description = $3
-      `, [mod.code, mod.name, mod.description]);
+        VALUES ($1, $2, $3, $4)
+        ON CONFLICT (code) DO UPDATE SET name = $3, description = $4
+      `, [crypto.randomUUID(), mod.code, mod.name, mod.description]);
     }
     console.log(`✅ ${modules.length} módulos SaaS creados/actualizados`);
 
@@ -159,9 +159,9 @@ async function main() {
     const existingSettings = await client.query(`SELECT id FROM "TenantSettings" WHERE "tenantId" = $1 LIMIT 1`, [tenantId]);
     if (existingSettings.rows.length === 0) {
       await client.query(`
-        INSERT INTO "TenantSettings" ("tenantId", "enableBoletaDte", "enableFacturaDte", "enableGuiaDespachoDte", "enableNotaCreditoDte", "maxBranches", "maxRegisters", "maxUsers", "canHardDelete", "createdAt", "updatedAt")
-        VALUES ($1, false, false, false, false, 1, 1, 3, false, NOW(), NOW())
-      `, [tenantId]);
+        INSERT INTO "TenantSettings" (id, "tenantId", "enableBoletaDte", "enableFacturaDte", "enableGuiaDespachoDte", "enableNotaCreditoDte", "maxBranches", "maxRegisters", "maxUsers", "canHardDelete", "createdAt", "updatedAt")
+        VALUES ($1, $2, false, false, false, false, 1, 1, 3, false, NOW(), NOW())
+      `, [crypto.randomUUID(), tenantId]);
       console.log(`✅ TenantSettings creado`);
     }
 
@@ -183,8 +183,8 @@ async function main() {
       } else {
         await client.query(`
           INSERT INTO "User" (id, email, name, password, role, "tenantId", "branchId", "createdAt", "updatedAt")
-          VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, $6, NOW(), NOW())
-        `, [u.email, u.name, password, u.role, tenantId, branchId]);
+          VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW())
+        `, [crypto.randomUUID(), u.email, u.name, password, u.role, tenantId, branchId]);
         console.log(`✅ Usuario creado: ${u.email}`);
       }
     }
