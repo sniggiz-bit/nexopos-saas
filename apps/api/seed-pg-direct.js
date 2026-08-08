@@ -70,8 +70,8 @@ async function main() {
 
     for (const mod of modules) {
       await client.query(`
-        INSERT INTO "Module" (id, code, name, description, "createdAt", "updatedAt")
-        VALUES (gen_random_uuid(), $1, $2, $3, NOW(), NOW())
+        INSERT INTO "Module" (id, code, name, description)
+        VALUES (gen_random_uuid(), $1, $2, $3)
         ON CONFLICT (code) DO UPDATE SET name = $2, description = $3
       `, [mod.code, mod.name, mod.description]);
     }
