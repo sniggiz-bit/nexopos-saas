@@ -1,6 +1,9 @@
 # ─── Build stage: compile TypeScript ─────────────────────────────────────────
 FROM node:20-alpine AS builder
 
+# Install OpenSSL so Prisma can detect libssl at generate time
+RUN apk add --no-cache openssl
+
 WORKDIR /app
 
 # Copy workspace manifests first (better layer caching)
@@ -32,6 +35,9 @@ RUN NODE_OPTIONS=--max-old-space-size=512 npm run build
 
 # ─── Runner stage: production image ──────────────────────────────────────────
 FROM node:20-alpine AS runner
+
+# Install OpenSSL so Prisma engine can load libssl at runtime
+RUN apk add --no-cache openssl
 
 WORKDIR /app
 
