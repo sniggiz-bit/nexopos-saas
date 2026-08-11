@@ -62,8 +62,11 @@ COPY packages/shared ./packages/shared
 
 WORKDIR /app/apps/api
 
-# Install prisma CLI globally for migrate deploy
+# Install prisma CLI globally for migrate deploy + generate
 RUN npm install -g prisma@5.22.0
+
+# Regenerate Prisma client HERE in the runner with the correct Alpine binary
+RUN prisma generate
 
 EXPOSE 3000
 
