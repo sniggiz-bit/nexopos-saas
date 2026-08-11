@@ -41,6 +41,7 @@ COPY packages/shared/package.json ./packages/shared/
 
 # Install only production dependencies
 RUN NODE_OPTIONS=--max-old-space-size=512 npm ci --omit=dev
+RUN npm install -g prisma@5.22.0
 
 # Copy compiled dist from builder
 COPY --from=builder /app/apps/api/dist ./apps/api/dist
@@ -60,4 +61,4 @@ EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=10s --retries=3 --start-period=40s \
     CMD wget --no-verbose --tries=1 --spider http://127.0.0.1:3000/api || exit 1
 
-CMD ["sh", "-c", "npx --yes prisma migrate deploy && node dist/main.js"]
+CMD ["sh", "-c", "prisma migrate deploy && node dist/main.js"]
