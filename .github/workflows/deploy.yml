@@ -49,6 +49,11 @@ jobs:
             docker rm -f nexopos_api 2>/dev/null || true
             docker compose -f docker-compose.prod.yml up -d api
             docker image prune -af --filter "until=24h" || true
+            echo "Waiting 10s for API to start..."
+            sleep 10
+            echo "=== DOCKER LOGS nexopos_api ==="
+            docker logs nexopos_api || true
+            echo "==============================="
             echo "✓ API deployed"
 
   deploy-web:
