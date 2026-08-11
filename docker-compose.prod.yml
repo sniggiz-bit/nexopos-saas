@@ -13,12 +13,6 @@ services:
       - ./postgres_data_v15:/var/lib/postgresql/data
     networks:
       - nexopos_network
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-nexopos_db}"]
-      interval: 5s
-      timeout: 5s
-      retries: 10
-      start_period: 10s
 
   api:
     build:
@@ -38,8 +32,7 @@ services:
     volumes:
       - ./uploads:/app/uploads
     depends_on:
-      postgres:
-        condition: service_healthy
+      - postgres
     networks:
       - nexopos_network
 

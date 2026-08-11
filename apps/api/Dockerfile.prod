@@ -24,7 +24,7 @@ WORKDIR /app/apps/api
 # Create nest-cli.json (required by nest build)
 RUN echo '{"$schema":"https://json.schemastore.org/nest-cli","collection":"@nestjs/schematics","sourceRoot":"src","compilerOptions":{"deleteOutDir":true,"webpack":false,"tsConfigPath":"tsconfig.build.json"}}' > nest-cli.json
 
-# Generate Prisma client (builder is also Alpine, so native = linux-musl-openssl-3.0.x)
+# Generate Prisma client for Alpine (linux-musl-openssl-3.0.x)
 RUN npm exec -- prisma generate
 
 # Compile TypeScript to dist/
@@ -43,12 +43,11 @@ COPY apps/api/package.json ./apps/api/
 COPY apps/web/package.json ./apps/web/
 COPY packages/shared/package.json ./packages/shared/
 
-# Install production dependencies only
-# Note: @prisma/client postinstall will attempt prisma generate but prisma CLI
-# is not available yet — that's fine, we regenerate below with the schema.
-RUN NODE_OPTIONS=--max-old-space-size=512 npm ci --omit=dev --ignore-scripts
+# Install production dependencies WITH scripts so native packages like bcrypt compile
+# @prisma/client postinstall will attempt generate without schema — exits gracefully (code 0)
+RUN NODE_OPTIONS=--max-old-space-size=512 npm ci --omit=dev
 
-# Install prisma CLI globally so migrate deploy and generate work at runtime
+# Install prisma CLI globally for migrate deploy + generate
 RUN npm install -g prisma@5.22.0
 
 # Copy compiled app from builder
@@ -60,8 +59,8 @@ COPY packages/shared ./packages/shared
 
 WORKDIR /app/apps/api
 
-# Generate the Prisma client HERE in the runner with the correct Alpine binary
-# This is the definitive fix: no more copying .prisma from builder
+# Regenerate Prisma client HERE in the runner with the correct Alpine binary
+# This overwrites whatever @prisma/client's postinstall produced
 RUN prisma generate
 
 EXPOSE 3000
@@ -69,4 +68,5 @@ EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=10s --retries=3 --start-period=60s \
     CMD wget --no-verbose --tries=1 --spider http://127.0.0.1:3000/api || exit 1
 
-CMD ["sh", "-c", "set -e && echo '→ Running DB migrations...' && prisma migrate deploy && echo '→ Starting NestJS API...' && node dist/main.js"]
+# Retry loop: wait until postgres is ready before migrating, then start the server
+CMD ["sh", "-c", "until prisma migrate deploy 2>&1; do echo 'DB not ready, retrying in 3s...'; sleep 3; done && node dist/main.js"]
