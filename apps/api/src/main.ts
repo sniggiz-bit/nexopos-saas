@@ -13,34 +13,28 @@ class AllExceptionsFilter implements ExceptionFilter {
 
     let status = 500;
     let message = 'Internal server error';
-    let errorClass = 'UnknownError';
-    let detail = '';
 
     if (exception instanceof HttpException) {
       status = exception.getStatus();
-      message = exception.message;
-      errorClass = exception.constructor.name;
       const resp = exception.getResponse();
-      detail = typeof resp === 'string' ? resp : JSON.stringify(resp);
+      message = typeof resp === 'string' ? resp : (resp as any)?.message || exception.message;
     } else if (exception instanceof Error) {
-      errorClass = exception.constructor.name;
-      detail = exception.message;
       message = exception.message;
     }
 
     console.error(
-      `[GLOBAL ERROR] ${new Date().toISOString()} | ${request.url} | ${status} | ${errorClass}: ${detail}`,
-      exception instanceof Error ? exception.stack : exception,
+      `[ERROR] ${new Date().toISOString()} | ${request.method} ${request.url} | ${status} | ${exception instanceof Error ? exception.constructor.name : 'Unknown'}: ${exception instanceof Error ? exception.message : exception}`,
+      exception instanceof Error ? exception.stack : '',
     );
 
     response.status(status).json({
       statusCode: status,
-      message: message,
-      ...(process.env.NODE_ENV !== 'production' && { errorClass, detail }),
+      message,
       path: request.url,
     });
   }
 }
+
 
 async function bootstrap() {
   

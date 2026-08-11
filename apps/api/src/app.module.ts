@@ -6,7 +6,6 @@ import { EventsModule } from './events/events.module';
 import { EcommerceIntegrationsModule } from './ecommerce-integrations/ecommerce-integrations.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { DebugController } from './debug/debug.controller';
 import { SalesModule } from './sales/sales.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { DteModule } from './dte/dte.module';
@@ -90,7 +89,7 @@ import { NotificationsModule } from './notifications/notifications.module';
     MercadopagoModule,
     NotificationsModule,
   ],
-  controllers: [AppController, DebugController],
+  controllers: [AppController],
   providers: [
     AppService,
     // Register JwtAuthGuard globally so all controllers use the same

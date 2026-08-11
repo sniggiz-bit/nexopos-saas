@@ -4,3 +4,34 @@ dist/
 .env.local
 .DS_Store
 pgdata/
+uploads/
+
+# Logs and temp files
+*.log
+*.txt
+api_logs*.txt
+job_logs.txt
+eslint_root_errors.txt
+migration_log.txt
+curl_out.txt
+
+# Ad-hoc debug/diagnostic scripts
+check_db.ts
+test-auth.ts
+seed-check.ts
+set-past-due.ts
+trigger-billing.ts
+repro_issue.ts
+list-users.ts
+get_logs*.js
+test_*.js
+test-*.js
+prueba-*.js
+
+# One-off SQL files
+*.sql
+!apps/api/prisma/migrations/**/*.sql
+
+# Misc
+composite_image.py
+*.pyc
