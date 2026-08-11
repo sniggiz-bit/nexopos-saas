@@ -23,6 +23,7 @@ COPY packages/shared ./packages/shared
 WORKDIR /app/apps/api
 RUN echo '{"$$schema": "https://json.schemastore.org/nest-cli", "collection": "@nestjs/schematics", "sourceRoot": "src", "compilerOptions": { "deleteOutDir": true, "webpack": false, "tsConfigPath": "tsconfig.build.json" }}' > nest-cli.json
 RUN npm exec -- prisma generate
+RUN cp -R /app/node_modules/.prisma /app/prisma_generated || cp -R /app/apps/api/node_modules/.prisma /app/prisma_generated
 RUN NODE_OPTIONS=--max-old-space-size=512 npm run build
 
 # Production stage
@@ -47,7 +48,7 @@ COPY --from=builder /app/apps/api/dist ./apps/api/dist
 # Copy Prisma files and generated client from builder
 COPY apps/api/prisma ./apps/api/prisma
 COPY apps/api/prisma.config.ts ./apps/api/prisma.config.ts
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder /app/prisma_generated ./node_modules/.prisma
 
 # Copy shared package source (needed at runtime for workspace resolution)
 COPY packages/shared ./packages/shared
