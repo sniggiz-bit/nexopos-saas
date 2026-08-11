@@ -48,6 +48,7 @@ jobs:
             docker compose -f docker-compose.prod.yml build --no-cache api
             docker rm -f nexopos_api 2>/dev/null || true
             docker compose -f docker-compose.prod.yml up -d api
+            docker image prune -af --filter "until=24h" || true
             echo "✓ API deployed"
 
   deploy-web:
@@ -74,4 +75,5 @@ jobs:
             docker compose -f docker-compose.prod.yml build --no-cache web
             docker rm -f nexopos_web 2>/dev/null || true
             docker compose -f docker-compose.prod.yml up -d web
+            docker image prune -af --filter "until=24h" || true
             echo "✓ Web deployed"
