@@ -10,8 +10,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Trash2 } from "lucide-react"
-import { formatCurrency } from "@/lib/utils" // Assuming this exists or I'll implement inline
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { formatCurrency } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
 
 export function QuoteItemsTable() {
@@ -30,10 +29,10 @@ export function QuoteItemsTable() {
             <Table>
                 <TableHeader>
                     <TableRow>
-                        <TableHead className="w-[40%]">Producto</TableHead>
+                        <TableHead className="w-[38%]">Producto</TableHead>
                         <TableHead className="w-[10%] text-center">Cantidad</TableHead>
                         <TableHead className="w-[15%] text-right">Precio Unit.</TableHead>
-                        <TableHead className="w-[20%] text-right">Descuento</TableHead>
+                        <TableHead className="w-[22%] text-center">Descuento</TableHead>
                         <TableHead className="w-[10%] text-right">Total</TableHead>
                         <TableHead className="w-[5%]"></TableHead>
                     </TableRow>
@@ -64,18 +63,23 @@ interface QuoteItemRowProps {
 }
 
 function QuoteItemRow({ item, updateQuantity, updatePrice, applyDiscount, removeItem }: QuoteItemRowProps) {
+    const discountType = item.discountType || 'PERCENTAGE'
 
     const calculateLineTotal = () => {
-        let total = (Number(item.price) || 0) * (Number(item.quantity) || 0);
-        const dVal = Number(item.discountValue) || 0;
+        let total = (Number(item.price) || 0) * (Number(item.quantity) || 0)
+        const dVal = Number(item.discountValue) || 0
         if (dVal && item.discountType) {
             if (item.discountType === 'PERCENTAGE') {
-                total -= (total * dVal) / 100;
+                total -= (total * dVal) / 100
             } else {
-                total -= dVal;
+                total -= dVal
             }
         }
-        return Math.max(0, total);
+        return Math.max(0, total)
+    }
+
+    const handleToggleType = (type: DiscountType) => {
+        applyDiscount(item.productId, type, item.discountValue)
     }
 
     return (
@@ -113,30 +117,48 @@ function QuoteItemRow({ item, updateQuantity, updatePrice, applyDiscount, remove
                 </div>
             </TableCell>
             <TableCell>
-                <div className="flex items-center gap-1">
+                {/* Discount field: number input + inline % / $ toggle buttons */}
+                <div className="flex items-center gap-1 justify-center">
                     <Input
                         type="number"
                         min="0"
-                        className="text-right h-8 w-16"
+                        className="text-right h-8 w-20"
                         placeholder="0"
                         value={item.discountValue ?? ''}
                         onChange={(e) => {
-                            const val = e.target.value === '' ? '' : parseFloat(e.target.value);
-                            applyDiscount(item.productId, item.discountType || 'PERCENTAGE', Number.isNaN(val as number) && val !== '' ? undefined : val)
+                            const val = e.target.value === '' ? '' : parseFloat(e.target.value)
+                            applyDiscount(
+                                item.productId,
+                                discountType,
+                                (typeof val === 'number' && isNaN(val)) ? '' : val
+                            )
                         }}
                     />
-                    <Select
-                        value={item.discountType || 'PERCENTAGE'}
-                        onValueChange={(val: DiscountType) => applyDiscount(item.productId, val, item.discountValue)}
-                    >
-                        <SelectTrigger className="h-8 w-[58px] px-2">
-                            <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="PERCENTAGE">%</SelectItem>
-                            <SelectItem value="FIXED">$</SelectItem>
-                        </SelectContent>
-                    </Select>
+                    {/* Toggle % / $ — visually clean, no native select */}
+                    <div className="flex rounded-md border border-border overflow-hidden h-8">
+                        <button
+                            type="button"
+                            onClick={() => handleToggleType('PERCENTAGE')}
+                            className={`px-2 text-xs font-semibold transition-colors ${
+                                discountType === 'PERCENTAGE'
+                                    ? 'bg-[#0099CC] text-white'
+                                    : 'bg-card text-muted-foreground hover:bg-muted'
+                            }`}
+                        >
+                            %
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => handleToggleType('FIXED')}
+                            className={`px-2 text-xs font-semibold border-l border-border transition-colors ${
+                                discountType === 'FIXED'
+                                    ? 'bg-[#0099CC] text-white'
+                                    : 'bg-card text-muted-foreground hover:bg-muted'
+                            }`}
+                        >
+                            $
+                        </button>
+                    </div>
                 </div>
             </TableCell>
             <TableCell className="text-right font-medium">

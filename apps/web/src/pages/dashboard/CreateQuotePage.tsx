@@ -211,7 +211,7 @@ export function CreateQuotePage() {
                                         id="iva-toggle"
                                         checked={includeIva}
                                         onCheckedChange={setIncludeIva}
-                                        className="data-[state=checked]:bg-[#0099CC]"
+                                        className={includeIva ? '!bg-[#0099CC]' : ''}
                                     />
                                 </div>
 
