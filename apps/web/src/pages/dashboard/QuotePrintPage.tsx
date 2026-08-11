@@ -137,17 +137,19 @@ export function QuotePrintPage() {
 
                             {/* Left: business info + logo */}
                             <div className="flex items-start gap-4">
-                                <div className="w-16 h-16 rounded-xl overflow-hidden shrink-0 flex items-center justify-center bg-[#0099CC] print:bg-[#0099CC]">
-                                    {logoUrl ? (
+                                {logoUrl ? (
+                                    <div className="max-w-[200px] max-h-16 shrink-0 flex items-center justify-start">
                                         <img
                                             src={logoUrl}
                                             alt={`Logo ${tenant?.name}`}
-                                            className="w-full h-full object-contain"
+                                            className="max-h-16 max-w-[200px] w-auto h-auto object-contain"
                                         />
-                                    ) : (
+                                    </div>
+                                ) : (
+                                    <div className="w-14 h-14 rounded-xl overflow-hidden shrink-0 flex items-center justify-center bg-[#0099CC] print:bg-[#0099CC]">
                                         <span className="text-2xl font-black text-white">{tenantInitial}</span>
-                                    )}
-                                </div>
+                                    </div>
+                                )}
                                 <div>
                                     <p className="text-lg font-bold text-gray-900 leading-tight">{tenant?.name || ''}</p>
                                     {tenant?.rut && <p className="text-sm text-gray-500 mt-0.5">RUT: {tenant.rut}</p>}
