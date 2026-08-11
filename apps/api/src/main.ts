@@ -1,6 +1,3 @@
-import * as fs from 'fs';
-import * as https from 'https';
-import * as path from 'path';
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe, Catch, ExceptionFilter, ArgumentsHost, HttpException } from '@nestjs/common';
 import { NestExpressApplication } from '@nestjs/platform-express';
