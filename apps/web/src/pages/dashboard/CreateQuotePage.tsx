@@ -217,24 +217,30 @@ export function CreateQuotePage() {
 
                                 <div className="flex justify-between text-muted-foreground/[0.5]">
                                     <span>Subtotal</span>
-                                    <span className="tabular-nums">${totals.subtotal.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</span>
+                                    <span className="tabular-nums">
+                                        ${(includeIva ? totals.subtotal : Math.round(totals.subtotal / 1.19)).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                                    </span>
                                 </div>
+                                {totals.totalDiscount > 0 && (
+                                    <div className="flex justify-between text-emerald-400 font-medium">
+                                        <span>Descuento</span>
+                                        <span className="tabular-nums">
+                                            -${(includeIva ? totals.totalDiscount : Math.round(totals.totalDiscount / 1.19)).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                                        </span>
+                                    </div>
+                                )}
                                 {includeIva && (
                                     <div className="flex justify-between text-muted-foreground/[0.5]">
                                         <span>IVA (19%)</span>
                                         <span className="tabular-nums">${totals.tax.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</span>
                                     </div>
                                 )}
-                                {totals.totalDiscount > 0 && (
-                                    <div className="flex justify-between text-emerald-400 font-medium">
-                                        <span>Descuento</span>
-                                        <span className="tabular-nums">-${totals.totalDiscount.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</span>
-                                    </div>
-                                )}
                                 <Separator className="my-2 bg-muted/30" />
                                 <div className="flex justify-between text-2xl font-bold text-[#0099CC] text-glow-cyan">
                                     <span>TOTAL</span>
-                                    <span className="tabular-nums">${totals.total.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</span>
+                                    <span className="tabular-nums">
+                                        ${(includeIva ? totals.total : Math.round(totals.total / 1.19)).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                                    </span>
                                 </div>
                             </div>
                         </div>
