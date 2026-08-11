@@ -117,12 +117,12 @@ function QuoteItemRow({ item, updateQuantity, updatePrice, applyDiscount, remove
                 </div>
             </TableCell>
             <TableCell>
-                {/* Discount field: number input + inline % / $ toggle buttons */}
-                <div className="flex items-center gap-1 justify-center">
+                {/* Discount field: number input + % or $ selector */}
+                <div className="flex items-center gap-1.5 justify-center">
                     <Input
                         type="number"
                         min="0"
-                        className="text-right h-8 w-20"
+                        className="text-right h-8 w-20 text-sm bg-card border-border"
                         placeholder="0"
                         value={item.discountValue ?? ''}
                         onChange={(e) => {
@@ -134,31 +134,14 @@ function QuoteItemRow({ item, updateQuantity, updatePrice, applyDiscount, remove
                             )
                         }}
                     />
-                    {/* Toggle % / $ — visually clean, no native select */}
-                    <div className="flex rounded-md border border-border overflow-hidden h-8">
-                        <button
-                            type="button"
-                            onClick={() => handleToggleType('PERCENTAGE')}
-                            className={`px-2 text-xs font-semibold transition-colors ${
-                                discountType === 'PERCENTAGE'
-                                    ? 'bg-[#0099CC] text-white'
-                                    : 'bg-card text-muted-foreground hover:bg-muted'
-                            }`}
-                        >
-                            %
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => handleToggleType('FIXED')}
-                            className={`px-2 text-xs font-semibold border-l border-border transition-colors ${
-                                discountType === 'FIXED'
-                                    ? 'bg-[#0099CC] text-white'
-                                    : 'bg-card text-muted-foreground hover:bg-muted'
-                            }`}
-                        >
-                            $
-                        </button>
-                    </div>
+                    <select
+                        value={discountType}
+                        onChange={(e) => handleToggleType(e.target.value as DiscountType)}
+                        className="h-8 px-2 rounded-md border border-border bg-card text-foreground font-bold text-xs cursor-pointer focus:outline-none focus:border-[#0099CC] transition-colors"
+                    >
+                        <option value="PERCENTAGE">%</option>
+                        <option value="FIXED">$</option>
+                    </select>
                 </div>
             </TableCell>
             <TableCell className="text-right font-medium">
