@@ -62,9 +62,10 @@ COPY packages/shared ./packages/shared
 
 WORKDIR /app/apps/api
 
-# NOTE: prisma generate is NOT needed here.
-# PrismaService uses @prisma/adapter-pg (pure JS, no Rust engine needed for queries).
-# prisma migrate deploy uses the schema engine (bundled in prisma CLI).
+# Generate Prisma client in the runner for correct Alpine binary target.
+# The pg adapter bypasses the Rust query engine for queries,
+# but the generated client types are still needed.
+RUN /app/node_modules/.bin/prisma generate
 
 EXPOSE 3000
 
