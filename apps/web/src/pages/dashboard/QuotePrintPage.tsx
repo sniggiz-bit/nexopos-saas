@@ -92,6 +92,7 @@ export function QuotePrintPage() {
     if (!quote) return <div className="p-8 text-center text-red-500">Cotización no encontrada</div>;
 
     const tenantInitial = (tenant?.name || 'N').charAt(0).toUpperCase();
+    const logoUrl = tenant?.logoUrl || (tenant as any)?.settings?.logoUrl || (tenant as any)?.storeSettings?.logoUrl;
     
     // Prices are IVA-inclusive. Compute totals from items directly.
     const includeIva = quote.includeIva !== false; // default true for legacy quotes
@@ -137,9 +138,9 @@ export function QuotePrintPage() {
                             {/* Left: business info + logo */}
                             <div className="flex items-start gap-4">
                                 <div className="w-16 h-16 rounded-xl overflow-hidden shrink-0 flex items-center justify-center bg-[#0099CC] print:bg-[#0099CC]">
-                                    {tenant?.logoUrl ? (
+                                    {logoUrl ? (
                                         <img
-                                            src={tenant.logoUrl}
+                                            src={logoUrl}
                                             alt={`Logo ${tenant?.name}`}
                                             className="w-full h-full object-contain"
                                         />
@@ -196,25 +197,34 @@ export function QuotePrintPage() {
                     <table className="w-full">
                         <thead>
                             <tr className="bg-[#0099CC] text-white print:bg-[#0099CC]">
-                                <th className="text-left py-3 px-10 text-xs font-semibold uppercase tracking-wider">Descripción</th>
+                                <th className="text-left py-3 px-6 text-xs font-semibold uppercase tracking-wider">Descripción</th>
                                 <th className="text-right py-3 px-4 text-xs font-semibold uppercase tracking-wider">Precio Unit.</th>
                                 <th className="text-center py-3 px-4 text-xs font-semibold uppercase tracking-wider">Cant.</th>
-                                <th className="text-right py-3 px-10 text-xs font-semibold uppercase tracking-wider">Total</th>
+                                <th className="text-right py-3 px-4 text-xs font-semibold uppercase tracking-wider">Descuento</th>
+                                <th className="text-right py-3 px-6 text-xs font-semibold uppercase tracking-wider">Total</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {quote.items.map((item: any, i: number) => (
-                                <tr key={item.id} className={i % 2 === 0 ? 'bg-white' : 'bg-slate-50'}>
-                                    <td className="py-3 px-10 text-sm text-gray-800">
-                                        {item.productName || item.product?.name || 'Producto'}
-                                    </td>
-                                    <td className="py-3 px-4 text-right text-sm text-gray-600">{formatPrice(item.price)}</td>
-                                    <td className="py-3 px-4 text-center text-sm text-gray-600">{Number(item.quantity)}</td>
-                                    <td className="py-3 px-10 text-right text-sm font-semibold text-gray-900">
-                                        {formatPrice(item.total ?? item.price * Number(item.quantity))}
-                                    </td>
-                                </tr>
-                            ))}
+                            {quote.items.map((item: any, i: number) => {
+                                const discountVal = Number(item.discount) || 0;
+                                const originalLineTotal = Number(item.price) * Number(item.quantity);
+                                const lineTotal = item.total ?? (originalLineTotal - discountVal);
+                                return (
+                                    <tr key={item.id || i} className={i % 2 === 0 ? 'bg-white' : 'bg-slate-50'}>
+                                        <td className="py-3 px-6 text-sm text-gray-800 font-medium">
+                                            {item.productName || item.product?.name || 'Producto'}
+                                        </td>
+                                        <td className="py-3 px-4 text-right text-sm text-gray-600">{formatPrice(item.price)}</td>
+                                        <td className="py-3 px-4 text-center text-sm text-gray-600">{Number(item.quantity)}</td>
+                                        <td className="py-3 px-4 text-right text-sm text-emerald-600 font-medium">
+                                            {discountVal > 0 ? `-${formatPrice(discountVal)}` : '—'}
+                                        </td>
+                                        <td className="py-3 px-6 text-right text-sm font-semibold text-gray-900">
+                                            {formatPrice(lineTotal)}
+                                        </td>
+                                    </tr>
+                                );
+                            })}
                         </tbody>
                     </table>
 

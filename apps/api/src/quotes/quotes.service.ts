@@ -370,9 +370,10 @@ export class QuotesService {
       
       // Table Header Text
       doc.fillColor('white').fontSize(9).font('Helvetica-Bold');
-      doc.text('Descripción del Producto', 60, tableTop + 7, { width: 230, align: 'left' });
-      doc.text('Precio Unit.', 290, tableTop + 7, { width: 80, align: 'right' });
-      doc.text('Cant.', 380, tableTop + 7, { width: 50, align: 'center' });
+      doc.text('Descripción del Producto', 60, tableTop + 7, { width: 180, align: 'left' });
+      doc.text('Precio Unit.', 245, tableTop + 7, { width: 70, align: 'right' });
+      doc.text('Cant.', 320, tableTop + 7, { width: 40, align: 'center' });
+      doc.text('Descuento', 365, tableTop + 7, { width: 70, align: 'right' });
       doc.text('Total', 440, tableTop + 7, { width: 95, align: 'right' });
 
       let y = tableTop + 22;
@@ -390,10 +391,20 @@ export class QuotesService {
         doc.rect(50, y, 495, 22).lineWidth(0.5).stroke(borderGray);
 
         doc.fillColor(textColor);
-        const name = (item.productName || item.product?.name || 'Producto').substring(0, 48);
-        doc.text(name, 60, y + 7, { width: 230, align: 'left' });
-        doc.text(`$${item.price.toLocaleString('es-CL')}`, 290, y + 7, { width: 80, align: 'right' });
-        doc.text(Number(item.quantity).toString(), 380, y + 7, { width: 50, align: 'center' });
+        const name = (item.productName || item.product?.name || 'Producto').substring(0, 38);
+        const discountVal = Number(item.discount) || 0;
+        doc.text(name, 60, y + 7, { width: 180, align: 'left' });
+        doc.text(`$${item.price.toLocaleString('es-CL')}`, 245, y + 7, { width: 70, align: 'right' });
+        doc.text(Number(item.quantity).toString(), 320, y + 7, { width: 40, align: 'center' });
+        
+        if (discountVal > 0) {
+          doc.fillColor('#10B981').text(`-$${discountVal.toLocaleString('es-CL')}`, 365, y + 7, { width: 70, align: 'right' });
+          doc.fillColor(textColor);
+        } else {
+          doc.fillColor('#9CA3AF').text('—', 365, y + 7, { width: 70, align: 'right' });
+          doc.fillColor(textColor);
+        }
+
         doc.font('Helvetica-Bold').text(`$${item.total.toLocaleString('es-CL')}`, 440, y + 7, { width: 95, align: 'right' });
         doc.font('Helvetica');
 
@@ -403,20 +414,32 @@ export class QuotesService {
       // Totals section (right side alignment)
       y += 15;
       
+      const totalDiscount = quote.items.reduce((sum: number, item: any) => sum + (item.discount || 0), 0);
+      const boxHeight = totalDiscount > 0 ? 80 : 65;
+
       // Draw a clean box for totals
-      doc.rect(320, y, 225, 65).fill(lightGray);
-      doc.rect(320, y, 225, 65).lineWidth(1).stroke(borderGray);
+      doc.rect(320, y, 225, boxHeight).fill(lightGray);
+      doc.rect(320, y, 225, boxHeight).lineWidth(1).stroke(borderGray);
 
+      let currentY = y + 10;
       doc.fillColor('#6B7280').fontSize(9);
-      doc.text('Subtotal (neto):', 335, y + 10, { width: 100, align: 'left' });
-      doc.fillColor(textColor).text(`$${quote.subtotal.toLocaleString('es-CL')}`, 445, y + 10, { width: 85, align: 'right' });
+      doc.text('Subtotal (neto):', 335, currentY, { width: 100, align: 'left' });
+      doc.fillColor(textColor).text(`$${quote.subtotal.toLocaleString('es-CL')}`, 445, currentY, { width: 85, align: 'right' });
 
-      doc.fillColor('#6B7280').text('IVA (19%):', 335, y + 25, { width: 100, align: 'left' });
-      doc.fillColor(textColor).text(`$${quote.tax.toLocaleString('es-CL')}`, 445, y + 25, { width: 85, align: 'right' });
+      currentY += 15;
+      doc.fillColor('#6B7280').text('IVA (19%):', 335, currentY, { width: 100, align: 'left' });
+      doc.fillColor(textColor).text(`$${quote.tax.toLocaleString('es-CL')}`, 445, currentY, { width: 85, align: 'right' });
 
+      if (totalDiscount > 0) {
+        currentY += 15;
+        doc.fillColor('#10B981').text('Descuento:', 335, currentY, { width: 100, align: 'left' });
+        doc.text(`-$${totalDiscount.toLocaleString('es-CL')}`, 445, currentY, { width: 85, align: 'right' });
+      }
+
+      currentY += 17;
       doc.fillColor(textColor).font('Helvetica-Bold').fontSize(11);
-      doc.text('TOTAL:', 335, y + 42, { width: 100, align: 'left' });
-      doc.fillColor(primaryColor).text(`$${quote.total.toLocaleString('es-CL')}`, 445, y + 42, { width: 85, align: 'right' });
+      doc.text('TOTAL:', 335, currentY, { width: 100, align: 'left' });
+      doc.fillColor(primaryColor).text(`$${quote.total.toLocaleString('es-CL')}`, 445, currentY, { width: 85, align: 'right' });
       doc.font('Helvetica').fontSize(9);
 
       // Notes
