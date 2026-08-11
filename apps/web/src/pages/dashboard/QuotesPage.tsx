@@ -8,13 +8,14 @@ import { Button } from '@/components/ui/button';
 import { formatPrice } from '@/utils/formatters';
 import { toast } from 'react-hot-toast';
 
+import { useCart } from '@/context/CartContext';
+
 export function QuotesPage() {
     const { data: quotesData, isLoading, isError, refetch } = useQuotes();
     const quotes = Array.isArray(quotesData) ? quotesData : [];
-    const convertQuote = useConvertQuote();
     const deleteQuote = useDeleteQuote();
+    const { loadQuoteItems } = useCart();
     const navigate = useNavigate();
-    const [convertingId, setConvertingId] = useState<string | null>(null);
     const [deletingId, setDeletingId] = useState<string | null>(null);
 
     const formatDate = (dateString: string) => {
@@ -32,21 +33,10 @@ export function QuotesPage() {
         }
     };
 
-    const handleConvert = async (id: string) => {
-        if (convertingId) return;
-        if (!confirm('¿Está seguro de convertir esta cotización en una venta pre-seleccionada?')) {
-            return;
-        }
-
-        setConvertingId(id);
-        try {
-            await convertQuote.mutateAsync(id);
-            refetch();
-        } catch (_error) {
-            // error shown by useConvertQuote hook toast
-        } finally {
-            setConvertingId(null);
-        }
+    const handleConvert = (quote: any) => {
+        loadQuoteItems(quote);
+        toast.success(`Cotización ${quote.number || ''} cargada en el Punto de Venta. Selecciona la forma de pago.`);
+        navigate('/pos');
     };
 
     const handleDelete = async (id: string) => {
@@ -149,15 +139,11 @@ export function QuotesPage() {
 
                                             {quote.status !== 'ACCEPTED' && (
                                                 <button
-                                                    onClick={() => handleConvert(quote.id)}
-                                                    className="text-emerald-400 hover:text-white inline-flex items-center p-2 rounded-lg hover:bg-emerald-500/10 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                                                    title="Convertir a Venta"
-                                                    disabled={!!convertingId}
+                                                    onClick={() => handleConvert(quote)}
+                                                    className="text-emerald-400 hover:text-white inline-flex items-center p-2 rounded-lg hover:bg-emerald-500/10 transition-colors"
+                                                    title="Convertir a Venta en POS"
                                                 >
-                                                    {convertingId === quote.id
-                                                        ? <div className="w-4 h-4 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin" />
-                                                        : <ShoppingCart className="w-4 h-4" />
-                                                    }
+                                                    <ShoppingCart className="w-4 h-4" />
                                                 </button>
                                             )}
 

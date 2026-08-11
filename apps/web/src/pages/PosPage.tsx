@@ -25,7 +25,7 @@ import { apiClient } from '@/api/client';
 import { Scan, Search, X, LogOut, LayoutGrid, List, ShoppingBag } from 'lucide-react';
 
 export function PosPage() {
-    const { items: cartItems, addItem, clearCart } = useCart();
+    const { items: cartItems, addItem, clearCart, quoteId, customerId: cartCustomerId } = useCart();
     const [saleResult, setSaleResult]               = useState<any>(null);
     const [isCloseShiftModalOpen, setIsCloseShiftModalOpen] = useState(false);
     const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
@@ -107,7 +107,8 @@ export function PosPage() {
             }),
             payments,
             dteType,
-            customerId,
+            customerId: customerId || cartCustomerId || undefined,
+            quoteId: quoteId || undefined,
         };
         try {
             const data = await createSaleAsync(saleData);

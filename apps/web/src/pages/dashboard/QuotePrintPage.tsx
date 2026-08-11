@@ -2,11 +2,12 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getQuote, sendQuoteEmail } from '@/api/quotes';
 import { Button } from '@/components/ui/button';
-import { Printer, ArrowLeft, Download, Mail, Loader2 } from 'lucide-react';
+import { Printer, ArrowLeft, Download, Mail, Loader2, ShoppingCart } from 'lucide-react';
 import { formatPrice } from '@/utils/formatters';
 import { useQuotePdf } from '@/hooks/useQuotes';
 import { useAuth } from '@/context/AuthContext';
 import { useTenant } from '@/hooks/useTenant';
+import { useCart } from '@/context/CartContext';
 import { toast } from 'react-hot-toast';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -16,6 +17,7 @@ import { Label } from '@/components/ui/label';
 export function QuotePrintPage() {
     const { id } = useParams<{ id: string }>();
     const { user } = useAuth();
+    const { loadQuoteItems } = useCart();
     const [quote, setQuote] = useState<any | null>(null);
     const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
@@ -113,6 +115,19 @@ export function QuotePrintPage() {
                         Volver
                     </Button>
                     <div className="flex gap-2">
+                        {quote.status !== 'ACCEPTED' && (
+                            <Button
+                                onClick={() => {
+                                    loadQuoteItems(quote);
+                                    toast.success(`Cotización ${quote.number || ''} cargada en el Punto de Venta`);
+                                    navigate('/pos');
+                                }}
+                                className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold shadow-sm"
+                            >
+                                <ShoppingCart className="w-4 h-4 mr-2" />
+                                Pagar en POS
+                            </Button>
+                        )}
                         <Button variant="outline" onClick={() => setIsEmailModalOpen(true)} className="border-slate-300 hover:bg-slate-50 text-slate-700 bg-white">
                             <Mail className="w-4 h-4 mr-2" />
                             Enviar por Email

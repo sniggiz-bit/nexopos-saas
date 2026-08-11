@@ -20,12 +20,15 @@ export interface CartItemData {
 
 interface CartContextType {
     items: CartItemData[];
+    quoteId: string | null;
+    customerId: string | null;
     addItem: (product: Product, quantity?: number) => void;
     updateQuantity: (productId: string, quantity: number | '') => void;
     removeItem: (productId: string) => void;
     applyDiscount: (productId: string, type: DiscountType | undefined, value?: number | '') => void;
     updatePrice: (productId: string, price: number | '') => void;
     clearCart: () => void;
+    loadQuoteItems: (quote: any) => void;
     totals: {
         total: number;
         tax: number;
@@ -38,6 +41,8 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
     const [items, setItems] = useState<CartItemData[]>([]);
+    const [quoteId, setQuoteId] = useState<string | null>(null);
+    const [customerId, setCustomerId] = useState<string | null>(null);
     const socket = useSocket();
 
     useEffect(() => {
@@ -159,6 +164,24 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
     const clearCart = useCallback(() => {
         setItems([]);
+        setQuoteId(null);
+        setCustomerId(null);
+    }, []);
+
+    const loadQuoteItems = useCallback((quote: any) => {
+        setQuoteId(quote.id || null);
+        setCustomerId(quote.customerId || null);
+        const loaded: CartItemData[] = (quote.items || []).map((qItem: any) => ({
+            productId: qItem.productId,
+            name: qItem.productName || qItem.product?.name || 'Producto',
+            basePrice: Number(qItem.price) || 0,
+            price: Number(qItem.price) || 0,
+            quantity: Number(qItem.quantity) || 1,
+            unitType: 'UNIT' as const,
+            discountType: 'FIXED' as const,
+            discountValue: Number(qItem.discount) || 0,
+        }));
+        setItems(loaded);
     }, []);
 
     const totals = useMemo(() => {
@@ -202,12 +225,15 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         <CartContext.Provider
             value={{
                 items,
+                quoteId,
+                customerId,
                 addItem,
                 updateQuantity,
                 removeItem,
                 applyDiscount,
                 updatePrice,
                 clearCart,
+                loadQuoteItems,
                 totals,
             }}
         >

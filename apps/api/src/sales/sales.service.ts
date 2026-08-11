@@ -272,7 +272,15 @@ export class SalesService {
         });
       }
 
-      // 7. Update Movement References (Async or inside transaction if vital)
+      // 7. Mark quote as ACCEPTED (Vendida) if quoteId provided
+      if (quoteId) {
+        await prisma.quote.update({
+          where: { id: quoteId },
+          data: { status: 'ACCEPTED' },
+        });
+      }
+
+      // 8. Update Movement References (Async or inside transaction if vital)
       // Since we created movements with placeholder reference, strict audit might require Sale ID.
       // Using `updateMany` inside transaction to link movements to this sale is good practice.
       // However, StockMovement doesn't have saleId field in our current schema plan, it uses `reference` string.
