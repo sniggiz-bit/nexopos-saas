@@ -1,13 +1,17 @@
 import { Injectable, OnModuleInit, OnModuleDestroy, Logger } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
-import { Pool } from 'pg';
+
+// pg types are not in devDependencies, use require to avoid compile error
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { Pool } = require('pg');
 
 @Injectable()
 export class PrismaService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(PrismaService.name);
   private prisma: PrismaClient;
-  private pool: Pool;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private pool: any;
 
   constructor() {
     const connectionString = process.env.DATABASE_URL;
@@ -16,7 +20,6 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
     }
     this.pool = new Pool({ connectionString });
     const adapter = new PrismaPg(this.pool);
-    // Driver adapters are GA since Prisma 5.12.0 — no previewFeatures needed
     this.prisma = new PrismaClient({ adapter } as any);
   }
 
