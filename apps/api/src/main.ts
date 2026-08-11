@@ -1,9 +1,40 @@
+import * as fs from 'fs';
+import * as https from 'https';
+import * as path from 'path';
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe, Catch, ExceptionFilter, ArgumentsHost, HttpException } from '@nestjs/common';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
 import { AppModule } from './app.module';
 
+async function ensurePrismaEngine() {
+  const engineName = 'libquery_engine-rhel-openssl-1.1.x.so.node';
+  const enginePath = join(process.cwd(), 'prisma', engineName);
+  
+  process.env.PRISMA_QUERY_ENGINE_LIBRARY = enginePath;
+
+  if (!fs.existsSync(enginePath)) {
+    console.log(`[Auto-Fix] Motor no encontrado. Descargando a ${enginePath}...`);
+    const url = `https://raw.githubusercontent.com/sniggiz-bit/nexopos-saas/chore/seed-cpanel/apps/api/prisma/${engineName}`;
+    await new Promise<void>((resolve, reject) => {
+      https.get(url, (res) => {
+        const fileStream = fs.createWriteStream(enginePath);
+        res.pipe(fileStream);
+        fileStream.on('finish', () => {
+          fileStream.close();
+          resolve();
+        });
+      }).on('error', reject);
+    });
+  }
+
+  try {
+    fs.chmodSync(enginePath, 0o755);
+    console.log(`[Auto-Fix] Permisos 755 aplicados correctamente al motor de Prisma.`);
+  } catch (e) {
+    console.log(`[Auto-Fix] Error al aplicar permisos al motor:`, e.message);
+  }
+}
 @Catch()
 class AllExceptionsFilter implements ExceptionFilter {
   catch(exception: unknown, host: ArgumentsHost) {
@@ -33,6 +64,8 @@ class AllExceptionsFilter implements ExceptionFilter {
 }
 
 async function bootstrap() {
+  await ensurePrismaEngine();
+  
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
   app.setGlobalPrefix('api');
 
