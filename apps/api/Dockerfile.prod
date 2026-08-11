@@ -1,7 +1,7 @@
 # ─── Build stage: compile TypeScript ─────────────────────────────────────────
 FROM node:20-alpine AS builder
 
-# Install OpenSSL so Prisma can detect libssl at generate time
+# OpenSSL required by Prisma schema engine (used by prisma generate + migrate)
 RUN apk add --no-cache openssl
 
 WORKDIR /app
@@ -27,7 +27,7 @@ WORKDIR /app/apps/api
 # Create nest-cli.json (required by nest build)
 RUN echo '{"$schema":"https://json.schemastore.org/nest-cli","collection":"@nestjs/schematics","sourceRoot":"src","compilerOptions":{"deleteOutDir":true,"webpack":false,"tsConfigPath":"tsconfig.build.json"}}' > nest-cli.json
 
-# Generate Prisma client for Alpine (linux-musl-openssl-3.0.x)
+# Generate Prisma client types (needed for TypeScript compilation)
 RUN npm exec -- prisma generate
 
 # Compile TypeScript to dist/
@@ -36,7 +36,7 @@ RUN NODE_OPTIONS=--max-old-space-size=512 npm run build
 # ─── Runner stage: production image ──────────────────────────────────────────
 FROM node:20-alpine AS runner
 
-# Install OpenSSL so Prisma engine can load libssl at runtime
+# OpenSSL required by Prisma schema engine (used by prisma migrate deploy)
 RUN apk add --no-cache openssl
 
 WORKDIR /app
@@ -49,12 +49,9 @@ COPY apps/api/package.json ./apps/api/
 COPY apps/web/package.json ./apps/web/
 COPY packages/shared/package.json ./packages/shared/
 
-# Install production dependencies WITH scripts so native packages like bcrypt compile
-# @prisma/client postinstall will attempt generate without schema — exits gracefully (code 0)
+# Install production dependencies (scripts enabled so native modules like bcrypt compile)
+# prisma CLI included (it's a production dep) — used for prisma migrate deploy
 RUN NODE_OPTIONS=--max-old-space-size=512 npm ci --omit=dev
-
-# Install prisma CLI globally for migrate deploy + generate
-RUN npm install -g prisma@5.22.0
 
 # Copy compiled app from builder
 COPY --from=builder /app/apps/api/dist ./apps/api/dist
@@ -65,14 +62,14 @@ COPY packages/shared ./packages/shared
 
 WORKDIR /app/apps/api
 
-# Regenerate Prisma client HERE in the runner with the correct Alpine binary
-# This overwrites whatever @prisma/client's postinstall produced
-RUN prisma generate
+# NOTE: prisma generate is NOT needed here.
+# PrismaService uses @prisma/adapter-pg (pure JS, no Rust engine needed for queries).
+# prisma migrate deploy uses the schema engine (bundled in prisma CLI).
 
 EXPOSE 3000
 
 HEALTHCHECK --interval=30s --timeout=10s --retries=3 --start-period=60s \
     CMD wget --no-verbose --tries=1 --spider http://127.0.0.1:3000/api || exit 1
 
-# Retry loop: wait until postgres is ready before migrating, then start the server
-CMD ["sh", "-c", "until prisma migrate deploy 2>&1; do echo 'DB not ready, retrying in 3s...'; sleep 3; done && node dist/main.js"]
+# Retry loop: wait for DB to accept connections before migrating, then start server
+CMD ["sh", "-c", "until /app/node_modules/.bin/prisma migrate deploy 2>&1; do echo 'DB not ready, retrying in 3s...'; sleep 3; done && node dist/main.js"]

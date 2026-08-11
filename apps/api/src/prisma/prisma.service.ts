@@ -1,20 +1,33 @@
-import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
+import { Injectable, OnModuleInit, OnModuleDestroy, Logger } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
+import { PrismaPg } from '@prisma/adapter-pg';
+import { Pool } from 'pg';
 
 @Injectable()
 export class PrismaService implements OnModuleInit, OnModuleDestroy {
+  private readonly logger = new Logger(PrismaService.name);
   private prisma: PrismaClient;
+  private pool: Pool;
 
   constructor() {
-    this.prisma = new PrismaClient();
+    const connectionString = process.env.DATABASE_URL;
+    if (!connectionString) {
+      throw new Error('DATABASE_URL environment variable is not set');
+    }
+    this.logger.log(`Connecting to database via pg adapter...`);
+    this.pool = new Pool({ connectionString });
+    const adapter = new PrismaPg(this.pool);
+    this.prisma = new PrismaClient({ adapter } as any);
   }
 
   async onModuleInit() {
     await this.prisma.$connect();
+    this.logger.log('Database connection established');
   }
 
   async onModuleDestroy() {
     await this.prisma.$disconnect();
+    await this.pool.end();
   }
 
   // Expose Prisma client methods
@@ -71,54 +84,6 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
     return this.prisma.brand;
   }
 
-  get dteConfig() {
-    return this.prisma.dteConfig;
-  }
-
-  get cashShift() {
-    return this.prisma.cashShift;
-  }
-
-  get customer() {
-    return this.prisma.customer;
-  }
-
-  get quote() {
-    return this.prisma.quote;
-  }
-
-  get credit() {
-    return this.prisma.credit;
-  }
-
-  get creditPayment() {
-    return this.prisma.creditPayment;
-  }
-
-  get payment() {
-    return this.prisma.payment;
-  }
-
-  get stockMovement() {
-    return this.prisma.stockMovement;
-  }
-
-  get quoteItem() {
-    return this.prisma.quoteItem;
-  }
-
-  get plan() {
-    return this.prisma.plan;
-  }
-
-  get systemLog() {
-    return this.prisma.systemLog;
-  }
-
-  get announcement() {
-    return this.prisma.announcement;
-  }
-
   get supplier() {
     return this.prisma.supplier;
   }
@@ -131,44 +96,28 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
     return this.prisma.purchaseItem;
   }
 
-  get transfer() {
-    return this.prisma.transfer;
+  get kardex() {
+    return this.prisma.kardex;
   }
 
-  get transferItem() {
-    return this.prisma.transferItem;
+  get cashShift() {
+    return this.prisma.cashShift;
   }
 
-  get paymentTransaction() {
-    return this.prisma.paymentTransaction;
+  get cashShiftExpense() {
+    return this.prisma.cashShiftExpense;
   }
 
-  get ecommerceConnection() {
-    return this.prisma.ecommerceConnection;
+  get quote() {
+    return this.prisma.quote;
   }
 
-  get productMapping() {
-    return this.prisma.productMapping;
+  get quoteItem() {
+    return this.prisma.quoteItem;
   }
 
-  get registeredWebhook() {
-    return this.prisma.registeredWebhook;
-  }
-
-  get ecommerceOrder() {
-    return this.prisma.ecommerceOrder;
-  }
-
-  get syncLog() {
-    return this.prisma.syncLog;
-  }
-
-  get tenantSettings() {
-    return this.prisma.tenantSettings;
-  }
-
-  get landingConfig() {
-    return this.prisma.landingConfig;
+  get plan() {
+    return this.prisma.plan;
   }
 
   get module() {
@@ -183,20 +132,35 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
     return this.prisma.tenantModuleAddon;
   }
 
-  get invoice() {
-    return this.prisma.invoice;
+  get notification() {
+    return this.prisma.notification;
   }
 
-  get systemNotification() {
-    return this.prisma.systemNotification;
+  get billing() {
+    return this.prisma.billing;
   }
 
-  get chatSession() {
-    return this.prisma.chatSession;
+  get paymentTransaction() {
+    return this.prisma.paymentTransaction;
   }
 
-  get chatMessage() {
-    return this.prisma.chatMessage;
+  get ecommerceIntegration() {
+    return (this.prisma as any).ecommerceIntegration;
+  }
+
+  get productGalleryImage() {
+    return (this.prisma as any).productGalleryImage;
+  }
+
+  get productSupplier() {
+    return (this.prisma as any).productSupplier;
+  }
+
+  get liveChat() {
+    return (this.prisma as any).liveChat;
+  }
+
+  get liveChatMessage() {
+    return (this.prisma as any).liveChatMessage;
   }
 }
-
