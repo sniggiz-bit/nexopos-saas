@@ -1,38 +1,20 @@
-import { Injectable, OnModuleInit, OnModuleDestroy, Logger } from '@nestjs/common';
+import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
-
-// Use require() for pg and adapter-pg to avoid TypeScript resolving @prisma/adapter-pg's
-// type declarations which reference 'pg' types that require @types/pg (not in devDeps).
-// Both packages are production dependencies — they work correctly at runtime.
-/* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-explicit-any */
-const { Pool } = require('pg');
-const { PrismaPg } = require('@prisma/adapter-pg');
-/* eslint-enable @typescript-eslint/no-require-imports, @typescript-eslint/no-explicit-any */
 
 @Injectable()
 export class PrismaService implements OnModuleInit, OnModuleDestroy {
-  private readonly logger = new Logger(PrismaService.name);
   private prisma: PrismaClient;
-  private pool: any;
 
   constructor() {
-    const connectionString = process.env.DATABASE_URL;
-    if (!connectionString) {
-      throw new Error('DATABASE_URL environment variable is not set');
-    }
-    this.pool = new Pool({ connectionString });
-    const adapter = new PrismaPg(this.pool);
-    this.prisma = new PrismaClient({ adapter } as any);
+    this.prisma = new PrismaClient();
   }
 
   async onModuleInit() {
     await this.prisma.$connect();
-    this.logger.log('Database connected via pg adapter');
   }
 
   async onModuleDestroy() {
     await this.prisma.$disconnect();
-    await this.pool.end();
   }
 
   // Expose Prisma client methods

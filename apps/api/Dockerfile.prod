@@ -62,15 +62,13 @@ COPY packages/shared ./packages/shared
 
 WORKDIR /app/apps/api
 
-# Generate Prisma client in the runner for correct Alpine binary target.
-# The pg adapter bypasses the Rust query engine for queries,
-# but the generated client types are still needed.
-RUN /app/node_modules/.bin/prisma generate
+# Install prisma CLI globally for migrate deploy
+RUN npm install -g prisma@5.22.0
 
 EXPOSE 3000
 
 HEALTHCHECK --interval=30s --timeout=10s --retries=3 --start-period=60s \
     CMD wget --no-verbose --tries=1 --spider http://127.0.0.1:3000/api || exit 1
 
-# Retry loop: wait for DB to accept connections before migrating, then start server
-CMD ["sh", "-c", "until /app/node_modules/.bin/prisma migrate deploy 2>&1; do echo 'DB not ready, retrying in 3s...'; sleep 3; done && node dist/main.js"]
+# Wait for DB, run migrations, then start server
+CMD ["sh", "-c", "until prisma migrate deploy 2>&1; do echo 'DB not ready, retrying in 3s...'; sleep 3; done && node dist/main.js"]
