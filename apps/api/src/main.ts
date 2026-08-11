@@ -36,8 +36,7 @@ class AllExceptionsFilter implements ExceptionFilter {
     response.status(status).json({
       statusCode: status,
       message: message,
-      errorClass: errorClass,
-      detail: detail,
+      ...(process.env.NODE_ENV !== 'production' && { errorClass, detail }),
       path: request.url,
     });
   }
