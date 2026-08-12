@@ -79,6 +79,7 @@ export function QuotesPage() {
                     <table className="min-w-full divide-y divide-border">
                         <thead style={{ background: 'hsl(var(--background))' }}>
                             <tr>
+                                <th className="px-6 py-4 text-left text-xs font-bold text-muted-foreground uppercase tracking-wider">N° Cotización</th>
                                 <th className="px-6 py-4 text-left text-xs font-bold text-muted-foreground uppercase tracking-wider">Fecha</th>
                                 <th className="px-6 py-4 text-left text-xs font-bold text-muted-foreground uppercase tracking-wider">Cliente</th>
                                 <th className="px-6 py-4 text-left text-xs font-bold text-muted-foreground uppercase tracking-wider">Total</th>
@@ -89,7 +90,7 @@ export function QuotesPage() {
                         <tbody className="divide-y divide-border">
                             {isLoading ? (
                                 <tr>
-                                    <td colSpan={5} className="px-6 py-8 text-center text-muted-foreground/[0.5]">
+                                    <td colSpan={6} className="px-6 py-8 text-center text-muted-foreground/[0.5]">
                                         <div className="flex items-center justify-center gap-2">
                                             <div className="w-4 h-4 border-2 border-[#0099CC] border-t-transparent rounded-full animate-spin" />
                                             <span>Cargando cotizaciones...</span>
@@ -98,13 +99,13 @@ export function QuotesPage() {
                                 </tr>
                             ) : isError ? (
                                 <tr>
-                                    <td colSpan={5} className="px-6 py-8 text-center text-red-400">
+                                    <td colSpan={6} className="px-6 py-8 text-center text-red-400">
                                         Error al cargar cotizaciones. <button onClick={() => refetch()} className="underline font-bold hover:text-red-300">Reintentar</button>
                                     </td>
                                 </tr>
                             ) : !quotes || quotes.length === 0 ? (
                                 <tr>
-                                    <td colSpan={5} className="px-6 py-12 text-center text-muted-foreground/[0.4]">
+                                    <td colSpan={6} className="px-6 py-12 text-center text-muted-foreground/[0.4]">
                                         <div className="flex flex-col items-center justify-center gap-2">
                                             <FileText className="w-8 h-8 text-muted-foreground" />
                                             <span>No se encontraron cotizaciones</span>
@@ -114,6 +115,9 @@ export function QuotesPage() {
                             ) : (
                                 quotes.map((quote) => (
                                     <tr key={quote.id} className="hover:bg-muted/30 transition-colors">
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-[#0099CC] tracking-wide">
+                                            {quote.number || `QT-${quote.id.slice(0, 4)}`}
+                                        </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground/[0.85]">{formatDate(quote.createdAt)}</td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground/[0.85]">{quote.customer?.name || 'Cliente Casual'}</td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-foreground/[0.95] tabular-nums">{formatPrice(quote.total)}</td>
