@@ -274,9 +274,9 @@ export class EmailService {
     quoteDetails?: any,
   ): Promise<void> {
     const htmlContent = this.generateQuoteEmailHtml(quoteNumber, message, companyName, quoteDetails);
-    const senderDisplayName = companyName || 'NexoPOS';
-    const fromHeader = `"${senderDisplayName}" <${this.fromEmail}>`;
-    const subject = `Cotización ${quoteNumber} - ${senderDisplayName}`;
+    const cleanDisplayName = (companyName || 'NexoPOS').replace(/["'<>]/g, '').trim();
+    const fromHeader = `${cleanDisplayName} <${this.fromEmail}>`;
+    const subject = `Cotización ${quoteNumber} - ${cleanDisplayName}`;
 
     try {
       if (!this.resendApiKey) {
