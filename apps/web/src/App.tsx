@@ -49,6 +49,7 @@ import { CartProvider } from './context/CartContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { useRealtimeSync } from './hooks/useRealtimeSync';
 import { ThemeProvider } from './context/ThemeContext';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 // Create a client for TanStack Query
 const queryClient = new QueryClient({
@@ -99,113 +100,108 @@ function LoadingScreen() {
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider>
-        <AuthProvider>
-          <RealtimeSync />
-          <BrowserRouter>
-          <Suspense fallback={<LoadingScreen />}>
-            <Routes>
-              {/* Public Routes */}
-              <Route path="/landing" element={<LandingPage />} />
-              <Route path="/register" element={<RegisterPage />} />
-              <Route path="/auth/sso" element={<SsoLoginPage />} />
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/store/:slug" element={<PublicStorePage />} />
-              <Route path="/terminos" element={<TerminosPage />} />
-              <Route path="/privacidad" element={<PrivacidadPage />} />
-              <Route path="/contacto" element={<ContactoPage />} />
-              <Route path="/soporte" element={<SoportePage />} />
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider>
+          <AuthProvider>
+            <CartProvider>
+              <RealtimeSync />
+              <BrowserRouter>
+                <Suspense fallback={<LoadingScreen />}>
+                  <Routes>
+                    {/* Public Routes */}
+                    <Route path="/landing" element={<LandingPage />} />
+                    <Route path="/register" element={<RegisterPage />} />
+                    <Route path="/auth/sso" element={<SsoLoginPage />} />
+                    <Route path="/login" element={<LoginPage />} />
+                    <Route path="/store/:slug" element={<PublicStorePage />} />
+                    <Route path="/terminos" element={<TerminosPage />} />
+                    <Route path="/privacidad" element={<PrivacidadPage />} />
+                    <Route path="/contacto" element={<ContactoPage />} />
+                    <Route path="/soporte" element={<SoportePage />} />
 
-              {/* Super Admin Routes */}
-              <Route element={<ProtectedRoute allowedRoles={['SUPER_ADMIN']} />}>
-                <Route path="/admin" element={<SuperAdminLayout />}>
-                  <Route index element={<Navigate to="/admin/dashboard" replace />} />
-                  <Route path="dashboard" element={<AdminDashboardPage />} />
-                  <Route path="tenants" element={<TenantsPage />} />
-                  <Route path="tenants/:id" element={<TenantDetailPage />} />
-                  <Route path="plans" element={<PlansPage />} />
-                  <Route path="branches" element={<SuperAdminBranchesPage />} />
-                  <Route path="system-health" element={<SystemHealthPage />} />
-                  <Route path="announcements" element={<AnnouncementsPage />} />
-                  <Route path="landing" element={<AdminLandingPage />} />
-                  <Route path="modules" element={<AdminModulesPage />} />
-                  <Route path="live-chats" element={<LiveChatsPage />} />
-                </Route>
-              </Route>
+                    {/* Super Admin Routes */}
+                    <Route element={<ProtectedRoute allowedRoles={['SUPER_ADMIN']} />}>
+                      <Route path="/admin" element={<SuperAdminLayout />}>
+                        <Route index element={<Navigate to="/admin/dashboard" replace />} />
+                        <Route path="dashboard" element={<AdminDashboardPage />} />
+                        <Route path="tenants" element={<TenantsPage />} />
+                        <Route path="tenants/:id" element={<TenantDetailPage />} />
+                        <Route path="plans" element={<PlansPage />} />
+                        <Route path="branches" element={<SuperAdminBranchesPage />} />
+                        <Route path="system-health" element={<SystemHealthPage />} />
+                        <Route path="announcements" element={<AnnouncementsPage />} />
+                        <Route path="landing" element={<AdminLandingPage />} />
+                        <Route path="modules" element={<AdminModulesPage />} />
+                        <Route path="live-chats" element={<LiveChatsPage />} />
+                      </Route>
+                    </Route>
 
-              {/* Protected Routes */}
-              <Route element={<ProtectedRoute allowedRoles={['TENANT_ADMIN', 'CASHIER', 'MANAGER']} />}>
-                <Route path="/pos" element={
-                  <CartProvider>
-                    <PosPage />
-                  </CartProvider>
-                } />
-              </Route>
+                    {/* Protected Routes */}
+                    <Route element={<ProtectedRoute allowedRoles={['TENANT_ADMIN', 'CASHIER', 'MANAGER']} />}>
+                      <Route path="/pos" element={<PosPage />} />
+                    </Route>
 
-              <Route element={<ProtectedRoute allowedRoles={['TENANT_ADMIN', 'MANAGER']} />}>
-                <Route path="/dashboard" element={<DashboardOverviewPage />} />
-                <Route path="/dashboard/products" element={<ProductsPage />} />
-                <Route path="/dashboard/inventory" element={<InventoryPage />} />
-                <Route path="/dashboard/categories" element={<CategoriesPage />} />
-                <Route path="/dashboard/brands" element={<BrandsPage />} />
-                <Route path="/dashboard/settings" element={<SettingsPage />} />
-                <Route path="/dashboard/sales" element={<SalesHistoryPage />} />
-                <Route path="/dashboard/clients" element={<ClientsPage />} />
-                <Route path="/dashboard/quotes" element={<QuotesPage />} />
-                <Route path="/dashboard/quotes/new" element={
-                  <CartProvider>
-                    <CreateQuotePage />
-                  </CartProvider>
-                } />
-                <Route path="/dashboard/quotes/:id/print" element={<QuotePrintPage />} />
-                <Route path="/dashboard/credits" element={<CreditsPage />} />
-                <Route path="/dashboard/treasury" element={<TreasuryPage />} />
-                <Route path="/dashboard/reports/critical-stock" element={<CriticalStockPage />} />
-                <Route path="/dashboard/branches" element={<BranchesPage />} />
-                <Route path="/dashboard/users" element={<UsersPage />} />
-                <Route path="/dashboard/transfers/new" element={<NewTransferPage />} />
-                <Route path="/admin/transfers/new" element={<NewTransferPage />} /> {/* Alias */}
-                <Route path="/dashboard/ecommerce" element={<EcommercePage />} />
-                <Route path="/dashboard/integrations" element={<IntegrationsPage />} />
-                <Route path="/admin/ecommerce" element={<EcommercePage />} />
-                <Route path="/dashboard/suppliers" element={<SuppliersPage />} />
-                <Route path="/dashboard/purchases" element={<PurchasesPage />} />
-                <Route path="/dashboard/transfers" element={<TransfersPage />} />
-                <Route path="/dashboard/transbank" element={<TransbankConfigPage />} />
-                <Route path="/dashboard/subscription" element={<SubscriptionPage />} />
-              </Route>
+                    <Route element={<ProtectedRoute allowedRoles={['TENANT_ADMIN', 'MANAGER']} />}>
+                      <Route path="/dashboard" element={<DashboardOverviewPage />} />
+                      <Route path="/dashboard/products" element={<ProductsPage />} />
+                      <Route path="/dashboard/inventory" element={<InventoryPage />} />
+                      <Route path="/dashboard/categories" element={<CategoriesPage />} />
+                      <Route path="/dashboard/brands" element={<BrandsPage />} />
+                      <Route path="/dashboard/settings" element={<SettingsPage />} />
+                      <Route path="/dashboard/sales" element={<SalesHistoryPage />} />
+                      <Route path="/dashboard/clients" element={<ClientsPage />} />
+                      <Route path="/dashboard/quotes" element={<QuotesPage />} />
+                      <Route path="/dashboard/quotes/new" element={<CreateQuotePage />} />
+                      <Route path="/dashboard/quotes/:id/print" element={<QuotePrintPage />} />
+                      <Route path="/dashboard/credits" element={<CreditsPage />} />
+                      <Route path="/dashboard/treasury" element={<TreasuryPage />} />
+                      <Route path="/dashboard/reports/critical-stock" element={<CriticalStockPage />} />
+                      <Route path="/dashboard/branches" element={<BranchesPage />} />
+                      <Route path="/dashboard/users" element={<UsersPage />} />
+                      <Route path="/dashboard/transfers/new" element={<NewTransferPage />} />
+                      <Route path="/admin/transfers/new" element={<NewTransferPage />} /> {/* Alias */}
+                      <Route path="/dashboard/ecommerce" element={<EcommercePage />} />
+                      <Route path="/dashboard/integrations" element={<IntegrationsPage />} />
+                      <Route path="/admin/ecommerce" element={<EcommercePage />} />
+                      <Route path="/dashboard/suppliers" element={<SuppliersPage />} />
+                      <Route path="/dashboard/purchases" element={<PurchasesPage />} />
+                      <Route path="/dashboard/transfers" element={<TransfersPage />} />
+                      <Route path="/dashboard/transbank" element={<TransbankConfigPage />} />
+                      <Route path="/dashboard/subscription" element={<SubscriptionPage />} />
+                    </Route>
 
-              {/* Default Redirect */}
-              {/* Default Redirect - Handle Role Based Redirect */}
-              <Route path="/" element={<RoleBasedRedirect />} />
-            </Routes>
-          </Suspense>
-          <Toaster
-            position="bottom-right"
-            toastOptions={{
-              style: {
-                background: 'hsl(var(--card))',
-                color: 'hsl(var(--foreground))',
-                border: '1px solid hsl(var(--border))',
-                borderRadius: '12px',
-                fontSize: '13px',
-                fontFamily: 'Inter, system-ui, sans-serif',
-              },
-              success: {
-                iconTheme: { primary: '#34D399', secondary: 'hsl(var(--card))' },
-              },
-              error: {
-                iconTheme: { primary: '#F87171', secondary: 'hsl(var(--card))' },
-              },
-            }}
-          />
-        </BrowserRouter>
-        </AuthProvider>
-      </ThemeProvider>
-    </QueryClientProvider>
+                    {/* Default Redirect */}
+                    {/* Default Redirect - Handle Role Based Redirect */}
+                    <Route path="/" element={<RoleBasedRedirect />} />
+                  </Routes>
+                </Suspense>
+                <Toaster
+                  position="bottom-right"
+                  toastOptions={{
+                    style: {
+                      background: 'hsl(var(--card))',
+                      color: 'hsl(var(--foreground))',
+                      border: '1px solid hsl(var(--border))',
+                      borderRadius: '12px',
+                      fontSize: '13px',
+                      fontFamily: 'Inter, system-ui, sans-serif',
+                    },
+                    success: {
+                      iconTheme: { primary: '#34D399', secondary: 'hsl(var(--card))' },
+                    },
+                    error: {
+                      iconTheme: { primary: '#F87171', secondary: 'hsl(var(--card))' },
+                    },
+                  }}
+                />
+              </BrowserRouter>
+            </CartProvider>
+          </AuthProvider>
+        </ThemeProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 }
-
 
 export default App;
