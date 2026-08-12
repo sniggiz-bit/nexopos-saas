@@ -277,11 +277,17 @@ export class QuotesService {
     const quote = await this.findOne(id);
     const pdfBuffer = await this.generatePdf(id);
 
+    const tenant = await this.prisma.tenant.findUnique({
+      where: { id: quote.tenantId },
+    });
+
     await this.emailService.sendQuoteEmail(
       email,
       quote.number || '',
       pdfBuffer,
       personalMessage,
+      tenant?.name || 'NexoPOS',
+      quote,
     );
 
     // Update status to SENT if it was DRAFT
@@ -295,6 +301,9 @@ export class QuotesService {
 
   async generatePdf(id: string): Promise<Buffer> {
     const quote = (await this.findOne(id)) as any;
+    const tenant = await this.prisma.tenant.findUnique({
+      where: { id: quote.tenantId },
+    });
 
     return new Promise((resolve) => {
       const doc = new PDFDocument({ margin: 50, size: 'A4' });
@@ -315,51 +324,49 @@ export class QuotesService {
       // Header Brand bar
       doc.rect(50, 45, 495, 4).fill(primaryColor);
 
-      // Business details
+      // Business details (Top Left)
+      const companyName = tenant?.name || 'NexoPOS';
       doc.fillColor(textColor);
-      doc.fontSize(16).font('Helvetica-Bold').text('COTIZACIÓN', 50, 65);
+      doc.fontSize(14).font('Helvetica-Bold').text(companyName.toUpperCase(), 50, 60, { width: 290 });
       
-      doc.fontSize(9).font('Helvetica').fillColor('#6B7280');
-      doc.text('Documento de control interno', 50, 85);
-
-      // Quote metadata (top right)
-      doc.fillColor(textColor);
-      doc.fontSize(10).font('Helvetica-Bold').text(`Cotización #:`, 360, 65, { width: 100, align: 'left' });
-      doc.font('Helvetica-Bold').fillColor(primaryColor).text(quote.number, 460, 65, { width: 85, align: 'right' });
-
-      doc.fontSize(9).font('Helvetica').fillColor('#6B7280');
-      doc.text(`Fecha Emisión:`, 360, 80, { width: 100, align: 'left' });
-      doc.fillColor(textColor).text(quote.issueDate ? quote.issueDate.toLocaleDateString('es-CL') : '—', 460, 80, { width: 85, align: 'right' });
-
-      doc.fillColor('#6B7280').text(`Válida hasta:`, 360, 93, { width: 100, align: 'left' });
-      doc.fillColor(textColor).text(quote.validUntil ? quote.validUntil.toLocaleDateString('es-CL') : '—', 460, 93, { width: 85, align: 'right' });
-
-      doc.fillColor('#6B7280').text(`Estado:`, 360, 106, { width: 100, align: 'left' });
-      const statusText = quote.status === 'ACCEPTED' ? 'VENDIDA' : quote.status === 'SENT' ? 'EMITIDA' : 'BORRADOR';
-      const statusColor = quote.status === 'ACCEPTED' ? '#10B981' : quote.status === 'SENT' ? primaryColor : '#6B7280';
-      doc.font('Helvetica-Bold').fillColor(statusColor).text(statusText, 460, 106, { width: 85, align: 'right' });
+      let headerY = 78;
+      doc.fontSize(8.5).font('Helvetica').fillColor('#6B7280');
+      if (tenant?.rut) {
+        doc.text(`RUT: ${tenant.rut}`, 50, headerY, { width: 290 });
+        headerY += 12;
+      }
+      if (tenant?.address) {
+        doc.text(`Dirección: ${tenant.address}`, 50, headerY, { width: 290 });
+        headerY += 12;
+      }
+      if (tenant?.phone) {
+        doc.text(`Teléfono: ${tenant.phone}`, 50, headerY, { width: 290 });
+        headerY += 12;
+      }
+      doc.fillColor(primaryColor).font('Helvetica-Bold').fontSize(11).text('COTIZACIÓN', 50, headerY + 2);
 
       // Customer Info Box
-      doc.rect(50, 130, 495, 75).fill(lightGray);
-      doc.rect(50, 130, 495, 75).lineWidth(1).stroke(borderGray);
+      const customerBoxTop = Math.max(headerY + 20, 130);
+      doc.rect(50, customerBoxTop, 495, 75).fill(lightGray);
+      doc.rect(50, customerBoxTop, 495, 75).lineWidth(1).stroke(borderGray);
 
-      doc.fillColor('#6B7280').fontSize(8).font('Helvetica-Bold').text('COTIZADO PARA:', 65, 140);
+      doc.fillColor('#6B7280').fontSize(8).font('Helvetica-Bold').text('COTIZADO PARA:', 65, customerBoxTop + 10);
       
-      doc.fillColor(textColor).fontSize(11).font('Helvetica-Bold').text(quote.customer?.name || 'Cliente Casual', 65, 153);
+      doc.fillColor(textColor).fontSize(11).font('Helvetica-Bold').text(quote.customer?.name || 'Cliente Casual', 65, customerBoxTop + 23);
       
       doc.fontSize(9).font('Helvetica').fillColor('#4B5563');
       if (quote.customer?.rut) {
-        doc.text(`RUT: ${quote.customer.rut}`, 65, 170);
+        doc.text(`RUT: ${quote.customer.rut}`, 65, customerBoxTop + 40);
       }
       if (quote.customer?.address) {
-        doc.text(`Dirección: ${quote.customer.address}`, 65, 185);
+        doc.text(`Dirección: ${quote.customer.address}`, 65, customerBoxTop + 55);
       }
       
       if (quote.customer?.phone || quote.customer?.email) {
         let contact = '';
         if (quote.customer?.phone) contact += `Tel: ${quote.customer.phone}`;
         if (quote.customer?.email) contact += `${contact ? '  |  ' : ''}Email: ${quote.customer.email}`;
-        doc.text(contact, 280, 170);
+        doc.text(contact, 280, customerBoxTop + 40);
       }
 
       // Items Table

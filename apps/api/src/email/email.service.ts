@@ -270,9 +270,13 @@ export class EmailService {
     quoteNumber: string,
     pdfBuffer: Buffer,
     message?: string,
+    companyName?: string,
+    quoteDetails?: any,
   ): Promise<void> {
-    const htmlContent = this.generateQuoteEmailHtml(quoteNumber, message);
-    const subject = `Cotización ${quoteNumber} - NexoPOS`;
+    const htmlContent = this.generateQuoteEmailHtml(quoteNumber, message, companyName, quoteDetails);
+    const senderDisplayName = companyName || 'NexoPOS';
+    const fromHeader = `"${senderDisplayName}" <${this.fromEmail}>`;
+    const subject = `Cotización ${quoteNumber} - ${senderDisplayName}`;
 
     try {
       if (!this.resendApiKey) {
@@ -281,6 +285,7 @@ export class EmailService {
         );
         this.logger.log('='.repeat(80));
         this.logger.log(`📧 SEND QUOTE EMAIL [${quoteNumber}]`);
+        this.logger.log(`From: ${fromHeader}`);
         this.logger.log(`To: ${email}`);
         this.logger.log(`Subject: ${subject}`);
         this.logger.log(`Attached PDF: cotizacion-${quoteNumber}.pdf (${pdfBuffer.length} bytes)`);
@@ -297,7 +302,7 @@ export class EmailService {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          from: this.fromEmail,
+          from: fromHeader,
           to: email,
           subject,
           html: htmlContent,
@@ -315,7 +320,7 @@ export class EmailService {
         throw new Error(`Resend API error: ${error}`);
       }
 
-      this.logger.log(`Quote email ${quoteNumber} sent successfully to ${email}`);
+      this.logger.log(`Quote email ${quoteNumber} sent successfully to ${email} from ${fromHeader}`);
     } catch (error) {
       this.logger.error(`Failed to send quote email to ${email}:`, error);
       throw error;
@@ -380,12 +385,70 @@ export class EmailService {
     }
   }
 
-  private generateQuoteEmailHtml(quoteNumber: string, message?: string): string {
+  private generateQuoteEmailHtml(
+    quoteNumber: string,
+    message?: string,
+    companyName?: string,
+    quote?: any,
+  ): string {
+    const senderTitle = companyName || 'NexoPOS';
     const personalMessageHtml = message
       ? `<div class="message-card">
            <p style="margin: 0; font-style: italic;">"${message}"</p>
          </div>`
       : '';
+
+    let itemsTableHtml = '';
+    if (quote && Array.isArray(quote.items) && quote.items.length > 0) {
+      const rowsHtml = quote.items
+        .map((item: any, idx: number) => {
+          const bg = idx % 2 === 0 ? '#FFFFFF' : '#F8FAFC';
+          const name = item.productName || item.product?.name || 'Producto';
+          const price = Number(item.price) || 0;
+          const qty = Number(item.quantity) || 0;
+          const lineTotal = Number(item.total) || price * qty;
+          return `
+            <tr style="background-color: ${bg}; border-bottom: 1px solid #E2E8F0;">
+              <td style="padding: 10px 12px; font-weight: 500; color: #1E293B;">${name}</td>
+              <td style="padding: 10px 12px; text-align: center; color: #475569;">${qty}</td>
+              <td style="padding: 10px 12px; text-align: right; color: #475569;">$${price.toLocaleString('es-CL')}</td>
+              <td style="padding: 10px 12px; text-align: right; font-weight: 700; color: #0F172A;">$${lineTotal.toLocaleString('es-CL')}</td>
+            </tr>
+          `;
+        })
+        .join('');
+
+      itemsTableHtml = `
+        <div style="margin: 25px 0;">
+          <div style="font-size: 13px; font-weight: 700; color: #64748B; text-transform: uppercase; tracking-wide: 0.5px; margin-bottom: 8px;">Resumen de la Cotización</div>
+          <table style="width: 100%; border-collapse: collapse; font-size: 13px; border-radius: 8px; overflow: hidden; border: 1px solid #E2E8F0;">
+            <thead>
+              <tr style="background-color: #0099CC; color: #FFFFFF; text-align: left; font-size: 12px;">
+                <th style="padding: 10px 12px;">Producto</th>
+                <th style="padding: 10px 12px; text-align: center;">Cant.</th>
+                <th style="padding: 10px 12px; text-align: right;">Precio</th>
+                <th style="padding: 10px 12px; text-align: right;">Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rowsHtml}
+            </tbody>
+          </table>
+
+          <div style="margin-top: 15px; background-color: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 8px; padding: 16px; text-align: right;">
+            <div style="font-size: 13px; color: #64748B; margin-bottom: 4px;">
+              Subtotal (neto): <strong style="color: #1E293B;">$${(quote.subtotal || 0).toLocaleString('es-CL')}</strong>
+            </div>
+            <div style="font-size: 13px; color: #64748B; margin-bottom: 8px;">
+              IVA (19%): <strong style="color: #1E293B;">$${(quote.tax || 0).toLocaleString('es-CL')}</strong>
+            </div>
+            <div style="font-size: 18px; font-weight: 800; color: #0099CC; border-top: 1px solid #E2E8F0; pt-2; padding-top: 8px;">
+              TOTAL: $${(quote.total || 0).toLocaleString('es-CL')}
+            </div>
+          </div>
+        </div>
+      `;
+    }
 
     return `
 <!DOCTYPE html>
@@ -393,7 +456,7 @@ export class EmailService {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cotización Enviada - NexoPOS</title>
+  <title>Cotización Enviada - ${senderTitle}</title>
   <style>
     body {
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
@@ -424,21 +487,21 @@ export class EmailService {
       text-align: center;
       border-bottom: 4px solid #0099CC;
     }
-    .logo-text {
-      font-size: 28px;
+    .company-title {
+      font-size: 26px;
       font-weight: 800;
       letter-spacing: -0.5px;
-      margin-bottom: 10px;
+      margin-bottom: 5px;
       color: #FFFFFF;
     }
     .logo-highlight {
       color: #0099CC;
     }
     .header h1 {
-      font-size: 22px;
-      font-weight: 700;
-      margin: 10px 0 0 0;
-      color: #F3F4F6;
+      font-size: 18px;
+      font-weight: 600;
+      margin: 8px 0 0 0;
+      color: #94A3B8;
     }
     .content {
       padding: 40px 30px;
@@ -535,36 +598,32 @@ export class EmailService {
   <div class="wrapper">
     <div class="container">
       <div class="header">
-        <div class="logo-text">Nexo<span class="logo-highlight">POS</span></div>
-        <h1>Cotización Recibida</h1>
+        <div class="company-title">${senderTitle}</div>
+        <h1>Cotización Formal</h1>
       </div>
       <div class="content">
         <h2 class="email-title">Estimado Cliente,</h2>
-        <p>Adjunto a este correo electrónico encontrará la cotización formal solicitada.</p>
+        <p>Agradecemos su interés. Le adjuntamos la cotización formal emitida por <strong>${senderTitle}</strong>.</p>
         
         <div class="doc-badge">DOCUMENTO N° ${quoteNumber}</div>
         
         ${personalMessageHtml}
+
+        ${itemsTableHtml}
         
         <div class="instructions-card">
-          <div class="instructions-title">¿Cómo continuar con esta cotización?</div>
+          <div class="instructions-title">¿Cómo aceptar o continuar con esta cotización?</div>
           <ol class="steps-list">
-            <li><strong>Revisión:</strong> Abra el archivo PDF adjunto a este correo para revisar el desglose y el valor total de la cotización.</li>
-            <li><strong>Aceptación:</strong> Si está de acuerdo y desea concretar la compra, simplemente responda directamente a este correo.</li>
-            <li><strong>Vencimiento:</strong> Tenga en cuenta la fecha de validez indicada en el documento PDF para conservar los precios cotizados.</li>
+            <li><strong>Revisar PDF:</strong> Puede descargar o abrir el PDF oficial adjunto a este correo.</li>
+            <li><strong>Aceptar Compra:</strong> Para confirmar la orden, simplemente responda a este correo electrónico.</li>
+            <li><strong>Dudas o Cambios:</strong> Si necesita modificar ítems o cantidades, contáctenos directamente respondiendo a este mensaje.</li>
           </ol>
-        </div>
-        
-        <p>Si necesita realizar cambios, agregar productos o requiere alguna aclaración adicional, no dude en contactarse respondiendo a este mensaje.</p>
-        
-        <div class="btn-container">
-          <span class="button" style="background-color: #475569; box-shadow: none; cursor: default;">PDF Adjunto en este Correo</span>
         </div>
       </div>
       <div class="footer">
-        <p>Este documento es una cotización informativa y no constituye una factura o boleta electrónica.</p>
-        <p>© ${new Date().getFullYear()} NexoPOS. Todos los derechos reservados.</p>
-        <p class="disclaimer">CONFIDENCIALIDAD: Este correo electrónico y cualquier archivo adjunto son confidenciales y pueden contener información legalmente privilegiada. Si usted no es el destinatario intencional, queda estrictamente prohibida cualquier divulgación, distribución o copia del mismo.</p>
+        <p>Documento emitido por <strong>${senderTitle}</strong> mediante el sistema NexoPOS.</p>
+        <p>© ${new Date().getFullYear()} ${senderTitle}. Todos los derechos reservados.</p>
+        <p class="disclaimer">CONFIDENCIALIDAD: Este correo electrónico y cualquier archivo adjunto son confidenciales. Si no es el destinatario intencional, favor eliminarlo.</p>
       </div>
     </div>
   </div>
