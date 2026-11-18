@@ -32,7 +32,7 @@ async function auth(page, token, user) {
     await dialog.waitFor({ state: 'hidden' });
     await page.getByRole('heading', { name: 'Usuario de prueba visual', exact: true }).waitFor();
     console.log('PASS: browser creates a customer user through the real form');
-    await page.getByRole('tab', { name: 'Sucursales', exact: true, level: 1 }).click();
+    await page.getByRole('tab', { name: 'Sucursales', exact: true }).click();
     await page.getByRole('button', { name: 'Crear sucursal', exact: true }).click();
     dialog = page.getByRole('dialog');
     await dialog.getByLabel('Nombre', { exact: true }).fill('Sucursal de prueba visual');
@@ -96,7 +96,7 @@ async function auth(page, token, user) {
     console.log('PASS: the full deletion form removes only the explicitly confirmed fixture');
     await auth(page, fixture.customerToken, fixture.customerUser);
     await page.goto(origin + '/dashboard/branches');
-    await page.getByRole('heading', { name: 'Sucursales', exact: true }).waitFor();
+    await page.getByRole('heading', { name: 'Sucursales', exact: true, level: 1 }).waitFor();
     await page.getByRole('heading', { name: 'Sucursal de prueba visual', exact: true }).waitFor();
     assert.equal(await page.getByRole('button', { name: /Nueva Sucursal|Crear sucursal/i }).count(), 0);
     const branchMain = await page.locator('main').boundingBox();
