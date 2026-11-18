@@ -11,7 +11,7 @@ async function auth(page, token, user) {
 }
 (async () => {
   const fixture = JSON.parse(await fs.readFile('/checks-results/context.json', 'utf8'));
-  const browser = await chromium.launch({ headless: true });
+  const browser = await chromium.launch({ headless: true, args: ['--unsafely-treat-insecure-origin-as-secure=http://release-web'] });
   try {
     const context = await browser.newContext({ viewport: { width: 1440, height: 1000 }, timezoneId: 'America/Santiago' });
     const page = await context.newPage();
