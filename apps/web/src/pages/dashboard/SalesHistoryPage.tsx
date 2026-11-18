@@ -2,13 +2,14 @@ import { useState, useMemo } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { DashboardLayout } from '../../components/dashboard/DashboardLayout';
 import { SalesHistoryTable } from '../../components/dashboard/SalesHistoryTable';
+import { CreditNoteDialog } from '../../components/dashboard/CreditNoteDialog';
 import { useSales } from '../../hooks/useSales';
 import { useBranches } from '../../hooks/useBranches';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { formatCLP } from '../../services/sales.service';
 import type { SaleStatus } from '../../services/sales.service';
-import { emitNotaCredito, deleteInternalSale } from '../../api/sales';
+import { deleteInternalSale } from '../../api/sales';
 import {
     TrendingUp, CalendarDays,
     Store, RefreshCw, ShoppingCart, XCircle,
@@ -121,18 +122,7 @@ export function SalesHistoryPage() {
 
     const { branches } = useBranches();
 
-    const { mutate: emitNC, isPending: isEmittingNC, variables: ncSaleId } = useMutation({
-        mutationFn: (saleId: string) => emitNotaCredito(saleId),
-        onSuccess: (data) => {
-            if (data.success) {
-                toast({ title: data.status === 'ACEPTADO' ? 'Nota de crédito aceptada' : 'Nota emitida; pendiente de confirmación SII', description: data.folio ? `Folio #${data.folio}` : 'DTE emitido exitosamente' });
-                refetch();
-            } else {
-                toast({ variant: 'destructive', title: 'Error al emitir NC', description: data.error || 'No se pudo emitir la Nota de Crédito' });
-            }
-        },
-        onError: () => toast({ variant: 'destructive', title: 'Error', description: 'No se pudo emitir la Nota de Crédito' }),
-    });
+    const [creditNoteSaleId, setCreditNoteSaleId] = useState<string | null>(null);
 
     const { mutate: deleteSale, isPending: isDeleting, variables: deletingSaleId } = useMutation({
         mutationFn: (saleId: string) => deleteInternalSale(saleId),
@@ -265,6 +255,8 @@ export function SalesHistoryPage() {
                                 <option value="COMPLETED" style={{ background: '#111622' }}>Completada</option>
                                 <option value="CANCELLED" style={{ background: '#111622' }}>Anulada</option>
                                 <option value="PRE_SALE" style={{ background: '#111622' }}>Pre-venta</option>
+                                <option value="PENDING_CREDIT_NOTE" style={{ background: '#111622' }}>Nota de crédito pendiente</option>
+                                <option value="CREDIT_NOTE" style={{ background: '#111622' }}>Nota de crédito confirmada</option>
                             </select>
                         </div>
 
@@ -289,13 +281,13 @@ export function SalesHistoryPage() {
                 <SalesHistoryTable
                     sales={sales}
                     isLoading={isLoading}
-                    onEmitNotaCredito={saleId => emitNC(saleId)}
-                    emittingNcId={isEmittingNC ? ncSaleId : null}
+                    onCreditNote={saleId => setCreditNoteSaleId(saleId)}
                     onDeleteInternalSale={saleId => deleteSale(saleId)}
                     deletingSaleId={isDeleting ? deletingSaleId : null}
                     userRole={user?.role}
                 />
             </div>
+            {creditNoteSaleId && <CreditNoteDialog key={creditNoteSaleId} saleId={creditNoteSaleId} onClose={() => setCreditNoteSaleId(null)} onChanged={refetch} />}
         </DashboardLayout>
     );
 }

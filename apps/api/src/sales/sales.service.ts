@@ -392,14 +392,20 @@ export class SalesService {
     });
   }
 
+  creditNotePreview(saleId: string, tenantId: string) { return this.dteService.creditNotePreview(saleId, tenantId); }
   async emitirNotaCreditoForSale(saleId: string, tenantId: string) {
+    const preview = await this.creditNotePreview(saleId, tenantId);
+    if (!preview.canEmit) {
+      if (!preview.existingNote) throw new BadRequestException(preview.message);
+      return { success: preview.existingNote.status === 'CREDIT_NOTE', noteId: preview.existingNote.id, folio: preview.existingNote.folio || undefined, status: preview.existingNote.dteStatus, error: preview.message };
+    }
     const note = await this.prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       await tx.$queryRawUnsafe('SELECT "id" FROM "Sale" WHERE "id"=$1 FOR UPDATE', saleId);
       const original = await tx.sale.findFirst({ where: { id: saleId, tenantId }, include: { items: true, credit: true } });
       if (!original) throw new NotFoundException('Venta no encontrada.');
       const existing = await tx.sale.findFirst({ where: { originalSaleId: saleId, tenantId, dteType: 61 } });
       if (existing) return existing;
-      if (original.status !== 'COMPLETED' || !original.dteVerifiedAt || !original.dteProviderId || !original.dteFolio || !['ACEPTADO', 'REPARO'].includes(original.dteStatus)) throw new BadRequestException('Se requiere una venta completada y un documento original confirmado antes de emitir la nota de crédito.');
+      if (![33, 39].includes(original.dteType) || original.status !== 'COMPLETED' || !original.dteVerifiedAt || !original.dteProviderId || !original.dteFolio || !['ACEPTADO', 'REPARO'].includes(original.dteStatus)) throw new BadRequestException('Se requiere una venta completada y un documento original confirmado antes de emitir la nota de crédito.');
       if (original.credit) throw new BadRequestException('La venta tiene un crédito asociado. Revisa su conciliación antes de emitir una anulación completa.');
       return tx.sale.create({ data: {
         total: original.total, discountAmount: original.discountAmount, tenantId, branchId: original.branchId, userId: original.userId,
@@ -409,7 +415,7 @@ export class SalesService {
     });
     const result = await this.dteService.emitirDte(note.id);
     if (result.status === 'ACEPTADO') await this.applyCreditNote(note.id, tenantId);
-    return result;
+    return { ...result, noteId: note.id };
   }
   async verifyDte(saleId: string, tenantId: string) {
     const result = await this.dteService.verify(saleId, tenantId);

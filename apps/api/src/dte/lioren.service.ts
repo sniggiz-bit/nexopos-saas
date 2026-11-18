@@ -16,6 +16,26 @@ export class LiorenService {
   emitirFactura(id: string) { return this.issue(id, 33); }
   emitirNotaCredito(id: string) { return this.issue(id, 61); }
   emitirGuiaDespacho(id: string) { return this.issue(id, 52); }
+  async creditNotePreview(saleId: string, tenantId: string) {
+    const original = await this.prisma.sale.findFirst({ where: { id: saleId, tenantId }, include: { items: { include: { product: true } }, customer: true, credit: true, branch: true } });
+    if (!original) throw new NotFoundException('Venta no encontrada.');
+    const existing = await this.prisma.sale.findFirst({ where: { originalSaleId: saleId, tenantId, dteType: 61 }, include: { dteSubmission: { select: { id: true } } } });
+    const existingNote = existing ? { id: existing.id, folio: existing.dteFolio, status: existing.status, dteStatus: existing.dteStatus, canVerify: !!existing.dteFolio && !!existing.dteProviderId && !!existing.dteSubmission && existing.status !== 'CREDIT_NOTE' && ['EMITIDO', 'PENDIENTE_SII', 'REPARO', 'ACEPTADO'].includes(existing.dteStatus) } : null;
+    const base = { sale: { id: original.id, type: original.dteType, folio: original.dteFolio, total: original.total, createdAt: original.createdAt, branchName: original.branch?.name || null }, existingNote };
+    const blocked = (message: string) => ({ ...base, canEmit: false, message });
+    if (existing && (existing.dteFolio || existing.dteSubmission || !['PENDING', 'BLOQUEADO'].includes(existing.dteStatus))) return blocked(existing.status === 'CREDIT_NOTE' ? 'La nota de crédito ya fue aceptada y la venta está anulada.' : 'Ya existe una nota de crédito asociada. Revisa su estado; no se creará otro documento.');
+    if (![33, 39].includes(original.dteType)) return blocked('Esta acción permite anular una boleta o factura electrónica.');
+    if (original.status !== 'COMPLETED' || !original.dteVerifiedAt || !original.dteProviderId || !original.dteFolio || !original.dteIssuedAt || !['ACEPTADO', 'REPARO'].includes(original.dteStatus)) return blocked('La venta debe tener una boleta o factura confirmada en Lioren. Los tickets internos y registros históricos sin verificar requieren revisión previa.');
+    if (original.credit) return blocked('La venta tiene un crédito asociado. Contacta a soporte para revisar su conciliación antes de anularla.');
+    if (!original.branch?.isActive) return blocked('La sucursal está deshabilitada. Solicita su habilitación al administrador de la plataforma.');
+    try {
+      const connection = await this.account.requireEmission(tenantId, 61);
+      await this.buildPayload({ ...original, id: existing?.id || original.id, originalSaleId: original.id }, 61, connection.token, connection.status.company.rut);
+      return { ...base, canEmit: true, message: 'Se emitirá una nota de crédito por el total del documento original.' };
+    } catch (error) {
+      return blocked(error instanceof LiorenApiError || error instanceof BadRequestException || error instanceof ForbiddenException ? error.message : 'No se pudo validar la nota de crédito. Reintenta la consulta antes de emitir.');
+    }
+  }
   private result(sale: any) { return { success: !!sale.dteFolio && !!sale.dteVerifiedAt && !['RECHAZADO', 'REQUIERE_REVISION'].includes(sale.dteStatus), folio: sale.dteFolio || undefined, url_pdf: sale.dtePdfUrl || undefined, status: sale.dteStatus }; }
   async issue(saleId: string, type: number) {
     const sale = await this.prisma.sale.findUnique({ where: { id: saleId }, include: { items: { include: { product: true } }, customer: true, dteSubmission: true } });

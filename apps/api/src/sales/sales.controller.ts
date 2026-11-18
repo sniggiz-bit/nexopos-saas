@@ -106,6 +106,12 @@ export class SalesController {
     return this.salesService.completePreSale(id, user.tenantId, payments);
   }
 
+  @Get(':id/nota-credito')
+  async creditNotePreview(@Param('id') id: string, @CurrentUser() user: any) {
+    if (!['TENANT_ADMIN', 'SUPER_ADMIN'].includes(user.role)) throw new ForbiddenException('Solo el administrador puede gestionar notas de crédito.');
+    return this.salesService.creditNotePreview(id, user.tenantId);
+  }
+
   @Post(':id/nota-credito')
   @HttpCode(HttpStatus.OK)
   async emitNotaCredito(@Param('id') id: string, @CurrentUser() user: any) {
