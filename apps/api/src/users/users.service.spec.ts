@@ -1,13 +1,12 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { UsersService } from './users.service';
 import { PrismaService } from '../prisma/prisma.service';
-import { ForbiddenException, BadRequestException, NotFoundException } from '@nestjs/common';
+import { ForbiddenException, BadRequestException } from '@nestjs/common';
 import { UserRole } from '@prisma/client';
 import { NotificationsService } from '../notifications/notifications.service';
 
 describe('UsersService (Multi-Tenant & Authorization)', () => {
   let service: UsersService;
-  let prisma: PrismaService;
 
   // Mock de PrismaService
   const mockPrismaService = {
@@ -32,7 +31,6 @@ describe('UsersService (Multi-Tenant & Authorization)', () => {
     }).compile();
 
     service = module.get<UsersService>(UsersService);
-    prisma = module.get<PrismaService>(PrismaService);
     jest.clearAllMocks();
   });
 
