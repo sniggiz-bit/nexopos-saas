@@ -1,0 +1,57 @@
+name: Synchronize authorized Lioren issuer
+on:
+  push:
+    branches: [feature/lioren-issuer-sync]
+    paths: [.github/workflows/sync-lioren-issuer.yml]
+permissions:
+  contents: read
+concurrency:
+  group: nexopos-production
+  cancel-in-progress: false
+jobs:
+  synchronize:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Synchronize the existing token company after the approved deployment
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          port: ${{ secrets.SERVER_PORT }}
+          command_timeout: 4m
+          script: |
+            set -eu
+            cd /home/nexopos/nexopos.cl
+            test "$(git rev-parse HEAD)" = "10d5d739b3597c9671d6abfe3f308e499aca868e"
+            docker exec -i nexopos_api node <<'LIOREN_AUTHORIZED_ISSUER_SYNC'
+            const { PrismaService } = require('./dist/prisma/prisma.service');
+            const { LiorenApiService, usableToken } = require('./dist/dte/lioren-api.service');
+            const { LiorenAccountService } = require('./dist/dte/lioren-account.service');
+            const { DteConfigService } = require('./dist/dte-config/dte-config.service');
+            const prisma = new PrismaService();
+            (async () => {
+              await prisma.onModuleInit();
+              const configs = await prisma.dteConfig.findMany({ select: { tenantId: true, liorenToken: true } });
+              if (configs.length !== 1 || !usableToken(configs[0].liorenToken)) throw Error('Configuration changed');
+              const tenantId = configs[0].tenantId;
+              const actors = await prisma.user.findMany({ where: { role: 'SUPER_ADMIN', isActive: true }, select: { id: true, email: true }, take: 10 });
+              const actor = actors.find(item => item.email === 'superadmin@nexopos.cl') || (actors.length === 1 ? actors[0] : null);
+              if (!actor) throw Error('Administrator unavailable');
+              const api = new LiorenApiService();
+              api.issue = async () => { throw Error('Issuance disabled in deployment verification'); };
+              const account = new LiorenAccountService(prisma, api);
+              const before = await account.status(tenantId, true);
+              if (!before.connected || !before.company || !before.certificateValid) throw Error('Provider verification failed');
+              const alreadySynced = before.identityMatches && before.resolutionMatches;
+              const auditBefore = await prisma.systemLog.count({ where: { tenantId, message: 'DTE_ISSUER_SYNCHRONIZED' } });
+              if (!alreadySynced) await account.syncIssuer(tenantId, before.company.rut, actor.id);
+              const after = await account.status(tenantId, true);
+              const auditAfter = await prisma.systemLog.count({ where: { tenantId, message: 'DTE_ISSUER_SYNCHRONIZED' } });
+              if (!after.connected || !after.identityMatches || !after.resolutionMatches || !after.certificateValid || (!alreadySynced && auditAfter !== auditBefore + 1)) throw Error('Post-synchronization verification failed');
+              const stats = await new DteConfigService(prisma, account, api).getStats(tenantId, true);
+              console.log(JSON.stringify({ metricsVerification: true, providerSource: stats.provider.source, partial: stats.provider.partial, totalAvailable: Number.isSafeInteger(stats.provider.total), acceptedAvailable: Number.isSafeInteger(stats.provider.accepted), rejectedAvailable: Number.isSafeInteger(stats.provider.rejected), recentDocumentNumbersValid: stats.provider.recent.every(item => Number.isSafeInteger(item.folio) && item.folio > 0), recentDocumentsPresent: stats.provider.recent.length > 0, localCountersAvailable: ['confirmed', 'unverified', 'errors', 'pending'].every(key => Number.isSafeInteger(stats.local[key])) }));
+              console.log(JSON.stringify({ issuerSynchronization: true, alreadySynced, connected: after.connected, identityMatches: after.identityMatches, resolutionMatches: after.resolutionMatches, certificateValid: after.certificateValid, auditRecorded: alreadySynced || auditAfter === auditBefore + 1, state: after.state, capabilities: after.types.map(item => ({ type: item.type, providerActive: item.providerActive, localEnabled: item.localEnabled, hasAvailableFolios: item.available === null ? null : item.available > 0, nextFolioReported: Boolean(item.nextFolio), ready: item.ready })), documentsIssuedByThisTask: 0 }, null, 2));
+            })().catch(error => { console.error(JSON.stringify({ synchronizationFailed: true, kind: error.name })); process.exitCode = 1; }).finally(() => prisma.onModuleDestroy());
+            LIOREN_AUTHORIZED_ISSUER_SYNC
