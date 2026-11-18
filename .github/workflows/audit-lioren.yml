@@ -74,14 +74,18 @@ jobs:
                   }
                   const { company, types, cafs, index } = tokenCache.get(token);
                   result.companyQueryStatus = company.status;
-                  result.companyRutMatches = company.ok && entry.tenant.rut ? cleanRut(company.body.rut) === cleanRut(entry.tenant.rut) : null;
+                  result.providerRutPresent = Boolean(cleanRut(company.body?.rut));
+                  result.tenantRutPresent = Boolean(cleanRut(entry.tenant.rut));
+                  result.companyRutMatches = company.ok && result.providerRutPresent && result.tenantRutPresent ? cleanRut(company.body.rut) === cleanRut(entry.tenant.rut) : null;
+                  result.companyResponseKeys = company.ok && company.body && typeof company.body === 'object' ? Object.keys(company.body).sort() : [];
                   result.typesQueryStatus = types.status;
                   const list = Array.isArray(types.body) ? types.body : Array.isArray(types.body?.tipodocs) ? types.body.tipodocs : Array.isArray(types.body?.data) ? types.body.data : null;
                   result.typesShapeRecognized = list !== null;
-                  result.documentCapabilities = docs.map(type => {
+                  result.documentCapabilities = await Promise.all(docs.map(async type => {
                     const match = list?.find(item => Number(item.codigosii ?? item.tipodoc) === type);
-                    return { type, providerActive: Boolean(match), localEnabled: localModules.includes(codes[type]), foliosReported: match?.folios && Number.isFinite(Number(match.folios.disponibles)) ? true : false, hasAvailableFolios: match?.folios ? Number(match.folios.disponibles) > 0 : null, nextFolioReported: match?.folios ? Number(match.folios.siguiente) > 0 : null };
-                  });
+                    const documentIndex = type === 39 ? index : await read(token, 'dtes/index', { tipodoc: String(type), rpp: 10, page: 1, orderby: 'fecha', direction: 'desc' });
+                    return { type, documentIndexStatus: documentIndex.status, providerActive: Boolean(match), localEnabled: localModules.includes(codes[type]), foliosReported: match?.folios && Number.isFinite(Number(match.folios.disponibles)) ? true : false, hasAvailableFolios: match?.folios ? Number(match.folios.disponibles) > 0 : null, nextFolioReported: match?.folios ? Number(match.folios.siguiente) > 0 : null };
+                  }));
                   result.cafQueryStatus = cafs.status;
                   const cafRows = Array.isArray(cafs.body) ? cafs.body : Array.isArray(cafs.body?.data) ? cafs.body.data : null;
                   result.cafShape = Array.isArray(cafs.body) ? 'array' : cafRows ? 'paginated' : 'unknown';
