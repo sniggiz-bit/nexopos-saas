@@ -35,7 +35,7 @@ function load(file) {
    if (name === '@nexopos/shared') return { formatRut: value => value };
    if (name === 'axios') return { post: async () => {} };
    if (name.includes('jwt-auth.guard')) return { JwtAuthGuard: class JwtAuthGuard {} };
-   if (/chat-identity|event-room-access|notification.template|welcome-email.template|super-admin.guard/.test(name)) return load(path.resolve(path.dirname(file), name + '.ts'));
+   if (/module-access|chat-identity|event-room-access|notification.template|welcome-email.template|super-admin.guard/.test(name)) return load(path.resolve(path.dirname(file), name + '.ts'));
    return {};
  };
  const context = { module: mod, exports: mod.exports, require: requireMock, process: { env: { NODE_ENV: 'production' } }, URL, AbortSignal, console: { log() {}, error() {} }, Date, Set };

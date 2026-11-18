@@ -7,6 +7,7 @@ export interface Branch {
     name: string;
     address?: string;
     isMain: boolean;
+    isActive: boolean;
     tenantId: string;
     createdAt: string;
     updatedAt: string;
@@ -17,15 +18,15 @@ export function useBranches() {
     const [loading, setLoading] = useState(true);
     const { toast } = useToast();
 
-    const fetchBranches = useCallback(async () => {
+    const fetchBranches = useCallback(async (silent = false) => {
         try {
-            setLoading(true);
+            if (!silent) setLoading(true);
             const response = await api.get('/branches');
             setBranches(response.data);
         } catch (error: any) {
             console.error('Error fetching branches:', error);
             const message = error.response?.data?.message || 'No se pudieron cargar las sucursales.';
-            toast({
+            if (!silent) toast({
                 title: 'Error',
                 description: message,
                 variant: 'destructive',
@@ -35,30 +36,13 @@ export function useBranches() {
         }
     }, [toast]);
 
-    const createBranch = async (data: { name: string; address?: string; isMain?: boolean }) => {
-        try {
-            const response = await api.post('/branches', data);
-            toast({
-                title: 'Éxito',
-                description: 'Sucursal creada correctamente.',
-            });
-            fetchBranches(); // Refresh list
-            return response.data;
-        } catch (error: any) {
-            console.error('Error creating branch:', error);
-            const message = error.response?.data?.message || 'No se pudo crear la sucursal.';
-            toast({
-                title: 'Error',
-                description: message,
-                variant: 'destructive',
-            });
-            throw error;
-        }
-    };
-
     useEffect(() => {
         fetchBranches();
+        const refresh = () => { if (document.visibilityState === 'visible') fetchBranches(true); };
+        const timer = window.setInterval(refresh, 30000);
+        window.addEventListener('focus', refresh);
+        return () => { window.clearInterval(timer); window.removeEventListener('focus', refresh); };
     }, [fetchBranches]);
 
-    return { branches, loading, fetchBranches, createBranch };
+    return { branches, loading, fetchBranches };
 }

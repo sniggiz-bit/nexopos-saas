@@ -8,6 +8,7 @@ import {
   ForbiddenException,
   NotFoundException,
 } from '@nestjs/common';
+import { SuperAdminGuard } from '../auth/super-admin.guard';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { PrismaService } from '../prisma/prisma.service';
 import { BillingStatus } from '@prisma/client';
@@ -26,6 +27,7 @@ export class BillingController {
     });
   }
 
+  @UseGuards(SuperAdminGuard)
   @Post('invoices/:id/pay-simulate')
   async payInvoiceSimulate(@Param('id') id: string, @Req() req: any) {
     const { tenantId } = req.user;

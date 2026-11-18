@@ -1,5 +1,6 @@
 import {
   Controller,
+  BadRequestException,
   Get,
   Post,
   Body,
@@ -11,8 +12,6 @@ import {
 import { BranchesService } from './branches.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { SuperAdminGuard } from '../auth/super-admin.guard';
-import { ResourceLimitGuard } from '../auth/resource-limit.guard';
-import { CheckLimit } from '../auth/decorators/check-limit.decorator';
 
 @Controller('branches')
 @UseGuards(JwtAuthGuard)
@@ -20,20 +19,19 @@ export class BranchesController {
   constructor(private readonly branchesService: BranchesService) {}
 
   @Post()
-  @UseGuards(ResourceLimitGuard)
-  @CheckLimit('maxBranches')
+  @UseGuards(SuperAdminGuard)
   create(
     @Body()
-    createBranchDto: { name: string; address?: string; isMain?: boolean },
+    createBranchDto: { tenantId: string; name: string; address?: string; isMain?: boolean; isActive?: boolean },
     @Request() req,
   ) {
     console.log('[BranchesController] Create User:', req.user);
-    const tenantId = req.user.tenantId;
+    const tenantId = createBranchDto.tenantId;
     if (!tenantId) {
       console.error('[BranchesController] Tenant ID missing in request user');
-      throw new Error('Tenant ID missing');
+      throw new BadRequestException('Indica la empresa de la sucursal.');
     }
-    return this.branchesService.create({ ...createBranchDto, tenantId });
+    return this.branchesService.create({ ...createBranchDto, tenantId }, req.user.sub);
   }
 
   @Get()
@@ -60,7 +58,8 @@ export class BranchesController {
   updateStatus(
     @Param('id') id: string,
     @Body() statusDto: { isActive: boolean },
+    @Request() req: any,
   ) {
-    return this.branchesService.updateStatus(id, statusDto.isActive);
+    return this.branchesService.updateStatus(id, statusDto.isActive, req.user.sub);
   }
 }

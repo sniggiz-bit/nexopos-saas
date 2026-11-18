@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { effectiveModuleCodes, FEATURE_MODULES, moduleTenantInclude } from '../modules/module-access';
 import { Prisma } from '@prisma/client';
 
 import { UpdateTenantSettingsDto } from './dto/update-tenant-settings.dto';
@@ -91,33 +92,36 @@ export class TenantsService {
   }
 
   async findOne(id: string): Promise<any> {
-    return this.prisma.tenant.findUnique({
+    const tenant = await this.prisma.tenant.findUnique({
       where: { id },
       include: {
-        plan: true,
-        branches: true,
-        users: true,
-        settings: true,
-        dteConfig: true,
-      } as any,
+        ...moduleTenantInclude, branches: true,
+        users: { select: { id: true, name: true, email: true, role: true, branchId: true, isActive: true, createdAt: true } },
+        dteConfig: { select: { id: true, tenantId: true, liorenLogo: true, dteResolution: true, resolutionDate: true } },
+        _count: { select: { users: true, branches: true } },
+      },
     });
+    if (!tenant) throw new NotFoundException('Empresa no encontrada.');
+    const codes = new Set(effectiveModuleCodes(tenant));
+    const effective = Object.fromEntries(Object.entries(FEATURE_MODULES).map(([flag, modules]) => [flag, modules.some(code => codes.has(code))]));
+    return { ...tenant, settings: { ...tenant.settings, ...effective } };
   }
 
   /**
    * Updates TenantSettings for a given tenant (upsert for resilience).
    * Intended for Super Admin use only.
    */
-  async updateSettings(tenantId: string, dto: UpdateTenantSettingsDto) {
+  async updateSettings(tenantId: string, dto: UpdateTenantSettingsDto, actorId?: string) {
     // Verify tenant exists
     const tenant = await this.prisma.tenant.findUnique({
       where: { id: tenantId },
     });
     if (!tenant) throw new NotFoundException(`Tenant ${tenantId} not found`);
 
-    return (this.prisma as any).tenantSettings.upsert({
-      where: { tenantId },
-      create: { tenantId, ...dto },
-      update: { ...dto },
+    return this.prisma.$transaction(async tx => {
+      const updated = await tx.tenantSettings.upsert({ where: { tenantId }, create: { tenantId, ...dto }, update: { ...dto } });
+      if (actorId) await tx.systemLog.create({ data: { tenantId, level: 'INFO', message: 'CLIENT_ADMIN_ACTION', context: { actorId, action: 'LIMITS_UPDATED' } } });
+      return updated;
     });
   }
 
@@ -135,7 +139,7 @@ export class TenantsService {
     });
   }
 
-  async updatePlan(id: string, planId: string | null) {
+  async updatePlan(id: string, planId: string | null, actorId?: string) {
     const tenant = await this.prisma.tenant.findUnique({
       where: { id },
     });
@@ -169,6 +173,7 @@ export class TenantsService {
         });
       }
 
+      if (actorId) await tx.systemLog.create({ data: { tenantId: id, level: 'INFO', message: 'CLIENT_ADMIN_ACTION', context: { actorId, action: 'PLAN_UPDATED', planId } } });
       return updatedTenant;
     });
   }

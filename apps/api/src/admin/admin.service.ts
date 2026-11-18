@@ -1,9 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { EventsGateway } from '../events/events.gateway';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class AdminService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService, private events: EventsGateway) {}
 
   async getDashboardMetrics() {
     const now = new Date();
@@ -69,39 +70,51 @@ export class AdminService {
     };
   }
 
-  async getTenants(page: number = 1, limit: number = 10, search?: string) {
-    const skip = (page - 1) * limit;
-    const where = search
-      ? { OR: [{ name: { contains: search, mode: 'insensitive' as const } }, { rut: { contains: search, mode: 'insensitive' as const } }] }
-      : {};
-
+  async getTenants(page = 1, limit = 15, search?: string, status?: string) {
+    page = Number.isFinite(page) ? Math.max(1, Math.floor(page)) : 1;
+    limit = Number.isFinite(limit) ? Math.min(100, Math.max(1, Math.floor(limit))) : 15;
+    if (status && !['ACTIVE', 'SUSPENDED'].includes(status)) throw new BadRequestException('Estado de cliente inválido.');
+    const term = search?.trim().slice(0, 200);
+    const where = {
+      ...(status ? { status } : {}),
+      ...(term ? { OR: [
+        { name: { contains: term, mode: 'insensitive' as const } },
+        { rut: { contains: term, mode: 'insensitive' as const } },
+        { users: { some: { OR: [{ email: { contains: term, mode: 'insensitive' as const } }, { name: { contains: term, mode: 'insensitive' as const } }] } } },
+      ] } : {}),
+    };
     const [tenants, total] = await Promise.all([
       this.prisma.tenant.findMany({
-        skip, take: limit, where,
+        skip: (page - 1) * limit, take: limit, where,
         include: {
           plan: { select: { id: true, name: true, price: true } },
-          settings: true,
-          users: { where: { role: 'TENANT_ADMIN' }, take: 1, select: { id: true, name: true, email: true } },
+          branches: { select: { isActive: true } },
+          users: { where: { role: { in: ['TENANT_ADMIN', 'SUPER_ADMIN'] } }, take: 1, orderBy: [{ role: 'desc' }, { isActive: 'desc' }, { createdAt: 'asc' }], select: { id: true, name: true, email: true, role: true, isActive: true } },
           _count: { select: { branches: true, users: true, products: true } },
-        },
-        orderBy: { createdAt: 'desc' },
+        }, orderBy: [{ createdAt: 'desc' }, { id: 'asc' }],
       }),
       this.prisma.tenant.count({ where }),
     ]);
-
     return {
-      data: tenants.map(t => ({ ...t, owner: t.users[0] ?? { id: null, name: 'Sin admin', email: 'N/A' } })),
-      total,
-      page,
-      lastPage: Math.ceil(total / limit),
+      data: tenants.map(({ branches, users, ...tenant }) => ({ ...tenant,
+        activeBranches: branches.filter(b => b.isActive).length,
+        owner: users[0] || { id: null, name: 'Sin administrador', email: '' },
+      })), total, page, lastPage: Math.max(1, Math.ceil(total / limit)),
     };
   }
-
-  async toggleTenantStatus(id: string, status: string) {
-    return this.prisma.tenant.update({
-      where: { id },
-      data: { status: status as any },
+  async toggleTenantStatus(id: string, status: string, actorId?: string) {
+    if (!['ACTIVE', 'SUSPENDED'].includes(status)) throw new BadRequestException('Estado inválido.');
+    const updated = await this.prisma.$transaction(async tx => {
+      const tenant = await tx.tenant.findUnique({ where: { id }, include: { users: { where: { role: 'SUPER_ADMIN' }, select: { id: true } } } });
+      if (!tenant) throw new NotFoundException('Empresa no encontrada.');
+      if (tenant.users.length) throw new ForbiddenException('Esta cuenta contiene administradores de la plataforma y está protegida.');
+      const result = await tx.tenant.update({ where: { id }, data: { status } });
+      if (status === 'SUSPENDED' && tenant.status !== 'SUSPENDED') await tx.user.updateMany({ where: { tenantId: id }, data: { tokenVersion: { increment: 1 } } });
+      await tx.systemLog.create({ data: { tenantId: id, level: 'INFO', message: 'CLIENT_ADMIN_ACTION', context: { actorId: actorId || 'superadmin', action: 'STATUS_UPDATED', status } } });
+      return result;
     });
+    this.events.revokeTenant(id);
+    return updated;
   }
 
   async getLandingConfig() {

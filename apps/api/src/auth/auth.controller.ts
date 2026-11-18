@@ -1,5 +1,7 @@
 import {
   Body,
+  Get,
+  Request,
   Controller,
   Post,
   HttpCode,
@@ -19,6 +21,10 @@ import { Public } from './decorators/public.decorator';
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) { }
+
+  @Get('me')
+  @UseGuards(JwtAuthGuard)
+  me(@Request() req: any) { return { user: req.user }; }
 
   @ApiOperation({ summary: 'Login de usuario', description: 'Autentica a un usuario y genera un token JWT.' })
   @ApiBody({
@@ -53,11 +59,11 @@ export class AuthController {
   }
 
   @ApiOperation({ summary: 'Generar Token SSO', description: 'Genera un token para Single Sign-On entre aplicaciones del ecosistema.' })
-  @Public()
+  @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
   @Post('sso/token')
-  signIn(@Body() signInDto: { userId: string; tenantId: string }) {
-    return this.authService.generateSsoToken(signInDto);
+  signIn(@Body() signInDto: { userId: string; tenantId: string }, @Request() req: any) {
+    return this.authService.generateSsoToken(signInDto, req.user);
   }
 
   @ApiOperation({ summary: 'Validar Token SSO' })

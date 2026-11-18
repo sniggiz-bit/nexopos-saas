@@ -90,6 +90,7 @@ export class TenantsController {
 
   @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Cambiar de plan (Simulado)' })
+  @UseGuards(SuperAdminGuard)
   @Post(':id/change-plan-simulate')
   async changePlanSimulate(
     @Param('id') id: string,

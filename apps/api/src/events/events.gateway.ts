@@ -8,6 +8,8 @@ import {
 import { Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Server, Socket } from 'socket.io';
+import { EventsService } from './events.service';
+import { PrismaService } from '../prisma/prisma.service';
 import { canJoinEventsRoom } from './event-room-access';
 
 export interface InventoryUpdatePayload {
@@ -34,7 +36,7 @@ export class EventsGateway
 
   private readonly logger = new Logger(EventsGateway.name);
 
-  constructor(private readonly jwtService: JwtService) {}
+  constructor(private readonly jwtService: JwtService, private readonly prisma: PrismaService, private readonly events: EventsService) {}
 
   afterInit() {
     this.logger.log('WebSocket Gateway initialized');
@@ -55,7 +57,13 @@ export class EventsGateway
 
       let payload: { tenantId?: string; sub?: string; role?: string } | null = null;
       if (token && token !== 'anonymous' && token !== 'null') {
-        payload = this.jwtService.verify(token);
+        const signed = this.jwtService.verify(token);
+        const user = typeof signed.sub === 'string' ? await this.prisma.user.findUnique({ where: { id: signed.sub }, include: { tenant: { select: { status: true } } } }) : null;
+        if (!signed.role || !user || !user.isActive || user.tenantId !== signed.tenantId || user.tokenVersion !== (signed.tokenVersion ?? 0) || (user.role !== 'SUPER_ADMIN' && user.tenant.status !== 'ACTIVE')) throw new Error('Session revoked');
+        payload = { sub: user.id, tenantId: user.tenantId, role: user.role };
+        client.data.userId = user.id;
+        await client.join('account_user:' + user.id);
+        await client.join('account_tenant:' + user.tenantId);
       }
       if (!canJoinEventsRoom(tenantId, payload)) {
         this.logger.warn(`Connection rejected: Room access denied. Socket ID: ${client.id}`);
@@ -74,6 +82,15 @@ export class EventsGateway
       );
       client.disconnect();
     }
+  }
+
+  revokeUser(userId: string) {
+    this.events.revokeUser(userId);
+    this.server?.in('account_user:' + userId).disconnectSockets(true);
+  }
+  revokeTenant(tenantId: string) {
+    this.events.revokeTenant(tenantId);
+    this.server?.in('account_tenant:' + tenantId).disconnectSockets(true);
   }
 
   handleDisconnect(client: Socket) {

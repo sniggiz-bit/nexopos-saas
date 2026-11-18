@@ -30,8 +30,9 @@ export class AdminController {
     @Query('page') page: number = 1,
     @Query('limit') limit: number = 10,
     @Query('search') search?: string,
+    @Query('status') status?: string,
   ) {
-    return this.adminService.getTenants(Number(page), Number(limit), search);
+    return this.adminService.getTenants(Number(page), Number(limit), search, status);
   }
 
   @Get('tenants/:id/metrics')
@@ -40,8 +41,8 @@ export class AdminController {
   }
 
   @Patch('tenants/:id/status')
-  async toggleStatus(@Param('id') id: string, @Body('status') status: string) {
-    return this.adminService.toggleTenantStatus(id, status);
+  async toggleStatus(@Param('id') id: string, @Body('status') status: string, @Request() req: any) {
+    return this.adminService.toggleTenantStatus(id, status, req.user.sub);
   }
 
   @Get('tenants/:id/welcome-email')

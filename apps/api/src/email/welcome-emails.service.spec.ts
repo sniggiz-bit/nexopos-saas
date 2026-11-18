@@ -24,7 +24,7 @@ describe('Welcome email tracking', () => {
 
   it('checks tenant membership before sending and does not reset credentials', async () => {
     await expect(service.send('t1', 'u1', 'super1')).resolves.toHaveProperty('status', 'ACCEPTED');
-    expect(prisma.user.findFirst).toHaveBeenCalledWith(expect.objectContaining({ where: { id: 'u1', tenantId: 't1', role: 'TENANT_ADMIN' } }));
+    expect(prisma.user.findFirst).toHaveBeenCalledWith(expect.objectContaining({ where: { id: 'u1', tenantId: 't1', role: 'TENANT_ADMIN', isActive: true } }));
     expect(prisma.systemLog.create).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ tenantId: 't1', context: { userId: 'u1', requestedBy: 'super1', status: 'PENDING' } }) }));
     expect(prisma.systemLog.update).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ context: expect.objectContaining({ status: 'ACCEPTED', providerId: 'resend1' }) }) }));
     expect(email.sendWelcomeEmail).toHaveBeenCalledWith('owner@example.cl', 'Owner', { email: 'owner@example.cl', companyName: 'Shop' });

@@ -1,5 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { LiorenService } from './lioren.service';
+import { effectiveModuleCodes, moduleTenantInclude } from '../modules/module-access';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
@@ -12,10 +13,13 @@ export class DteService {
   async emitirDte(saleId: string) {
     const sale = await this.prisma.sale.findUnique({
       where: { id: saleId },
-      select: { dteType: true },
+      select: { dteType: true, tenant: { include: moduleTenantInclude } },
     });
 
-    const tipodoc = sale?.dteType ?? 39;
+    if (!sale) throw new NotFoundException('Venta no encontrada.');
+    const tipodoc = sale.dteType ?? 39;
+    const code = ({ 33: 'DTE_FACTURA', 61: 'DTE_NOTA_CREDITO', 52: 'DTE_GUIA_DESPACHO' } as Record<number, string>)[tipodoc] || 'DTE_BOLETA';
+    if (sale.tenant.status !== 'ACTIVE' || !effectiveModuleCodes(sale.tenant).includes(code)) throw new ForbiddenException('Este servicio de emisión está deshabilitado para la empresa.');
 
     switch (tipodoc) {
       case 33:

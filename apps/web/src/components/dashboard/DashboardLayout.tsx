@@ -1,3 +1,4 @@
+import { canAccessModuleRoute } from '../../lib/module-for-route';
 import { ReactNode, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import {
@@ -72,14 +73,22 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     const location         = useLocation();
     const { user, logout } = useAuth();
     const { theme, toggleTheme } = useTheme();
-    const isImpersonating  = localStorage.getItem('impersonating') === 'true';
+    const isImpersonating  = !!localStorage.getItem('impersonating');
     const [searchQuery, setSearchQuery]   = useState('');
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
     const handleExitImpersonation = () => {
-        localStorage.removeItem('token');
-        localStorage.removeItem('impersonating');
-        window.location.href = '/login';
+        const previousToken = localStorage.getItem('__prev_session_token');
+        const previousUser = localStorage.getItem('__prev_session_user');
+        const tenantId = user?.tenantId;
+        for (const key of ['impersonating', '__prev_session_token', '__prev_session_user']) localStorage.removeItem(key);
+        if (previousToken && previousUser) {
+            localStorage.setItem('token', previousToken); localStorage.setItem('user', previousUser);
+            window.location.href = tenantId ? '/admin/tenants/' + tenantId : '/admin/tenants';
+        } else {
+            localStorage.removeItem('token'); localStorage.removeItem('user');
+            window.location.href = '/login';
+        }
     };
 
     const currentPage = flattenedNavigation.find(item => item.href === location.pathname);
@@ -146,7 +155,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                                 {group.title}
                             </p>
                             <div className="space-y-0.5">
-                                {group.items.map(item => {
+                                {group.items.filter(item => canAccessModuleRoute(item.href, user?.modules, user?.role)).map(item => {
                                     const isActive = location.pathname === item.href;
                                     const Icon     = item.icon;
                                     return (

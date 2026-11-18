@@ -1,3 +1,4 @@
+import { integrationEnabled } from './integration-access';
 import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { createHmac, timingSafeEqual } from 'crypto';
 import { PrismaService } from '../../prisma/prisma.service';
@@ -53,6 +54,7 @@ export class WebhookService {
       where: { id: connectionId },
     });
     if (!conn || !conn.isActive) return;
+    if (!await integrationEnabled(this.prisma, conn)) return;
 
     if (conn.webhookSecret) {
       this.validateShopifyHmac(rawBody, hmacHeader, conn.webhookSecret);
@@ -74,6 +76,7 @@ export class WebhookService {
       where: { id: connectionId },
     });
     if (!conn || !conn.isActive) return;
+    if (!await integrationEnabled(this.prisma, conn)) return;
 
     if (conn.webhookSecret) {
       this.validateWooCommerceSignature(rawBody, signatureHeader, conn.webhookSecret);

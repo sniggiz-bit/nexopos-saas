@@ -175,51 +175,13 @@ export function SubscriptionPage() {
   };
 
   const handleChangePlan = async (planId: string | null, planName: string) => {
-    if (!tenantId) return;
-    if (!window.confirm(`¿Estás seguro de cambiar al plan "${planName}"? Esta operación simulará la facturación y el cambio de límites.`)) {
-      return;
-    }
-
+    if (!tenantId || !window.confirm('¿Enviar al administrador una solicitud para cambiar al plan "' + planName + '"?')) return;
+    setChangingPlan(planId || 'basic');
     try {
-      setChangingPlan(planId);
-      const response = await api.post(`/tenants/${tenantId}/change-plan-simulate`, { planId });
-      setTenantInfo(response.data);
-      toast.success(`Plan cambiado a "${planName}" con éxito`);
-      
-      // Refresh related data
-      const [invoicesRes, activeRes] = await Promise.all([
-        api.get('/billing/invoices'),
-        api.get('/modules/me')
-      ]);
-      setInvoices(invoicesRes.data || []);
-      setActiveModules(activeRes.data);
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Error al cambiar de plan');
-    } finally {
-      setChangingPlan(null);
-    }
-  };
-
-  const handlePayInvoice = async (invoiceId: string) => {
-    try {
-      setPayingInvoice(invoiceId);
-      await api.post(`/billing/invoices/${invoiceId}/pay-simulate`);
-      toast.success('Pago simulado procesado con éxito');
-      
-      // Reload invoices & tenant state
-      const [invoicesRes, tenantRes] = await Promise.all([
-        api.get('/billing/invoices'),
-        api.get(`/tenants/${tenantId}`)
-      ]);
-      setInvoices(invoicesRes.data || []);
-      if (tenantRes.data) {
-        setTenantInfo(tenantRes.data);
-      }
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Error al procesar el pago');
-    } finally {
-      setPayingInvoice(null);
-    }
+      await api.post('/support/chat', { message: 'Solicitud de cambio de plan: ' + planName + '.' });
+      toast.success('Solicitud enviada al administrador. Puedes continuar la conversación en el chat de soporte.');
+    } catch (error: any) { toast.error(error.response?.data?.message || 'No se pudo enviar la solicitud.'); }
+    finally { setChangingPlan(null); }
   };
 
   const handlePayServiceInvoices = async () => {
@@ -720,7 +682,7 @@ export function SubscriptionPage() {
                           ) : isCurrent ? (
                             'Plan Activo'
                           ) : (
-                            'Activar Plan'
+                            'Solicitar cambio'
                           )}
                         </button>
                       </div>
@@ -788,7 +750,6 @@ export function SubscriptionPage() {
                       </thead>
                       <tbody className="divide-y divide-slate-100 dark:divide-white/[0.05]">
                         {invoices.map(invoice => {
-                          const isPaying = payingInvoice === invoice.id;
                           return (
                             <tr key={invoice.id} className="hover:bg-white/[0.01]">
                               <td className="py-3 pr-2 font-mono text-xs truncate max-w-[120px] text-slate-300" title={invoice.id}>
@@ -818,21 +779,7 @@ export function SubscriptionPage() {
                                 )}
                               </td>
                               <td className="py-3 pl-2 text-right">
-                                {invoice.status !== 'PAID' ? (
-                                  <button
-                                    onClick={() => handlePayInvoice(invoice.id)}
-                                    disabled={payingInvoice !== null}
-                                    className="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition-colors"
-                                  >
-                                    {isPaying ? (
-                                      <Loader2 className="w-3.5 h-3.5 animate-spin mx-auto text-white" />
-                                    ) : (
-                                      'Simular Pago'
-                                    )}
-                                  </button>
-                                ) : (
-                                  <span className="text-slate-500 text-xs">—</span>
-                                )}
+                                <span className="text-muted-foreground text-xs">{invoice.status === 'PAID' ? '—' : 'Usa el botón de pago de facturas pendientes'}</span>
                               </td>
                             </tr>
                           );

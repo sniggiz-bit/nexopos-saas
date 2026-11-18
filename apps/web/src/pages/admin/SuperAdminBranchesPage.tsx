@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { useState } from 'react';
 import { Search, Store, Building2, MapPin, Calendar, ShieldCheck, ShieldAlert } from 'lucide-react';
 import { useSuperAdminBranches } from '../../hooks/useSuperAdminBranches';
@@ -86,7 +87,7 @@ export default function SuperAdminBranchesPage() {
                                         </td>
                                         <td className="px-6 py-4">
                                             <div className="flex flex-col">
-                                                <span className="text-sm font-medium text-neutral-200">{branch.tenant.name}</span>
+                                                <Link className="text-sm font-medium text-cyan-500 hover:underline" to={'/admin/tenants/' + branch.tenantId + '?tab=branches'}>{branch.tenant.name}</Link>
                                                 <span className="text-[10px] text-neutral-500 uppercase tracking-tighter">ID: {branch.tenantId.substring(0, 8)}</span>
                                             </div>
                                         </td>

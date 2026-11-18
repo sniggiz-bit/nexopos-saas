@@ -16,15 +16,18 @@ import {
     Sun,
     Moon,
     MessageSquare,
+    Menu,
 } from 'lucide-react';
 import { Logo } from '../components/ui/Logo';
 import { NotificationBell } from '../components/admin/NotificationBell';
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from '../components/ui/dialog';
 
 export default function SuperAdminLayout() {
     const { user, logout } = useAuth();
     const { theme, toggleTheme } = useTheme();
     const location = useLocation();
     const [searchQuery, setSearchQuery] = useState('');
+    const [sidebarOpen, setSidebarOpen] = useState(false);
 
     const navigationGroups = [
         {
@@ -36,7 +39,7 @@ export default function SuperAdminLayout() {
         {
             title: 'SaaS & Clientes',
             items: [
-                { name: 'Tenants', path: '/admin/tenants', icon: Users },
+                { name: 'Clientes', path: '/admin/tenants', icon: Users },
                 { name: 'Sucursales', path: '/admin/branches', icon: GitBranch },
                 { name: 'Planes', path: '/admin/plans', icon: CreditCard },
                 { name: 'Módulos SaaS', path: '/admin/modules', icon: Activity },
@@ -54,19 +57,12 @@ export default function SuperAdminLayout() {
     ];
 
     const flattenedNavigation = navigationGroups.flatMap(g => g.items);
-    const currentPage = flattenedNavigation.find(item => item.path === location.pathname);
+    const currentPage = flattenedNavigation.find(item => location.pathname.startsWith(item.path));
     const CurrentIcon = currentPage ? currentPage.icon : LayoutDashboard;
 
-    return (
-        <div className="min-h-screen bg-background text-foreground transition-colors duration-200">
-            {/* ──────────────────────────────────────────────────────
-                SIDEBAR
-            ────────────────────────────────────────────────────── */}
-            <aside
-                className="fixed inset-y-0 left-0 w-60 flex flex-col z-20 bg-card border-r border-border transition-colors duration-200"
-            >
+    const sidebarContent = <>
                 {/* ── Logo area ── */}
-                <div className="flex items-center gap-2.5 h-16 px-5 shrink-0"
+                <div className="flex items-center gap-2.5 h-16 pl-5 pr-10 lg:px-5 shrink-0"
                     style={{ borderBottom: theme === 'dark' ? '1px solid rgba(0,153,204,0.08)' : '1px solid rgba(0,0,0,0.06)' }}>
                     <Logo variant="full" mode={theme} />
                     <span className="ml-auto text-[9px] font-bold px-1.5 py-0.5 rounded tracking-widest uppercase"
@@ -91,6 +87,7 @@ export default function SuperAdminLayout() {
                                         <Link
                                             key={item.name}
                                             to={item.path}
+                                            onClick={() => setSidebarOpen(false)}
                                             className={[
                                                 'relative flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium transition-all duration-150 group',
                                                 isActive ? 'nav-active-bar' : '',
@@ -169,14 +166,32 @@ export default function SuperAdminLayout() {
                         </button>
                     </div>
                 </div>
+    </>;
+
+    return (
+        <div className="min-h-screen bg-background text-foreground transition-colors duration-200">
+            {/* ──────────────────────────────────────────────────────
+                SIDEBAR
+            ────────────────────────────────────────────────────── */}
+            <aside
+                className="fixed inset-y-0 left-0 w-60 hidden lg:flex flex-col z-20 bg-card border-r border-border transition-colors duration-200"
+            >
+                {sidebarContent}
             </aside>
+            <Dialog open={sidebarOpen} onOpenChange={setSidebarOpen}>
+                <DialogContent className="left-0 top-0 h-dvh w-72 max-w-[85vw] translate-x-0 translate-y-0 rounded-none p-0 gap-0 flex flex-col bg-card">
+                    <DialogTitle className="sr-only">Menú del superadmin</DialogTitle>
+                    <DialogDescription className="sr-only">Navegación de administración de NexoPOS</DialogDescription>
+                    {sidebarContent}
+                </DialogContent>
+            </Dialog>
 
             {/* ──────────────────────────────────────────────────────
                 MAIN CONTENT
             ────────────────────────────────────────────────────── */}
-            <div className="pl-60 min-h-screen flex flex-col">
+            <div className="lg:pl-60 min-h-screen flex flex-col min-w-0">
                 {/* ── Top Header ── */}
-                <header className="sticky top-0 z-10 flex items-center gap-4 px-8 h-16 shrink-0"
+                <header className="sticky top-0 z-10 flex items-center gap-3 px-4 md:px-8 h-16 shrink-0"
                     style={{
                         background: theme === 'dark' ? 'rgba(11,15,26,0.85)' : 'rgba(255,255,255,0.85)',
                         backdropFilter: 'blur(20px)',
@@ -184,6 +199,7 @@ export default function SuperAdminLayout() {
                         borderBottom: theme === 'dark' ? '1px solid rgba(0,153,204,0.08)' : '1px solid rgba(0,0,0,0.08)',
                     }}>
 
+                    <button type="button" className="lg:hidden rounded-lg border border-border p-2" aria-label="Abrir menú de administración" aria-expanded={sidebarOpen} onClick={() => setSidebarOpen(true)}><Menu size={20} /></button>
                     {/* Page breadcrumb */}
                     <div className="flex items-center gap-2 flex-1 min-w-0">
                         <CurrentIcon className="w-4 h-4 shrink-0" style={{ color: '#0099CC' }} />
@@ -234,7 +250,7 @@ export default function SuperAdminLayout() {
                 </header>
 
                 {/* ── Page Content ── */}
-                <main className="flex-1 p-8 animate-fade-up overflow-y-auto">
+                <main className="flex-1 min-w-0 p-4 md:p-8 animate-fade-up">
                     <Outlet />
                 </main>
             </div>
