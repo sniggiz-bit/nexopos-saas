@@ -10,10 +10,11 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserRole } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class UsersService {
-  constructor(private prisma: PrismaService) { }
+  constructor(private prisma: PrismaService, private notifications: NotificationsService) { }
 
   async create(createUserDto: CreateUserDto, requestingUser: any) {
     // 1. Doble Capa: Validar rol del solicitante
@@ -43,7 +44,7 @@ export class UsersService {
     const saltRounds = 10;
     const hashedPassword = password ? await bcrypt.hash(password, saltRounds) : null;
 
-    return this.prisma.user.create({
+    const created = await this.prisma.user.create({
       data: {
         email,
         name,
@@ -61,8 +62,24 @@ export class UsersService {
         tenantId: true,
         createdAt: true,
         updatedAt: true,
+        tenant: { select: { name: true } },
       }
     });
+    const { tenant, ...user } = created;
+    this.notifications.notifySuperAdmin(
+      'Nuevo usuario interno',
+      [
+        `Empresa: ${tenant?.name || user.tenantId}`,
+        `Usuario: ${user.name || 'Sin nombre'}`,
+        `Correo: ${user.email}`,
+        `Rol: ${user.role}`,
+        `Tipo de alta: Usuario de una empresa existente`,
+        `Fecha de creación: ${(user.createdAt || new Date()).toLocaleString('es-CL', { timeZone: 'America/Santiago' })} (Chile)`,
+      ].join('\n'),
+      'REGISTRATION',
+      { actionPath: `/admin/tenants/${encodeURIComponent(user.tenantId)}` },
+    ).catch(() => console.error('Failed to notify superadmin about new user'));
+    return user;
   }
 
   async findAll(tenantId: string, role: UserRole | undefined, requestingUser: any) {

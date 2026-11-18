@@ -7,15 +7,18 @@ import {
   UseGuards,
   Body,
   Put,
+  Post,
+  Request,
 } from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { SuperAdminGuard } from '../auth/super-admin.guard';
+import { WelcomeEmailsService } from '../email/welcome-emails.service';
 
 @Controller('admin')
 @UseGuards(JwtAuthGuard, SuperAdminGuard)
 export class AdminController {
-  constructor(private readonly adminService: AdminService) {}
+  constructor(private readonly adminService: AdminService, private readonly welcomeEmails: WelcomeEmailsService) {}
 
   @Get('dashboard')
   async getDashboard() {
@@ -39,6 +42,16 @@ export class AdminController {
   @Patch('tenants/:id/status')
   async toggleStatus(@Param('id') id: string, @Body('status') status: string) {
     return this.adminService.toggleTenantStatus(id, status);
+  }
+
+  @Get('tenants/:id/welcome-email')
+  getWelcomeStatus(@Param('id') id: string) {
+    return this.welcomeEmails.getStatus(id);
+  }
+
+  @Post('tenants/:id/users/:userId/welcome-email')
+  sendWelcome(@Param('id') id: string, @Param('userId') userId: string, @Request() req: { user: { sub: string } }) {
+    return this.welcomeEmails.send(id, userId, req.user.sub);
   }
 
   @Get('landing')

@@ -1,24 +1,29 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient as api } from '../../api/client';
 import { useAuth } from '../../context/AuthContext';
 import { MessageSquare, Send, Clock, User } from 'lucide-react';
 import { io, Socket } from 'socket.io-client';
 import toast from 'react-hot-toast';
+import { eventsUrl } from '../../lib/events-url';
 
 export default function LiveChatsPage() {
   const { user: _user, token } = useAuth();
   const queryClient = useQueryClient();
-  const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const requestedSessionId = searchParams.get('session');
+  const [activeSessionId, setActiveSessionId] = useState<string | null>(requestedSessionId);
   const [message, setMessage] = useState('');
+  useEffect(() => { setActiveSessionId(requestedSessionId); setMessage(''); }, [requestedSessionId]);
   const [_socket, setSocket] = useState<Socket | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Fetch active sessions
-  const { data: sessions = [], isLoading } = useQuery({
-    queryKey: ['active-chats'],
+  const { data: sessions = [], isLoading, isError } = useQuery({
+    queryKey: ['active-chats', requestedSessionId],
     queryFn: async () => {
-      const { data } = await api.post('/support/active-sessions');
+      const { data } = await api.post('/support/active-sessions', { sessionId: requestedSessionId || undefined });
       return data;
     },
     refetchInterval: 10000, // Poll every 10s as backup
@@ -28,7 +33,7 @@ export default function LiveChatsPage() {
   useEffect(() => {
     if (!token) return;
 
-    const newSocket = io(import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:3000/events', {
+    const newSocket = io(eventsUrl(), {
       auth: { token, tenantId: 'superadmin' },
       transports: ['websocket']
     });
@@ -42,7 +47,7 @@ export default function LiveChatsPage() {
       queryClient.invalidateQueries({ queryKey: ['active-chats'] });
       // Show toast if the message is from a visitor and not the active session
       if (payload.message?.sender === 'VISITOR' && payload.sessionId !== activeSessionId) {
-        toast('Nuevo mensaje en el chatbot', { icon: '💬' });
+        toast('Nuevo mensaje en el chat de soporte', { icon: '💬' });
       }
     });
 
@@ -85,7 +90,7 @@ export default function LiveChatsPage() {
   return (
     <div className="flex h-[calc(100vh-100px)] bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
       {/* Sidebar - Sessions List */}
-      <div className="w-1/3 border-r border-slate-200 flex flex-col bg-slate-50">
+      <div className="w-1/3 min-w-0 border-r border-slate-200 flex flex-col bg-slate-50">
         <div className="p-4 border-b border-slate-200 bg-white">
           <h2 className="font-semibold flex items-center gap-2">
             <MessageSquare className="w-5 h-5 text-primary" />
@@ -101,7 +106,7 @@ export default function LiveChatsPage() {
             sessions.map((session: any) => (
               <div
                 key={session.id}
-                onClick={() => setActiveSessionId(session.id)}
+                onClick={() => setSearchParams({ session: session.id })}
                 className={`p-4 border-b border-slate-100 cursor-pointer transition-colors ${
                   activeSessionId === session.id ? 'bg-primary/5 border-l-4 border-l-primary' : 'hover:bg-slate-100'
                 }`}
@@ -126,13 +131,13 @@ export default function LiveChatsPage() {
       </div>
 
       {/* Chat Area */}
-      <div className="flex-1 flex flex-col bg-white">
+      <div className="flex-1 min-w-0 flex flex-col bg-white">
         {activeSession ? (
           <>
             {/* Header */}
             <div className="p-4 border-b border-slate-200 flex items-center justify-between">
               <h3 className="font-medium">Chat con {activeSession.visitorName}</h3>
-              <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full font-medium">Activo</span>
+              <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full font-medium">{activeSession.status === 'ACTIVE' ? 'Activo' : 'Cerrado'}</span>
             </div>
 
             {/* Messages */}
@@ -144,7 +149,7 @@ export default function LiveChatsPage() {
                 return (
                   <div key={msg.id} className={`flex flex-col ${isVisitor ? 'items-start' : 'items-end'}`}>
                     <div className="flex items-end gap-2 max-w-[70%]">
-                      <div className={`p-3 rounded-2xl ${
+                      <div className={`p-3 rounded-2xl break-words [overflow-wrap:anywhere] ${
                         isVisitor 
                           ? 'bg-slate-100 text-slate-800 rounded-bl-none' 
                           : isBot 
@@ -171,7 +176,7 @@ export default function LiveChatsPage() {
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                   placeholder="Escribe tu respuesta..."
-                  className="flex-1 rounded-full border border-slate-300 px-4 py-2 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+                  className="flex-1 min-w-0 rounded-full border border-slate-300 px-4 py-2 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
                   disabled={replyMutation.isPending}
                 />
                 <button
@@ -188,7 +193,7 @@ export default function LiveChatsPage() {
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center text-slate-400">
             <MessageSquare className="w-12 h-12 mb-2 opacity-20" />
-            <p>Selecciona un chat de la lista para responder</p>
+            <p>{isError ? 'No se pudieron cargar las conversaciones. Intenta actualizar la página.' : requestedSessionId && !isLoading ? 'No se encontró esta conversación. Selecciona otra de la lista.' : 'Selecciona un chat de la lista para responder'}</p>
           </div>
         )}
       </div>

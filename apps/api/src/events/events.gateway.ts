@@ -8,6 +8,7 @@ import {
 import { Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Server, Socket } from 'socket.io';
+import { canJoinEventsRoom } from './event-room-access';
 
 export interface InventoryUpdatePayload {
   productId: string;
@@ -52,25 +53,12 @@ export class EventsGateway
         return;
       }
 
-      let payload: any = null;
-
+      let payload: { tenantId?: string; sub?: string; role?: string } | null = null;
       if (token && token !== 'anonymous' && token !== 'null') {
-        payload = this.jwtService.verify(token) as { tenantId?: string; role?: string };
-        
-        if (payload.tenantId !== tenantId && payload.role !== 'SUPERADMIN' && tenantId !== 'superadmin') {
-          this.logger.warn(
-            `Connection rejected: Tenant mismatch. Socket ID: ${client.id}`,
-          );
-          client.disconnect();
-          return;
-        }
-      } else if (tenantId.startsWith('visitor_') || tenantId === 'public') {
-        // Allow anonymous connections for public chatbot
-        this.logger.log(`Anonymous visitor connection allowed. Socket ID: ${client.id}`);
-      } else {
-        this.logger.warn(
-          `Connection rejected: Valid token required for tenant ${tenantId}. Socket ID: ${client.id}`,
-        );
+        payload = this.jwtService.verify(token);
+      }
+      if (!canJoinEventsRoom(tenantId, payload)) {
+        this.logger.warn(`Connection rejected: Room access denied. Socket ID: ${client.id}`);
         client.disconnect();
         return;
       }

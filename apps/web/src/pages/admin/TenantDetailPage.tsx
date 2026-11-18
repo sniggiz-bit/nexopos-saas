@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import api from '../../lib/api';
 import toast from 'react-hot-toast';
+import WelcomeEmailPanel from './WelcomeEmailPanel';
 
 interface TenantSettings {
     enableBoletaDte: boolean; enableFacturaDte: boolean;
@@ -479,7 +480,7 @@ export default function TenantDetailPage() {
 
             <div>
                 {activeTab === 'info' && (
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="bg-neutral-800 border border-neutral-700 rounded-xl p-5 space-y-3">
                             <h3 className="text-sm font-semibold text-foreground mb-3">Datos del negocio</h3>
                             {([['Nombre', tenant.name], ['Slug', tenant.slug], ['RUT', tenant.rut ?? '—'], ['Giro', tenant.giro ?? '—'], ['Teléfono', tenant.phone ?? '—'], ['Dirección', tenant.address ?? '—']] as [string, string][]).map(([l, v]) => (
@@ -518,13 +519,15 @@ export default function TenantDetailPage() {
                                 </div>
                             </div>
 
+                            <WelcomeEmailPanel tenantId={tenant.id} active={tenant.status === 'ACTIVE'} />
+
                             {/* Usuarios */}
                             <div className="bg-neutral-800 border border-neutral-700 rounded-xl p-5">
                                 <h3 className="text-sm font-semibold text-foreground mb-3">Usuarios</h3>
                                 <div className="space-y-2">
                                     {tenant.users?.length ? tenant.users.map(u => (
                                         <div key={u.id} className="flex items-center gap-3 p-2.5 rounded-lg bg-neutral-900/50">
-                                            <div className="w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center text-xs font-bold text-purple-300 uppercase flex-shrink-0">{u.name.charAt(0)}</div>
+                                            <div className="w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center text-xs font-bold text-purple-300 uppercase flex-shrink-0">{(u.name || u.email).charAt(0)}</div>
                                             <div className="flex-1 min-w-0">
                                                 <p className="text-sm text-neutral-200 truncate">{u.name}</p>
                                                 <p className="text-xs text-neutral-500 truncate">{u.email}</p>

@@ -4,6 +4,7 @@ import { useTheme } from '../../context/ThemeContext';
 import { apiClient } from '../../api/client';
 import { io, Socket } from 'socket.io-client';
 import toast from 'react-hot-toast';
+import { eventsUrl } from '../../lib/events-url';
 
 interface Notification {
   id: string;
@@ -26,9 +27,7 @@ export function NotificationBell() {
     fetchUnreadCount();
 
     const token = localStorage.getItem('token');
-    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
-    
-    socketRef.current = io(`${apiUrl}/events`, {
+    socketRef.current = io(eventsUrl(), {
       auth: { token, tenantId: 'superadmin' }
     });
 

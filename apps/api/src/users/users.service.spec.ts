@@ -3,6 +3,7 @@ import { UsersService } from './users.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { ForbiddenException, BadRequestException, NotFoundException } from '@nestjs/common';
 import { UserRole } from '@prisma/client';
+import { NotificationsService } from '../notifications/notifications.service';
 
 describe('UsersService (Multi-Tenant & Authorization)', () => {
   let service: UsersService;
@@ -26,6 +27,7 @@ describe('UsersService (Multi-Tenant & Authorization)', () => {
       providers: [
         UsersService,
         { provide: PrismaService, useValue: mockPrismaService },
+        { provide: NotificationsService, useValue: { notifySuperAdmin: jest.fn().mockResolvedValue({}) } },
       ],
     }).compile();
 

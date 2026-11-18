@@ -16,7 +16,7 @@ export class NotificationsService {
     private emailService: EmailService,
   ) {}
 
-  async notifySuperAdmin(title: string, message: string, type: 'CHAT' | 'REGISTRATION' | 'SYSTEM') {
+  async notifySuperAdmin(title: string, message: string, type: 'CHAT' | 'REGISTRATION' | 'SYSTEM', options: { actionPath?: string } = {}) {
     // 1. Save to DB
     const notification = await this.prisma.systemNotification.create({
       data: {
@@ -33,7 +33,7 @@ export class NotificationsService {
     this.sendWebhook(title, message, type).catch(e => this.logger.error(e));
 
     // 4. Send Email if configured
-    this.sendEmailNotification(title, message, type).catch(e => this.logger.error(e));
+    this.sendEmailNotification(notification.id, title, message, type, options.actionPath).catch(() => this.logger.error('Could not process admin email notification.'));
 
     return notification;
   }
@@ -58,17 +58,21 @@ export class NotificationsService {
     }
   }
 
-  private async sendEmailNotification(title: string, message: string, type: string) {
-    const adminEmail = this.configService.get<string>('ADMIN_EMAIL');
-    if (!adminEmail) return;
-
-    let actionUrl: string | undefined;
-    if (type === 'CHAT') {
-      const frontendUrl = this.configService.get<string>('FRONTEND_URL') || 'http://localhost:5173';
-      actionUrl = `${frontendUrl}/admin/live-chats`;
+  private async sendEmailNotification(notificationId: string, title: string, message: string, type: string, actionPath?: string) {
+    const adminEmail = this.configService.get<string>('ADMIN_EMAIL')?.trim() || 'sniggiz@gmail.com';
+    const frontend = new URL(this.configService.get<string>('FRONTEND_URL') || 'https://nexopos.cl');
+    if (!['https:', 'http:'].includes(frontend.protocol) || frontend.username || frontend.password ||
+        (process.env.NODE_ENV === 'production' && (frontend.protocol !== 'https:' || ['localhost', '127.0.0.1', '[::1]'].includes(frontend.hostname)))) {
+      throw new Error('Invalid frontend URL for admin notification');
     }
-
-    await this.emailService.sendSystemNotification(adminEmail, title, message, type, actionUrl);
+    const path = actionPath || (type === 'CHAT' ? '/admin/live-chats' : type === 'REGISTRATION' ? '/admin/tenants' : undefined);
+    if (path && (!path.startsWith('/admin/') || path.includes('\\') || /[\r\n]/.test(path))) throw new Error('Invalid admin action path');
+    const result = await this.emailService.sendSystemNotification(adminEmail, title, message, type, path ? frontend.origin + path : undefined);
+    await this.prisma.systemLog.create({ data: {
+      level: result.status === 'ACCEPTED' ? 'INFO' : 'WARNING',
+      message: 'ADMIN_EMAIL_NOTIFICATION',
+      context: { notificationId, type, ...result },
+    } });
   }
 
   async getHistory(limit = 50) {

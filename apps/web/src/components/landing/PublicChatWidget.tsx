@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { MessageSquare, X, Send, Bot, User, Loader2 } from 'lucide-react';
 import { apiClient } from '../../api/client';
 import { io, Socket } from 'socket.io-client';
+import { eventsUrl } from '../../lib/events-url';
 
 interface Message {
   id: string;
@@ -33,7 +34,7 @@ export function PublicChatWidget({ cfg }: { cfg: { welcomeMessage: string; optio
   useEffect(() => {
     if (!visitorId) return;
 
-    const newSocket = io(import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:3000/events', {
+    const newSocket = io(eventsUrl(), {
       auth: { token: 'anonymous', tenantId: `visitor_${visitorId}` },
       transports: ['websocket']
     });

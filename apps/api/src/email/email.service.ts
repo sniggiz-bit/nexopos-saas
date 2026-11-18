@@ -1,4 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { renderWelcomeEmail } from './welcome-email.template';
+import { renderAdminNotification } from './admin-notification.template';
 
 @Injectable()
 export class EmailService {
@@ -6,263 +8,68 @@ export class EmailService {
   private readonly resendApiKey = process.env.RESEND_API_KEY;
   private readonly fromEmail = process.env.FROM_EMAIL || 'noreply@nexopos.cl';
 
+  getWelcomeConfiguration() {
+    try {
+      this.getFrontendUrl();
+      return { configured: Boolean(this.resendApiKey), reason: this.resendApiKey ? null : 'Falta configurar RESEND_API_KEY en el servidor.' };
+    } catch {
+      return { configured: false, reason: 'FRONTEND_URL debe ser una URL HTTPS válida en producción.' };
+    }
+  }
+
+  private getFrontendUrl(): string {
+    const url = new URL(process.env.FRONTEND_URL || 'https://nexopos.cl');
+    if (!['https:', 'http:'].includes(url.protocol) || url.username || url.password ||
+        (process.env.NODE_ENV === 'production' &&
+          (url.protocol !== 'https:' || ['localhost', '127.0.0.1', '[::1]'].includes(url.hostname)))) {
+      throw new Error('Invalid FRONTEND_URL');
+    }
+    return url.origin;
+  }
+
   async sendWelcomeEmail(
     email: string,
     name: string,
-    credentials: { email: string; password: string; companyName: string },
-  ): Promise<void> {
-    const emailContent = this.generateWelcomeEmailHtml(name, credentials);
-
+    credentials: { email: string; companyName: string },
+  ): Promise<{ status: 'ACCEPTED' | 'FAILED' | 'NOT_CONFIGURED'; providerId?: string; error?: string }> {
+    const configuration = this.getWelcomeConfiguration();
+    if (!configuration.configured) {
+      this.logger.warn('Welcome email skipped: email configuration is incomplete.');
+      return { status: 'NOT_CONFIGURED', error: configuration.reason! };
+    }
     try {
-      if (!this.resendApiKey) {
-        // Fallback: Log to console if no API key configured
-        this.logger.warn(
-          'RESEND_API_KEY not configured. Email will be logged to console.',
-        );
-        this.logger.log('='.repeat(80));
-        this.logger.log('📧 WELCOME EMAIL');
-        this.logger.log(`To: ${email}`);
-        this.logger.log(`Subject: ¡Bienvenido a NexoPOS!`);
-        this.logger.log('-'.repeat(80));
-        this.logger.log(emailContent);
-        this.logger.log('='.repeat(80));
-        return;
-      }
-
-      // Send email via Resend API
       const response = await fetch('https://api.resend.com/emails', {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${this.resendApiKey}`,
           'Content-Type': 'application/json',
         },
+        signal: AbortSignal.timeout(10000),
         body: JSON.stringify({
           from: this.fromEmail,
           to: email,
           subject: '¡Bienvenido a NexoPOS!',
-          html: emailContent,
+          html: this.generateWelcomeEmailHtml(name, credentials),
         }),
       });
-
       if (!response.ok) {
-        const error = await response.text();
-        throw new Error(`Resend API error: ${error}`);
+        // No guardar el cuerpo del proveedor: puede contener datos personales.
+        return { status: 'FAILED', error: `Resend rechazó el envío (HTTP ${response.status}).` };
       }
-
-      this.logger.log(`Welcome email sent successfully to ${email}`);
-    } catch (error) {
-      // Don't throw - we don't want email failures to block registration
-      this.logger.error(`Failed to send welcome email to ${email}:`, error);
+      const result = await response.json() as { id?: string };
+      if (typeof result.id !== 'string' || !result.id) return { status: 'FAILED', error: 'Resend no confirmó el identificador del envío.' };
+      return { status: 'ACCEPTED', providerId: result.id };
+    } catch {
+      this.logger.error('Welcome email request failed or timed out.');
+      return { status: 'FAILED', error: 'No se pudo confirmar el envío con Resend. Revisa el proveedor antes de reintentar.' };
     }
   }
 
   private generateWelcomeEmailHtml(
     name: string,
-    credentials: { email: string; password: string; companyName: string },
+    credentials: { email: string; companyName: string },
   ): string {
-    return `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>¡Bienvenido a NexoPOS!</title>
-  <style>
-    body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-      line-height: 1.6;
-      color: #1F2937;
-      background-color: #F3F4F6;
-      margin: 0;
-      padding: 0;
-      -webkit-font-smoothing: antialiased;
-    }
-    .wrapper {
-      background-color: #F3F4F6;
-      padding: 30px 15px;
-    }
-    .container {
-      max-width: 600px;
-      margin: 0 auto;
-      background-color: #FFFFFF;
-      border-radius: 12px;
-      overflow: hidden;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-    }
-    .header {
-      background-color: #0B0F1A;
-      background-image: linear-gradient(135deg, #0B0F1A 0%, #1E293B 100%);
-      color: #FFFFFF;
-      padding: 40px 30px;
-      text-align: center;
-      border-bottom: 4px solid #0099CC;
-    }
-    .logo-text {
-      font-size: 28px;
-      font-weight: 800;
-      letter-spacing: -0.5px;
-      margin-bottom: 10px;
-      color: #FFFFFF;
-    }
-    .logo-highlight {
-      color: #0099CC;
-    }
-    .header h1 {
-      font-size: 22px;
-      font-weight: 700;
-      margin: 10px 0 0 0;
-      color: #F3F4F6;
-    }
-    .content {
-      padding: 40px 30px;
-      background-color: #FFFFFF;
-    }
-    .welcome-title {
-      font-size: 20px;
-      font-weight: 700;
-      color: #111827;
-      margin-top: 0;
-      margin-bottom: 15px;
-    }
-    .credentials-card {
-      background-color: #F8FAFC;
-      border: 1px solid #E2E8F0;
-      border-left: 4px solid #0099CC;
-      border-radius: 8px;
-      padding: 24px;
-      margin: 25px 0;
-    }
-    .credentials-title {
-      font-size: 15px;
-      font-weight: 700;
-      color: #0F172A;
-      margin-top: 0;
-      margin-bottom: 12px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-    .credential-field {
-      margin-bottom: 8px;
-      font-size: 14px;
-    }
-    .credential-label {
-      color: #64748B;
-      font-weight: 500;
-    }
-    .credential-value {
-      color: #0F172A;
-      font-weight: 600;
-      font-family: 'Courier New', Courier, monospace;
-      background-color: #E2E8F0;
-      padding: 2px 6px;
-      border-radius: 4px;
-    }
-    .features-list {
-      margin: 25px 0;
-      padding-left: 20px;
-      list-style-type: none;
-    }
-    .features-list li {
-      position: relative;
-      margin-bottom: 12px;
-      font-size: 15px;
-      color: #334155;
-    }
-    .features-list li::before {
-      content: "✓";
-      position: absolute;
-      left: -20px;
-      color: #0099CC;
-      font-weight: bold;
-    }
-    .btn-container {
-      text-align: center;
-      margin: 30px 0 10px 0;
-    }
-    .button {
-      display: inline-block;
-      background-color: #0099CC;
-      color: #FFFFFF !important;
-      font-weight: 600;
-      font-size: 15px;
-      text-decoration: none;
-      padding: 12px 32px;
-      border-radius: 6px;
-      box-shadow: 0 4px 6px -1px rgba(0, 153, 204, 0.2);
-    }
-    .footer {
-      text-align: center;
-      padding: 30px;
-      background-color: #F8FAFC;
-      border-top: 1px solid #E2E8F0;
-      color: #64748B;
-      font-size: 12px;
-    }
-    .footer p {
-      margin: 5px 0;
-    }
-    .disclaimer {
-      font-size: 11px;
-      color: #94A3B8;
-      line-height: 1.4;
-      margin-top: 15px !important;
-    }
-  </style>
-</head>
-<body>
-  <div class="wrapper">
-    <div class="container">
-      <div class="header">
-        <div class="logo-text">Nexo<span class="logo-highlight">POS</span></div>
-        <h1>¡Bienvenido a NexoPOS!</h1>
-      </div>
-      <div class="content">
-        <h2 class="welcome-title">Hola ${name},</h2>
-        <p>¡Felicitaciones! Tu cuenta de NexoPOS ha sido creada exitosamente para la empresa <strong>${credentials.companyName}</strong>.</p>
-        
-        <p>A partir de ahora, tienes en tus manos una herramienta potente para gestionar tus ventas, inventarios, clientes y sucursales en tiempo real.</p>
-        
-        <div class="credentials-card">
-          <div class="credentials-title">Tus credenciales de acceso:</div>
-          <div class="credential-field">
-            <span class="credential-label">Empresa:</span>
-            <span class="credential-value" style="font-family: inherit; background: none; padding: 0; font-weight: bold; border-radius: 0;">${credentials.companyName}</span>
-          </div>
-          <div class="credential-field">
-            <span class="credential-label">Correo:</span>
-            <span class="credential-value">${credentials.email}</span>
-          </div>
-          <div class="credential-field">
-            <span class="credential-label">Contraseña temporal:</span>
-            <span class="credential-value">${credentials.password}</span>
-          </div>
-        </div>
-        
-        <p>Comienza a configurar tu negocio siguiendo estos sencillos pasos:</p>
-        <ul class="features-list">
-          <li><strong>Configura tus Sucursales:</strong> Define tus locales y asigna cajeros y vendedores.</li>
-          <li><strong>Carga tu Inventario:</strong> Sube tus productos, categorías y controla el stock fácilmente.</li>
-          <li><strong>Personaliza tu POS:</strong> Ajusta los métodos de pago y de boleta electrónica.</li>
-          <li><strong>Comienza a Vender:</strong> Realiza transacciones rápidas desde cualquier dispositivo.</li>
-        </ul>
-        
-        <div class="btn-container">
-          <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}/login" class="button" target="_blank">
-            Ingresar al Panel de NexoPOS
-          </a>
-        </div>
-      </div>
-      <div class="footer">
-        <p><strong>NexoPOS SpA</strong></p>
-        <p>Gestión inteligente para tu punto de venta</p>
-        <p>© ${new Date().getFullYear()} NexoPOS. Todos los derechos reservados.</p>
-        <p class="disclaimer">Este es un correo automático. Por favor no respondas directamente a este mensaje. Para soporte técnico, contáctanos a soporte@nexopos.cl.</p>
-      </div>
-    </div>
-  </div>
-</body>
-</html>
-    `.trim();
+    return renderWelcomeEmail({ name, ...credentials, frontendUrl: this.getFrontendUrl() });
   }
 
   async sendQuoteEmail(
@@ -815,85 +622,25 @@ export class EmailService {
     message: string,
     type: string,
     actionUrl?: string,
-  ): Promise<void> {
-    const htmlContent = this.generateSystemNotificationHtml(title, message, type, actionUrl);
-    const subject = `NexoPOS Alerta: ${title}`;
-
+  ): Promise<{ status: 'ACCEPTED' | 'FAILED' | 'NOT_CONFIGURED'; providerId?: string; error?: string }> {
+    if (!this.resendApiKey) {
+      this.logger.warn('Admin email skipped: RESEND_API_KEY is not configured.');
+      return { status: 'NOT_CONFIGURED', error: 'Falta configurar RESEND_API_KEY.' };
+    }
     try {
-      if (!this.resendApiKey) {
-        this.logger.warn('RESEND_API_KEY not configured. Email will be logged to console.');
-        this.logger.log('='.repeat(80));
-        this.logger.log(`📧 SEND SYSTEM NOTIFICATION`);
-        this.logger.log(`To: ${email}`);
-        this.logger.log(`Subject: ${subject}`);
-        this.logger.log('-'.repeat(80));
-        this.logger.log(htmlContent);
-        this.logger.log('='.repeat(80));
-        return;
-      }
-
       const response = await fetch('https://api.resend.com/emails', {
         method: 'POST',
-        headers: {
-          Authorization: `Bearer ${this.resendApiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          from: this.fromEmail,
-          to: email,
-          subject,
-          html: htmlContent,
-        }),
+        headers: { Authorization: `Bearer ${this.resendApiKey}`, 'Content-Type': 'application/json' },
+        signal: AbortSignal.timeout(10000),
+        body: JSON.stringify({ from: this.fromEmail, to: email, subject: `NexoPOS Alerta: ${title.replace(/[\r\n]+/g, ' ')}`, html: renderAdminNotification({ title, message, type, actionUrl }) }),
       });
-
-      if (!response.ok) {
-        const error = await response.text();
-        throw new Error(`Resend API error: ${error}`);
-      }
-
-      this.logger.log(`System notification sent successfully to ${email}`);
-    } catch (error) {
-      this.logger.error(`Failed to send system notification to ${email}:`, error);
+      if (!response.ok) return { status: 'FAILED', error: `Resend rechazó el envío (HTTP ${response.status}).` };
+      const result = await response.json() as { id?: string };
+      if (typeof result.id !== 'string' || !result.id) return { status: 'FAILED', error: 'El proveedor no confirmó el envío.' };
+      return { status: 'ACCEPTED', providerId: result.id };
+    } catch {
+      this.logger.error('Admin email request failed or timed out.');
+      return { status: 'FAILED', error: 'No se pudo confirmar el envío con Resend.' };
     }
-  }
-
-  private generateSystemNotificationHtml(title: string, message: string, type: string, actionUrl?: string): string {
-    const actionHtml = actionUrl
-      ? `<div style="text-align: center; margin-top: 30px;">
-           <a href="${actionUrl}" style="background-color: #0099CC; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">
-             Continuar Conversación
-           </a>
-         </div>`
-      : '';
-
-    return `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <title>Alerta NexoPOS</title>
-</head>
-<body style="font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px;">
-  <div style="max-width: 600px; margin: 0 auto; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-    <div style="background-color: #0B0F1A; color: white; padding: 20px; text-align: center; border-bottom: 4px solid #0099CC;">
-      <h1 style="margin: 0; font-size: 24px;">NexoPOS</h1>
-    </div>
-    <div style="padding: 30px;">
-      <h2 style="margin-top: 0; color: #333;">${title}</h2>
-      <span style="display: inline-block; background-color: #e2e8f0; color: #475569; padding: 4px 10px; border-radius: 9999px; font-size: 12px; font-weight: bold; margin-bottom: 20px;">
-        TIPO: ${type}
-      </span>
-      <p style="color: #4a5568; line-height: 1.6; font-size: 16px; background-color: #f8fafc; padding: 15px; border-left: 4px solid #0099CC; border-radius: 0 8px 8px 0;">
-        ${message}
-      </p>
-      ${actionHtml}
-    </div>
-    <div style="background-color: #f8fafc; padding: 20px; text-align: center; font-size: 12px; color: #64748b; border-top: 1px solid #e2e8f0;">
-      Este es un mensaje automático del sistema NexoPOS.
-    </div>
-  </div>
-</body>
-</html>
-    `.trim();
   }
 }
