@@ -155,8 +155,8 @@ export function SalesHistoryPage() {
             <div className="space-y-5">
 
                 {/* ── Header ── */}
-                <div className="flex items-center justify-between">
-                    <div>
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div className="min-w-0">
                         <h1 className="text-xl font-bold" style={{ color: C.text }}>Historial de Ventas</h1>
                         <p className="text-[13px] mt-0.5" style={{ color: C.muted }}>
                             Consulta, filtra y descarga tus boletas y tickets de venta.
