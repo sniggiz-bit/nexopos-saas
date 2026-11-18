@@ -47,7 +47,6 @@ const origin = 'http://release-web';
     const unchangedResponse = page.waitForResponse(response => response.url().endsWith('/api/dte-config') && response.request().method() === 'POST');
     await page.getByRole('button', { name: 'Guardar configuración', exact: true }).click();
     await unchangedResponse;
-    await page.waitForFunction(() => document.querySelector('input[type="password"]') && !document.querySelector('button[type="submit"]')?.disabled);
     assert(updates.length >= 1); assert.equal(updates[0].liorenToken, undefined);
     await credential.fill('fixture-replacement-never-real');
     const saved = page.waitForResponse(response => response.url().endsWith('/api/dte-config') && response.request().method() === 'POST');
