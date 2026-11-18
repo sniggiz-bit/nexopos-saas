@@ -173,6 +173,7 @@ export function SalesHistoryTable({ sales, isLoading, onEmitNotaCredito, emittin
                                                     </span>
                                                 )}
                                                 {sale.dteType && <DteTypeBadge dteType={sale.dteType} />}
+                                                {sale.dteFolio && !sale.dteVerifiedAt && <span className="text-[10px] text-amber-500">Sin confirmar en Lioren</span>}
                                             </div>
                                         </td>
 

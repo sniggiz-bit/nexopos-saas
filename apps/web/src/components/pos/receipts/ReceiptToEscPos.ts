@@ -23,13 +23,8 @@ export function generateReceiptEscPos(sale: Sale, tenant?: Tenant): Uint8Array {
     
     // Document Title
     encoder.bold(true);
-    if (sale.dteType === 39) {
-        encoder.line('BOLETA ELECTRONICA');
-    } else if (sale.dteType === 33) {
-        encoder.line('FACTURA ELECTRONICA');
-    } else {
-        encoder.line('COMPROBANTE DE VENTA');
-    }
+    encoder.line('COMPROBANTE INTERNO DE VENTA');
+    encoder.line('NO ACREDITA EMISION DTE');
     encoder.bold(false);
     
     encoder.line(`Nro: ${sale.id}`);

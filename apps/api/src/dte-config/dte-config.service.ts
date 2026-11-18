@@ -14,6 +14,7 @@ export class DteConfigService {
   async upsert(input: ConfigInput) {
     const { tenantId, ...data } = input;
     if (data.liorenToken !== undefined) {
+      if (typeof data.liorenToken !== 'string') throw new BadRequestException('La credencial debe ser texto. Se conserva el token actual.');
       data.liorenToken = data.liorenToken.trim();
       if (!usableToken(data.liorenToken)) throw new BadRequestException('Ingresa una credencial real válida. Se conserva el token actual.');
       await this.api.company(data.liorenToken).catch(() => { throw new BadRequestException('Lioren no pudo validar la nueva credencial. Se conserva el token actual.'); });

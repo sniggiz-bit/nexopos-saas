@@ -27,13 +27,14 @@ export class LiorenService {
     let payload: any;
     try {
       connection = await this.account.requireEmission(sale.tenantId, type);
-      payload = await this.buildPayload(sale, type, connection.token);
+      payload = await this.buildPayload(sale, type, connection.token, connection.status.company.rut);
     } catch (error) {
       await this.prisma.sale.updateMany({ where: { id: saleId, dteFolio: null, dteStatus: 'PENDING', dteSubmission: { is: null } }, data: { dteStatus: 'BLOQUEADO' } });
       return { success: false, status: 'BLOQUEADO', error: error instanceof LiorenApiError || error instanceof BadRequestException || error instanceof ForbiddenException ? error.message : 'No se pudo validar el documento antes del envío.' };
     }
     const token = connection.token;
-    const submission = await this.prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+    let submission: { id: string; payload: Prisma.JsonValue } | null;
+    try { submission = await this.prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       await tx.$queryRawUnsafe('SELECT "id" FROM "Tenant" WHERE "id"=$1 FOR UPDATE', sale.tenantId);
       await tx.$queryRawUnsafe('SELECT "id" FROM "Sale" WHERE "id"=$1 FOR UPDATE', saleId);
       const current = await tx.sale.findUnique({ where: { id: saleId }, include: { dteSubmission: true } });
@@ -49,6 +50,10 @@ export class LiorenService {
       await tx.sale.update({ where: { id: saleId }, data: { dteStatus: 'ENVIANDO', dteIssuerRut: normalizeRut(connection.status.company.rut) } });
       return created;
     });
+    } catch (error) {
+      await this.prisma.sale.updateMany({ where: { id: saleId, dteFolio: null, dteStatus: { in: ['PENDING', 'BLOQUEADO'] }, dteSubmission: { is: null } }, data: { dteStatus: 'BLOQUEADO' } }).catch(() => undefined);
+      return { success: false, status: 'BLOQUEADO', error: error instanceof ConflictException || error instanceof ForbiddenException ? error.message : 'No se pudo registrar el envío. Actualiza la venta antes de continuar.' };
+    }
     if (!submission) return { success: false, status: 'PENDIENTE_CONFIRMACION', error: 'Ya hay un envío registrado. No se duplicará el documento.' };
     try {
       const response = await this.api.issue(token, type, submission.payload as object, submission.id);
@@ -69,18 +74,22 @@ export class LiorenService {
       return { success: false, status, error: uncertain ? 'El resultado del envío no está confirmado. Revisa Lioren antes de cualquier nuevo envío.' : (error as LiorenApiError).message };
     }
   }
-  private async buildPayload(sale: any, type: number, token: string) {
+  private async buildPayload(sale: any, type: number, token: string, issuerRut: string) {
     if (!sale.items.length || sale.items.length > 60) throw new BadRequestException('El documento debe tener entre 1 y 60 productos.');
     const round = (value: number) => Math.round(value * 1000000) / 1000000;
     const details = sale.items.map((item: any) => {
       const quantity = Number(item.quantity); const price = Number(item.price); const discount = Number(item.discountAmount || 0);
-      if (!Number.isFinite(quantity) || quantity < 0.000001 || price < 0 || discount < 0 || discount > price * quantity || !item.product?.name || item.product.name.length < 3 || item.product.name.length > 80) throw new BadRequestException('Revisa cantidad, nombre, precio y descuento de los productos antes de emitir.');
+      if (!Number.isFinite(quantity) || quantity < 0.000001 || price < 0 || discount < 0 || discount > price * quantity || item.product?.tenantId !== sale.tenantId || !item.product?.name || item.product.name.length < 3 || item.product.name.length > 80) throw new BadRequestException('Revisa cantidad, nombre, precio y descuento de los productos antes de emitir.');
       return { nombre: item.product.name, cantidad: quantity, precio: type === 39 ? price : round(price / 1.19), exento: false, ...(discount ? { descuento: type === 39 ? discount : round(discount / 1.19), tipodescuento: 1 } : {}) };
     });
     const payload: any = { emisor: { tipodoc: String(type), observaciones: 'NexoPOS ' + sale.id, ...(type === 39 ? { servicio: 3 } : { fecha: chileDate() }) }, detalles: details };
+    if (type === 39 && sale.customer) {
+      if (sale.customer.tenantId !== sale.tenantId) throw new BadRequestException('El receptor no pertenece a esta empresa.');
+      payload.receptor = { rut: normalizeRut(sale.customer.rut), rs: sale.customer.name };
+    }
     if (type !== 39) {
       const customer = sale.customer;
-      if (!customer || !normalizeRut(customer.rut) || !customer.giro || !customer.address || !customer.comuna || !customer.city) throw new BadRequestException('Completa RUT, razón social, giro, dirección, comuna y ciudad del receptor para emitir este documento.');
+      if (!customer || customer.tenantId !== sale.tenantId || !normalizeRut(customer.rut) || !customer.giro || !customer.address || !customer.comuna || !customer.city) throw new BadRequestException('Completa RUT, razón social, giro, dirección, comuna y ciudad del receptor para emitir este documento.');
       const unwrap = (data: any, name: string) => Array.isArray(data) ? data : Array.isArray(data?.[name]) ? data[name] : [];
       const normalize = (value: string) => value.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
       const communes = unwrap(await this.api.get(token, 'comunas'), 'comunas');
@@ -92,8 +101,13 @@ export class LiorenService {
       payload.receptor = { rut: normalizeRut(customer.rut), rs: customer.name, giro: customer.giro, direccion: customer.address, comuna: commune.id, ciudad: city.id };
     }
     if (type === 61) {
-      const original = sale.originalSaleId ? await this.prisma.sale.findFirst({ where: { id: sale.originalSaleId, tenantId: sale.tenantId } }) : null;
+      const original = sale.originalSaleId ? await this.prisma.sale.findFirst({ where: { id: sale.originalSaleId, tenantId: sale.tenantId }, include: { dteSubmission: true } }) : null;
       if (!original?.dteFolio || !original.dteVerifiedAt || !original.dteIssuedAt || !['ACEPTADO', 'REPARO'].includes(original.dteStatus)) throw new BadRequestException('La nota de crédito requiere un documento original confirmado y una referencia válida.');
+      if (normalizeRut(original.dteIssuerRut) !== normalizeRut(issuerRut)) throw new BadRequestException('El documento original corresponde a otra empresa emisora.');
+      const originalPayload = original.dteSubmission?.payload as any;
+      if (!originalPayload?.receptor?.rut || normalizeRut(originalPayload.receptor.rut) !== normalizeRut(payload.receptor.rut)) throw new BadRequestException('El receptor debe coincidir con el documento original. Revisa su conciliación.');
+      if (originalPayload.receptor.giro && originalPayload.receptor.comuna && originalPayload.receptor.ciudad) payload.receptor = originalPayload.receptor;
+      else payload.receptor.rs = originalPayload.receptor.rs;
       const response = await this.api.get(token, 'razonesref');
       const reasons = Array.isArray(response) ? response : response?.razonesref || [];
       const reason = reasons.find((row: any) => /anula/i.test(String(row.nombre)));

@@ -18,7 +18,7 @@ async function check(name, run) { await run(); checks++; console.log('PASS: ' + 
   const context = JSON.parse(await fs.readFile('/checks-results/context.json', 'utf8'));
   const company = { rut: '76000000-0', name: 'Empresa ficticia', resolution: '80', resolutionDate: '2020-01-01', validFrom: '2020-01-01', validTo: '2099-01-01' };
   const tenant = await prisma.tenant.create({ data: { name: 'Lioren isolated fixture', slug: randomUUID(), rut: company.rut, dteConfig: { create: { liorenToken: token, dteResolution: '80', resolutionDate: new Date('2020-01-01') } }, settings: { create: { enableBoletaDte: true, enableFacturaDte: true, enableNotaCreditoDte: true, enableGuiaDespachoDte: true } } } });
-  const branch = await prisma.branch.create({ data: { tenantId: tenant.id, name: 'Matriz de prueba', isMain: true } });
+  const branch = await prisma.branch.create({ data: { tenantId: tenant.id, name: 'Matriz de prueba', isMain: true, isActive: true } });
   const customer = await prisma.customer.create({ data: { tenantId: tenant.id, name: 'Receptor ficticio', rut: '11111111-1', giro: 'Actividad ficticia', address: 'Dirección ficticia 123', comuna: 'Providencia', city: 'Santiago' } });
   const product = await prisma.product.create({ data: { tenantId: tenant.id, name: 'Producto ficticio', price: 119 } });
   await prisma.inventory.create({ data: { branchId: branch.id, productId: product.id, quantity: 8 } });
@@ -52,6 +52,12 @@ async function check(name, run) { await run(); checks++; console.log('PASS: ' + 
     assert.equal(posts - before, 1); assert.equal(await prisma.dteSubmission.count({ where: { saleId: row.id } }), 1);
     const stored = await prisma.sale.findUnique({ where: { id: row.id } }); assert.equal(stored.dteStatus, 'PENDIENTE_SII'); assert(stored.dteVerifiedAt); assert(!stored.dtePdfUrl.includes('ejemplo-mock'));
     await lioren.emitirBoleta(row.id); assert.equal(posts - before, 1);
+  });
+  await check('an inactive branch blocks submission even after provider preflight succeeds', async () => {
+    const inactive = await prisma.branch.create({ data: { tenantId: tenant.id, name: 'Sucursal inactiva de prueba', isActive: false } });
+    const row = await sale({ branchId: inactive.id }); const before = posts;
+    assert.equal((await lioren.emitirBoleta(row.id)).status, 'BLOQUEADO'); assert.equal(posts, before);
+    assert.equal(await prisma.dteSubmission.count({ where: { saleId: row.id } }), 0);
   });
   await check('weight quantities and line discounts survive the documented payload conversion', async () => {
     const row = await sale({ total: 166.6, items: { create: { productId: product.id, quantity: 1.5, price: 119, discountAmount: 11.9 } } });

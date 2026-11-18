@@ -70,6 +70,7 @@ export const InvoiceA4: React.FC<InvoiceA4Props> = ({
                 `}
             </style>
 
+            {!hasRealPdf && <p style={{ border: '1px solid #92400e', padding: 12, color: '#92400e', fontWeight: 'bold' }}>Comprobante interno. No acredita emisión ni aceptación de un documento tributario.</p>}
             {/* Enlace al PDF oficial de Lioren (con TED real) — visible en pantalla, oculto al imprimir */}
             {hasRealPdf && (
                 <div className="lioren-banner no-print">
@@ -95,7 +96,7 @@ export const InvoiceA4: React.FC<InvoiceA4Props> = ({
                 </div>
                 <div className="doc-type">
                     <h2>R.U.T.: {tenantRut}</h2>
-                    <h1 style={{ margin: '10px 0', fontSize: '18px' }}>{dteLabel}</h1>
+                    <h1 style={{ margin: '10px 0', fontSize: '18px' }}>{hasRealPdf ? dteLabel : 'COMPROBANTE INTERNO'}</h1>
                     <h2>Nº {hasRealPdf ? sale.dteFolio : 'SIN VERIFICAR'}</h2>
                     {hasRealPdf && sale.dteStatus === 'ACEPTADO' && (
                         <span style={{ fontSize: '11px', color: '#16a34a', fontWeight: 'bold' }}>
