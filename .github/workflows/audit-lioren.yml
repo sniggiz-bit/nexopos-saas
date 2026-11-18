@@ -1,0 +1,97 @@
+name: Audit Lioren read-only
+on:
+  push:
+    branches: [feature/lioren-audit]
+    paths: [.github/workflows/audit-lioren.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: nexopos-lioren-read-only-audit
+  cancel-in-progress: false
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Read current DTE configuration and provider capabilities
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          port: ${{ secrets.SERVER_PORT }}
+          command_timeout: 4m
+          script: |
+            set -eu
+            docker exec -i nexopos_api node <<'LIOREN_READ_ONLY_AUDIT'
+            const { PrismaClient } = require('@prisma/client');
+            const axios = require('axios');
+            const { effectiveModuleCodes, moduleTenantInclude } = require('./dist/modules/module-access');
+            const prisma = new PrismaClient();
+            const docs = [39, 33, 61, 52];
+            const codes = { 39: 'DTE_BOLETA', 33: 'DTE_FACTURA', 61: 'DTE_NOTA_CREDITO', 52: 'DTE_GUIA_DESPACHO' };
+            const placeholder = value => /TEST_TOKEN|YOUR_TOKEN/.test(value || '');
+            const cleanRut = value => String(value || '').replace(/[^0-9kK]/g, '').toUpperCase();
+            async function read(token, endpoint, params) {
+              try {
+                const response = await axios.get('https://cl.lioren.enterprises/api/' + endpoint, {
+                  headers: { Accept: 'application/json', Authorization: 'Bearer ' + token },
+                  params, timeout: 12000, maxRedirects: 0,
+                });
+                return { ok: true, status: response.status, body: response.data };
+              } catch (error) { return { ok: false, status: error.response?.status || null, network: !error.response }; }
+            }
+            (async () => {
+              const snapshot = await prisma.$transaction(async tx => {
+                await tx.$executeRawUnsafe('SET TRANSACTION READ ONLY');
+                const total = await tx.dteConfig.count();
+                if (total > 25) throw Error('Audit size limit');
+                const configs = await tx.dteConfig.findMany({ select: { tenantId: true, liorenToken: true } });
+                const entries = [];
+                for (const config of configs) {
+                  const tenant = await tx.tenant.findUnique({ where: { id: config.tenantId }, include: moduleTenantInclude });
+                  const accepted = await tx.sale.findMany({ where: { tenantId: config.tenantId, dteStatus: 'ACEPTADO' }, select: { dteType: true, dteFolio: true, dtePdfUrl: true, createdAt: true } });
+                  const errors = await tx.sale.count({ where: { tenantId: config.tenantId, dteStatus: 'ERROR' } });
+                  entries.push({ config, tenant, accepted, errors });
+                }
+                return { total, entries };
+              }, { timeout: 30000 });
+              const tokenCache = new Map();
+              const results = [];
+              for (const entry of snapshot.entries) {
+                const token = entry.config.liorenToken || process.env.LIOREN_TOKEN;
+                const acceptedWithMockLink = entry.accepted.filter(row => /ejemplo-mock/.test(row.dtePdfUrl || '')).length;
+                const localModules = effectiveModuleCodes(entry.tenant).filter(code => Object.values(codes).includes(code));
+                const result = { configuredToken: Boolean(token), fallbackToken: !entry.config.liorenToken && Boolean(token), placeholderToken: placeholder(token), acceptedCount: entry.accepted.length, acceptedWithMockLink, localErrorCount: entry.errors, localDteModules: localModules };
+                if (token && !placeholder(token)) {
+                  if (!tokenCache.has(token)) {
+                    const company = await read(token, 'miempresa');
+                    const types = await read(token, 'tipodocs');
+                    const cafs = await read(token, 'cafs', { tipodoc: '39', rpp: 1, page: 1 });
+                    const index = await read(token, 'boletas/index', { tipodoc: '39', rpp: 10, page: 1, orderby: 'fecha', direction: 'desc' });
+                    tokenCache.set(token, { company, types, cafs, index });
+                  }
+                  const { company, types, cafs, index } = tokenCache.get(token);
+                  result.companyQueryStatus = company.status;
+                  result.companyRutMatches = company.ok && entry.tenant.rut ? cleanRut(company.body.rut) === cleanRut(entry.tenant.rut) : null;
+                  result.typesQueryStatus = types.status;
+                  const list = Array.isArray(types.body) ? types.body : Array.isArray(types.body?.tipodocs) ? types.body.tipodocs : Array.isArray(types.body?.data) ? types.body.data : null;
+                  result.typesShapeRecognized = list !== null;
+                  result.documentCapabilities = docs.map(type => {
+                    const match = list?.find(item => Number(item.codigosii ?? item.tipodoc) === type);
+                    return { type, providerActive: Boolean(match), localEnabled: localModules.includes(codes[type]), foliosReported: match?.folios && Number.isFinite(Number(match.folios.disponibles)) ? true : false, hasAvailableFolios: match?.folios ? Number(match.folios.disponibles) > 0 : null, nextFolioReported: match?.folios ? Number(match.folios.siguiente) > 0 : null };
+                  });
+                  result.cafQueryStatus = cafs.status;
+                  const cafRows = Array.isArray(cafs.body) ? cafs.body : Array.isArray(cafs.body?.data) ? cafs.body.data : null;
+                  result.cafShape = Array.isArray(cafs.body) ? 'array' : cafRows ? 'paginated' : 'unknown';
+                  result.cafHasLegacyCounters = Boolean(cafRows?.some(row => Object.hasOwn(row, 'libres') && Object.hasOwn(row, 'asignados')));
+                  result.documentIndexStatus = index.status;
+                  result.documentIndexRecognized = Array.isArray(index.body?.data);
+                  result.monthHasProviderDocuments = Number.isFinite(index.body?.total) ? index.body.total > 0 : null;
+                }
+                results.push(result);
+              }
+              console.log(JSON.stringify({ readOnlyAudit: true, configuredCompanies: snapshot.total, uniqueRealTokensQueried: tokenCache.size, results }, null, 2));
+            })().catch(error => { console.error(JSON.stringify({ auditFailed: true, kind: error.code || error.name })); process.exitCode = 1; }).finally(() => prisma.$disconnect());
+            LIOREN_READ_ONLY_AUDIT
