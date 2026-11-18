@@ -55,6 +55,7 @@ export class ResourceLimitGuard implements CanActivate {
     if (!limitKey) return true;
 
     const request = context.switchToHttp().getRequest();
+    if (request.user?.role === 'SUPER_ADMIN') return true;
     const tenantId: string | undefined = request.user?.tenantId;
 
     if (!tenantId) {
@@ -90,7 +91,7 @@ export class ResourceLimitGuard implements CanActivate {
     }
 
     const currentCount: number = await prismaDelegate.count({
-      where: { [resource.field]: tenantId },
+      where: { [resource.field]: tenantId, ...(limitKey === 'maxUsers' ? { isActive: true } : {}) },
     });
 
     // 4. Enforce the limit (>= means "at or above the cap", block creation)

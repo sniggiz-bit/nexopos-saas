@@ -23,7 +23,7 @@ export class WelcomeEmailsService {
     if (!tenant) throw new NotFoundException('Empresa no encontrada.');
     const admins = await this.prisma.user.findMany({
       where: { tenantId, role: 'TENANT_ADMIN' },
-      select: { id: true, name: true, email: true },
+      select: { id: true, name: true, email: true, isActive: true },
       orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
     });
     const users = await Promise.all(admins.map(async user => {
@@ -41,7 +41,7 @@ export class WelcomeEmailsService {
 
   async send(tenantId: string, userId: string, requestedBy?: string) {
     const user = await this.prisma.user.findFirst({
-      where: { id: userId, tenantId, role: 'TENANT_ADMIN' },
+      where: { id: userId, tenantId, role: 'TENANT_ADMIN', isActive: true },
       select: { id: true, name: true, email: true, tenant: { select: { name: true, status: true } } },
     });
     if (!user) throw new NotFoundException('Administrador no encontrado en esta empresa.');

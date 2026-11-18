@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { effectiveModuleCodes, moduleTenantInclude } from '../modules/module-access';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
@@ -13,8 +14,9 @@ export class StoreService {
         name: true,
         storeSlug: true,
         storeSettings: true,
+        status: true, billingStatus: true, ...moduleTenantInclude,
         branches: {
-          where: { isMain: true },
+          where: { isMain: true, isActive: true },
           take: 1,
           select: { id: true },
         },
@@ -26,12 +28,12 @@ export class StoreService {
     }
 
     const settings = tenant.storeSettings as any;
-    if (!settings?.isActive) {
+    if (!settings?.isActive || tenant.status !== 'ACTIVE' || tenant.billingStatus !== 'ACTIVE' || !tenant.branches.length || !effectiveModuleCodes(tenant).includes('ECOMMERCE')) {
       throw new NotFoundException('Store is not active');
     }
 
     return {
-      ...tenant,
+      id: tenant.id, name: tenant.name, storeSlug: tenant.storeSlug, storeSettings: tenant.storeSettings, branches: tenant.branches,
       mainBranchId: tenant.branches[0]?.id,
     };
   }

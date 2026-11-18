@@ -13,6 +13,7 @@ import { TenantsService } from '../tenants/tenants.service';
 import * as bcrypt from 'bcrypt';
 import { RegisterTenantDto } from './dto/register-tenant.dto';
 import { formatRut } from '@nexopos/shared';
+import { effectiveModuleCodes, moduleTenantInclude } from '../modules/module-access';
 import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
@@ -34,7 +35,7 @@ export class AuthService {
       });
       console.log(`[AuthService] User found: ${!!user}`);
 
-      if (user && user.password) {
+      if (user && user.isActive !== false && user.password) {
         // Check if password is hashed (bcrypt hashes start with $2b$ or $2a$)
         const isHashed =
           user.password.startsWith('$2b$') || user.password.startsWith('$2a$');
@@ -78,23 +79,13 @@ export class AuthService {
         `[AuthService] Logging in user: ${user.id}, Role: ${user.role}, tenantId: ${user.tenantId}, branchId: ${user.branchId}`,
       );
 
+      if (user.isActive === false) throw new UnauthorizedException('Usuario deshabilitado.');
       let activeModules: string[] = [];
 
       if (user.tenantId) {
         const tenant = await this.prisma.tenant.findUnique({
           where: { id: user.tenantId },
-          include: {
-            plan: {
-              include: {
-                planModules: {
-                  include: { module: true }
-                }
-              }
-            },
-            tenantModuleAddons: {
-              include: { module: true }
-            }
-          }
+          include: moduleTenantInclude,
         });
 
         if (tenant) {
@@ -105,9 +96,7 @@ export class AuthService {
             );
           }
 
-          const planModules = tenant.plan?.planModules.map(pm => pm.module.code) || [];
-          const addonModules = tenant.tenantModuleAddons?.map(addon => addon.module.code) || [];
-          activeModules = [...new Set([...planModules, ...addonModules])];
+          activeModules = effectiveModuleCodes(tenant);
         }
       }
 
@@ -119,6 +108,7 @@ export class AuthService {
         tenantId: user.tenantId ?? null,
         branchId: user.branchId ?? null,
         modules: activeModules,
+        tokenVersion: user.tokenVersion ?? 0,
       };
 
       console.log('[AuthService] JWT payload being signed:', payload);
@@ -144,17 +134,19 @@ export class AuthService {
     }
   }
 
-  async generateSsoToken(user: { userId: string; tenantId: string }) {
-    const payload = { sub: user.userId, tenantId: user.tenantId };
-    return {
-      access_token: await this.jwtService.signAsync(payload),
-    };
+  async generateSsoToken(target: { userId: string; tenantId: string }, actor: { sub: string; role: string }) {
+    if (actor.role !== 'SUPER_ADMIN' && target.userId !== actor.sub) throw new UnauthorizedException();
+    const user = await this.prisma.user.findFirst({ where: { id: target.userId, tenantId: target.tenantId } });
+    if (!user) throw new UnauthorizedException();
+    return this.login(user);
   }
 
   async validateSsoToken(token: string) {
     try {
       const payload = await this.jwtService.verifyAsync(token);
-      return payload;
+      const user = typeof payload.sub === 'string' ? await this.prisma.user.findUnique({ where: { id: payload.sub }, include: { tenant: { select: { status: true } } } }) : null;
+      if (!payload.role || !user || !user.isActive || user.tenantId !== payload.tenantId || user.tokenVersion !== (payload.tokenVersion ?? 0) || user.tenant.status !== 'ACTIVE') throw new UnauthorizedException();
+      return { sub: user.id, tenantId: user.tenantId, branchId: user.branchId, role: user.role, email: user.email };
     } catch {
       throw new UnauthorizedException();
     }

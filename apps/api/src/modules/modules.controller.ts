@@ -25,6 +25,7 @@ export class ModulesController {
     return this.modulesService.getModulesForTenant(req.user.tenantId);
   }
 
+  @UseGuards(SuperAdminGuard)
   @Post('me/addons')
   setMyAddons(@Req() req: any, @Body('moduleIds') moduleIds: string[]) {
     if (!req.user.tenantId) throw new ForbiddenException('No tenant associated');

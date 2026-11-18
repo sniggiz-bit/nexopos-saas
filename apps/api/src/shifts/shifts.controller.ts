@@ -1,83 +1,24 @@
-import {
-  Controller,
-  Post,
-  Get,
-  Body,
-  Param,
-  Query,
-  BadRequestException,
-} from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query, Request, BadRequestException } from '@nestjs/common';
 import { ShiftsService } from './shifts.service';
-
 @Controller('shifts')
 export class ShiftsController {
-  constructor(private readonly shiftsService: ShiftsService) { }
-
+  constructor(private readonly shiftsService: ShiftsService) {}
   @Post('open')
-  async openShift(
-    @Body()
-    body: {
-      branchId: string;
-      initialAmount: number;
-      userId: string;
-      tenantId: string;
-    },
-  ) {
-    // In a real app, userId and tenantId would come from the authenticated user (Request)
-    // For now, we accept them in the body as per the existing simplified auth pattern in this project
-    const { branchId, initialAmount, userId, tenantId } = body;
-
-    if (!branchId || initialAmount === undefined || !userId || !tenantId) {
-      throw new BadRequestException('Missing required fields');
-    }
-
-    return this.shiftsService.openShift(
-      tenantId,
-      branchId,
-      userId,
-      initialAmount,
-    );
+  openShift(@Body() body: { branchId: string; initialAmount: number }, @Request() req: any) {
+    if (!body.branchId || !Number.isFinite(body.initialAmount) || body.initialAmount < 0) throw new BadRequestException('Sucursal y monto inicial válidos son obligatorios.');
+    return this.shiftsService.openShift(req.user.tenantId, body.branchId, req.user.sub, body.initialAmount);
   }
-
   @Post('close')
-  async closeShift(
-    @Body() body: { shiftId: string; userId: string; finalAmount: number },
-  ) {
-    const { shiftId, userId, finalAmount } = body;
-
-    if (!shiftId || !userId || finalAmount === undefined) {
-      throw new BadRequestException('Missing required fields');
-    }
-
-    return this.shiftsService.closeShift(shiftId, userId, finalAmount);
+  closeShift(@Body() body: { shiftId: string; finalAmount: number }, @Request() req: any) {
+    if (!body.shiftId || !Number.isFinite(body.finalAmount) || body.finalAmount < 0) throw new BadRequestException('Caja y monto final válidos son obligatorios.');
+    return this.shiftsService.closeShift(body.shiftId, req.user.sub, body.finalAmount);
   }
-
   @Get('current/:branchId')
-  async getCurrentShift(@Param('branchId') branchId: string) {
-    return this.shiftsService.getCurrentShift(branchId);
-  }
-
+  getCurrentShift(@Param('branchId') branchId: string) { return this.shiftsService.getCurrentShift(branchId); }
   @Get('summary/:shiftId')
-  async getShiftSummary(@Param('shiftId') shiftId: string) {
-    return this.shiftsService.getShiftSummary(shiftId);
-  }
-
+  getShiftSummary(@Param('shiftId') shiftId: string) { return this.shiftsService.getShiftSummary(shiftId); }
   @Get('history')
-  async getShiftHistory(
-    @Query('tenantId') tenantId: string,
-    @Query('branchId') branchId?: string,
-    @Query('page') page?: string,
-    @Query('from') from?: string,
-    @Query('to') to?: string,
-  ) {
-    if (!tenantId) throw new BadRequestException('tenantId is required');
-    return this.shiftsService.getShiftHistory(
-      tenantId,
-      branchId,
-      page ? parseInt(page, 10) : 1,
-      20,
-      from,
-      to,
-    );
+  getShiftHistory(@Request() req: any, @Query('branchId') branchId?: string, @Query('page') page?: string, @Query('from') from?: string, @Query('to') to?: string) {
+    return this.shiftsService.getShiftHistory(req.user.tenantId, branchId, Math.max(1, parseInt(page || '1', 10) || 1), 20, from, to);
   }
 }

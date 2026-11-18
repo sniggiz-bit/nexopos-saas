@@ -4,7 +4,7 @@ import toast from 'react-hot-toast';
 import api from '../../lib/api';
 
 type Attempt = { status: 'PENDING' | 'ACCEPTED' | 'FAILED' | 'NOT_CONFIGURED'; attemptedAt: string; providerId?: string; error?: string };
-type WelcomeStatus = { configured: boolean; reason: string | null; users: { id: string; name: string | null; email: string; attempt: Attempt | null }[] };
+type WelcomeStatus = { configured: boolean; reason: string | null; users: { id: string; name: string | null; email: string; isActive: boolean; attempt: Attempt | null }[] };
 const labels = { PENDING: 'Sin confirmación del resultado', ACCEPTED: 'Aceptado por Resend', FAILED: 'Envío fallido o sin confirmar', NOT_CONFIGURED: 'Configuración incompleta' };
 
 export default function WelcomeEmailPanel({ tenantId, active }: { tenantId: string; active: boolean }) {
@@ -56,7 +56,8 @@ export default function WelcomeEmailPanel({ tenantId, active }: { tenantId: stri
                         {user.attempt.error && <p className="text-xs text-red-300">{user.attempt.error}</p>}
                         {user.attempt.providerId && <p className="text-xs text-neutral-500 break-all">Referencia: {user.attempt.providerId}</p>}
                     </>}
-                    <button type="button" onClick={() => void send(user.id)} disabled={!!sending || !data.configured || !active} className="flex items-center justify-center gap-2 w-full rounded-lg bg-purple-600 hover:bg-purple-700 disabled:opacity-50 px-3 py-2 text-xs font-semibold text-white">
+                    {user.isActive === false && <p className="text-xs text-amber-500">Habilita al usuario antes de enviar la bienvenida.</p>}
+                    <button type="button" onClick={() => void send(user.id)} disabled={!!sending || !data.configured || !active || user.isActive === false} className="flex items-center justify-center gap-2 w-full rounded-lg bg-purple-600 hover:bg-purple-700 disabled:opacity-50 px-3 py-2 text-xs font-semibold text-white">
                         {sending === user.id ? <Loader2 size={14} className="animate-spin" /> : <Mail size={14} />}
                         {sending === user.id ? 'Enviando...' : user.attempt ? 'Reenviar bienvenida' : 'Enviar bienvenida'}
                     </button>

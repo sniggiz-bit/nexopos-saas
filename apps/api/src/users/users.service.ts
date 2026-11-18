@@ -33,6 +33,10 @@ export class UsersService {
       }
     }
 
+    if (branchId) {
+      const branch = await this.prisma.branch.findFirst({ where: { id: branchId, tenantId: targetTenantId, isActive: true } });
+      if (!branch) throw new BadRequestException('La sucursal no pertenece a esta empresa o está deshabilitada.');
+    }
     const existingUser = await this.prisma.user.findFirst({
       where: { email },
     });
@@ -179,6 +183,8 @@ export class UsersService {
       }
     }
 
+    if (updateUserDto.tenantId && updateUserDto.tenantId !== targetUser.tenantId) throw new ForbiddenException('No se puede trasladar un usuario a otra empresa.');
+    if (updateUserDto.branchId && updateUserDto.branchId !== targetUser.branchId && !await this.prisma.branch.findFirst({ where: { id: updateUserDto.branchId, tenantId: targetUser.tenantId, isActive: true } })) throw new BadRequestException('La sucursal no pertenece a esta empresa o está deshabilitada.');
     const data = { ...updateUserDto };
 
     if (data.password) {
@@ -188,7 +194,7 @@ export class UsersService {
 
     return this.prisma.user.update({
       where: { id },
-      data,
+      data: { ...data, ...(updateUserDto.password ? { tokenVersion: { increment: 1 } } : {}) },
       select: {
         id: true,
         email: true,

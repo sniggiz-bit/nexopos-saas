@@ -18,7 +18,12 @@ export interface StoreEvent {
 
 @Injectable()
 export class EventsService implements OnModuleDestroy {
+  private readonly revoked$ = new Subject<{ userId?: string; tenantId?: string }>();
   private readonly events$ = new Subject<StoreEvent>();
+
+  revokeUser(userId: string) { this.revoked$.next({ userId }); }
+  revokeTenant(tenantId: string) { this.revoked$.next({ tenantId }); }
+  getSessionRevocations(userId: string, tenantId: string) { return this.revoked$.pipe(filter(e => e.userId === userId || e.tenantId === tenantId)); }
 
   emit(event: StoreEvent): void {
     this.events$.next(event);
@@ -30,5 +35,6 @@ export class EventsService implements OnModuleDestroy {
 
   onModuleDestroy() {
     this.events$.complete();
+    this.revoked$.complete();
   }
 }

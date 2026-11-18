@@ -1,3 +1,4 @@
+import { integrationEnabled } from './integration-access';
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { IntegrationService } from './integration.service';
@@ -16,6 +17,7 @@ export class ProductSyncService {
       where: { id: connectionId },
     });
     if (!conn || !conn.isActive || !conn.syncProducts) return;
+    if (!await integrationEnabled(this.prisma, conn)) return;
 
     const startedAt = Date.now();
     let total = 0, synced = 0, failed = 0;

@@ -1,7 +1,9 @@
 import {
-  Controller, Post, UploadedFile, UseInterceptors,
+  Controller, Post, UploadedFile, UseInterceptors, Request,
   BadRequestException,
 } from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
+import { unlink } from 'node:fs/promises';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname, join } from 'path';
@@ -19,6 +21,11 @@ function ensureDir(dir: string) {
 
 @Controller('uploads')
 export class UploadsController {
+  constructor(private prisma: PrismaService) {}
+  private async recordFile(file: Express.Multer.File, tenantId: string, url: string) {
+    try { await this.prisma.uploadAsset.create({ data: { tenantId, path: url } }); }
+    catch (error) { await unlink(file.path).catch(() => undefined); throw error; }
+  }
 
   @Post('image')
   @UseInterceptors(
@@ -43,9 +50,10 @@ export class UploadsController {
       },
     }),
   )
-  uploadImage(@UploadedFile() file: Express.Multer.File) {
+  async uploadImage(@UploadedFile() file: Express.Multer.File, @Request() req: any) {
     if (!file) throw new BadRequestException('No se recibió ningún archivo');
     const url = `/api/static/products/${file.filename}`;
+    await this.recordFile(file, req.user.tenantId, url);
     return { url, filename: file.filename, size: file.size };
   }
 
@@ -72,9 +80,10 @@ export class UploadsController {
       },
     }),
   )
-  uploadLogo(@UploadedFile() file: Express.Multer.File) {
+  async uploadLogo(@UploadedFile() file: Express.Multer.File, @Request() req: any) {
     if (!file) throw new BadRequestException('No se recibió ningún archivo');
     const url = `/api/static/logos/${file.filename}`;
+    await this.recordFile(file, req.user.tenantId, url);
     return { url, filename: file.filename, size: file.size };
   }
 }

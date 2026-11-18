@@ -1,551 +1,125 @@
-import { useEffect, useState, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import {
-    ArrowLeft, Building2, Users, Calendar, CheckCircle2, XCircle,
-    Settings2, Info, Loader2, ShieldAlert, BarChart3, Zap,
-    Store, CreditCard, Plug, FileText, LogIn, Ban, CheckCheck,
-    TrendingUp, Package, Clock, DollarSign, RefreshCw,
-} from 'lucide-react';
-import api from '../../lib/api';
+import { useCallback, useEffect, useState } from 'react';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { ArrowLeft, Building2, CheckCircle2, CreditCard, FileText, Loader2, RefreshCw, Settings2, ShieldAlert, Store, Users, Zap } from 'lucide-react';
 import toast from 'react-hot-toast';
+import api from '../../lib/api';
 import WelcomeEmailPanel from './WelcomeEmailPanel';
+import TenantUsersPanel from './TenantUsersPanel';
+import TenantBranchesPanel from './TenantBranchesPanel';
+import TenantServicesPanel from './TenantServicesPanel';
+import TenantActionsPanel from './TenantActionsPanel';
+import { ClientRecord, cardClass, errorMessage, fieldClass, money, primaryClass, secondaryClass } from './client-record';
 
-interface TenantSettings {
-    enableBoletaDte: boolean; enableFacturaDte: boolean;
-    enableGuiaDespachoDte: boolean; enableNotaCreditoDte: boolean;
-    maxBranches: number; maxRegisters: number; maxUsers: number;
-    canHardDelete: boolean;
-    enableEcommerce: boolean; enableTransbank: boolean; enableIntegrations: boolean;
-}
-
-interface TenantDetail {
-    id: string; name: string; slug: string; phone?: string; rut?: string;
-    giro?: string; address?: string; createdAt: string;
-    status: 'ACTIVE' | 'SUSPENDED';
-    plan?: { id: string; name: string; price: number };
-    settings: TenantSettings | null;
-    _count: { users: number; branches: number };
-    users: Array<{ id: string; name: string; email: string; role: string }>;
-}
-
-interface TenantMetrics {
-    salesThisMonth: number; revenueThisMonth: number; productsCount: number;
-    usersCount: number; branchesCount: number; lastActivity: string | null;
-}
-
-type Tab = 'info' | 'features' | 'saas' | 'metrics' | 'limits' | 'danger';
-const fmt = (n: number) => `$${Math.round(n).toLocaleString('es-CL')}`;
-
-// ── Primitives ────────────────────────────────────────────────────────────────
-
-const Toggle = ({ checked, onChange, danger = false }: { checked: boolean; onChange: (v: boolean) => void; danger?: boolean }) => (
-    <button type="button" onClick={() => onChange(!checked)}
-        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors
-            ${checked ? (danger ? 'bg-red-500' : 'bg-purple-500') : 'bg-neutral-600'}`}>
-        <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${checked ? 'translate-x-6' : 'translate-x-1'}`} />
-    </button>
-);
-
-const ToggleRow = ({ icon: Icon, label, desc, checked, onChange, danger, color = 'text-purple-400' }: {
-    icon: React.ElementType; label: string; desc: string; checked: boolean; onChange: (v: boolean) => void; danger?: boolean; color?: string;
-}) => (
-    <div className="flex items-center justify-between py-4 border-b border-neutral-700/50 last:border-0">
-        <div className="flex items-center gap-3 flex-1 mr-4">
-            <div className="p-2 rounded-lg bg-neutral-900/60"><Icon size={16} className={color} /></div>
-            <div>
-                <p className={`text-sm font-medium ${danger ? 'text-red-300' : 'text-neutral-200'}`}>{label}</p>
-                <p className="text-xs text-neutral-500 mt-0.5">{desc}</p>
-            </div>
-        </div>
-        <Toggle checked={checked} onChange={onChange} danger={danger} />
-    </div>
-);
-
-const NumInput = ({ label, desc, value, onChange }: { label: string; desc: string; value: number; onChange: (v: number) => void }) => (
-    <div className="flex items-center justify-between py-4 border-b border-neutral-700/50 last:border-0">
-        <div className="flex-1 mr-4">
-            <p className="text-sm font-medium text-neutral-200">{label}</p>
-            <p className="text-xs text-neutral-500 mt-0.5">{desc}</p>
-        </div>
-        <div className="flex items-center gap-2">
-            <button onClick={() => onChange(Math.max(1, value - 1))} className="w-7 h-7 rounded-lg bg-neutral-700 hover:bg-neutral-600 text-white flex items-center justify-center text-sm font-bold">−</button>
-            <span className="w-10 text-center text-sm font-bold text-foreground tabular-nums">{value}</span>
-            <button onClick={() => onChange(value + 1)} className="w-7 h-7 rounded-lg bg-neutral-700 hover:bg-neutral-600 text-white flex items-center justify-center text-sm font-bold">+</button>
-        </div>
-    </div>
-);
-
-const MetCard = ({ icon: Icon, label, value, sub, color = 'text-purple-400' }: { icon: React.ElementType; label: string; value: string | number; sub?: string; color?: string }) => (
-    <div className="bg-neutral-900/60 border border-neutral-700/50 rounded-xl p-4 flex items-center gap-3">
-        <div className="p-2.5 rounded-xl bg-neutral-800"><Icon size={18} className={color} /></div>
-        <div>
-            <p className="text-xs text-neutral-500">{label}</p>
-            <p className="text-base font-bold text-foreground leading-snug">{value}</p>
-            {sub && <p className="text-xs text-neutral-500">{sub}</p>}
-        </div>
-    </div>
-);
-
-const SaveBtn = ({ saving, onClick }: { saving: boolean; onClick: () => void }) => (
-    <button onClick={onClick} disabled={saving}
-        className="w-full py-3 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-sm transition-colors disabled:opacity-60 flex items-center justify-center gap-2">
-        {saving ? <Loader2 size={16} className="animate-spin" /> : <CheckCheck size={16} />}
-        {saving ? 'Guardando...' : 'Guardar cambios'}
-    </button>
-);
-
-// ── Tab: Features ─────────────────────────────────────────────────────────────
-
-function FeaturesTab({ settings, onSave }: { settings: TenantSettings; onSave: (s: Partial<TenantSettings>) => Promise<void> }) {
-    const [local, setLocal] = useState(settings);
-    const [saving, setSaving] = useState(false);
-    const set = (p: Partial<TenantSettings>) => setLocal(prev => ({ ...prev, ...p }));
-    const save = async () => { setSaving(true); try { await onSave(local); toast.success('Funciones actualizadas'); } finally { setSaving(false); } };
-
-    return (
-        <div className="space-y-5">
-            <div className="bg-neutral-800 border border-neutral-700 rounded-xl p-5">
-                <p className="text-sm font-bold text-foreground mb-0.5">Módulos principales</p>
-                <p className="text-xs text-neutral-500 mb-4">Activa o desactiva funcionalidades para este cliente</p>
-                <ToggleRow icon={Store} label="Tienda Online (E-commerce)" desc="Panel admin de tienda, publicación de productos y carrito público" checked={local.enableEcommerce} onChange={v => set({ enableEcommerce: v })} color="text-blue-400" />
-                <ToggleRow icon={CreditCard} label="Transbank / Pago electrónico" desc="Integración Webpay para cobros con tarjeta en el punto de venta" checked={local.enableTransbank} onChange={v => set({ enableTransbank: v })} color="text-emerald-400" />
-                <ToggleRow icon={Plug} label="Integraciones externas" desc="Shopify, WooCommerce y otras plataformas e-commerce" checked={local.enableIntegrations} onChange={v => set({ enableIntegrations: v })} color="text-amber-400" />
-            </div>
-            <div className="bg-neutral-800 border border-neutral-700 rounded-xl p-5">
-                <p className="text-sm font-bold text-foreground mb-0.5">Documentos tributarios electrónicos (DTE)</p>
-                <p className="text-xs text-neutral-500 mb-4">Módulos SII Chile — requieren configuración adicional en el cliente</p>
-                <ToggleRow icon={FileText} label="Boleta electrónica" desc="Emisión de boletas al SII" checked={local.enableBoletaDte} onChange={v => set({ enableBoletaDte: v })} color="text-purple-400" />
-                <ToggleRow icon={FileText} label="Factura electrónica" desc="Emisión de facturas al SII" checked={local.enableFacturaDte} onChange={v => set({ enableFacturaDte: v })} color="text-purple-400" />
-                <ToggleRow icon={FileText} label="Guía de despacho" desc="Guías de despacho electrónicas al SII" checked={local.enableGuiaDespachoDte} onChange={v => set({ enableGuiaDespachoDte: v })} color="text-purple-400" />
-                <ToggleRow icon={FileText} label="Nota de crédito" desc="Notas de crédito electrónicas al SII" checked={local.enableNotaCreditoDte} onChange={v => set({ enableNotaCreditoDte: v })} color="text-purple-400" />
-            </div>
-            <SaveBtn saving={saving} onClick={save} />
-        </div>
-    );
-}
-
-// ── Tab: Modules SaaS ─────────────────────────────────────────────────────────
-
-function ModulesSaaSTab({ tenantId }: { tenantId: string }) {
-    const [loading, setLoading] = useState(true);
-    const [saving, setSaving] = useState(false);
-    const [catalog, setCatalog] = useState<{id: string, code: string, name: string, description: string}[]>([]);
-    const [planModules, setPlanModules] = useState<any[]>([]);
-    const [selectedAddons, setSelectedAddons] = useState<Set<string>>(new Set());
-
-    const load = useCallback(async () => {
-        setLoading(true);
-        try {
-            const [catalogRes, tenantRes] = await Promise.all([
-                api.get('/modules'),
-                api.get(`/modules/tenant/${tenantId}`)
-            ]);
-            setCatalog(catalogRes.data);
-            setPlanModules(tenantRes.data.planModules);
-            setSelectedAddons(new Set(tenantRes.data.addonModules.map((m: any) => m.id)));
-        } catch { toast.error('Error cargando módulos SaaS'); }
-        finally { setLoading(false); }
-    }, [tenantId]);
-
-    useEffect(() => { load(); }, [load]);
-
-    const toggleAddon = (id: string) => {
-        const next = new Set(selectedAddons);
-        if (next.has(id)) next.delete(id);
-        else next.add(id);
-        setSelectedAddons(next);
-    };
-
-    const save = async () => {
-        setSaving(true);
-        try {
-            await api.post(`/modules/tenant/${tenantId}/addons`, { moduleIds: Array.from(selectedAddons) });
-            toast.success('Módulos Add-on guardados exitosamente');
-            load();
-        } catch { toast.error('Error al guardar addons'); }
-        finally { setSaving(false); }
-    };
-
-    if (loading) return <div className="flex items-center justify-center py-16 text-neutral-500 gap-2"><Loader2 size={20} className="animate-spin" />Cargando módulos...</div>;
-
-    const planModuleIds = new Set(planModules.map(m => m.id));
-
-    return (
-        <div className="space-y-5">
-            <div className="bg-neutral-800 border border-neutral-700 rounded-xl p-5">
-                <p className="text-sm font-bold text-foreground mb-0.5">Gestión de Módulos SaaS</p>
-                <p className="text-xs text-neutral-500 mb-4">Habilita módulos adicionales (Add-ons) independientemente del Plan Base del cliente.</p>
-                
-                <div className="space-y-1">
-                    {catalog.map(mod => {
-                        const isIncludedInPlan = planModuleIds.has(mod.id);
-                        const isAddonChecked = selectedAddons.has(mod.id);
-                        
-                        return (
-                            <div key={mod.id} className="flex items-center justify-between py-4 border-b border-neutral-700/50 last:border-0">
-                                <div className="flex items-center gap-3 flex-1 mr-4">
-                                    <div className="p-2 rounded-lg bg-neutral-900/60"><Plug size={16} className="text-blue-400" /></div>
-                                    <div>
-                                        <p className="text-sm font-medium text-neutral-200">
-                                            {mod.name} 
-                                            {isIncludedInPlan && <span className="ml-2 text-[10px] bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full uppercase">Incluido en Plan</span>}
-                                        </p>
-                                        <p className="text-xs text-neutral-500 mt-0.5">{mod.description || 'Sin descripción'} ({mod.code})</p>
-                                    </div>
-                                </div>
-                                {isIncludedInPlan ? (
-                                    <div className="px-3 py-1 bg-neutral-700/50 rounded-full text-xs text-neutral-400">Habilitado por Plan</div>
-                                ) : (
-                                    <Toggle checked={isAddonChecked} onChange={() => toggleAddon(mod.id)} />
-                                )}
-                            </div>
-                        );
-                    })}
-                </div>
-            </div>
-            <SaveBtn saving={saving} onClick={save} />
-        </div>
-    );
-}
-
-// ── Tab: Metrics ──────────────────────────────────────────────────────────────
-
-function MetricsTab({ tenantId }: { tenantId: string }) {
-    const [metrics, setMetrics] = useState<TenantMetrics | null>(null);
-    const [loading, setLoading] = useState(true);
-    const load = useCallback(async () => {
-        setLoading(true);
-        try { const { data } = await api.get(`/admin/tenants/${tenantId}/metrics`); setMetrics(data); }
-        catch { toast.error('Error cargando métricas'); }
-        finally { setLoading(false); }
-    }, [tenantId]);
-    useEffect(() => { load(); }, [load]);
-
-    if (loading) return <div className="flex items-center justify-center py-16 text-neutral-500 gap-2"><Loader2 size={20} className="animate-spin" />Cargando métricas...</div>;
-    if (!metrics) return null;
-
-    const lastAct = metrics.lastActivity ? new Date(metrics.lastActivity).toLocaleDateString('es-CL', { day: '2-digit', month: 'short', year: 'numeric' }) : 'Sin actividad';
-
-    return (
-        <div className="space-y-4">
-            <div className="flex justify-end">
-                <button onClick={load} className="flex items-center gap-1.5 text-xs text-neutral-400 hover:text-foreground transition-colors"><RefreshCw size={13} />Actualizar</button>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-                <MetCard icon={TrendingUp} label="Ventas este mes" value={metrics.salesThisMonth} sub="transacciones" color="text-emerald-400" />
-                <MetCard icon={DollarSign} label="Ingresos este mes" value={fmt(metrics.revenueThisMonth)} color="text-emerald-400" />
-                <MetCard icon={Package} label="Productos activos" value={metrics.productsCount} color="text-blue-400" />
-                <MetCard icon={Users} label="Usuarios" value={metrics.usersCount} color="text-purple-400" />
-                <MetCard icon={Building2} label="Sucursales" value={metrics.branchesCount} color="text-amber-400" />
-                <MetCard icon={Clock} label="Última venta" value={lastAct} color="text-neutral-400" />
-            </div>
-        </div>
-    );
-}
-
-// ── Tab: Limits ───────────────────────────────────────────────────────────────
-
-function LimitsTab({ settings, onSave }: { settings: TenantSettings; onSave: (s: Partial<TenantSettings>) => Promise<void> }) {
-    const [local, setLocal] = useState(settings);
-    const [saving, setSaving] = useState(false);
-    const set = (p: Partial<TenantSettings>) => setLocal(prev => ({ ...prev, ...p }));
-    const save = async () => { setSaving(true); try { await onSave(local); toast.success('Límites actualizados'); } finally { setSaving(false); } };
-
-    return (
-        <div className="space-y-4">
-            <div className="bg-neutral-800 border border-neutral-700 rounded-xl p-5">
-                <p className="text-sm font-bold text-foreground mb-4">Límites de recursos</p>
-                <NumInput label="Sucursales" desc="Máximo de sucursales permitidas" value={local.maxBranches} onChange={v => set({ maxBranches: v })} />
-                <NumInput label="Cajas / Terminales" desc="Terminales de venta por sucursal" value={local.maxRegisters} onChange={v => set({ maxRegisters: v })} />
-                <NumInput label="Usuarios" desc="Máximo de usuarios en el equipo" value={local.maxUsers} onChange={v => set({ maxUsers: v })} />
-            </div>
-            <div className="bg-neutral-800 border border-neutral-700 rounded-xl p-5">
-                <p className="text-sm font-bold text-foreground mb-1">Permisos especiales</p>
-                <p className="text-xs text-neutral-500 mb-4">Capacidades avanzadas potencialmente destructivas</p>
-                <ToggleRow icon={ShieldAlert} label="Eliminación permanente" desc="Permite borrar registros de forma irreversible" checked={local.canHardDelete} onChange={v => set({ canHardDelete: v })} danger color="text-red-400" />
-            </div>
-            <SaveBtn saving={saving} onClick={save} />
-        </div>
-    );
-}
-
-// ── Tab: Danger ───────────────────────────────────────────────────────────────
-
-function DangerTab({ tenant, onStatusChange }: { tenant: TenantDetail; onStatusChange: (s: 'ACTIVE' | 'SUSPENDED') => void }) {
-    const [toggling, setToggling] = useState(false);
-    const [impersonating, setImpersonating] = useState(false);
-    const adminUser = tenant.users?.find(u => u.role === 'TENANT_ADMIN') ?? tenant.users?.[0];
-
-    const handleToggle = async () => {
-        const next = tenant.status === 'ACTIVE' ? 'SUSPENDED' : 'ACTIVE';
-        if (!window.confirm(next === 'SUSPENDED' ? `¿Suspender a ${tenant.name}? El cliente no podrá acceder.` : `¿Reactivar a ${tenant.name}?`)) return;
-        setToggling(true);
-        try {
-            await api.patch(`/admin/tenants/${tenant.id}/status`, { status: next });
-            onStatusChange(next);
-            toast.success(next === 'ACTIVE' ? 'Tenant reactivado' : 'Tenant suspendido');
-        } catch { toast.error('Error al cambiar estado'); }
-        finally { setToggling(false); }
-    };
-
-    const handleImpersonate = async () => {
-        if (!adminUser?.id) { toast.error('No hay admin disponible'); return; }
-        if (!window.confirm(`¿Acceder como ${adminUser.name} (${tenant.name})?`)) return;
-        setImpersonating(true);
-        try {
-            const { data } = await api.post(`/auth/impersonate/${adminUser.id}`);
-            if (data.access_token) {
-                const prevToken = localStorage.getItem('token');
-                const prevUser = localStorage.getItem('user');
-                if (prevToken) localStorage.setItem('__prev_session_token', prevToken);
-                if (prevUser) localStorage.setItem('__prev_session_user', prevUser);
-                localStorage.setItem('token', data.access_token);
-                localStorage.setItem('user', JSON.stringify(data.user));
-                localStorage.setItem('impersonating', tenant.name);
-                window.location.href = '/dashboard';
-            }
-        } catch { toast.error('Error al impersonar'); }
-        finally { setImpersonating(false); }
-    };
-
-    return (
-        <div className="space-y-4">
-            <div className="bg-neutral-800 border border-neutral-700 rounded-xl p-5">
-                <div className="flex items-center gap-3 mb-4">
-                    <div className="p-2 rounded-lg bg-blue-500/10"><LogIn size={16} className="text-blue-400" /></div>
-                    <div>
-                        <p className="text-sm font-semibold text-foreground">Acceder como cliente</p>
-                        <p className="text-xs text-neutral-500 mt-0.5">Inicia sesión en nombre del cliente para soporte o revisión</p>
-                    </div>
-                </div>
-                {adminUser && (
-                    <div className="flex items-center gap-3 p-3 bg-neutral-900/60 rounded-xl mb-4">
-                        <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center text-xs font-bold text-blue-300 uppercase flex-shrink-0">{adminUser.name.charAt(0)}</div>
-                        <div className="min-w-0">
-                            <p className="text-sm text-foreground font-medium truncate">{adminUser.name}</p>
-                            <p className="text-xs text-neutral-500 truncate">{adminUser.email}</p>
-                        </div>
-                    </div>
-                )}
-                <button onClick={handleImpersonate} disabled={!adminUser?.id || impersonating}
-                    className="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
-                    {impersonating ? <Loader2 size={15} className="animate-spin" /> : <LogIn size={15} />}
-                    {impersonating ? 'Accediendo...' : 'Acceder como este cliente'}
-                </button>
-            </div>
-
-            <div className={`border rounded-xl p-5 ${tenant.status === 'ACTIVE' ? 'bg-red-950/20 border-red-900/40' : 'bg-emerald-950/20 border-emerald-900/40'}`}>
-                <div className="flex items-center gap-3 mb-4">
-                    <div className={`p-2 rounded-lg ${tenant.status === 'ACTIVE' ? 'bg-red-500/10' : 'bg-emerald-500/10'}`}>
-                        {tenant.status === 'ACTIVE' ? <Ban size={16} className="text-red-400" /> : <CheckCircle2 size={16} className="text-emerald-400" />}
-                    </div>
-                    <div>
-                        <p className={`text-sm font-semibold ${tenant.status === 'ACTIVE' ? 'text-red-300' : 'text-emerald-300'}`}>
-                            {tenant.status === 'ACTIVE' ? 'Suspender tenant' : 'Reactivar tenant'}
-                        </p>
-                        <p className="text-xs text-neutral-500 mt-0.5">
-                            {tenant.status === 'ACTIVE' ? 'El cliente perderá acceso inmediatamente. Sus datos se conservan.' : 'El cliente recuperará acceso completo.'}
-                        </p>
-                    </div>
-                </div>
-                <button onClick={handleToggle} disabled={toggling}
-                    className={`w-full py-2.5 rounded-xl font-bold text-sm text-white transition-colors disabled:opacity-50 flex items-center justify-center gap-2
-                        ${tenant.status === 'ACTIVE' ? 'bg-red-600 hover:bg-red-700' : 'bg-emerald-600 hover:bg-emerald-700'}`}>
-                    {toggling ? <Loader2 size={15} className="animate-spin" /> : tenant.status === 'ACTIVE' ? <Ban size={15} /> : <CheckCircle2 size={15} />}
-                    {toggling ? 'Procesando...' : tenant.status === 'ACTIVE' ? 'Suspender tenant' : 'Reactivar tenant'}
-                </button>
-            </div>
-        </div>
-    );
-}
-
-// ── Main ──────────────────────────────────────────────────────────────────────
-
+const tabs = [
+  { id: 'overview', name: 'Ficha general', icon: Building2 },
+  { id: 'users', name: 'Usuarios', icon: Users },
+  { id: 'branches', name: 'Sucursales', icon: Store },
+  { id: 'services', name: 'Servicios y módulos', icon: Zap },
+  { id: 'subscription', name: 'Suscripción y límites', icon: CreditCard },
+  { id: 'activity', name: 'Actividad', icon: FileText },
+  { id: 'actions', name: 'Acciones', icon: ShieldAlert },
+];
 export default function TenantDetailPage() {
-    const { id } = useParams<{ id: string }>();
-    const navigate = useNavigate();
-    const [tenant, setTenant] = useState<TenantDetail | null>(null);
-    const [plans, setPlans] = useState<any[]>([]);
-    const [selectedPlanId, setSelectedPlanId] = useState<string>('');
-    const [savingPlan, setSavingPlan] = useState(false);
-    const [loading, setLoading] = useState(true);
-    const [activeTab, setActiveTab] = useState<Tab>('info');
-
-    useEffect(() => {
-        if (!id) return;
-        setLoading(true);
-        Promise.all([
-            api.get(`/tenants/${id}`),
-            api.get('/plans')
-        ])
-            .then(([tenantRes, plansRes]) => {
-                setTenant(tenantRes.data);
-                setPlans(plansRes.data || []);
-            })
-            .catch(() => toast.error('Error cargando datos del tenant'))
-            .finally(() => setLoading(false));
-    }, [id]);
-
-    useEffect(() => {
-        if (tenant) {
-            setSelectedPlanId(tenant.plan?.id || '');
-        }
-    }, [tenant]);
-
-    const handleSaveSettings = useCallback(async (patch: Partial<TenantSettings>) => {
-        await api.patch(`/tenants/${id}/settings`, patch);
-        setTenant(prev => prev ? { ...prev, settings: { ...prev.settings!, ...patch } } : prev);
-    }, [id]);
-
-    const handleUpdatePlan = async () => {
-        setSavingPlan(true);
-        try {
-            const res = await api.patch(`/tenants/${id}/plan`, { planId: selectedPlanId || null });
-            setTenant(prev => prev ? { ...prev, plan: res.data.plan } : null);
-            toast.success('Plan de suscripción actualizado con éxito');
-        } catch {
-            toast.error('Error al actualizar el plan');
-        } finally {
-            setSavingPlan(false);
-        }
-    };
-
-    if (loading) return <div className="flex items-center justify-center h-64 text-neutral-500 gap-2"><Loader2 className="animate-spin" size={20} />Cargando...</div>;
-    if (!tenant) return (
-        <div className="flex flex-col items-center justify-center h-64 gap-3 text-neutral-500">
-            <XCircle size={40} className="text-red-400 opacity-50" />
-            <p>Tenant no encontrado</p>
-            <button onClick={() => navigate('/admin/tenants')} className="text-purple-400 hover:underline text-sm">← Volver</button>
-        </div>
-    );
-
-    const settings: TenantSettings = {
-        enableBoletaDte: false, enableFacturaDte: false, enableGuiaDespachoDte: false, enableNotaCreditoDte: false,
-        maxBranches: 1, maxRegisters: 1, maxUsers: 3, canHardDelete: false,
-        enableEcommerce: true, enableTransbank: false, enableIntegrations: false,
-        ...(tenant.settings ?? {}),
-    };
-
-    const TABS: { key: Tab; label: string; Icon: React.ElementType }[] = [
-        { key: 'info', label: 'Info', Icon: Info },
-        { key: 'features', label: 'Funciones (Legacy)', Icon: Zap },
-        { key: 'saas', label: 'Módulos SaaS', Icon: Plug },
-        { key: 'metrics', label: 'Métricas', Icon: BarChart3 },
-        { key: 'limits', label: 'Límites', Icon: Settings2 },
-        { key: 'danger', label: 'Acciones', Icon: ShieldAlert },
-    ];
-
-    return (
-        <div className="space-y-6 max-w-4xl mx-auto">
-            <div className="flex items-center gap-4">
-                <button onClick={() => navigate('/admin/tenants')} className="p-2 rounded-lg hover:bg-neutral-800 text-neutral-400 hover:text-white transition-colors"><ArrowLeft size={20} /></button>
-                <div className="flex-1 min-w-0">
-                    <h1 className="text-2xl font-bold text-foreground truncate">{tenant.name}</h1>
-                    <p className="text-xs text-neutral-500 mt-0.5 font-mono truncate">{tenant.id}</p>
-                </div>
-                <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold flex-shrink-0
-                    ${tenant.status === 'ACTIVE' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}`}>
-                    {tenant.status === 'ACTIVE' ? <><CheckCircle2 size={12} />Activo</> : <><XCircle size={12} />Suspendido</>}
-                </span>
-            </div>
-
-            <div className="grid grid-cols-4 gap-3">
-                {([
-                    { icon: Users, label: 'Usuarios', value: tenant._count?.users ?? 0, color: 'text-blue-400' },
-                    { icon: Building2, label: 'Sucursales', value: tenant._count?.branches ?? 0, color: 'text-purple-400' },
-                    { icon: Calendar, label: 'Plan', value: tenant.plan?.name ?? 'Sin plan', color: 'text-amber-400' },
-                    { icon: DollarSign, label: 'Precio', value: tenant.plan?.price ? fmt(tenant.plan.price) + '/mes' : '—', color: 'text-emerald-400' },
-                ] as const).map(({ icon: Icon, label, value, color }) => (
-                    <div key={label} className="bg-neutral-800 border border-neutral-700 rounded-xl p-3.5 flex items-center gap-3">
-                        <div className="p-2 rounded-lg bg-neutral-900/50"><Icon size={16} className={color} /></div>
-                        <div>
-                            <p className="text-[10px] text-neutral-500 uppercase tracking-wide">{label}</p>
-                            <p className="text-sm font-bold text-foreground">{value}</p>
-                        </div>
-                    </div>
-                ))}
-            </div>
-
-            <div className="border-b border-neutral-700">
-                <nav className="flex gap-1">
-                    {TABS.map(({ key, label, Icon }) => (
-                        <button key={key} onClick={() => setActiveTab(key)}
-                            className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors -mb-px
-                                ${activeTab === key ? 'border-purple-500 text-purple-400' : 'border-transparent text-neutral-400 hover:text-neutral-200'}`}>
-                            <Icon size={15} /><span className="hidden sm:inline">{label}</span>
-                        </button>
-                    ))}
-                </nav>
-            </div>
-
-            <div>
-                {activeTab === 'info' && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="bg-neutral-800 border border-neutral-700 rounded-xl p-5 space-y-3">
-                            <h3 className="text-sm font-semibold text-foreground mb-3">Datos del negocio</h3>
-                            {([['Nombre', tenant.name], ['Slug', tenant.slug], ['RUT', tenant.rut ?? '—'], ['Giro', tenant.giro ?? '—'], ['Teléfono', tenant.phone ?? '—'], ['Dirección', tenant.address ?? '—']] as [string, string][]).map(([l, v]) => (
-                                <div key={l} className="flex justify-between items-start">
-                                    <span className="text-xs text-neutral-500">{l}</span>
-                                    <span className="text-sm text-neutral-200 text-right max-w-[60%] break-words">{v}</span>
-                                </div>
-                            ))}
-                        </div>
-                        <div className="space-y-4">
-                            {/* Plan de Suscripción */}
-                            <div className="bg-neutral-800 border border-neutral-700 rounded-xl p-5 space-y-3">
-                                <h3 className="text-sm font-semibold text-foreground">Plan de Suscripción</h3>
-                                <p className="text-xs text-neutral-500">Cambia el plan de suscripción de este cliente para modificar sus límites y módulos.</p>
-                                <div className="flex gap-2">
-                                    <select
-                                        value={selectedPlanId}
-                                        onChange={e => setSelectedPlanId(e.target.value)}
-                                        className="flex-1 bg-neutral-900 border border-neutral-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500"
-                                    >
-                                        <option value="">Sin plan (Acceso Básico)</option>
-                                        {plans.map(p => (
-                                            <option key={p.id} value={p.id}>
-                                                {p.name} (${p.price.toLocaleString('es-CL')}/mes)
-                                            </option>
-                                        ))}
-                                    </select>
-                                    <button
-                                        onClick={handleUpdatePlan}
-                                        disabled={savingPlan || selectedPlanId === (tenant.plan?.id || '')}
-                                        className="px-4 py-2 bg-purple-600 hover:bg-purple-700 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-semibold rounded-xl transition-colors flex items-center gap-1.5"
-                                    >
-                                        {savingPlan && <Loader2 size={12} className="animate-spin" />}
-                                        Cambiar
-                                    </button>
-                                </div>
-                            </div>
-
-                            <WelcomeEmailPanel tenantId={tenant.id} active={tenant.status === 'ACTIVE'} />
-
-                            {/* Usuarios */}
-                            <div className="bg-neutral-800 border border-neutral-700 rounded-xl p-5">
-                                <h3 className="text-sm font-semibold text-foreground mb-3">Usuarios</h3>
-                                <div className="space-y-2">
-                                    {tenant.users?.length ? tenant.users.map(u => (
-                                        <div key={u.id} className="flex items-center gap-3 p-2.5 rounded-lg bg-neutral-900/50">
-                                            <div className="w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center text-xs font-bold text-purple-300 uppercase flex-shrink-0">{(u.name || u.email).charAt(0)}</div>
-                                            <div className="flex-1 min-w-0">
-                                                <p className="text-sm text-neutral-200 truncate">{u.name}</p>
-                                                <p className="text-xs text-neutral-500 truncate">{u.email}</p>
-                                            </div>
-                                            <span className="text-xs px-2 py-0.5 rounded-full bg-neutral-700 text-neutral-400 flex-shrink-0">{u.role}</span>
-                                        </div>
-                                    )) : <p className="text-sm text-neutral-500">Sin usuarios.</p>}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                )}
-                {activeTab === 'features' && <FeaturesTab settings={settings} onSave={handleSaveSettings} />}
-                {activeTab === 'saas' && id && <ModulesSaaSTab tenantId={id} />}
-                {activeTab === 'metrics' && id && <MetricsTab tenantId={id} />}
-                {activeTab === 'limits' && <LimitsTab settings={settings} onSave={handleSaveSettings} />}
-                {activeTab === 'danger' && <DangerTab tenant={tenant} onStatusChange={s => setTenant(prev => prev ? { ...prev, status: s } : prev)} />}
-            </div>
-        </div>
-    );
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const [params, setParams] = useSearchParams();
+  const requested = params.get('tab') || 'overview';
+  const tab = tabs.some(t => t.id === requested) ? requested : 'overview';
+  const [tenant, setTenant] = useState<ClientRecord | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const load = useCallback(async (signal?: AbortSignal) => {
+    if (!id) return;
+    setError('');
+    try {
+      const { data } = await api.get('/admin/tenants/' + id, { signal });
+      if (!signal?.aborted) setTenant(data);
+    } catch (err) { if (!signal?.aborted) setError(errorMessage(err, 'No se pudo cargar la ficha del cliente.')); }
+    finally { if (!signal?.aborted) setLoading(false); }
+  }, [id]);
+  useEffect(() => {
+    const controller = new AbortController();
+    setLoading(true); setTenant(null);
+    load(controller.signal);
+    return () => controller.abort();
+  }, [load]);
+  const refresh = useCallback(async () => { await load(); }, [load]);
+  if (loading) return <div className="flex items-center justify-center gap-2 py-24 text-muted-foreground"><Loader2 className="animate-spin" size={20} />Cargando ficha...</div>;
+  if (error || !tenant) return <div className={cardClass}><h1 className="text-lg font-semibold">Ficha de cliente</h1><p role="alert" className="my-4 text-red-400">{error || 'Cliente no encontrado.'}</p><div className="flex gap-2"><button className={secondaryClass} onClick={() => navigate('/admin/tenants')}>Volver a clientes</button><button className={primaryClass} onClick={refresh}>Reintentar</button></div></div>;
+  const activeUsers = tenant.users.filter(u => u.isActive).length;
+  const activeBranches = tenant.branches.filter(b => b.isActive).length;
+  const cards = [
+    { label: 'Usuarios habilitados', value: activeUsers, detail: 'de ' + tenant.users.length + ' registrados', icon: Users },
+    { label: 'Sucursales habilitadas', value: activeBranches, detail: 'de ' + tenant.branches.length + ' registradas', icon: Store },
+    { label: 'Plan de servicios', value: tenant.plan?.name || 'Acceso básico', detail: tenant.plan ? money(tenant.plan.price) + ' / mes' : 'Sin plan asignado', icon: CreditCard },
+    { label: 'Productos', value: tenant._count.products, detail: tenant._count.sales + ' ventas registradas', icon: FileText },
+  ];
+  return <div className="mx-auto max-w-7xl space-y-6">
+    <header className="flex flex-wrap items-start justify-between gap-4">
+      <div className="flex min-w-0 items-start gap-3"><button className={secondaryClass + ' shrink-0'} aria-label="Volver a clientes" onClick={() => navigate('/admin/tenants')}><ArrowLeft size={18} /></button><div className="min-w-0"><p className="text-xs font-semibold uppercase tracking-widest text-cyan-500">Gestión de clientes</p><h1 className="mt-1 text-2xl font-bold break-words">{tenant.name}</h1><p className="mt-1 text-sm text-muted-foreground">{tenant.rut || 'Sin RUT registrado'} · Registro: {new Date(tenant.createdAt).toLocaleDateString('es-CL')}</p></div></div>
+      <div className="flex items-center gap-3"><span className={'inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold ' + (tenant.status === 'ACTIVE' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-red-500/10 text-red-400')}><CheckCircle2 size={13} />{tenant.status === 'ACTIVE' ? 'Empresa activa' : 'Empresa suspendida'}</span><button className={secondaryClass} aria-label="Actualizar ficha" onClick={refresh}><RefreshCw size={15} /></button></div>
+    </header>
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">{cards.map(card => <div key={card.label} className={cardClass + ' flex items-center gap-3'}><div className="rounded-xl bg-cyan-500/10 p-3 text-cyan-500"><card.icon size={20} /></div><div className="min-w-0"><p className="text-xs text-muted-foreground">{card.label}</p><p className="mt-1 text-xl font-semibold break-words">{card.value}</p><p className="mt-1 text-xs text-muted-foreground">{card.detail}</p></div></div>)}</div>
+    <nav aria-label="Secciones de la ficha" role="tablist" className="flex gap-1 overflow-x-auto border-b border-border pb-1">{tabs.map(item => <button key={item.id} id={'tab-' + item.id} aria-controls={'panel-' + item.id} role="tab" aria-selected={tab === item.id} onClick={() => setParams({ tab: item.id })} className={'inline-flex shrink-0 items-center gap-2 rounded-t-lg border-b-2 px-4 py-3 text-sm font-medium transition-colors ' + (tab === item.id ? 'border-cyan-500 bg-cyan-500/5 text-cyan-500' : 'border-transparent text-muted-foreground hover:bg-muted hover:text-foreground')}><item.icon size={16} />{item.name}</button>)}</nav>
+    <section key={tenant.id + ':' + tab} id={'panel-' + tab} role="tabpanel" aria-labelledby={'tab-' + tab} className="min-w-0">
+      {tab === 'overview' && <div className="grid gap-5 lg:grid-cols-2"><ClientProfile key={tenant.updatedAt} tenant={tenant} onChanged={refresh} /><div className="space-y-5"><div className={cardClass}><h2 className="text-lg font-semibold">Control del cliente</h2><p className="mt-2 text-sm text-muted-foreground">Gestiona sus servicios y accesos desde esta ficha. Los usuarios del negocio consultan sus sucursales; la habilitación queda bajo tu control.</p><div className="mt-4 flex flex-wrap gap-2"><button className={secondaryClass} onClick={() => setParams({ tab: 'users' })}><Users size={15} />Gestionar usuarios</button><button className={secondaryClass} onClick={() => setParams({ tab: 'branches' })}><Store size={15} />Gestionar sucursales</button><button className={secondaryClass} onClick={() => setParams({ tab: 'services' })}><Zap size={15} />Gestionar servicios</button></div></div><WelcomeEmailPanel tenantId={tenant.id} active={tenant.status === 'ACTIVE'} /></div></div>}
+      {tab === 'users' && <TenantUsersPanel tenant={tenant} onChanged={refresh} />}
+      {tab === 'branches' && <TenantBranchesPanel tenant={tenant} onChanged={refresh} />}
+      {tab === 'services' && <TenantServicesPanel tenantId={tenant.id} />}
+      {tab === 'subscription' && <SubscriptionPanel key={tenant.updatedAt + ':' + tenant.plan?.id} tenant={tenant} onChanged={refresh} />}
+      {tab === 'activity' && <ActivityPanel tenantId={tenant.id} />}
+      {tab === 'actions' && <TenantActionsPanel tenant={tenant} onChanged={refresh} onDeleted={() => navigate('/admin/tenants', { replace: true })} />}
+    </section>
+  </div>;
+}
+function ClientProfile({ tenant, onChanged }: { tenant: ClientRecord; onChanged: () => Promise<void> }) {
+  const [form, setForm] = useState({ name: tenant.name, rut: tenant.rut || '', giro: tenant.giro || '', phone: tenant.phone || '', address: tenant.address || '' });
+  const [saving, setSaving] = useState(false);
+  const save = async (e: React.FormEvent) => {
+    e.preventDefault(); setSaving(true);
+    try { await api.patch('/admin/tenants/' + tenant.id, form); await onChanged(); toast.success('Datos del cliente actualizados.'); }
+    catch (error) { toast.error(errorMessage(error, 'No se pudieron guardar los datos.')); }
+    finally { setSaving(false); }
+  };
+  return <form onSubmit={save} className={cardClass + ' space-y-4'}><h2 className="text-lg font-semibold">Datos de la empresa</h2>{([{ key: 'name', label: 'Nombre de la empresa', max: 150 }, { key: 'rut', label: 'RUT', max: 30 }, { key: 'giro', label: 'Giro comercial', max: 150 }, { key: 'phone', label: 'Teléfono', max: 30 }, { key: 'address', label: 'Dirección', max: 300 }] as const).map(field => <label key={field.key} className="block text-sm">{field.label}<input className={fieldClass + ' mt-1'} required={field.key === 'name'} maxLength={field.max} disabled={saving} value={form[field.key]} onChange={e => setForm({ ...form, [field.key]: e.target.value })} /></label>)}<button className={primaryClass} disabled={saving}>{saving && <Loader2 size={16} className="animate-spin" />}Guardar datos</button></form>;
+}
+function SubscriptionPanel({ tenant, onChanged }: { tenant: ClientRecord; onChanged: () => Promise<void> }) {
+  const [plans, setPlans] = useState<Array<{ id: string; name: string; price: number }>>([]);
+  const [planId, setPlanId] = useState(tenant.plan?.id || '');
+  const [settings, setSettings] = useState({ maxUsers: tenant.settings?.maxUsers ?? 3, maxBranches: tenant.settings?.maxBranches ?? 1, maxRegisters: tenant.settings?.maxRegisters ?? 1 });
+  const [billing, setBilling] = useState({ billingStatus: tenant.billingStatus, nextPayment: tenant.nextPayment ? tenant.nextPayment.slice(0, 10) : '' });
+  const [saving, setSaving] = useState<string | null>(null);
+  useEffect(() => { api.get('/plans').then(res => setPlans(res.data)).catch(() => toast.error('No se pudo cargar el catálogo de planes.')); }, []);
+  const save = async (kind: 'plan' | 'limits' | 'billing') => {
+    setSaving(kind);
+    try {
+      if (kind === 'plan') await api.patch('/admin/tenants/' + tenant.id + '/plan', { planId: planId || null });
+      if (kind === 'limits') await api.patch('/admin/tenants/' + tenant.id + '/settings', settings);
+      if (kind === 'billing') await api.patch('/admin/tenants/' + tenant.id, { billingStatus: billing.billingStatus, nextPayment: billing.nextPayment ? new Date(billing.nextPayment + 'T12:00:00').toISOString() : null });
+      await onChanged(); toast.success('Configuración actualizada.');
+    } catch (error) { toast.error(errorMessage(error, 'No se pudo guardar la configuración.')); }
+    finally { setSaving(null); }
+  };
+  return <div className="grid gap-5 lg:grid-cols-2">
+    <div className={cardClass + ' space-y-4'}><h2 className="flex items-center gap-2 font-semibold text-lg"><CreditCard size={20} className="text-cyan-500" />Plan de servicios</h2><p className="text-sm text-muted-foreground">Asigna el plan base. Las decisiones manuales de Servicios y módulos se conservan.</p><select className={fieldClass} value={planId} disabled={!!saving} onChange={e => setPlanId(e.target.value)}><option value="">Sin plan · acceso básico</option>{plans.map(plan => <option key={plan.id} value={plan.id}>{plan.name} · {money(plan.price)} / mes</option>)}</select><button className={primaryClass} disabled={!!saving || planId === (tenant.plan?.id || '')} onClick={() => save('plan')}>{saving === 'plan' && <Loader2 className="animate-spin" size={16} />}Guardar plan</button></div>
+    <div className={cardClass + ' space-y-4'}><h2 className="flex items-center gap-2 font-semibold text-lg"><Settings2 size={20} className="text-cyan-500" />Límites de recursos</h2><p className="text-sm text-muted-foreground">Aplican a nuevas altas y habilitaciones. Reducirlos no desactiva recursos existentes.</p>{([{ key: 'maxUsers', label: 'Usuarios habilitados' }, { key: 'maxBranches', label: 'Sucursales habilitadas' }, { key: 'maxRegisters', label: 'Terminales por sucursal' }] as const).map(item => <label className="flex items-center justify-between gap-4 text-sm" key={item.key}>{item.label}<input className={fieldClass + ' !w-24'} type="number" min={1} max={100000} step={1} required disabled={!!saving} value={settings[item.key]} onChange={e => setSettings({ ...settings, [item.key]: Number(e.target.value) })} /></label>)}<button className={primaryClass} disabled={!!saving || Object.values(settings).some(v => !Number.isInteger(v) || v < 1)} onClick={() => save('limits')}>{saving === 'limits' && <Loader2 className="animate-spin" size={16} />}Guardar límites</button></div>
+    <div className={cardClass + ' space-y-4'}><h2 className="font-semibold text-lg">Estado de suscripción</h2><label className="block text-sm">Estado<select className={fieldClass + ' mt-1'} disabled={!!saving} value={billing.billingStatus} onChange={e => setBilling({ ...billing, billingStatus: e.target.value as ClientRecord['billingStatus'] })}><option value="ACTIVE">Al día</option><option value="PAST_DUE">Pago pendiente</option><option value="CANCELED">Cancelada</option></select></label><label className="block text-sm">Próximo vencimiento<input className={fieldClass + ' mt-1'} type="date" value={billing.nextPayment} disabled={!!saving} onChange={e => setBilling({ ...billing, nextPayment: e.target.value })} /></label><button className={primaryClass} disabled={!!saving} onClick={() => save('billing')}>{saving === 'billing' && <Loader2 size={16} className="animate-spin" />}Guardar estado</button></div>
+    <div className={cardClass}><h2 className="font-semibold text-lg mb-3">Últimas facturas de servicios</h2>{tenant.invoices.length ? <div className="divide-y divide-border">{tenant.invoices.map(invoice => <div key={invoice.id} className="flex flex-wrap items-center justify-between gap-3 py-3 text-sm"><div><strong>{money(invoice.amount)}</strong><p className="text-xs text-muted-foreground mt-1">Vence: {new Date(invoice.dueDate).toLocaleDateString('es-CL')}</p></div><span className="rounded-full bg-muted px-2.5 py-1 text-xs">{({ PAID: 'Pagada', PENDING: 'Pendiente', FAILED: 'Fallida' } as Record<string, string>)[invoice.status] || invoice.status}</span></div>)}</div> : <p className="text-sm text-muted-foreground">Sin facturas de servicios registradas.</p>}</div>
+  </div>;
+}
+function ActivityPanel({ tenantId }: { tenantId: string }) {
+  const [metrics, setMetrics] = useState<any>(null);
+  const [failed, setFailed] = useState(false);
+  useEffect(() => {
+    const controller = new AbortController();
+    api.get('/admin/tenants/' + tenantId + '/metrics', { signal: controller.signal }).then(res => setMetrics(res.data)).catch(() => { if (!controller.signal.aborted) setFailed(true); });
+    return () => controller.abort();
+  }, [tenantId]);
+  if (failed) return <p role="alert" className="text-red-400">No se pudo cargar la actividad.</p>;
+  if (!metrics) return <p className="flex items-center gap-2 text-muted-foreground"><Loader2 size={18} className="animate-spin" />Cargando actividad...</p>;
+  return <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{[
+    ['Ventas este mes', metrics.salesThisMonth], ['Ingresos este mes', money(metrics.revenueThisMonth)],
+    ['Productos activos', metrics.productsCount], ['Usuarios registrados', metrics.usersCount], ['Sucursales registradas', metrics.branchesCount],
+    ['Última venta', metrics.lastActivity ? new Date(metrics.lastActivity).toLocaleString('es-CL') : 'Sin ventas'],
+  ].map(([label, value]) => <div key={label} className={cardClass}><p className="text-sm text-muted-foreground">{label}</p><p className="mt-2 text-2xl font-semibold">{value}</p></div>)}</div>;
 }

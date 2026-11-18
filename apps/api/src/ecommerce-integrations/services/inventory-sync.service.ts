@@ -1,3 +1,4 @@
+import { integrationEnabled } from './integration-access';
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { IntegrationService } from './integration.service';
@@ -16,6 +17,7 @@ export class InventorySyncService {
       where: { id: connectionId },
     });
     if (!conn || !conn.isActive || !conn.syncInventory) return;
+    if (!await integrationEnabled(this.prisma, conn)) return;
 
     const startedAt = Date.now();
     let total = 0, synced = 0, failed = 0;
@@ -110,6 +112,7 @@ export class InventorySyncService {
 
     for (const mapping of mappings) {
       if (!mapping.connection.isActive || !mapping.connection.syncInventory) continue;
+      if (!await integrationEnabled(this.prisma, mapping.connection)) continue;
       const stock = mapping.product.inventory.reduce(
         (sum, inv) => sum + Number(inv.quantity),
         0,

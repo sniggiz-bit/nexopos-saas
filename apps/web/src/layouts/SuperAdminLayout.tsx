@@ -36,7 +36,7 @@ export default function SuperAdminLayout() {
         {
             title: 'SaaS & Clientes',
             items: [
-                { name: 'Tenants', path: '/admin/tenants', icon: Users },
+                { name: 'Clientes', path: '/admin/tenants', icon: Users },
                 { name: 'Sucursales', path: '/admin/branches', icon: GitBranch },
                 { name: 'Planes', path: '/admin/plans', icon: CreditCard },
                 { name: 'Módulos SaaS', path: '/admin/modules', icon: Activity },

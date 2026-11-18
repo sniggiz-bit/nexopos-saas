@@ -44,6 +44,8 @@ model Tenant {
   ecommerceConnections  EcommerceConnection[]
   ecommerceOrders       EcommerceOrder[]
   tenantModuleAddons    TenantModuleAddon[]
+  moduleOverrides       TenantModuleOverride[]
+  uploadAssets          UploadAsset[]
   billingStatus         BillingStatus         @default(ACTIVE)
   invoices              Invoice[]
 }
@@ -96,6 +98,8 @@ model User {
   id                 String          @id @default(uuid())
   email              String          @unique
   name               String?
+  isActive           Boolean         @default(true)
+  tokenVersion       Int             @default(0)
   password           String?
   role               UserRole        @default(MANAGER)
   tenantId           String
@@ -817,6 +821,7 @@ model Module {
 
   planModules  PlanModule[]
   tenantAddons TenantModuleAddon[]
+  tenantOverrides TenantModuleOverride[]
 }
 
 model PlanModule {
@@ -869,4 +874,23 @@ model ChatMessage {
   chatSession   ChatSession @relation(fields: [chatSessionId], references: [id], onDelete: Cascade)
 
   @@index([chatSessionId])
+}
+
+model TenantModuleOverride {
+  id String @id @default(uuid())
+  tenantId String
+  moduleId String
+  enabled Boolean
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  module Module @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  @@unique([tenantId, moduleId])
+}
+
+model UploadAsset {
+  id String @id @default(uuid())
+  tenantId String
+  path String @unique
+  createdAt DateTime @default(now())
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  @@index([tenantId])
 }

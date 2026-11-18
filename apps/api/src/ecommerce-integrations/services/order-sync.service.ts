@@ -1,3 +1,4 @@
+import { integrationEnabled } from './integration-access';
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { IntegrationService } from './integration.service';
@@ -16,6 +17,7 @@ export class OrderSyncService {
       where: { id: connectionId },
     });
     if (!conn || !conn.isActive || !conn.syncOrders) return;
+    if (!await integrationEnabled(this.prisma, conn)) return;
 
     const startedAt = Date.now();
     let synced = 0, failed = 0;
@@ -88,6 +90,7 @@ export class OrderSyncService {
     });
 
     if (!ecommerceOrder) return { message: 'Orden no encontrada' };
+    if (!ecommerceOrder.connection.isActive || !await integrationEnabled(this.prisma, ecommerceOrder.connection)) return { message: 'La integración está deshabilitada.' };
     if (ecommerceOrder.status === 'COMPLETED') return { message: 'Orden ya procesada' };
 
     try {
@@ -100,7 +103,7 @@ export class OrderSyncService {
       const tenantId = ecommerceOrder.tenantId;
 
       const branch = await this.prisma.branch.findFirst({
-        where: { tenantId, isMain: true },
+        where: { tenantId, isMain: true, isActive: true },
       });
       if (!branch) throw new Error('Sucursal principal no encontrada');
 
