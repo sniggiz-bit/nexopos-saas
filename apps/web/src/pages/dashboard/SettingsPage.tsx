@@ -1,485 +1,77 @@
-import { useState, useEffect, useRef } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { DashboardLayout } from '../../components/dashboard/DashboardLayout';
-import {
-    Save, Upload, X, Loader2, FileText,
-    CheckCircle2, Calendar, ExternalLink, RefreshCw,
-    Hash, AlertTriangle, ShieldCheck,
-} from 'lucide-react';
-import { useAuth } from '@/context/AuthContext';
-import { getDteConfig, upsertDteConfig } from '@/api/dte-config';
-import { api } from '@/lib/api';
-import { apiClient } from '@/api/client';
+import { useEffect, useRef, useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { AlertTriangle, CheckCircle2, FileText, Loader2, RefreshCw, ShieldCheck, Upload, X } from 'lucide-react';
 import toast from 'react-hot-toast';
-
-// ── Palette ────────────────────────────────────────────────────────────────────
-const C = {
-    cyan:   '#0099CC',
-    cyanA:  (a: number) => `rgba(0,153,204,${a})`,
-    green:  '#34D399',
-    greenA: (a: number) => `rgba(52,211,153,${a})`,
-    red:    '#F87171',
-    redA:   (a: number) => `rgba(248,113,113,${a})`,
-    amber:  '#F59E0B',
-    amberA: (a: number) => `rgba(245,158,11,${a})`,
-    violet: '#A78BFA',
-    violetA:(a: number) => `rgba(167,139,250,${a})`,
-    text: 'hsl(var(--foreground))',
-    muted: 'hsl(var(--muted-foreground))',
-    subtle: 'hsl(var(--muted-foreground))',
-};
-
-// ── Types ──────────────────────────────────────────────────────────────────────
-interface DteStats {
-    totalAccepted: number;
-    thisMonth:     number;
-    errorCount:    number;
-    byType:    { type: number; label: string; count: number; lastFolio: number | null }[];
-    recentDocs: {
-        id: string; folio: number; type: number; label: string;
-        pdfUrl: string | null; total: number; createdAt: string; customerName: string | null;
-    }[];
-}
-
-const DTE_TYPE: Record<number, { color: string; alpha: (a: number) => string }> = {
-    39: { color: C.cyan,   alpha: C.cyanA   },
-    33: { color: C.green,  alpha: C.greenA  },
-    61: { color: C.amber,  alpha: C.amberA  },
-    52: { color: C.violet, alpha: C.violetA },
-};
-
-const fmtPrice = (n: number) => `$${Math.round(n).toLocaleString('es-CL')}`;
-const fmtDate  = (s: string) =>
-    new Intl.DateTimeFormat('es-CL', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(s));
-
-// ── Shared input style ─────────────────────────────────────────────────────────
-const fieldStyle: React.CSSProperties = {
-    background:   C.cyanA(0.04),
-    border:       `1px solid ${C.cyanA(0.14)}`,
-    borderRadius: '10px',
-    padding:      '9px 14px',
-    fontSize:     '13px',
-    color:        C.text,
-    outline:      'none',
-    width:        '100%',
-    transition:   'border-color 150ms',
-    colorScheme: 'normal',
-};
-
-// ── Stats Panel ────────────────────────────────────────────────────────────────
-function DteStatsPanel({ tenantId }: { tenantId: string }) {
-    const { data, isLoading, refetch, isRefetching } = useQuery<DteStats>({
-        queryKey: ['dte-stats', tenantId],
-        queryFn:  async () => { const res = await apiClient.get('/dte-config/stats'); return res.data; },
-        enabled: !!tenantId,
-        staleTime: 60_000,
-    });
-
-    const { data: folios, isLoading: isLoadingFolios } = useQuery<
-        { tipodoc: number; label: string; disponibles: number; ultimoFolio: number }[]
-    >({
-        queryKey: ['dte-folios', tenantId],
-        queryFn: async () => {
-            const res = await apiClient.get('/dte-config/folios');
-            return res.data;
-        },
-        enabled: !!tenantId,
-        staleTime: 60_000,
-    });
-
-    if (isLoading || isLoadingFolios) return (
-        <div className="flex items-center gap-2 py-8 justify-center text-[13px]" style={{ color: C.muted }}>
-            <Loader2 className="w-4 h-4 animate-spin" style={{ color: C.cyan }} /> Cargando estadísticas...
-        </div>
-    );
-    if (!data) return null;
-
-    return (
-        <div className="space-y-4">
-            {/* KPIs */}
-            <div className="grid grid-cols-3 gap-3">
-                {[
-                    { icon: FileText,      label: 'Total emitidos', value: data.totalAccepted, sub: 'documentos aceptados', color: C.cyan,  alpha: C.cyanA  },
-                    { icon: Calendar,      label: 'Este mes',       value: data.thisMonth,     sub: 'documentos',           color: C.violet,alpha: C.violetA },
-                    {
-                        icon: AlertTriangle,
-                        label: 'Con error',
-                        value: data.errorCount,
-                        sub: data.errorCount > 0 ? 'requieren revisión' : 'sin errores',
-                        color: data.errorCount > 0 ? C.red   : C.green,
-                        alpha: data.errorCount > 0 ? C.redA  : C.greenA,
-                    },
-                ].map(({ icon: Icon, label, value, sub, color, alpha }) => (
-                    <div key={label} className="rounded-xl p-4 flex items-center gap-3 relative overflow-hidden transition-all duration-200"
-                        style={{ background: alpha(0.05), border: `1px solid ${alpha(0.15)}` }}
-                        onMouseEnter={e => (e.currentTarget as HTMLElement).style.borderColor = alpha(0.3)}
-                        onMouseLeave={e => (e.currentTarget as HTMLElement).style.borderColor = alpha(0.15)}>
-                        <div className="absolute -top-4 -right-4 w-16 h-16 rounded-full pointer-events-none"
-                            style={{ background: `radial-gradient(circle, ${alpha(0.1)} 0%, transparent 70%)` }} />
-                        <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
-                            style={{ background: alpha(0.12), border: `1px solid ${alpha(0.2)}` }}>
-                            <Icon className="w-4 h-4" style={{ color, filter: `drop-shadow(0 0 4px ${alpha(0.7)})` }} />
-                        </div>
-                        <div className="relative z-10">
-                            <p className="text-[9px] font-bold uppercase tracking-widest" style={{ color: alpha(0.55) }}>{label}</p>
-                            <p className="text-xl font-black tabular-nums" style={{ color: C.text }}>{value}</p>
-                            {sub && <p className="text-[10px]" style={{ color: C.muted }}>{sub}</p>}
-                        </div>
-                    </div>
-                ))}
-            </div>
-
-            {/* Folios y Autorizaciones (CAF) */}
-            {folios && folios.length > 0 && (
-                <div className="rounded-xl p-4" style={{ background: C.cyanA(0.03), border: `1px solid ${C.cyanA(0.08)}` }}>
-                    <p className="text-[10px] font-bold uppercase tracking-widest mb-3" style={{ color: C.cyanA(0.4) }}>
-                        Folios Disponibles en Lioren (CAF)
-                    </p>
-                    <div className="space-y-2">
-                        {folios.map(f => {
-                            const tc = DTE_TYPE[f.tipodoc] ?? { color: C.muted, alpha: (a: number) => `rgba(180,195,220,${a})` };
-                            const isLow = f.disponibles < 50;
-                            return (
-                                <div key={f.tipodoc} className="flex items-center justify-between py-1.5 px-2 rounded-lg transition-colors"
-                                    onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = C.cyanA(0.04)}
-                                    onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = ''}>
-                                    <div className="flex items-center gap-2">
-                                        <span className="text-[9px] font-bold px-2 py-0.5 rounded-full"
-                                            style={{ background: tc.alpha(0.12), color: tc.color, border: `1px solid ${tc.alpha(0.25)}` }}>
-                                            {f.tipodoc}
-                                        </span>
-                                        <span className="text-[13px]" style={{ color: C.text }}>{f.label}</span>
-                                    </div>
-                                    <div className="flex items-center gap-3">
-                                        <span className="text-[10px] flex items-center gap-1" style={{ color: C.muted }}>
-                                            <Hash className="w-3.5 h-3.5" />último folio: {f.ultimoFolio}
-                                        </span>
-                                        <span className={`text-[13px] font-bold tabular-nums flex items-center gap-1.5 ${isLow ? 'text-amber-500' : 'text-emerald-400'}`}>
-                                            {isLow && <AlertTriangle className="w-3.5 h-3.5" />}
-                                            {f.disponibles} disp.
-                                        </span>
-                                    </div>
-                                </div>
-                            );
-                        })}
-                    </div>
-                </div>
-            )}
-
-            {/* Por tipo */}
-            {data.byType.length > 0 && (
-                <div className="rounded-xl p-4" style={{ background: C.cyanA(0.03), border: `1px solid ${C.cyanA(0.08)}` }}>
-                    <p className="text-[10px] font-bold uppercase tracking-widest mb-3" style={{ color: C.cyanA(0.4) }}>
-                        Por tipo de documento (Emitidos)
-                    </p>
-                    <div className="space-y-2">
-                        {data.byType.map(t => {
-                            const tc = DTE_TYPE[t.type] ?? { color: C.muted, alpha: (a: number) => `rgba(180,195,220,${a})` };
-                            return (
-                                <div key={t.type} className="flex items-center justify-between py-1.5 px-2 rounded-lg transition-colors"
-                                    onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = C.cyanA(0.04)}
-                                    onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = ''}>
-                                    <div className="flex items-center gap-2">
-                                        <span className="text-[9px] font-bold px-2 py-0.5 rounded-full"
-                                            style={{ background: tc.alpha(0.12), color: tc.color, border: `1px solid ${tc.alpha(0.25)}` }}>
-                                            {t.type}
-                                        </span>
-                                        <span className="text-[13px]" style={{ color: C.text }}>{t.label}</span>
-                                    </div>
-                                    <div className="flex items-center gap-3">
-                                        <span className="text-[13px] font-bold tabular-nums" style={{ color: C.text }}>{t.count}</span>
-                                        {t.lastFolio && (
-                                            <span className="text-[10px] flex items-center gap-1" style={{ color: C.muted }}>
-                                                <Hash className="w-3 h-3" />último: {t.lastFolio}
-                                            </span>
-                                        )}
-                                    </div>
-                                </div>
-                            );
-                        })}
-                    </div>
-                </div>
-            )}
-
-            {/* Documentos recientes */}
-            {data.recentDocs.length > 0 && (
-                <div className="rounded-xl overflow-hidden" style={{ border: `1px solid ${C.cyanA(0.08)}` }}>
-                    <div className="flex items-center justify-between px-4 py-3"
-                        style={{ borderBottom: `1px solid ${C.cyanA(0.07)}`, background: C.cyanA(0.03) }}>
-                        <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: C.cyanA(0.4) }}>
-                            Últimos documentos emitidos
-                        </p>
-                        <button onClick={() => refetch()} disabled={isRefetching}
-                            className="p-1.5 rounded-lg transition-all"
-                            style={{ color: C.muted, background: C.cyanA(0.04) }}
-                            onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = C.cyan}
-                            onMouseLeave={e => (e.currentTarget as HTMLElement).style.color = C.muted}>
-                            <RefreshCw className={`w-3.5 h-3.5 ${isRefetching ? 'animate-spin' : ''}`} />
-                        </button>
-                    </div>
-                    <div>
-                        {data.recentDocs.map((doc, idx) => {
-                            const tc = DTE_TYPE[doc.type] ?? { color: C.muted, alpha: (a: number) => `rgba(180,195,220,${a})` };
-                            const isEven = idx % 2 === 0;
-                            return (
-                                <div key={doc.id} className="flex items-center gap-3 px-4 py-3 transition-colors"
-                                    style={{ borderBottom: '1px solid rgba(0,153,204,0.05)', background: isEven ? 'transparent' : C.cyanA(0.015) }}
-                                    onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = C.cyanA(0.04)}
-                                    onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = isEven ? 'transparent' : C.cyanA(0.015)}>
-                                    <span className="text-[9px] font-bold px-2 py-0.5 rounded-full shrink-0"
-                                        style={{ background: tc.alpha(0.12), color: tc.color, border: `1px solid ${tc.alpha(0.25)}` }}>
-                                        {doc.type}
-                                    </span>
-                                    <div className="flex-1 min-w-0">
-                                        <div className="flex items-center gap-1.5">
-                                            <span className="text-[13px] font-semibold" style={{ color: C.text }}>
-                                                Folio #{doc.folio}
-                                            </span>
-                                            <span className="text-[11px] truncate" style={{ color: C.muted }}>
-                                                {doc.customerName ? `· ${doc.customerName}` : `· ${doc.label}`}
-                                            </span>
-                                        </div>
-                                        <p className="text-[10px] mt-0.5" style={{ color: C.subtle }}>{fmtDate(doc.createdAt)}</p>
-                                    </div>
-                                    <div className="flex items-center gap-2 shrink-0">
-                                        <span className="text-[13px] font-bold tabular-nums" style={{ color: C.text }}>{fmtPrice(doc.total)}</span>
-                                        {doc.pdfUrl && (
-                                            <a href={doc.pdfUrl} target="_blank" rel="noreferrer" title="Ver PDF"
-                                                className="p-1.5 rounded-lg transition-all"
-                                                style={{ color: C.cyanA(0.5), background: C.cyanA(0.06) }}
-                                                onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = C.cyan}
-                                                onMouseLeave={e => (e.currentTarget as HTMLElement).style.color = C.cyanA(0.5)}>
-                                                <ExternalLink className="w-3.5 h-3.5" />
-                                            </a>
-                                        )}
-                                    </div>
-                                </div>
-                            );
-                        })}
-                    </div>
-                </div>
-            )}
-
-            {data.totalAccepted === 0 && data.errorCount === 0 && (
-                <div className="text-center py-8 rounded-xl" style={{ border: `1px dashed ${C.cyanA(0.15)}` }}>
-                    <FileText className="w-8 h-8 mx-auto mb-2" style={{ color: C.cyanA(0.2) }} />
-                    <p className="text-[13px]" style={{ color: C.muted }}>Sin documentos emitidos aún</p>
-                </div>
-            )}
-        </div>
-    );
-}
-
-// ── Main Page ──────────────────────────────────────────────────────────────────
+import { DashboardLayout } from '../../components/dashboard/DashboardLayout';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '../../components/ui/dialog';
+import { useAuth } from '../../context/AuthContext';
+import { getDteConfig, getDteStats, openDtePdf, upsertDteConfig } from '../../api/dte-config';
+import { apiClient } from '../../api/client';
+const card = 'rounded-2xl border border-border bg-card p-5 sm:p-6';
+const field = 'mt-2 w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm disabled:opacity-60';
+const button = 'inline-flex items-center justify-center gap-2 rounded-xl border border-border px-4 py-2.5 text-sm font-semibold hover:bg-muted disabled:opacity-50';
+const count = (value: number | null | undefined) => value == null ? '—' : value.toLocaleString('es-CL');
+const message = (error: any) => error.response?.data?.message || 'No se pudo completar la operación. Intenta nuevamente.';
+const states: Record<string, string> = { acepta: 'Aceptado SII', rechazo: 'Rechazado SII', reparo: 'Con reparo', pendiente: 'Pendiente SII', EMITIDO: 'Emitido; falta estado SII', PENDIENTE_SII: 'Pendiente SII', REPARO: 'Con reparo' };
 export function SettingsPage() {
-    const { user } = useAuth();
-    const queryClient = useQueryClient();
-    const tenantId    = user?.tenantId || '';
-    const fileInputRef = useRef<HTMLInputElement>(null);
-
-    const [liorenToken,     setLiorenToken]     = useState('');
-    const [liorenLogo,      setLiorenLogo]      = useState('');
-    const [dteResolution,   setDteResolution]   = useState('');
-    const [resolutionDate,  setResolutionDate]  = useState('');
-    const [uploadingLogo,   setUploadingLogo]   = useState(false);
-
-    const { data: config, isLoading } = useQuery({
-        queryKey: ['dte-config', tenantId],
-        queryFn:  () => getDteConfig(tenantId),
-        enabled:  !!tenantId,
-        staleTime: 5 * 60 * 1000,
-    });
-
-    useEffect(() => {
-        if (config) {
-            setLiorenToken(config.liorenToken || '');
-            setLiorenLogo(config.liorenLogo || '');
-            setDteResolution(config.dteResolution || '');
-            setResolutionDate(config.resolutionDate ? config.resolutionDate.split('T')[0] : '');
-        }
-    }, [config]);
-
-    const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-        const formData = new FormData();
-        formData.append('file', file);
-        setUploadingLogo(true);
-        try {
-            const { data } = await api.post('/uploads/image', formData);
-            setLiorenLogo(data.url);
-            toast.success('Logo subido correctamente');
-        } catch {
-            toast.error('Error al subir el logo');
-        } finally {
-            setUploadingLogo(false);
-            if (fileInputRef.current) fileInputRef.current.value = '';
-        }
-    };
-
-    const { mutate: saveConfig, isPending } = useMutation({
-        mutationFn: () => upsertDteConfig({ liorenToken, liorenLogo, dteResolution, resolutionDate }),
-        onSuccess: () => {
-            toast.success('Configuración guardada correctamente');
-            queryClient.invalidateQueries({ queryKey: ['dte-config', tenantId] });
-            queryClient.invalidateQueries({ queryKey: ['dte-folios', tenantId] });
-            queryClient.invalidateQueries({ queryKey: ['dte-stats', tenantId] });
-        },
-        onError: () => toast.error('Error al guardar la configuración'),
-    });
-
-    const focusField  = (e: React.FocusEvent<HTMLInputElement | HTMLSelectElement>) =>
-        (e.currentTarget.style.borderColor = C.cyanA(0.4));
-    const blurField   = (e: React.FocusEvent<HTMLInputElement | HTMLSelectElement>) =>
-        (e.currentTarget.style.borderColor = C.cyanA(0.14));
-
-    return (
-        <DashboardLayout>
-            <div className="max-w-2xl space-y-5">
-
-                {/* ── Config card ── */}
-                <div className="rounded-2xl p-6" style={{ background: 'hsl(var(--card))', border: `1px solid hsl(var(--border))` }}>
-                    <div className="flex items-center gap-3 mb-5">
-                        <div className="w-9 h-9 rounded-xl flex items-center justify-center"
-                            style={{ background: C.cyanA(0.1), border: `1px solid ${C.cyanA(0.2)}` }}>
-                            <ShieldCheck className="w-4 h-4" style={{ color: C.cyan, filter: `drop-shadow(0 0 4px ${C.cyanA(0.7)})` }} />
-                        </div>
-                        <div>
-                            <h3 className="text-[15px] font-bold" style={{ color: C.text }}>Configuración DTE (Lioren)</h3>
-                            <p className="text-[12px]" style={{ color: C.muted }}>
-                                Integración para emitir documentos tributarios electrónicos (SII Chile).
-                            </p>
-                        </div>
-                    </div>
-
-                    {isLoading ? (
-                        <div className="flex items-center gap-2 py-6 text-[13px]" style={{ color: C.muted }}>
-                            <Loader2 className="w-4 h-4 animate-spin" style={{ color: C.cyan }} /> Cargando configuración...
-                        </div>
-                    ) : (
-                        <div className="space-y-5">
-                            {/* Token */}
-                            <div>
-                                <label className="block text-[11px] font-bold uppercase tracking-widest mb-2" style={{ color: C.cyanA(0.5) }}>
-                                    Token de Lioren
-                                </label>
-                                <input type="password" value={liorenToken}
-                                    onChange={e => setLiorenToken(e.target.value)}
-                                    placeholder="Ingresa tu token de API"
-                                    style={fieldStyle}
-                                    onFocus={focusField} onBlur={blurField} />
-                            </div>
-
-                            {/* Logo */}
-                            <div>
-                                <label className="block text-[11px] font-bold uppercase tracking-widest mb-2" style={{ color: C.cyanA(0.5) }}>
-                                    Logo para documentos
-                                </label>
-                                {liorenLogo ? (
-                                    <div className="flex items-center gap-3 p-3 rounded-xl"
-                                        style={{ background: C.cyanA(0.04), border: `1px solid ${C.cyanA(0.14)}` }}>
-                                        <img src={liorenLogo} alt="Logo DTE" className="h-12 w-auto object-contain rounded-lg"
-                                            onError={e => (e.currentTarget.style.display = 'none')} />
-                                        <div className="flex-1 min-w-0">
-                                            <p className="text-[11px] truncate" style={{ color: C.muted }}>{liorenLogo}</p>
-                                        </div>
-                                        <button type="button" onClick={() => setLiorenLogo('')}
-                                            className="p-1.5 rounded-lg transition-all"
-                                            style={{ color: C.muted }}
-                                            onMouseEnter={e => {
-                                                (e.currentTarget as HTMLElement).style.color = C.red;
-                                                (e.currentTarget as HTMLElement).style.background = C.redA(0.1);
-                                            }}
-                                            onMouseLeave={e => {
-                                                (e.currentTarget as HTMLElement).style.color = C.muted;
-                                                (e.currentTarget as HTMLElement).style.background = '';
-                                            }}>
-                                            <X className="w-4 h-4" />
-                                        </button>
-                                    </div>
-                                ) : (
-                                    <button type="button" onClick={() => fileInputRef.current?.click()} disabled={uploadingLogo}
-                                        className="w-full flex items-center justify-center gap-2 px-4 py-4 rounded-xl text-[13px] transition-all disabled:opacity-50"
-                                        style={{ border: `1.5px dashed ${C.cyanA(0.2)}`, color: C.muted }}
-                                        onMouseEnter={e => {
-                                            (e.currentTarget as HTMLElement).style.borderColor = C.cyanA(0.4);
-                                            (e.currentTarget as HTMLElement).style.color = C.cyan;
-                                            (e.currentTarget as HTMLElement).style.background = C.cyanA(0.04);
-                                        }}
-                                        onMouseLeave={e => {
-                                            (e.currentTarget as HTMLElement).style.borderColor = C.cyanA(0.2);
-                                            (e.currentTarget as HTMLElement).style.color = C.muted;
-                                            (e.currentTarget as HTMLElement).style.background = '';
-                                        }}>
-                                        {uploadingLogo
-                                            ? <><Loader2 className="w-4 h-4 animate-spin" />Subiendo...</>
-                                            : <><Upload className="w-4 h-4" />Subir logo <span className="text-[11px]" style={{ color: C.subtle }}>(JPG, PNG — máx 5MB)</span></>}
-                                    </button>
-                                )}
-                                <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp"
-                                    className="hidden" onChange={handleLogoUpload} />
-                                <p className="text-[11px] mt-1.5" style={{ color: C.subtle }}>
-                                    Aparece en el encabezado de boletas y facturas electrónicas
-                                </p>
-                            </div>
-
-                            {/* Resolución */}
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-[11px] font-bold uppercase tracking-widest mb-2" style={{ color: C.cyanA(0.5) }}>
-                                        Número de Resolución SII
-                                    </label>
-                                    <input type="text" value={dteResolution}
-                                        onChange={e => setDteResolution(e.target.value)}
-                                        placeholder="Ej: 80"
-                                        style={fieldStyle}
-                                        onFocus={focusField} onBlur={blurField} />
-                                </div>
-                                <div>
-                                    <label className="block text-[11px] font-bold uppercase tracking-widest mb-2" style={{ color: C.cyanA(0.5) }}>
-                                        Fecha de Resolución
-                                    </label>
-                                    <input type="date" value={resolutionDate}
-                                        onChange={e => setResolutionDate(e.target.value)}
-                                        style={fieldStyle}
-                                        onFocus={focusField} onBlur={blurField} />
-                                </div>
-                            </div>
-
-                            {/* Guardar */}
-                            <div className="pt-1">
-                                <button onClick={() => saveConfig()} disabled={isPending || !tenantId}
-                                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-[13px] font-bold transition-all duration-150 disabled:opacity-50"
-                                    style={{ background: 'linear-gradient(135deg,rgba(0,153,204,0.25) 0%,rgba(0,153,204,0.1) 100%)', border: `1px solid ${C.cyanA(0.35)}`, color: C.cyan }}
-                                    onMouseEnter={e => !isPending && ((e.currentTarget as HTMLElement).style.background = 'linear-gradient(135deg,rgba(0,153,204,0.35) 0%,rgba(0,153,204,0.18) 100%)')}
-                                    onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'linear-gradient(135deg,rgba(0,153,204,0.25) 0%,rgba(0,153,204,0.1) 100%)'}>
-                                    {isPending
-                                        ? <><Loader2 className="w-4 h-4 animate-spin" />Guardando...</>
-                                        : <><Save className="w-4 h-4" />Guardar configuración</>}
-                                </button>
-                            </div>
-                        </div>
-                    )}
-                </div>
-
-                {/* ── Stats card ── */}
-                <div className="rounded-2xl p-6" style={{ background: 'hsl(var(--card))', border: `1px solid hsl(var(--border))` }}>
-                    <div className="flex items-center justify-between mb-5">
-                        <div>
-                            <h3 className="text-[15px] font-bold" style={{ color: C.text }}>Actividad DTE</h3>
-                            <p className="text-[12px] mt-0.5" style={{ color: C.muted }}>
-                                Documentos tributarios emitidos con tu cuenta
-                            </p>
-                        </div>
-                        <span className="flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-full"
-                            style={{ background: C.greenA(0.1), color: C.green, border: `1px solid ${C.greenA(0.2)}` }}>
-                            <CheckCircle2 className="w-3.5 h-3.5" />Lioren
-                        </span>
-                    </div>
-                    <DteStatsPanel tenantId={tenantId} />
-                </div>
-
-            </div>
-        </DashboardLayout>
-    );
+  const { user } = useAuth(); const query = useQueryClient();
+  const tenantId = user?.tenantId || ''; const admin = ['TENANT_ADMIN', 'SUPER_ADMIN'].includes(user?.role || '');
+  const configKey = ['dte-config', tenantId]; const statsKey = ['dte-stats', tenantId];
+  const configQuery = useQuery({ queryKey: configKey, queryFn: () => getDteConfig(tenantId), enabled: admin && !!tenantId });
+  const statsQuery = useQuery({ queryKey: statsKey, queryFn: () => getDteStats(), enabled: admin && !!tenantId, staleTime: 60000, retry: 1 });
+  const config = configQuery.data; const data = statsQuery.data; const connection = data?.connection;
+  const [token, setToken] = useState(''); const [logo, setLogo] = useState(''); const [uploading, setUploading] = useState(false);
+  const [syncOpen, setSyncOpen] = useState(false); const [acknowledged, setAcknowledged] = useState(false); const [refreshing, setRefreshing] = useState(false); const [verifying, setVerifying] = useState<string | null>(null);
+  const input = useRef<HTMLInputElement>(null);
+  useEffect(() => { if (config) setLogo(config.liorenLogo || ''); }, [config]);
+  const save = useMutation({
+    mutationFn: () => upsertDteConfig({ liorenLogo: logo, ...(token.trim() ? { liorenToken: token.trim() } : {}) }),
+    onSuccess: async () => { setToken(''); toast.success('Configuración guardada. Se consultará la empresa del token.'); await Promise.all([query.invalidateQueries({ queryKey: configKey }), query.invalidateQueries({ queryKey: statsKey })]); },
+    onError: error => toast.error(message(error)),
+  });
+  const sync = useMutation({
+    mutationFn: () => apiClient.post('/dte-config/sync-issuer', { expectedRut: connection?.company?.rut }),
+    onSuccess: async () => { setSyncOpen(false); toast.success('RUT y resolución sincronizados desde Lioren.'); await Promise.all([query.invalidateQueries({ queryKey: configKey }), query.invalidateQueries({ queryKey: statsKey })]); },
+    onError: error => toast.error(message(error)),
+  });
+  const refresh = async () => { setRefreshing(true); try { query.setQueryData(statsKey, await getDteStats(true)); } catch (error) { toast.error(message(error)); } finally { setRefreshing(false); } };
+  const verify = async (id: string) => { setVerifying(id); try { const { data } = await apiClient.post('/sales/' + id + '/dte/verify', {}, { timeout: 30000 }); toast.success(data.status === 'ACEPTADO' ? 'Aceptación confirmada por Lioren.' : 'Estado actualizado: ' + (states[data.status] || data.status)); await query.invalidateQueries({ queryKey: statsKey }); } catch (error) { toast.error(message(error)); } finally { setVerifying(null); } };
+  const upload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]; if (!file) return; setUploading(true);
+    try { const form = new FormData(); form.append('file', file); const { data } = await apiClient.post('/uploads/image', form); setLogo(data.url); toast.success('Logo subido. Guarda la configuración para aplicarlo.'); } catch (error) { toast.error(message(error)); } finally { setUploading(false); if (input.current) input.current.value = ''; }
+  };
+  if (!admin) return <DashboardLayout><div className={card}><h1 className="text-xl font-bold">Configuración tributaria</h1><p className="mt-3 text-muted-foreground">El administrador de tu empresa gestiona la conexión y los documentos de Lioren.</p></div></DashboardLayout>;
+  return <DashboardLayout><div className="mx-auto max-w-5xl space-y-6">
+    <header className="flex flex-wrap items-start justify-between gap-3"><div><p className="text-xs font-bold uppercase tracking-widest text-cyan-500">Facturación electrónica</p><h1 className="mt-1 text-2xl font-bold">Conexión con Lioren</h1><p className="mt-2 text-sm text-muted-foreground">Empresa emisora, folios y documentos tributarios de tu cuenta.</p></div><button className={button} onClick={refresh} disabled={refreshing || statsQuery.isFetching}><RefreshCw size={16} className={refreshing || statsQuery.isFetching ? 'animate-spin' : ''} />Actualizar datos</button></header>
+    {statsQuery.isLoading && <p className="flex items-center gap-2 py-6 text-muted-foreground"><Loader2 size={18} className="animate-spin" />Consultando Lioren y sus documentos...</p>}
+    {(statsQuery.isError || configQuery.isError) && <div role="alert" className="rounded-xl border border-red-500/25 bg-red-500/5 p-4 text-sm">No se pudo cargar toda la información. No se muestran ceros en lugar de consultas fallidas.<button className={button + ' ml-3'} onClick={() => { configQuery.refetch(); statsQuery.refetch(); }}>Reintentar</button></div>}
+    {connection && <section className={card}>
+      <div className="flex flex-wrap items-start justify-between gap-3"><div className="flex items-center gap-3"><ShieldCheck size={24} className="text-cyan-500" /><h2 className="text-lg font-semibold">Validación de la empresa</h2></div><span className={'rounded-full px-3 py-1 text-xs font-bold ' + (connection.state === 'ready' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-amber-500/10 text-amber-500')}>{connection.state === 'ready' ? 'Datos verificados' : connection.connected ? 'Conectado · requiere revisión' : 'Conexión sin validar'}</span></div>
+      <p role={connection.state !== 'ready' ? 'alert' : undefined} className="mt-4 text-sm text-muted-foreground">{connection.message}</p>
+      {connection.company && <><div className="mt-5 grid gap-4 sm:grid-cols-2"><div><p className="text-xs text-muted-foreground">Empresa asociada al token</p><p className="mt-1 font-semibold break-words">{connection.company.name}</p><p className="text-sm">RUT {connection.company.rut}</p></div><div><p className="text-xs text-muted-foreground">RUT registrado en NexoPOS</p><p className="mt-1 font-semibold">{connection.registeredRut || 'Sin registrar'}</p><p className={'mt-1 text-xs ' + (connection.identityMatches ? 'text-emerald-500' : 'text-amber-500')}>{connection.identityMatches ? 'La identidad coincide' : 'La identidad no coincide'}</p></div><div><p className="text-xs text-muted-foreground">Resolución informada por Lioren</p><p className="mt-1 text-sm">N.º {connection.company.resolution || 'Sin informar'} · {connection.company.resolutionDate || 'Sin fecha'}</p></div><div><p className="text-xs text-muted-foreground">Certificado digital</p><p className={'mt-1 text-sm ' + (connection.certificateValid ? 'text-emerald-500' : 'text-amber-500')}>{connection.certificateValid ? 'Dentro de las fechas de vigencia' : 'Vigencia no confirmada'}</p><p className="mt-1 text-xs text-muted-foreground">Hasta {connection.company.validTo?.slice(0, 10) || 'fecha no informada'}</p></div></div>
+      {(!connection.identityMatches || !connection.resolutionMatches) && <button className={button + ' mt-5 border-cyan-500/30 text-cyan-500'} onClick={() => { setAcknowledged(false); setSyncOpen(true); }}>Usar empresa del token</button>}</>}
+      <p className="mt-5 text-xs text-muted-foreground">Consulta: {new Date(connection.checkedAt).toLocaleString('es-CL', { timeZone: 'America/Santiago' })}. La conexión validada no sustituye la revisión de cada servicio y sus folios.</p>
+    </section>}
+    <section className={card}><h2 className="font-semibold text-lg">Credencial y presentación</h2>
+      {configQuery.isLoading ? <p className="py-5 text-muted-foreground">Cargando configuración...</p> : !configQuery.isError && <form className="mt-4 space-y-5" onSubmit={event => { event.preventDefault(); save.mutate(); }}>
+        <label className="block text-sm font-medium">{config?.hasToken ? 'Reemplazar token de Lioren' : 'Token de Lioren'}<input type="password" autoComplete="off" value={token} onChange={event => setToken(event.target.value)} className={field} placeholder={config?.hasToken ? 'Token guardado. Deja este campo vacío para conservarlo.' : 'Ingresa el token de tu empresa'} disabled={save.isPending} /></label>
+        <p className="text-xs text-muted-foreground">El token guardado no se muestra ni se descarga al navegador. Una credencial nueva se valida antes de sustituir la actual.</p>
+        <div><p className="text-sm font-medium">Logo de documentos internos</p><p className="mt-1 text-xs text-muted-foreground">El PDF tributario oficial conserva la presentación configurada en Lioren.</p>{logo ? <div className="mt-3 flex items-center gap-3"><img src={logo} alt="Logo de documentos" className="h-12 max-w-40 object-contain" /><button className={button} type="button" onClick={() => setLogo('')} aria-label="Quitar logo"><X size={16} /></button></div> : <button className={button + ' mt-3'} type="button" disabled={uploading} onClick={() => input.current?.click()}>{uploading ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}Subir logo</button>}<input ref={input} className="hidden" type="file" accept="image/png,image/jpeg,image/webp" onChange={upload} /></div>
+        <div className="grid gap-4 sm:grid-cols-2"><label className="text-sm">Resolución registrada<input className={field} readOnly value={config?.dteResolution || ''} /></label><label className="text-sm">Fecha registrada<input className={field} readOnly value={config?.resolutionDate?.slice(0, 10) || ''} /></label></div><p className="text-xs text-muted-foreground">El RUT y la resolución se actualizan mediante “Usar empresa del token”.</p>
+        <button className={button + ' bg-cyan-600 text-white hover:bg-cyan-500'} disabled={save.isPending || (!config?.hasToken && !token.trim())}>{save.isPending && <Loader2 size={16} className="animate-spin" />}Guardar configuración</button>
+      </form>}
+    </section>
+    {connection && <section className={card}><h2 className="font-semibold text-lg">Servicios y folios</h2><p className="mt-2 text-sm text-muted-foreground">Los números disponibles y el próximo folio provienen de Lioren. El superadmin gestiona la habilitación de cada servicio en NexoPOS.</p><div className="mt-5 overflow-x-auto"><table className="w-full min-w-[640px] text-left text-sm"><thead className="text-xs uppercase text-muted-foreground"><tr><th className="py-3 pr-4">Documento</th><th>En Lioren</th><th>En NexoPOS</th><th>Disponibles</th><th>Próximo folio</th><th>Emisión</th></tr></thead><tbody>{connection.types.map(type => <tr key={type.type} className="border-t border-border"><td className="py-4 pr-4 font-medium">{type.label}<span className="ml-2 text-xs text-muted-foreground">{type.type}</span></td><td>{type.providerActive == null ? 'Sin consulta' : type.providerActive ? 'Tipo activo' : 'No informado'}</td><td>{type.localEnabled ? 'Habilitado' : 'Deshabilitado'}</td><td className="tabular-nums">{count(type.available)}</td><td className="tabular-nums">{count(type.nextFolio)}</td><td className={type.ready ? 'text-emerald-500' : 'text-amber-500'}>{type.ready ? 'Disponible' : 'No disponible'}</td></tr>)}</tbody></table></div><p className="mt-4 text-xs text-muted-foreground">Un guion indica que Lioren no informó el dato. Cero significa que la consulta confirmó que no hay folios. Los tipos activos no acreditan por sí solos todos los permisos de emisión contratados.</p></section>}
+    {data && <><section className={card}><div className="flex items-center gap-3"><FileText size={22} className="text-cyan-500" /><div><h2 className="font-semibold text-lg">Actividad confirmada por Lioren</h2><p className="text-sm text-muted-foreground">Mes {data.provider.month} · Fechas de Chile · Todos los documentos de la empresa del token.</p></div></div>{data.provider.partial && <p role="alert" className="mt-4 rounded-xl bg-amber-500/10 p-3 text-sm text-amber-500">La consulta está incompleta. Los totales no disponibles se muestran con un guion.</p>}
+      <div className="mt-5 grid gap-3 sm:grid-cols-3">{[{ label: 'Documentos del mes', value: data.provider.total }, { label: 'Aceptados por el SII', value: data.provider.accepted }, { label: 'Rechazados por el SII', value: data.provider.rejected }].map(metric => <div className="rounded-xl border border-border p-4" key={metric.label}><p className="text-xs text-muted-foreground">{metric.label}</p><p className="mt-2 text-2xl font-bold tabular-nums">{count(metric.value)}</p></div>)}</div>
+      <div className="mt-5 space-y-2">{data.provider.types.map(type => <div className="flex flex-wrap justify-between gap-2 border-t border-border py-3 text-sm" key={type.type}><span>{type.label}</span><span>{count(type.total)} documentos · {count(type.accepted)} aceptados{type.message ? ' · Consulta incompleta' : ''}</span></div>)}</div>
+      {data.provider.recent.length > 0 && <div className="mt-5"><h3 className="text-sm font-semibold">Documentos del mes</h3><div className="mt-2 divide-y divide-border">{data.provider.recent.map(doc => <div key={doc.type + ':' + doc.folio} className="flex flex-wrap items-center justify-between gap-3 py-4 text-sm"><div><p className="font-medium">{doc.label} · Folio {doc.folio}</p><p className="mt-1 text-xs text-muted-foreground">{doc.date} · {states[doc.state] || doc.state}{doc.total != null ? ' · $' + doc.total.toLocaleString('es-CL') : ''}</p></div><button className={button} disabled={!connection?.identityMatches} onClick={() => openDtePdf('/dte-config/documents/' + doc.type + '/' + doc.folio + '/pdf').catch(error => toast.error(message(error)))}>Ver PDF oficial</button></div>)}</div></div>}
+      <p className="mt-4 text-xs text-muted-foreground">Consulta: {new Date(data.provider.checkedAt).toLocaleString('es-CL', { timeZone: 'America/Santiago' })}.</p>
+    </section>
+    <section className={card}><h2 className="font-semibold text-lg">Control de registros de NexoPOS</h2><p className="mt-2 text-sm text-muted-foreground">Historial local. Estos valores no se suman a los documentos confirmados por Lioren.</p><div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">{[{ label: 'Confirmados en Lioren', value: data.local.confirmed }, { label: 'Por conciliar', value: data.local.unverified }, { label: 'Con error o bloqueados', value: data.local.errors }, { label: 'Pendientes de estado', value: data.local.pending }].map(metric => <div className="rounded-xl border border-border p-3" key={metric.label}><p className="text-xs text-muted-foreground">{metric.label}</p><p className="mt-2 text-2xl font-bold">{metric.value}</p></div>)}</div>
+    {data.local.unverified > 0 && <p className="mt-4 flex items-start gap-2 text-sm text-amber-500"><AlertTriangle size={18} className="shrink-0" />Hay registros históricos sin confirmación verificable. Se conserva el historial y no se reemiten automáticamente.</p>}
+    {data.local.reviewDocs.map(doc => <div key={doc.id} className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4 text-sm"><p>Tipo {doc.dteType} · Folio {doc.dteFolio} · {states[doc.dteStatus] || doc.dteStatus}</p><button className={button} disabled={!!verifying} onClick={() => verify(doc.id)}>{verifying === doc.id && <Loader2 size={16} className="animate-spin" />}Consultar estado en Lioren</button></div>)}
+    </section></>}
+    <Dialog open={syncOpen} onOpenChange={value => { if (!sync.isPending) setSyncOpen(value); }}><DialogContent><DialogHeader><DialogTitle>Usar empresa del token de Lioren</DialogTitle><DialogDescription>Se actualizarán únicamente el RUT y los datos de resolución de esta empresa en NexoPOS. Los documentos anteriores se conservarán.</DialogDescription></DialogHeader><div className="space-y-3 text-sm"><p className="font-semibold">{connection?.company?.name}</p><p>RUT: {connection?.company?.rut}</p><p>Resolución: {connection?.company?.resolution} · {connection?.company?.resolutionDate}</p><label className="flex items-start gap-3"><input type="checkbox" checked={acknowledged} disabled={sync.isPending} onChange={event => setAcknowledged(event.target.checked)} /><span>Confirmo que esta es la empresa que debe emitir los documentos.</span></label><div className="flex flex-wrap justify-end gap-2"><button className={button} disabled={sync.isPending} onClick={() => setSyncOpen(false)}>Cancelar</button><button className={button + ' bg-cyan-600 text-white'} disabled={!acknowledged || sync.isPending} onClick={() => sync.mutate()}>{sync.isPending ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle2 size={16} />}Sincronizar empresa emisora</button></div></div></DialogContent></Dialog>
+  </div></DashboardLayout>;
 }

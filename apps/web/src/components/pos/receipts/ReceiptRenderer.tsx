@@ -1,4 +1,5 @@
 import React from 'react';
+import { openDtePdf } from '@/api/dte-config';
 import { renderToString } from 'react-dom/server';
 import { Sale } from '@/api/sales';
 import { Ticket80mm } from './Ticket80mm';
@@ -34,8 +35,7 @@ export const ReceiptRenderer: React.FC<ReceiptRendererProps> = ({ sale, format, 
 export function isRealDtePdf(url?: string | null): boolean {
     if (!url) return false;
     if (url.includes('ejemplo-mock')) return false;
-    // Lioren real PDFs come from lioren.cl or a real endpoint
-    return true;
+    return /^\/api\/sales\/[a-zA-Z0-9-]+\/dte\/pdf$/.test(url);
 }
 
 /**
@@ -55,8 +55,8 @@ export async function printSaleAction(
     printBytes?: (data: Uint8Array) => Promise<boolean>,
 ): Promise<void> {
     // ── 1. Si hay PDF oficial del DTE, abrir en nueva pestaña (tiene TED) ──
-    if (isRealDtePdf(sale.dtePdfUrl)) {
-        window.open(sale.dtePdfUrl!, '_blank', 'noopener,noreferrer');
+    if (sale.dteVerifiedAt && sale.dteProviderId && isRealDtePdf(sale.dtePdfUrl)) {
+        await openDtePdf('/sales/' + sale.id + '/dte/pdf');
         return;
     }
 

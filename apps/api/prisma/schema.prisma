@@ -46,6 +46,7 @@ model Tenant {
   tenantModuleAddons    TenantModuleAddon[]
   moduleOverrides       TenantModuleOverride[]
   uploadAssets          UploadAsset[]
+  dteSubmissions        DteSubmission[]
   billingStatus         BillingStatus         @default(ACTIVE)
   invoices              Invoice[]
 }
@@ -271,6 +272,11 @@ model Sale {
   status             String     @default("COMPLETED") // COMPLETED, PRE_SALE
   createdAt          DateTime   @default(now())
   updatedAt          DateTime   @updatedAt
+  dteProviderId      String?
+  dteIssuerRut       String?
+  dteIssuedAt        DateTime?
+  dteVerifiedAt      DateTime?
+  dteSubmission      DteSubmission?
   dteFolio           Int?
   dteStatus          String     @default("PENDING")
   dteType            Int        @default(39)
@@ -404,6 +410,7 @@ model Customer {
   giro      String?
   address   String?
   comuna    String?
+  city      String?
   email     String?
   phone     String?
   createdAt DateTime @default(now())
@@ -892,5 +899,18 @@ model UploadAsset {
   path String @unique
   createdAt DateTime @default(now())
   tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  @@index([tenantId])
+}
+
+model DteSubmission {
+  id        String   @id @default(uuid())
+  saleId    String   @unique
+  tenantId  String
+  tokenHash String
+  payload   Json
+  createdAt DateTime @default(now())
+  sale      Sale     @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
   @@index([tenantId])
 }

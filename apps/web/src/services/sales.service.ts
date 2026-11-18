@@ -11,7 +11,7 @@ import { apiClient } from '../api/client';
 // Strict TypeScript types
 // ─────────────────────────────────────────────
 
-export type SaleStatus = 'COMPLETED' | 'PRE_SALE' | 'CANCELLED';
+export type SaleStatus = 'COMPLETED' | 'PRE_SALE' | 'CANCELLED' | 'PENDING_CREDIT_NOTE' | 'CREDIT_NOTE';
 
 export type PaymentMethodKey =
     | 'EFECTIVO'
@@ -62,6 +62,8 @@ export interface SaleRecord {
     userId?: string;
     total: number;
     status: SaleStatus;
+    dteVerifiedAt?: string | null;
+    dteProviderId?: string | null;
     dteFolio?: number | null;
     dteStatus?: string | null;
     dteType?: number | null;

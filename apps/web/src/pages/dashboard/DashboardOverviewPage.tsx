@@ -14,6 +14,7 @@ import { useQuery } from '@tanstack/react-query';
 import { getSales } from '../../api/sales';
 import { getDashboardAnalytics } from '../../api/dashboard';
 import { apiClient } from '../../api/client';
+import { getDteStats } from '../../api/dte-config';
 import { useTheme } from '../../context/ThemeContext';
 import {
     Chart as ChartJS,
@@ -67,14 +68,10 @@ export function DashboardOverviewPage() {
         staleTime: 5 * 60 * 1000,
     });
 
+    const dteAdmin = ['TENANT_ADMIN', 'SUPER_ADMIN'].includes(user?.role || '');
     const { data: dteStats } = useQuery({
-        queryKey: ['dte-stats'],
-        queryFn: async () => {
-            const res = await apiClient.get('/dte-config/stats');
-            return res.data as { totalAccepted: number; thisMonth: number; errorCount: number };
-        },
-        enabled: !!user,
-        staleTime: 2 * 60 * 1000,
+        queryKey: ['dte-stats', user?.tenantId], queryFn: () => getDteStats(),
+        enabled: !!user && dteAdmin, staleTime: 60000, retry: 1,
     });
 
     const { data: webOrders } = useQuery({
@@ -318,38 +315,38 @@ export function DashboardOverviewPage() {
                 </div>
 
                 {/* ── Fila 2b: KPIs DTE Lioren ── */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {dteAdmin && <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                     <DteMiniCard
-                        title="DTE Emitidos"
-                        value={dteStats?.totalAccepted ?? 0}
-                        sub="total aceptados"
+                        title="Aceptados SII este mes"
+                        value={dteStats?.provider.accepted ?? '—'}
+                        sub="consultados en Lioren"
                         accent={CYAN}
                         accentAlpha={CYAN_ALPHA}
                     />
                     <DteMiniCard
                         title="DTE Este Mes"
-                        value={dteStats?.thisMonth ?? 0}
-                        sub="documentos del mes"
+                        value={dteStats?.provider.total ?? '—'}
+                        sub="documentos en Lioren"
                         accent="#A78BFA"
                         accentAlpha={(a) => `rgba(167,139,250,${a})`}
                     />
                     <DteMiniCard
-                        title="DTE Con Error"
-                        value={dteStats?.errorCount ?? 0}
-                        sub={dteStats?.errorCount ? 'requieren revisión' : 'sin errores'}
-                        accent={dteStats?.errorCount ? '#F59E0B' : '#34D399'}
-                        accentAlpha={dteStats?.errorCount
+                        title="Revisión local DTE"
+                        value={dteStats?.local.errors ?? '—'}
+                        sub={dteStats?.local.errors ? 'requieren revisión' : 'sin errores'}
+                        accent={dteStats?.local.errors ? '#F59E0B' : '#34D399'}
+                        accentAlpha={dteStats?.local.errors
                             ? (a: number) => `rgba(245,158,11,${a})`
                             : (a: number) => `rgba(52,211,153,${a})`}
-                        alert={!!(dteStats?.errorCount && dteStats.errorCount > 0)}
+                        alert={!!(dteStats?.local.errors && dteStats.errorCount > 0)}
                     />
                     <MiniKpiCard
                         title="Config. DTE"
-                        value="Lioren"
+                        value={dteStats?.connection.state === 'ready' ? 'Validada' : 'Revisar'}
                         icon={FileText}
                         href="/dashboard/settings"
                     />
-                </div>
+                </div>}
 
                 {/* ── Fila 4: Tablas de detalle ── */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">

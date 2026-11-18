@@ -22,6 +22,10 @@ export class CreateCustomerDto {
   comuna?: string;
 
   @IsOptional()
+  @IsString()
+  city?: string;
+
+  @IsOptional()
   @IsEmail()
   email?: string;
 

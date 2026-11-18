@@ -62,9 +62,8 @@ export const Ticket58mm: React.FC<Ticket58mmProps> = ({
     // Si la DB tiene rut/giro, usar esa data. Si no, usar fallback simple.
     const displayName = tenant?.name || tenantName || 'NEXOPOS';
     const dteType = sale.dteType; // 33, 39, 52, 61
-    const isDte = !!sale.dteFolio;
-    const hasRealPdf = sale.dtePdfUrl && !sale.dtePdfUrl.includes('ejemplo-mock');
-    const folio = sale.dteFolio ? String(sale.dteFolio) : sale.id.slice(-6).toUpperCase();
+    const isDte = !!sale.dteFolio && !!sale.dteVerifiedAt && !!sale.dteProviderId;
+    const folio = isDte && sale.dteFolio ? String(sale.dteFolio) : sale.id.slice(-6).toUpperCase();
 
     let docTitle = 'Comprobante de Venta';
     if (isDte) {
@@ -228,26 +227,7 @@ export const Ticket58mm: React.FC<Ticket58mmProps> = ({
                 ))}
             </div>
 
-            {isDte && sale.dtePdfUrl && (
-                <>
-                    <div className="dash" />
-                    <div className="tc" style={{ margin: '6px 0' }}>
-                        <p className="bold" style={{ fontSize: '8px', marginBottom: '2px' }}>
-                            DOCTO OFICIAL SII
-                        </p>
-                        <img 
-                            src={`https://api.qrserver.com/v1/create-qr-code/?size=110x110&data=${encodeURIComponent(sale.dtePdfUrl)}`} 
-                            alt="QR DTE" 
-                            style={{ width: '110px', height: '110px', margin: '0 auto', display: 'block' }} 
-                        />
-                        <p className="small" style={{ fontSize: '7px', marginTop: '2px', opacity: 0.8, lineHeight: '1.2' }}>
-                            {hasRealPdf 
-                                ? 'Escanee para descargar PDF oficial' 
-                                : 'MOCK DTE — Ejemplo PDF'}
-                        </p>
-                    </div>
-                </>
-            )}
+            <div className="tc small" style={{ marginTop: 8 }}>Comprobante interno de venta. El documento tributario y su timbre se consultan en el PDF oficial de Lioren.</div>
 
             <div className="double" />
 

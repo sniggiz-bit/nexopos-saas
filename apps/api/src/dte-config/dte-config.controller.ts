@@ -1,70 +1,32 @@
-import {
-  Controller, Get, Post, Patch, Body, Param, UseGuards,
-} from '@nestjs/common';
-
-import { IsString, IsOptional } from 'class-validator';
+import { Controller, Get, Post, Patch, Body, Param, Query, UseGuards, ForbiddenException, Res } from '@nestjs/common';
+import { IsString, IsOptional, MaxLength, IsDateString, IsNotEmpty } from 'class-validator';
+import type { Response } from 'express';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CurrentUser } from '../auth/user.decorator';
-import { DteConfigService, DteConfigResponseDto } from './dte-config.service';
+import { DteConfigService } from './dte-config.service';
+import { LiorenAccountService } from '../dte/lioren-account.service';
 import { LiorenService } from '../dte/lioren.service';
-
 export class UpsertDteConfigDto {
-  @IsOptional() @IsString() liorenToken?: string;
-  @IsOptional() @IsString() liorenLogo?: string;
-  @IsOptional() @IsString() dteResolution?: string;
-  @IsOptional() @IsString() resolutionDate?: string;
+  @IsOptional() @IsString() @MaxLength(8192) liorenToken?: string;
+  @IsOptional() @IsString() @MaxLength(2048) liorenLogo?: string;
+  @IsOptional() @IsString() @MaxLength(40) dteResolution?: string;
+  @IsOptional() @IsDateString() resolutionDate?: string;
 }
-
-export class UpdateDteConfigDto {
-  @IsOptional() @IsString() liorenToken?: string;
-  @IsOptional() @IsString() liorenLogo?: string;
-  @IsOptional() @IsString() dteResolution?: string;
-  @IsOptional() @IsString() resolutionDate?: string;
-}
-
+class SyncIssuerDto { @IsString() @IsNotEmpty() @MaxLength(20) expectedRut: string; }
+function requireAdmin(user: any) { if (!['TENANT_ADMIN', 'SUPER_ADMIN'].includes(user.role)) throw new ForbiddenException('Solo el administrador puede gestionar la configuración tributaria.'); }
 @Controller('dte-config')
 @UseGuards(JwtAuthGuard)
 export class DteConfigController {
-  constructor(
-    private readonly dteConfigService: DteConfigService,
-    private readonly liorenService: LiorenService,
-  ) {}
-
-  @Get()
-  findByTenant(@CurrentUser() user: any): Promise<DteConfigResponseDto | null> {
-    return this.dteConfigService.findByTenant(user.tenantId);
-  }
-
-  @Get('stats')
-  getStats(@CurrentUser() user: any): Promise<object> {
-    return this.dteConfigService.getStats(user.tenantId);
-  }
-
-  @Get('folios')
-  getFolios(@CurrentUser() user: any) {
-    return this.liorenService.consultarFolios(user.tenantId);
-  }
-
-  @Post()
-  upsert(@CurrentUser() user: any, @Body() dto: UpsertDteConfigDto): Promise<DteConfigResponseDto> {
-    // Build update object with only defined fields to avoid overwriting existing
-    // DB values with null when the user doesn't change a particular field.
-    const payload: Record<string, any> = { tenantId: user.tenantId };
-    if (dto.liorenToken !== undefined) payload.liorenToken = dto.liorenToken;
-    if (dto.liorenLogo !== undefined) payload.liorenLogo = dto.liorenLogo;
-    if (dto.dteResolution !== undefined) payload.dteResolution = dto.dteResolution;
-    if (dto.resolutionDate !== undefined) payload.resolutionDate = dto.resolutionDate ? new Date(dto.resolutionDate) : null;
-
-    return this.dteConfigService.upsert(payload as any);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() dto: UpdateDteConfigDto): Promise<DteConfigResponseDto> {
-    return this.dteConfigService.update(id, {
-      liorenToken: dto.liorenToken,
-      liorenLogo: dto.liorenLogo,
-      dteResolution: dto.dteResolution,
-      resolutionDate: dto.resolutionDate ? new Date(dto.resolutionDate) : undefined,
-    });
+  constructor(private readonly config: DteConfigService, private readonly account: LiorenAccountService, private readonly lioren: LiorenService) {}
+  @Get() find(@CurrentUser() user: any) { requireAdmin(user); return this.config.findByTenant(user.tenantId); }
+  @Get('status') status(@CurrentUser() user: any, @Query('refresh') refresh?: string) { requireAdmin(user); return this.account.status(user.tenantId, refresh === '1'); }
+  @Get('stats') stats(@CurrentUser() user: any, @Query('refresh') refresh?: string) { requireAdmin(user); return this.config.getStats(user.tenantId, refresh === '1'); }
+  @Get('folios') async folios(@CurrentUser() user: any) { requireAdmin(user); return (await this.account.status(user.tenantId)).types; }
+  @Post('sync-issuer') sync(@CurrentUser() user: any, @Body() dto: SyncIssuerDto) { requireAdmin(user); return this.account.syncIssuer(user.tenantId, dto.expectedRut, user.id); }
+  @Post() upsert(@CurrentUser() user: any, @Body() dto: UpsertDteConfigDto) { requireAdmin(user); return this.config.upsert({ ...dto, tenantId: user.tenantId, resolutionDate: dto.resolutionDate ? new Date(dto.resolutionDate) : undefined }); }
+  @Patch(':id') update(@CurrentUser() user: any, @Param('id') id: string, @Body() dto: UpsertDteConfigDto) { requireAdmin(user); return this.config.update(id, user.tenantId, { ...dto, resolutionDate: dto.resolutionDate ? new Date(dto.resolutionDate) : undefined }); }
+  @Get('documents/:type/:folio/pdf') async pdf(@CurrentUser() user: any, @Param('type') type: string, @Param('folio') folio: string, @Res() res: Response) {
+    requireAdmin(user); const buffer = await this.lioren.documentPdf(user.tenantId, Number(type), Number(folio));
+    res.set({ 'Content-Type': 'application/pdf', 'Content-Disposition': 'inline; filename="dte-' + Number(type) + '-' + Number(folio) + '.pdf"', 'Cache-Control': 'no-store' }); res.send(buffer);
   }
 }

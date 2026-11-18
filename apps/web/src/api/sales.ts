@@ -45,7 +45,9 @@ export interface Sale {
     userId?: string;
     total: number;
     discountAmount?: number;
-    status: 'COMPLETED' | 'PRE_SALE' | 'CANCELLED';
+    status: 'COMPLETED' | 'PRE_SALE' | 'CANCELLED' | 'PENDING_CREDIT_NOTE' | 'CREDIT_NOTE';
+    dteVerifiedAt?: string | null;
+    dteProviderId?: string | null;
     dteFolio?: number;
     dteStatus?: string;
     dteType?: number;        // 39=Boleta, 33=Factura, 61=NotaCredito, 52=GuiaDespacho
@@ -128,7 +130,7 @@ export async function getSale(id: string): Promise<Sale> {
 /**
  * Emit a Nota de Crédito for an existing completed sale
  */
-export async function emitNotaCredito(id: string): Promise<{ success: boolean; folio?: number; url_pdf?: string; error?: string }> {
+export async function emitNotaCredito(id: string): Promise<{ success: boolean; folio?: number; url_pdf?: string; status?: string; error?: string }> {
     const response = await apiClient.post(`/sales/${id}/nota-credito`);
     return response.data;
 }

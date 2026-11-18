@@ -125,7 +125,7 @@ export function SalesHistoryPage() {
         mutationFn: (saleId: string) => emitNotaCredito(saleId),
         onSuccess: (data) => {
             if (data.success) {
-                toast({ title: 'Nota de Crédito emitida', description: data.folio ? `Folio #${data.folio}` : 'DTE emitido exitosamente' });
+                toast({ title: data.status === 'ACEPTADO' ? 'Nota de crédito aceptada' : 'Nota emitida; pendiente de confirmación SII', description: data.folio ? `Folio #${data.folio}` : 'DTE emitido exitosamente' });
                 refetch();
             } else {
                 toast({ variant: 'destructive', title: 'Error al emitir NC', description: data.error || 'No se pudo emitir la Nota de Crédito' });

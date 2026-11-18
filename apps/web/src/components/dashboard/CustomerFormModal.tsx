@@ -96,6 +96,7 @@ export function CustomerFormModal({ isOpen, onClose, initialData }: CustomerForm
         giro: '',
         address: '',
         comuna: '',
+        city: '',
         email: '',
         phone: '',
     });
@@ -111,13 +112,14 @@ export function CustomerFormModal({ isOpen, onClose, initialData }: CustomerForm
             const response = await apiClient.get(`/common/rut-lookup/${rut}`);
             if (response.data) {
                 if (response.data.success && response.data.data) {
-                    const { reasonSocial, giro, address, comuna } = response.data.data;
+                    const { reasonSocial, giro, address, comuna, city } = response.data.data;
                     setFormData(prev => ({
                         ...prev,
                         name: reasonSocial || prev.name || '',
                         giro: giro || prev.giro || '',
                         address: address || prev.address || '',
                         comuna: comuna || prev.comuna || '',
+                        city: city || prev.city || '',
                     }));
                     toast.success('Datos tributarios completados de forma automática');
                 } else {
@@ -146,6 +148,7 @@ export function CustomerFormModal({ isOpen, onClose, initialData }: CustomerForm
                 giro: initialData.giro || '',
                 address: initialData.address || '',
                 comuna: initialData.comuna || '',
+                city: initialData.city || '',
                 email: initialData.email || '',
                 phone: initialData.phone || '',
             });
@@ -156,6 +159,7 @@ export function CustomerFormModal({ isOpen, onClose, initialData }: CustomerForm
                 giro: '',
                 address: '',
                 comuna: '',
+                city: '',
                 email: '',
                 phone: '',
             });
@@ -185,6 +189,7 @@ export function CustomerFormModal({ isOpen, onClose, initialData }: CustomerForm
                         giro: formData.giro || undefined,
                         address: formData.address || undefined,
                         comuna: formData.comuna || undefined,
+                        city: formData.city || undefined,
                         email: formData.email || undefined,
                         phone: formData.phone || undefined,
                     }
@@ -198,6 +203,7 @@ export function CustomerFormModal({ isOpen, onClose, initialData }: CustomerForm
                     giro: formData.giro || undefined,
                     address: formData.address || undefined,
                     comuna: formData.comuna || undefined,
+                    city: formData.city || undefined,
                     email: formData.email || undefined,
                     phone: formData.phone || undefined,
                 });
@@ -364,6 +370,7 @@ export function CustomerFormModal({ isOpen, onClose, initialData }: CustomerForm
                         </div>
                     </div>
 
+                    <div><label htmlFor="customer-city" style={labelStyle}>Ciudad para documentos tributarios</label><FocusInput id="customer-city" value={formData.city} onChange={e => setFormData({ ...formData, city: e.target.value })} placeholder="Ej: Santiago" /><p style={{ color: C.muted, fontSize: 11, marginTop: 4 }}>Requerida para facturas, notas de crédito y guías de despacho.</p></div>
                     {/* Email y Teléfono */}
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                         <div>
