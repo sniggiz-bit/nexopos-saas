@@ -62,6 +62,7 @@ export interface SaleRecord {
     userId?: string;
     total: number;
     status: SaleStatus;
+    originalSaleId?: string | null;
     dteVerifiedAt?: string | null;
     dteProviderId?: string | null;
     dteFolio?: number | null;

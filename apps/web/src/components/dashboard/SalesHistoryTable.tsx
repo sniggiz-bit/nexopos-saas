@@ -102,8 +102,7 @@ function EmptyState() {
 interface SalesHistoryTableProps {
     sales:                 SaleRecord[];
     isLoading:             boolean;
-    onEmitNotaCredito?:    (saleId: string) => void;
-    emittingNcId?:         string | null;
+    onCreditNote?:    (saleId: string) => void;
     onDeleteInternalSale?: (saleId: string) => void;
     deletingSaleId?:       string | null;
     userRole?:             string;
@@ -111,7 +110,7 @@ interface SalesHistoryTableProps {
 
 const COLS = ['Folio / ID', 'Fecha y Hora', 'Sucursal', 'Método de Pago', 'Total', 'Estado', 'Acciones'];
 
-export function SalesHistoryTable({ sales, isLoading, onEmitNotaCredito, emittingNcId, onDeleteInternalSale, deletingSaleId, userRole }: SalesHistoryTableProps) {
+export function SalesHistoryTable({ sales, isLoading, onCreditNote, onDeleteInternalSale, deletingSaleId, userRole }: SalesHistoryTableProps) {
     const handleViewPdf = (sale: SaleRecord) => {
         if (sale.dteVerifiedAt && sale.dteProviderId) { openDtePdf('/sales/' + sale.id + '/dte/pdf').catch(() => toast.error('No se pudo consultar el PDF oficial.')); return; }
         const url = sale.internalReceiptUrl;
@@ -124,17 +123,73 @@ export function SalesHistoryTable({ sales, isLoading, onEmitNotaCredito, emittin
         return labels[sale.dteType ?? 39] ?? 'Ver DTE';
     };
 
+    const renderActions = (sale: SaleRecord) => {
+        const pdfAvailable = !!resolvePdfUrl(sale);
+        const isAdmin = ['TENANT_ADMIN', 'SUPER_ADMIN'].includes(userRole || '');
+        const canReviewNC = isAdmin && !!onCreditNote && (([33, 39].includes(sale.dteType ?? 39) && ['COMPLETED', 'CANCELLED'].includes(sale.status)) || sale.dteType === 61 && !!sale.originalSaleId);
+        const canDeleteInternal = sale.status === 'COMPLETED' && !sale.dteFolio && ['PENDING', 'BLOQUEADO'].includes(sale.dteStatus || 'PENDING') && isAdmin && !!onDeleteInternalSale;
+        return (<div className="flex flex-wrap items-center gap-2 justify-end">
+                                                {/* PDF / Ticket */}
+                                                <button
+                                                    onClick={() => handleViewPdf(sale)}
+                                                    disabled={!pdfAvailable}
+                                                    title={pdfAvailable ? 'Abrir documento' : 'Documento no disponible'}
+                                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all duration-150 disabled:opacity-30 disabled:cursor-not-allowed"
+                                                    style={{ background: C.cyanA(0.08), border: `1px solid ${C.cyanA(0.2)}`, color: C.cyan }}
+                                                    onMouseEnter={e => !e.currentTarget.disabled && ((e.currentTarget as HTMLElement).style.background = C.cyanA(0.16))}
+                                                    onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = C.cyanA(0.08)}>
+                                                    {sale.dteFolio ? <ReceiptText className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                                                    {getPdfLabel(sale)}
+                                                </button>
+
+                                                {/* Nota de Crédito */}
+                                                {canReviewNC && (
+                                                    <button
+                                                        onClick={() => onCreditNote!(sale.dteType === 61 ? sale.originalSaleId! : sale.id)}
+                                                        title="Revisar nota de crédito"
+                                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all duration-150 disabled:opacity-50"
+                                                        style={{ background: C.amberA(0.08), border: `1px solid ${C.amberA(0.25)}`, color: C.amber }}
+                                                        onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = C.amberA(0.16)}
+                                                        onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = C.amberA(0.08)}>
+                                                        <ReceiptText className="w-3.5 h-3.5" />
+                                                        {sale.dteType === 61 ? 'Ver nota de crédito' : 'Nota de crédito'}
+                                                    </button>
+                                                )}
+
+                                                {/* Eliminar Venta Interna */}
+                                                {canDeleteInternal && (
+                                                    <button
+                                                        onClick={() => {
+                                                            if (window.confirm('¿Estás seguro de que deseas eliminar esta venta de control interno? Se devolverá el stock y el dinero de caja.')) {
+                                                                onDeleteInternalSale!(sale.id);
+                                                            }
+                                                        }}
+                                                        disabled={deletingSaleId === sale.id}
+                                                        title="Eliminar venta de control interno"
+                                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all duration-150 disabled:opacity-50"
+                                                        style={{ background: C.redA(0.08), border: `1px solid ${C.redA(0.25)}`, color: C.red }}
+                                                        onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = C.redA(0.16)}
+                                                        onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = C.redA(0.08)}>
+                                                        {deletingSaleId === sale.id
+                                                            ? <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                                                            : <Trash2 className="w-3.5 h-3.5" />}
+                                                        Eliminar
+                                                    </button>
+                                                )}
+                                            </div>);
+    };
+
     return (
         <div className="rounded-2xl overflow-hidden"
             style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}>
-            <div className="overflow-x-auto">
+            <div className="hidden overflow-x-auto md:block">
                 <table className="min-w-full text-[13px]">
                     {/* ── thead ── */}
                     <thead>
                         <tr style={{ borderBottom: '1px solid hsl(var(--border))' }}>
                             {COLS.map(col => (
                                 <th key={col}
-                                    className="px-5 py-3.5 text-left text-[10px] font-bold uppercase tracking-widest whitespace-nowrap"
+                                    className={'px-5 py-3.5 text-left text-[10px] font-bold uppercase tracking-widest whitespace-nowrap ' + (col === 'Acciones' ? 'sticky right-0 z-10' : '')}
                                     style={{ color: 'hsl(var(--muted-foreground))', background: 'hsl(var(--muted))' }}>
                                     {col}
                                 </th>
@@ -150,10 +205,6 @@ export function SalesHistoryTable({ sales, isLoading, onEmitNotaCredito, emittin
                             <EmptyState />
                         ) : (
                             sales.map((sale, idx) => {
-                                const pdfAvailable = !!resolvePdfUrl(sale);
-                                const canEmitNC    = sale.status === 'COMPLETED' && !!sale.dteFolio && !!sale.dteVerifiedAt && ['ACEPTADO', 'REPARO'].includes(sale.dteStatus || '') && ['TENANT_ADMIN', 'SUPER_ADMIN'].includes(userRole || '') && !!onEmitNotaCredito;
-                                const isAdmin      = userRole === 'TENANT_ADMIN' || userRole === 'SUPER_ADMIN';
-                                const canDeleteInternal = sale.status === 'COMPLETED' && !sale.dteFolio && ['PENDING', 'BLOQUEADO'].includes(sale.dteStatus || 'PENDING') && isAdmin && !!onDeleteInternalSale;
                                 const isEven       = idx % 2 === 0;
 
                                 return (
@@ -203,59 +254,8 @@ export function SalesHistoryTable({ sales, isLoading, onEmitNotaCredito, emittin
                                         </td>
 
                                         {/* Acciones */}
-                                        <td className="px-5 py-3.5 whitespace-nowrap">
-                                            <div className="flex items-center gap-2 justify-end">
-                                                {/* PDF / Ticket */}
-                                                <button
-                                                    onClick={() => handleViewPdf(sale)}
-                                                    disabled={!pdfAvailable}
-                                                    title={pdfAvailable ? 'Abrir documento' : 'Documento no disponible'}
-                                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all duration-150 disabled:opacity-30 disabled:cursor-not-allowed"
-                                                    style={{ background: C.cyanA(0.08), border: `1px solid ${C.cyanA(0.2)}`, color: C.cyan }}
-                                                    onMouseEnter={e => !e.currentTarget.disabled && ((e.currentTarget as HTMLElement).style.background = C.cyanA(0.16))}
-                                                    onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = C.cyanA(0.08)}>
-                                                    {sale.dteFolio ? <ReceiptText className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                                                    {getPdfLabel(sale)}
-                                                </button>
-
-                                                {/* Nota de Crédito */}
-                                                {canEmitNC && (
-                                                    <button
-                                                        onClick={() => onEmitNotaCredito!(sale.id)}
-                                                        disabled={emittingNcId === sale.id}
-                                                        title="Emitir Nota de Crédito"
-                                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all duration-150 disabled:opacity-50"
-                                                        style={{ background: C.amberA(0.08), border: `1px solid ${C.amberA(0.25)}`, color: C.amber }}
-                                                        onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = C.amberA(0.16)}
-                                                        onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = C.amberA(0.08)}>
-                                                        {emittingNcId === sale.id
-                                                            ? <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                                                            : <ReceiptText className="w-3.5 h-3.5" />}
-                                                        NC
-                                                    </button>
-                                                )}
-
-                                                {/* Eliminar Venta Interna */}
-                                                {canDeleteInternal && (
-                                                    <button
-                                                        onClick={() => {
-                                                            if (window.confirm('¿Estás seguro de que deseas eliminar esta venta de control interno? Se devolverá el stock y el dinero de caja.')) {
-                                                                onDeleteInternalSale!(sale.id);
-                                                            }
-                                                        }}
-                                                        disabled={deletingSaleId === sale.id}
-                                                        title="Eliminar venta de control interno"
-                                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all duration-150 disabled:opacity-50"
-                                                        style={{ background: C.redA(0.08), border: `1px solid ${C.redA(0.25)}`, color: C.red }}
-                                                        onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = C.redA(0.16)}
-                                                        onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = C.redA(0.08)}>
-                                                        {deletingSaleId === sale.id
-                                                            ? <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                                                            : <Trash2 className="w-3.5 h-3.5" />}
-                                                        Eliminar
-                                                    </button>
-                                                )}
-                                            </div>
+                                        <td className="sticky right-0 z-10 bg-card px-5 py-3.5">
+                                            {renderActions(sale)}
                                         </td>
                                     </tr>
                                 );
@@ -263,6 +263,15 @@ export function SalesHistoryTable({ sales, isLoading, onEmitNotaCredito, emittin
                         )}
                     </tbody>
                 </table>
+            </div>
+
+            <div className="divide-y divide-border md:hidden">
+                {isLoading ? <p className="p-6 text-sm text-muted-foreground">Cargando ventas...</p> : !sales.length ? <p className="p-6 text-sm text-muted-foreground">No hay ventas registradas. Ajusta los filtros o realiza una venta en el POS.</p> : sales.map(sale => <article key={sale.id} aria-label={'Venta ' + (sale.dteFolio || sale.id.slice(0, 8))} className="space-y-3 p-4">
+                    <div className="flex flex-wrap items-start justify-between gap-2"><div className="flex flex-wrap items-center gap-2"><span className="font-mono text-sm font-semibold">{sale.dteFolio ? '#' + sale.dteFolio : sale.id.slice(0, 8) + '…'}</span><DteTypeBadge dteType={sale.dteType ?? 39} /></div><strong className="text-sm tabular-nums">{formatCLP(sale.total)}</strong></div>
+                    <p className="text-xs text-muted-foreground">{formatSaleDate(sale.createdAt)} · {sale.branch?.name || 'Sin sucursal'}</p>
+                    <div className="flex flex-wrap items-center gap-2"><StatusBadge status={sale.status} />{sale.dteFolio && !sale.dteVerifiedAt && <span className="text-xs text-amber-500">Sin confirmar en Lioren</span>}</div>
+                    {renderActions(sale)}
+                </article>)}
             </div>
 
             {/* Footer count */}

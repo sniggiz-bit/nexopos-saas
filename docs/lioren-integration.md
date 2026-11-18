@@ -60,3 +60,11 @@ Fuentes oficiales: [Mi Empresa](https://www.lioren.cl/docs#/api-miempresa), [Tip
 El control de registros locales se consulta en Superadmin → Clientes → Ficha → Registros tributarios. Su ruta de lectura `/api/admin/tenants/:id/dte-records` exige SUPER_ADMIN, limita las consultas a la empresa seleccionada y no consulta al proveedor ni modifica documentos. Las categorías pueden superponerse y no se suman a los totales oficiales de Lioren.
 
 La configuración del cliente muestra los datos reales del proveedor, conserva la consulta de documentos con estado pendiente y avisa de intentos actuales que requieren soporte. Los errores históricos sin DteSubmission no activan ese aviso. El resumen del negocio utiliza los rechazos del SII consultados en Lioren, en lugar del contador de errores locales. No se eliminan ni reemiten registros al consultar estas pantallas.
+
+## Nota de crédito desde Ventas
+
+La acción «Nota de crédito» abre una validación de solo lectura (`GET /api/sales/:id/nota-credito`), visible para administradores de la empresa. Muestra documento original, total, sucursal, impedimentos y una nota existente si la hay. No emite al abrir el diálogo. La emisión exige confirmar expresamente la anulación total y vuelve a validar servicio, folios, emisor, receptor y original. Sin folios o con original sin verificar, no se crea una nueva nota bloqueada.
+
+Se admiten originales de tipo 33 y 39, con receptor coincidente y datos completos conforme al contrato de DTE de Lioren. Los tickets internos, notas, guías, originales históricos sin confirmar y ventas con crédito asociado no se anulan por esta acción. Fuente del contrato: https://cl.lioren.enterprises/docs#/api-emisiondte .
+
+Una nota existente no se duplica. Su estado puede consultarse desde la misma acción o desde su fila. La anulación de la venta y la devolución de inventario se aplican una sola vez tras la aceptación SII. No se automatiza una devolución de dinero ni se ofrecen anulaciones parciales. En móvil las ventas se presentan como tarjetas con las acciones a la vista.

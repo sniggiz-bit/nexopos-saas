@@ -58,7 +58,7 @@ export class JwtAuthGuard implements CanActivate {
         const platform = connection?.platform || order?.connection.platform || request.body?.platform;
         if (connectionId && !connection || platform && !modules.includes(platform) || !platform && !['SHOPIFY', 'WOOCOMMERCE'].some(c => modules.includes(c))) throw new ForbiddenException('Esta integración no está habilitada para tu empresa.');
       }
-      if (path.endsWith('/nota-credito') && !modules.includes('DTE_NOTA_CREDITO')) throw new ForbiddenException('La emisión de notas de crédito está deshabilitada.');
+      if (!['GET', 'HEAD'].includes(request.method) && path.endsWith('/nota-credito') && !modules.includes('DTE_NOTA_CREDITO')) throw new ForbiddenException('La emisión de notas de crédito está deshabilitada.');
       // Validate every explicit branch reference, including query parameters.
       if ([request.body?.tenantId, request.query?.tenantId].some(id => id && id !== user.tenantId)) throw new ForbiddenException('La empresa no coincide con tu sesión.');
       const sources = [request.body, request.query, request.params].filter(x => x && typeof x === 'object' && !Array.isArray(x));

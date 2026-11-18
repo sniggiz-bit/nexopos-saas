@@ -46,6 +46,7 @@ export interface Sale {
     total: number;
     discountAmount?: number;
     status: 'COMPLETED' | 'PRE_SALE' | 'CANCELLED' | 'PENDING_CREDIT_NOTE' | 'CREDIT_NOTE';
+    originalSaleId?: string | null;
     dteVerifiedAt?: string | null;
     dteProviderId?: string | null;
     dteFolio?: number;
@@ -130,8 +131,8 @@ export async function getSale(id: string): Promise<Sale> {
 /**
  * Emit a Nota de Crédito for an existing completed sale
  */
-export async function emitNotaCredito(id: string): Promise<{ success: boolean; folio?: number; url_pdf?: string; status?: string; error?: string }> {
-    const response = await apiClient.post(`/sales/${id}/nota-credito`);
+export async function emitNotaCredito(id: string): Promise<{ success: boolean; folio?: number; url_pdf?: string; status?: string; error?: string; noteId?: string }> {
+    const response = await apiClient.post(`/sales/${id}/nota-credito`, {}, { timeout: 90000 });
     return response.data;
 }
 
@@ -145,3 +146,16 @@ export async function deleteInternalSale(id: string): Promise<{ success: boolean
 }
 
 
+
+export interface CreditNotePreview {
+    sale: { id: string; type: number; folio: number | null; total: number; createdAt: string; branchName: string | null };
+    existingNote: { id: string; folio: number | null; status: string; dteStatus: string; canVerify: boolean } | null;
+    canEmit: boolean;
+    message: string;
+}
+export async function getCreditNotePreview(id: string, signal?: AbortSignal): Promise<CreditNotePreview> {
+    return (await apiClient.get('/sales/' + id + '/nota-credito', { signal, timeout: 60000 })).data;
+}
+export async function verifySaleDte(id: string): Promise<{ success: boolean; status: string; error?: string }> {
+    return (await apiClient.post('/sales/' + id + '/dte/verify', {}, { timeout: 30000 })).data;
+}
