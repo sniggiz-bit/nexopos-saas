@@ -1,0 +1,35 @@
+export interface AdminNotificationData {
+  title: string;
+  message: string;
+  type: string;
+  actionUrl?: string;
+}
+
+const escapeHtml = (value: string) => value.replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]!));
+
+export function renderAdminNotification(data: AdminNotificationData): string {
+  const title = escapeHtml(data.title);
+  const message = escapeHtml(data.message).replace(/\r?\n/g, '<br>');
+  const label = data.type === 'CHAT' ? 'MENSAJE DE SOPORTE' : data.type === 'REGISTRATION' ? 'NUEVO REGISTRO' : 'ALERTA DEL SISTEMA';
+  const button = data.type === 'CHAT' ? 'Responder en el chat' : data.type === 'REGISTRATION' ? 'Ver usuario y empresa' : 'Ver detalle';
+  let actionUrl: string | undefined;
+  if (data.actionUrl) {
+    const url = new URL(data.actionUrl);
+    if (!['https:', 'http:'].includes(url.protocol) || url.username || url.password) throw new Error('Invalid notification URL');
+    actionUrl = escapeHtml(url.href);
+  }
+  return `<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${title}</title>
+<style>@media(max-width:600px){.pad{padding-left:22px!important;padding-right:22px!important}.outer{padding:12px 8px!important}}</style></head>
+<body style="margin:0;background:#eef3f8;font-family:Arial,Helvetica,sans-serif;color:#172b43;">
+<div style="display:none;max-height:0;overflow:hidden;mso-hide:all;">${title}. Revisa los detalles en tu panel de administración.</div>
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" bgcolor="#eef3f8" style="width:100%;table-layout:fixed;"><tr><td align="center" class="outer" style="padding:32px 16px;">
+<!--[if mso]><table role="presentation" width="600"><tr><td><![endif]-->
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" bgcolor="#ffffff" style="width:100%;max-width:600px;table-layout:fixed;border:1px solid #e0e8f1;border-radius:18px;border-collapse:separate;overflow:hidden;">
+<tr><td bgcolor="#10273f" class="pad" style="padding:28px 36px;border-bottom:4px solid #13b8cd;"><p style="margin:0 0 20px;color:#ffffff;font-size:25px;font-weight:700;">Nexo<span style="color:#67dbed;">POS</span></p><p style="margin:0;color:#67dbed;font-size:11px;line-height:18px;letter-spacing:1.5px;font-weight:700;">${label}</p></td></tr>
+<tr><td class="pad" style="padding:28px 36px 32px;"><h1 style="margin:0 0 22px;font-size:25px;line-height:33px;color:#12263d;">${title}</h1>
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" bgcolor="#f4f8fc" style="width:100%;table-layout:fixed;border:1px solid #e4ebf3;border-radius:12px;border-collapse:separate;"><tr><td style="padding:20px;font-size:14px;line-height:24px;color:#41566e;overflow-wrap:anywhere;word-break:break-word;">${message}</td></tr></table>
+${actionUrl ? `<table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin-top:24px;"><tr><td bgcolor="#008bb9" style="border-radius:9px;mso-padding-alt:14px 24px;"><a href="${actionUrl}" target="_blank" style="display:inline-block;padding:14px 24px;border:1px solid #008bb9;border-radius:9px;color:#ffffff;font-size:14px;line-height:20px;font-weight:700;text-decoration:none;">${button} &rarr;</a></td></tr></table><p style="margin:14px 0 0;color:#60738b;font-size:12px;line-height:20px;">Si tu sesión está cerrada, inicia sesión con tu cuenta de superadministrador para continuar.</p>` : ''}
+</td></tr><tr><td class="pad" bgcolor="#f7f9fc" style="padding:20px 36px;border-top:1px solid #e4ebf3;color:#6a7c91;font-size:11px;line-height:18px;">Notificación automática para la administración de NexoPOS. Responde al usuario desde el panel; las respuestas a este correo no se incorporan al chat.</td></tr>
+</table><!--[if mso]></td></tr></table><![endif]--></td></tr></table></body></html>`;
+}

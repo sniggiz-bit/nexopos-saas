@@ -2,7 +2,8 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { JwtService } from '@nestjs/jwt';
 import { AuthService } from './auth.service';
 import { PrismaService } from '../prisma/prisma.service';
-import { EmailService } from '../email/email.service';
+import { WelcomeEmailsService } from '../email/welcome-emails.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { TenantsService } from '../tenants/tenants.service';
 import * as bcrypt from 'bcrypt';
 import { ConflictException } from '@nestjs/common';
@@ -14,7 +15,7 @@ describe('AuthService', () => {
     let service: AuthService;
     let prisma: PrismaService;
     let jwt: JwtService;
-    let email: EmailService;
+    let email: WelcomeEmailsService;
     let tenants: TenantsService;
 
     const mockPrismaService = {
@@ -32,29 +33,35 @@ describe('AuthService', () => {
         verifyAsync: jest.fn(),
     };
 
-    const mockEmailService = {
-        sendWelcomeEmail: jest.fn().mockResolvedValue(true),
+    const mockWelcomeEmailsService = {
+        send: jest.fn().mockResolvedValue(true),
     };
+
+    const mockNotificationsService = { notifySuperAdmin: jest.fn().mockResolvedValue({}) };
 
     const mockTenantsService = {
         createWithDefaults: jest.fn(),
     };
 
     beforeEach(async () => {
+        jest.clearAllMocks();
+        mockPrismaService.user.findUnique.mockReset();
+        mockPrismaService.tenant.findUnique.mockReset();
         const module: TestingModule = await Test.createTestingModule({
             providers: [
                 AuthService,
                 { provide: PrismaService, useValue: mockPrismaService },
                 { provide: JwtService, useValue: mockJwtService },
-                { provide: EmailService, useValue: mockEmailService },
+                { provide: WelcomeEmailsService, useValue: mockWelcomeEmailsService },
                 { provide: TenantsService, useValue: mockTenantsService },
+                { provide: NotificationsService, useValue: mockNotificationsService },
             ],
         }).compile();
 
         service = module.get<AuthService>(AuthService);
         prisma = module.get<PrismaService>(PrismaService);
         jwt = module.get<JwtService>(JwtService);
-        email = module.get<EmailService>(EmailService);
+        email = module.get<WelcomeEmailsService>(WelcomeEmailsService);
         tenants = module.get<TenantsService>(TenantsService);
     });
 
@@ -140,7 +147,21 @@ describe('AuthService', () => {
             expect(result).toBeDefined();
             expect(result.access_token).toBe('mock-token');
             expect(tenants.createWithDefaults).toHaveBeenCalled();
-            expect(email.sendWelcomeEmail).toHaveBeenCalled();
+            expect(email.send).toHaveBeenCalledWith('t1', 'u1');
+            expect(mockNotificationsService.notifySuperAdmin).toHaveBeenCalledWith(
+                'Nuevo usuario registrado', expect.stringContaining(dto.email), 'REGISTRATION',
+                { actionPath: '/admin/tenants/t1' },
+            );
+            expect(JSON.stringify(mockNotificationsService.notifySuperAdmin.mock.calls)).not.toContain(dto.password);
+        });
+
+        it('should preserve registration when welcome processing fails', async () => {
+            mockPrismaService.user.findUnique.mockResolvedValue(null);
+            mockPrismaService.tenant.findUnique.mockResolvedValue(null);
+            mockTenantsService.createWithDefaults.mockResolvedValue({ tenant: { id: 't1' }, branch: { id: 'b1' }, user: { id: 'u1' } });
+            mockWelcomeEmailsService.send.mockRejectedValueOnce(new Error('Email storage unavailable'));
+            mockJwtService.signAsync.mockResolvedValue('token');
+            await expect(service.registerTenant({ companyName: 'Test', userName: 'User', email: 'user@test.cl', phone: '123', password: 'password' })).resolves.toHaveProperty('access_token', 'token');
         });
 
         it('should throw ConflictException if email already exists', async () => {

@@ -12,3 +12,11 @@ apps/*/coverage
 apps/*/.turbo
 apps/api/nest-cli.json
 
+
+**/node_modules
+**/dist
+uploads
+postgres_data_v15
+docs
+**/*.log
+**/*.tsbuildinfo

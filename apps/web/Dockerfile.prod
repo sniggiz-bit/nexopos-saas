@@ -12,7 +12,7 @@ COPY apps/web/package.json ./
 RUN node -e "const fs=require('fs'); const p=JSON.parse(fs.readFileSync('package.json','utf8')); delete p.dependencies['@nexopos/shared']; fs.writeFileSync('package.json',JSON.stringify(p,null,2));"
 
 ENV NODE_ENV=development
-RUN --mount=type=cache,target=/root/.npm npm install
+RUN npm install
 
 # Copy source files
 COPY apps/web/src ./src
@@ -67,6 +67,18 @@ RUN printf 'server {\n\
         proxy_cache off;\n\
         proxy_read_timeout 86400s;\n\
         chunked_transfer_encoding on;\n\
+    }\n\
+\n\
+    # Socket.IO transport for the /events namespace\n\
+    location ^~ /socket.io/ {\n\
+        set $api_upstream api;\n\
+        proxy_pass http://$api_upstream:3000;\n\
+        proxy_http_version 1.1;\n\
+        proxy_set_header Upgrade $http_upgrade;\n\
+        proxy_set_header Connection "upgrade";\n\
+        proxy_set_header Host $host;\n\
+        proxy_buffering off;\n\
+        proxy_read_timeout 3600s;\n\
     }\n\
 \n\
     # General API proxy (WebSocket + REST)\n\

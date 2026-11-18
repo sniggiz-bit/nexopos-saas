@@ -5,6 +5,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
 import { Logo } from '../components/ui/Logo';
+import { loginDestination } from '../lib/login-destination';
 import { Mail, Lock, Sparkles, Database, ArrowRight, Compass, AlertTriangle } from 'lucide-react';
 
 export function LoginPage() {
@@ -17,7 +18,6 @@ export function LoginPage() {
     const [searchParams] = useSearchParams();
     const queryClient = useQueryClient();
 
-    const from = location.state?.from?.pathname || '/';
     const isSuspended = searchParams.get('suspended') === 'true';
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -36,16 +36,7 @@ export function LoginPage() {
 
             toast.success(`Bienvenido, ${user.name || user.email}`);
 
-            // Redirect based on role
-            if (user.role === 'SUPER_ADMIN') {
-                navigate('/admin/dashboard');
-            } else if (user.role === 'TENANT_ADMIN' || user.role === 'MANAGER') {
-                navigate('/dashboard');
-            } else if (user.role === 'CASHIER') {
-                navigate('/pos');
-            } else {
-                navigate(from === '/login' ? '/' : from);
-            }
+            navigate(loginDestination(user.role, location.state?.from), { replace: true });
         } catch (error: any) {
             console.error('Login error:', error);
             toast.error(error.response?.data?.message || 'Error al iniciar sesión');

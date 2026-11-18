@@ -8,7 +8,7 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
-import { EmailService } from '../email/email.service';
+import { WelcomeEmailsService } from '../email/welcome-emails.service';
 import { TenantsService } from '../tenants/tenants.service';
 import * as bcrypt from 'bcrypt';
 import { RegisterTenantDto } from './dto/register-tenant.dto';
@@ -20,7 +20,7 @@ export class AuthService {
   constructor(
     private jwtService: JwtService,
     private prisma: PrismaService,
-    private emailService: EmailService,
+    private welcomeEmailsService: WelcomeEmailsService,
     @Inject(forwardRef(() => TenantsService))
     private tenantsService: TenantsService,
     private notificationsService: NotificationsService,
@@ -216,22 +216,27 @@ export class AuthService {
       });
 
       // 4. Send welcome email (non-blocking)
-      this.emailService
-        .sendWelcomeEmail(dto.email, dto.userName, {
-          email: dto.email,
-          password: dto.password,
-          companyName: dto.companyName,
-        })
+      this.welcomeEmailsService
+        .send(result.tenant.id, result.user.id)
         .catch((err) => {
-          console.error('Failed to send welcome email:', err);
+          console.error('Failed to process welcome email:', err instanceof Error ? err.name : 'UnknownError');
         });
 
-      // Notify SuperAdmin
+      // Avisar al administrador después de confirmar la creación; nunca incluir contraseñas.
       this.notificationsService.notifySuperAdmin(
-        'Nuevo Registro',
-        `El comercio "${dto.companyName}" se ha registrado exitosamente. Usuario: ${dto.userName} (${dto.email})`,
-        'REGISTRATION'
-      ).catch(e => console.error('Failed to notify superadmin:', e));
+        'Nuevo usuario registrado',
+        [
+          `Empresa: ${result.tenant.name}`,
+          `Usuario: ${dto.userName}`,
+          `Correo: ${dto.email}`,
+          `Teléfono: ${dto.phone || 'No informado'}`,
+          `Rol: Administrador de empresa`,
+          `Sucursal inicial: ${result.branch.name}`,
+          `Fecha de creación: ${(result.tenant.createdAt || new Date()).toLocaleString('es-CL', { timeZone: 'America/Santiago' })} (Chile)`,
+        ].join('\n'),
+        'REGISTRATION',
+        { actionPath: `/admin/tenants/${encodeURIComponent(result.tenant.id)}` },
+      ).catch(() => console.error('Failed to notify superadmin about registration'));
 
       // 5. Generate JWT token for auto-login
       const token = await this.login(result.user);
