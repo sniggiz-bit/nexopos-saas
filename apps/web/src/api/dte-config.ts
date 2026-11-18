@@ -12,7 +12,7 @@ export interface DteStats {
   provider: { source: string; month: string; checkedAt: string; total: number | null; accepted: number | null; rejected: number | null; partial: boolean; types: Array<{ type: number; label: string; total: number | null; accepted: number | null; rejected: number | null; message: string }>; recent: Array<{ type: number; label: string; folio: number; date: string; total: number | null; state: string }> };
   local: { confirmed: number; unverified: number; errors: number; pending: number; reviewDocs: Array<{ id: string; dteType: number; dteFolio: number; dteStatus: string }> };
 }
-export async function getDteConfig(_tenantId: string): Promise<DteConfig | null> { return (await apiClient.get('/dte-config')).data; }
+export async function getDteConfig(_tenantId: string): Promise<DteConfig | null> { return (await apiClient.get('/dte-config')).data || null; }
 export async function upsertDteConfig(data: UpsertDteConfigData): Promise<DteConfig> { return (await apiClient.post('/dte-config', data)).data; }
 export async function getDteStats(fresh = false): Promise<DteStats> { return (await apiClient.get('/dte-config/stats', { params: fresh ? { refresh: '1' } : {}, timeout: 60000 })).data; }
 export async function openDtePdf(path: string) {

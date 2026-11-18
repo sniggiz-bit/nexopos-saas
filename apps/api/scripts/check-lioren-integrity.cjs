@@ -74,13 +74,13 @@ async function check(name, run) { await run(); checks++; console.log('PASS: ' + 
     const error = await sale({ dteStatus: 'ERROR' }); await lioren.emitirBoleta(error.id); assert.equal(posts, before);
   });
   await check('credit note failure never cancels the original or returns inventory', async () => {
-    accepted = true; const original = await sale(); await lioren.emitirBoleta(original.id); mode = 'network'; const before = posts;
+    accepted = true; const original = await sale({ payments: { create: { amount: 238, paymentMethod: 'EFECTIVO' } } }); await lioren.emitirBoleta(original.id); mode = 'network'; const before = posts;
     const response = await sales.emitirNotaCreditoForSale(original.id, tenant.id); assert.equal(response.success, false); assert.equal((await prisma.sale.findUnique({ where: { id: original.id } })).status, 'COMPLETED');
     assert.equal(await currentInventory(), 8);
     await sales.emitirNotaCreditoForSale(original.id, tenant.id); assert.equal(posts - before, 1); mode = 'normal';
   });
   await check('credit note inventory and cancellation apply once after SII acceptance', async () => {
-    accepted = true; const original = await sale(); await lioren.emitirBoleta(original.id); accepted = false;
+    accepted = true; const original = await sale({ payments: { create: { amount: 238, paymentMethod: 'EFECTIVO' } } }); await lioren.emitirBoleta(original.id); accepted = false;
     await sales.emitirNotaCreditoForSale(original.id, tenant.id); const note = await prisma.sale.findFirst({ where: { originalSaleId: original.id } });
     assert.equal((await prisma.sale.findUnique({ where: { id: original.id } })).status, 'COMPLETED'); assert.equal(await prisma.payment.count({ where: { saleId: note.id } }), 0);
     accepted = true; await sales.verifyDte(note.id, tenant.id); await sales.verifyDte(note.id, tenant.id);
@@ -89,7 +89,7 @@ async function check(name, run) { await run(); checks++; console.log('PASS: ' + 
     assert.equal(await prisma.stockMovement.count({ where: { branchId: branch.id, type: 'RETURN' } }), 1);
     assert.equal((await prisma.sale.findUnique({ where: { id: note.id } })).status, 'CREDIT_NOTE');
   });
-  const request = async (method, path, jwt, data) => { const r = await fetch('http://release-api:3000/api' + path, { method, headers: { Authorization: 'Bearer ' + jwt, ...(data ? { 'Content-Type': 'application/json' } : {}) }, body: data ? JSON.stringify(data) : undefined }); return { status: r.status, data: await r.json() }; };
+  const request = async (method, path, jwt, data) => { const r = await fetch('http://release-api:3000/api' + path, { method, headers: { Authorization: 'Bearer ' + jwt, ...(data ? { 'Content-Type': 'application/json' } : {}) }, body: data ? JSON.stringify(data) : undefined }); const text = await r.text(); return { status: r.status, data: text ? JSON.parse(text) : null }; };
   await check('saved token and foreign configuration are protected through the real HTTP API', async () => {
     const config = await request('GET', '/dte-config', context.customerToken); assert.equal(config.status, 200);
     const { JwtService } = require('@nestjs/jwt');
