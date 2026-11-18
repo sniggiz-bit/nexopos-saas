@@ -63,4 +63,19 @@ describe('Lioren contract and isolation', () => {
     db.sale.findUnique.mockResolvedValueOnce({ dteType: 39, dteFolio: 80000, dteStatus: 'ACEPTADO', dtePdfUrl: 'ejemplo-mock' });
     expect((await service.emitirBoleta('sale')).success).toBe(false); expect(api.issue).not.toHaveBeenCalled();
   });
+  it('distinguishes a real monthly zero from an unavailable provider query', async () => {
+    const f = fixture(); f.db.sale = { count: jest.fn(async () => 0), findMany: jest.fn(async () => []) };
+    f.api.index = jest.fn(async () => ({ total: 0, rows: [] }));
+    const first = await new DteConfigService(f.db, f.account, f.api).getStats('tenant-a');
+    expect(first.provider.total).toBe(0); expect(first.provider.partial).toBe(false);
+    f.api.index.mockImplementation(async (_token: string, type: number) => { if (type === 33) throw new LiorenApiError(503); return { total: 0, rows: [] }; });
+    const partial = await new DteConfigService(f.db, f.account, f.api).getStats('tenant-a');
+    expect(partial.provider.total).toBeNull(); expect(partial.provider.partial).toBe(true); expect(partial.provider.types[0].total).toBe(0);
+  });
+  it('keeps the previous token when the provider rejects a replacement', async () => {
+    const f = fixture(); f.api.company.mockRejectedValueOnce(new LiorenApiError(401));
+    await expect(new DteConfigService(f.db, f.account, f.api).upsert({ tenantId: 'tenant-a', liorenToken: 'rejected-fixture-credential' })).rejects.toThrow('Se conserva');
+    expect(f.db.dteConfig.upsert).not.toHaveBeenCalled();
+  });
+
 });
