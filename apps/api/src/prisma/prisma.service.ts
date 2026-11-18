@@ -179,6 +179,9 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
     return this.prisma.planModule;
   }
 
+  get tenantModuleOverride() { return this.prisma.tenantModuleOverride; }
+  get uploadAsset() { return this.prisma.uploadAsset; }
+
   get tenantModuleAddon() {
     return this.prisma.tenantModuleAddon;
   }

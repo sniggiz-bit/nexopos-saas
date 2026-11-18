@@ -27,7 +27,7 @@ export class BranchesService {
   async create(data: BranchChange & { name: string; tenantId: string }, actorId?: string) {
     if (typeof data.name !== 'string' || typeof data.tenantId !== 'string' || !data.tenantId || data.tenantId.length > 128) throw new BadRequestException('Nombre y empresa son obligatorios.');
     this.validate(data);
-    return this.prisma.$transaction(async tx => {
+    return this.prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       await this.lock(tx, data.tenantId);
       if (data.isActive) await this.activeLimit(tx, data.tenantId);
       const first = await tx.branch.count({ where: { tenantId: data.tenantId } }) === 0;
@@ -48,7 +48,7 @@ export class BranchesService {
   }
   async updateForTenant(tenantId: string, id: string, data: BranchChange, actorId?: string) {
     this.validate(data);
-    return this.prisma.$transaction(async tx => {
+    return this.prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       await this.lock(tx, tenantId);
       const branch = await tx.branch.findFirst({ where: { id, tenantId } });
       if (!branch) throw new NotFoundException('Sucursal no encontrada en esta empresa.');
@@ -66,7 +66,7 @@ export class BranchesService {
     return this.updateForTenant(branch.tenantId, id, { isActive }, actorId);
   }
   async removeForTenant(tenantId: string, id: string, actorId: string) {
-    return this.prisma.$transaction(async tx => {
+    return this.prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       await this.lock(tx, tenantId);
       const branch = await tx.branch.findFirst({ where: { id, tenantId }, include: {
         _count: { select: { users: true, sales: true, purchases: true, cashShifts: true, stockMovements: true, transfersFrom: true, transfersTo: true, transbankTransactions: true } },

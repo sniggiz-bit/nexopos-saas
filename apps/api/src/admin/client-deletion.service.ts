@@ -23,7 +23,7 @@ export class ClientDeletionService {
     if (!actor || actor.role !== 'SUPER_ADMIN' || !actor.isActive || !actor.password ||
         !await bcrypt.compare(password, actor.password)) throw new ForbiddenException('La contraseña del superadmin no es correcta.');
     if (actor.tenantId === id) throw new ForbiddenException('No puedes eliminar tu propia cuenta de plataforma.');
-    const result = await this.prisma.$transaction(async tx => {
+    const result = await this.prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       await tx.$queryRawUnsafe('SELECT "id" FROM "Tenant" WHERE "id"=$1 FOR UPDATE', id);
       const tenant = await tx.tenant.findUnique({ where: { id }, include: {
         users: { select: { id: true, role: true } },

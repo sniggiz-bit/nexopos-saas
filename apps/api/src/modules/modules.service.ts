@@ -1,3 +1,4 @@
+import { Prisma } from '@prisma/client';
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { effectiveModuleCodes, moduleTenantInclude } from './module-access';
@@ -35,7 +36,7 @@ export class ModulesService {
     const ids = [...new Set(moduleIds)];
     if (await this.prisma.module.count({ where: { id: { in: ids }, isActive: true } }) !== ids.length) throw new BadRequestException('Hay módulos inexistentes o deshabilitados.');
     const included = new Set(tenant.plan?.planModules.map(pm => pm.moduleId) || []);
-    return this.prisma.$transaction(async tx => {
+    return this.prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       await tx.tenantModuleAddon.deleteMany({ where: { tenantId } });
       const addons = ids.filter(id => !included.has(id));
       if (addons.length) await tx.tenantModuleAddon.createMany({ data: addons.map(moduleId => ({ tenantId, moduleId })) });
@@ -51,7 +52,7 @@ export class ModulesService {
     const catalog = await this.findAll();
     if (overrides.some(o => !catalog.some(m => m.id === o.moduleId) ||
         (o.enabled === true && !catalog.find(m => m.id === o.moduleId)?.isActive))) throw new BadRequestException('Módulo inexistente o deshabilitado globalmente.');
-    await this.prisma.$transaction(async tx => {
+    await this.prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       for (const o of overrides) {
         if (o.enabled === null) await tx.tenantModuleOverride.deleteMany({ where: { tenantId, moduleId: o.moduleId } });
         else await tx.tenantModuleOverride.upsert({

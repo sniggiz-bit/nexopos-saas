@@ -51,7 +51,7 @@ export class ClientManagementService {
   async updateProfile(id: string, dto: ClientProfileDto, actorId: string) {
     if (dto.name !== undefined && (typeof dto.name !== 'string' || !dto.name.trim())) throw new BadRequestException('El nombre de la empresa es obligatorio.');
     if (dto.billingStatus !== undefined && !['ACTIVE', 'PAST_DUE', 'CANCELED'].includes(dto.billingStatus)) throw new BadRequestException('Estado de suscripción inválido.');
-    await this.prisma.$transaction(async tx => {
+    await this.prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       await this.lock(tx, id);
       await tx.tenant.update({ where: { id }, data: {
         ...dto, name: dto.name?.trim(), nextPayment: dto.nextPayment === null ? null : dto.nextPayment ? new Date(dto.nextPayment) : undefined,
@@ -70,7 +70,7 @@ export class ClientManagementService {
     if (!dto.email || !dto.password) throw new BadRequestException('Correo y contraseña son obligatorios.');
     if (Buffer.byteLength(dto.password, 'utf8') > 72) throw new BadRequestException('La contraseña excede 72 bytes.');
     const password = await bcrypt.hash(dto.password, 10);
-    const user = await this.prisma.$transaction(async tx => {
+    const user = await this.prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       await this.lock(tx, tenantId);
       await this.validateBranch(tx, tenantId, dto.branchId);
       const settings = await tx.tenantSettings.findUnique({ where: { tenantId } });
@@ -97,7 +97,7 @@ export class ClientManagementService {
     this.validateUserInput(dto);
     if (dto.password && Buffer.byteLength(dto.password, 'utf8') > 72) throw new BadRequestException('La contraseña excede 72 bytes.');
     const password = dto.password ? await bcrypt.hash(dto.password, 10) : undefined;
-    const result = await this.prisma.$transaction(async tx => {
+    const result = await this.prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       await this.lock(tx, tenantId);
       const user = await tx.user.findFirst({ where: { id: userId, tenantId } });
       if (!user) throw new NotFoundException('Usuario no encontrado en esta empresa.');
@@ -120,7 +120,7 @@ export class ClientManagementService {
     return result;
   }
   async removeUser(tenantId: string, userId: string, confirmation: string, actorId: string) {
-    await this.prisma.$transaction(async tx => {
+    await this.prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       await this.lock(tx, tenantId);
       const user = await tx.user.findFirst({ where: { id: userId, tenantId }, include: {
         _count: { select: { sales: true, quotes: true, stockMovements: true, shiftsOpened: true, shiftsClosed: true, requestedTransfers: true, processedTransfers: true } },
