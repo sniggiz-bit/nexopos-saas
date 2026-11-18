@@ -52,7 +52,7 @@ export class LiorenApiService {
     return DTE_TYPES.map(type => {
       const row = list.find((item: any) => Number(item.codigosii ?? item.tipodoc) === type);
       const count = row?.folios?.disponibles; const next = row?.folios?.siguiente;
-      const nonnegative = (value: unknown) => value !== null && value !== undefined && Number.isSafeInteger(Number(value)) && Number(value) >= 0 ? Number(value) : null;
+      const nonnegative = (value: unknown) => (typeof value === 'number' || typeof value === 'string' && /^\d+$/.test(value)) && Number.isSafeInteger(Number(value)) && Number(value) >= 0 ? Number(value) : null;
       return { type, label: DTE_LABELS[type], providerActive: !!row, available: nonnegative(count), nextFolio: nonnegative(next) && Number(next) > 0 ? Number(next) : null };
     });
   }

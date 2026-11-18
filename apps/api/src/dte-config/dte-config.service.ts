@@ -30,7 +30,7 @@ export class DteConfigService {
   async getStats(tenantId: string, fresh = false) {
     const connection = await this.account.connection(tenantId, fresh);
     const month = chileMonth();
-    const key = tenantId + ':' + connection.config?.updatedAt.toISOString() + ':' + month.label;
+    const key = tenantId + ':' + this.account.fingerprint(connection.token) + ':' + connection.config?.updatedAt.toISOString() + ':' + month.label;
     let cached = this.statsCache.get(key);
     if (fresh || !cached || cached.until < Date.now()) {
       if (this.statsCache.size > 100) this.statsCache.clear();

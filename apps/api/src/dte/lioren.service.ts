@@ -5,7 +5,8 @@ import axios from 'axios';
 import { Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { LiorenAccountService } from './lioren-account.service';
-import { chileDate, DTE_TYPES, LiorenApiError, LiorenApiService, normalizeRut, siiStatus } from './lioren-api.service';
+import { effectiveModuleCodes, moduleTenantInclude } from '../modules/module-access';
+import { chileDate, DTE_CODES, DTE_TYPES, LiorenApiError, LiorenApiService, normalizeRut, siiStatus } from './lioren-api.service';
 
 @Injectable()
 export class LiorenService {
@@ -33,12 +34,17 @@ export class LiorenService {
     }
     const token = connection.token;
     const submission = await this.prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+      await tx.$queryRawUnsafe('SELECT "id" FROM "Tenant" WHERE "id"=$1 FOR UPDATE', sale.tenantId);
       await tx.$queryRawUnsafe('SELECT "id" FROM "Sale" WHERE "id"=$1 FOR UPDATE', saleId);
       const current = await tx.sale.findUnique({ where: { id: saleId }, include: { dteSubmission: true } });
       if (!current || current.dteSubmission || current.dteFolio || !['PENDING', 'BLOQUEADO'].includes(current.dteStatus)) return null;
       if (current.updatedAt.getTime() !== sale.updatedAt.getTime()) throw new ConflictException('La venta cambió durante la validación. Actualiza antes de continuar.');
       const config = await tx.dteConfig.findUnique({ where: { tenantId: sale.tenantId } });
-      if (config?.liorenToken?.trim() !== token) throw new ConflictException('La credencial cambió durante la validación. No se envió el documento.');
+      if (config?.liorenToken?.trim() !== token || config?.updatedAt.getTime() !== connection.config?.updatedAt.getTime()) throw new ConflictException('La configuración cambió durante la validación. No se envió el documento.');
+      const tenant = await tx.tenant.findUnique({ where: { id: sale.tenantId }, include: moduleTenantInclude });
+      const catalog = await tx.module.findMany({ select: { code: true, isActive: true } });
+      const branch = await tx.branch.findUnique({ where: { id: sale.branchId } });
+      if (!tenant || tenant.status !== 'ACTIVE' || tenant.billingStatus !== 'ACTIVE' || normalizeRut(tenant.rut) !== normalizeRut(connection.status.company.rut) || !effectiveModuleCodes(tenant, catalog).includes(DTE_CODES[type]) || !branch?.isActive || branch.tenantId !== sale.tenantId) throw new ForbiddenException('La empresa, sucursal o servicio cambió durante la validación. No se envió el documento.');
       const created = await tx.dteSubmission.create({ data: { id: randomUUID(), saleId, tenantId: sale.tenantId, tokenHash: this.account.fingerprint(token), payload } });
       await tx.sale.update({ where: { id: saleId }, data: { dteStatus: 'ENVIANDO', dteIssuerRut: normalizeRut(connection.status.company.rut) } });
       return created;
@@ -125,7 +131,7 @@ export class LiorenService {
   }
   async consultarFolios(tenantId: string) { return (await this.account.status(tenantId)).types; }
 
-  async consultaRut(rut: string, tenantId?: string) {
+  async consultaRut(rut: string, _tenantId?: string) {
     try {
       const cleanRut = rut.replace(/\./g, '').replace(/-/g, '').trim();
       const dv = cleanRut.slice(-1);

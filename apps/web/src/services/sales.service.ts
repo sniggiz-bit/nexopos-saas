@@ -177,7 +177,7 @@ export function formatCLP(amount: number): string {
 
 /** Resolve which PDF URL to open for a given sale */
 export function resolvePdfUrl(sale: SaleRecord): string | null {
-    if (sale.dtePdfUrl && !sale.dtePdfUrl.includes('ejemplo-mock')) {
+    if (sale.dteVerifiedAt && sale.dteProviderId && sale.dtePdfUrl?.startsWith('/api/sales/')) {
         return sale.dtePdfUrl;
     }
     return sale.internalReceiptUrl ?? null;

@@ -109,6 +109,7 @@ export class SalesController {
   @Post(':id/nota-credito')
   @HttpCode(HttpStatus.OK)
   async emitNotaCredito(@Param('id') id: string, @CurrentUser() user: any) {
+    if (!['TENANT_ADMIN', 'SUPER_ADMIN'].includes(user.role)) throw new ForbiddenException('Solo el administrador puede emitir notas de crédito.');
     return this.salesService.emitirNotaCreditoForSale(id, user.tenantId);
   }
 

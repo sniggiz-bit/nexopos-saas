@@ -457,28 +457,19 @@ export class SalesService {
 
     let pdfBuffer: Buffer | null = null;
     let filename = `comprobante-${saleId}.pdf`;
-    let docTypeLabel = 'Comprobante';
+    const verified = !!sale.dteVerifiedAt && !!sale.dteProviderId && !!sale.dteFolio;
+    let docTypeLabel = 'Comprobante interno';
 
-    if (sale.dteType === 39) docTypeLabel = 'Boleta';
-    else if (sale.dteType === 33) docTypeLabel = 'Factura';
-    else if (sale.dteType === 52) docTypeLabel = 'Guía de Despacho';
+    if (verified && sale.dteType === 39) docTypeLabel = 'Boleta';
+    else if (verified && sale.dteType === 33) docTypeLabel = 'Factura';
+    else if (verified && sale.dteType === 52) docTypeLabel = 'Guía de Despacho';
 
-    const folio = sale.dteFolio ? String(sale.dteFolio) : sale.id.substring(0, 8).toUpperCase();
+    const folio = verified ? String(sale.dteFolio) : sale.id.substring(0, 8).toUpperCase();
     filename = `${docTypeLabel.toLowerCase().replace(/ /g, '_')}-${folio}.pdf`;
 
     // 1. Try DTE PDF if present
     if (sale.dteVerifiedAt && sale.dteProviderId && sale.dtePdfUrl?.startsWith('/api/sales/')) {
       pdfBuffer = await this.dteService.pdf(sale.id, { tenantId: sale.tenantId });
-    } else if (sale.dtePdfUrl && !sale.dtePdfUrl.includes('ejemplo-mock')) {
-      try {
-        const response = await fetch(sale.dtePdfUrl);
-        if (response.ok) {
-          const arrayBuffer = await response.arrayBuffer();
-          pdfBuffer = Buffer.from(arrayBuffer);
-        }
-      } catch (err) {
-        this.logger.error(`Error downloading DTE PDF from ${sale.dtePdfUrl}:`, err);
-      }
     }
 
     // 2. Fallback to Internal Receipt PDF
@@ -513,7 +504,7 @@ export class SalesService {
   async cancelInternalSale(saleId: string, tenantId: string, userId: string) {
     const sale = await this.prisma.sale.findUnique({
       where: { id: saleId },
-      include: { items: true },
+      include: { items: true, dteSubmission: true },
     });
 
     if (!sale) {
@@ -524,6 +515,7 @@ export class SalesService {
       throw new BadRequestException('La venta no pertenece a este inquilino');
     }
 
+    if (sale.dteSubmission || ['ERROR', 'ENVIANDO', 'PENDIENTE_CONFIRMACION', 'REQUIERE_REVISION'].includes(sale.dteStatus)) throw new BadRequestException('El envío tributario requiere conciliación antes de anular la venta. No se devolverá inventario.');
     if (sale.dteFolio) {
       throw new BadRequestException(
         'No se puede eliminar una venta con folio DTE asignado. Utilice Nota de Crédito.',
