@@ -11,7 +11,7 @@ import { CreateSaleDto, CreatePaymentDto } from './dto/create-sale.dto';
 import { CreditsService } from '../credits/credits.service';
 import { InventoryService } from '../inventory/inventory.service';
 import { EventsService } from '../events/events.service';
-import { MovementType } from '@prisma/client';
+import { MovementType, Prisma } from '@prisma/client';
 import { EmailService } from '../email/email.service';
 import * as fs from 'fs';
 
@@ -393,92 +393,43 @@ export class SalesService {
   }
 
   async emitirNotaCreditoForSale(saleId: string, tenantId: string) {
-    const originalSale = await this.prisma.sale.findUnique({
-      where: { id: saleId },
-      include: { items: true, payments: true },
+    const note = await this.prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+      await tx.$queryRawUnsafe('SELECT "id" FROM "Sale" WHERE "id"=$1 FOR UPDATE', saleId);
+      const original = await tx.sale.findFirst({ where: { id: saleId, tenantId }, include: { items: true, credit: true } });
+      if (!original) throw new NotFoundException('Venta no encontrada.');
+      const existing = await tx.sale.findFirst({ where: { originalSaleId: saleId, tenantId, dteType: 61 } });
+      if (existing) return existing;
+      if (original.status !== 'COMPLETED' || !original.dteVerifiedAt || !original.dteProviderId || !original.dteFolio || !['ACEPTADO', 'REPARO'].includes(original.dteStatus)) throw new BadRequestException('Se requiere una venta completada y un documento original confirmado antes de emitir la nota de crédito.');
+      if (original.credit) throw new BadRequestException('La venta tiene un crédito asociado. Revisa su conciliación antes de emitir una anulación completa.');
+      return tx.sale.create({ data: {
+        total: original.total, discountAmount: original.discountAmount, tenantId, branchId: original.branchId, userId: original.userId,
+        customerId: original.customerId, status: 'PENDING_CREDIT_NOTE', dteType: 61, originalSaleId: saleId,
+        items: { create: original.items.map(item => ({ productId: item.productId, quantity: item.quantity, price: item.price, discountAmount: item.discountAmount })) },
+      } });
     });
-
-    if (!originalSale) throw new NotFoundException('Venta no encontrada');
-    if (originalSale.tenantId !== tenantId) {
-      throw new BadRequestException('La venta no pertenece a este tenant');
-    }
-    if (originalSale.status !== 'COMPLETED') {
-      throw new BadRequestException(
-        'Solo se puede emitir Nota de Crédito para ventas completadas',
-      );
-    }
-
-    // Verificar si ya existe una nota de crédito emitida para esta venta
-    const existingNc = await this.prisma.sale.findFirst({
-      where: {
-        originalSaleId: saleId,
-        dteType: 61,
-        dteStatus: 'ACEPTADO',
-      },
+    const result = await this.dteService.emitirDte(note.id);
+    if (result.status === 'ACEPTADO') await this.applyCreditNote(note.id, tenantId);
+    return result;
+  }
+  async verifyDte(saleId: string, tenantId: string) {
+    const result = await this.dteService.verify(saleId, tenantId);
+    if (result.status === 'ACEPTADO') await this.applyCreditNote(saleId, tenantId);
+    return result;
+  }
+  dtePdf(saleId: string, user: { tenantId: string; role?: string; branchId?: string }) { return this.dteService.pdf(saleId, user); }
+  private async applyCreditNote(noteId: string, tenantId: string) {
+    await this.prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+      const note = await tx.sale.findFirst({ where: { id: noteId, tenantId, dteType: 61, dteStatus: 'ACEPTADO', dteVerifiedAt: { not: null } } });
+      if (!note?.originalSaleId) return;
+      await tx.$queryRawUnsafe('SELECT "id" FROM "Sale" WHERE "id"=$1 FOR UPDATE', note.originalSaleId);
+      const original = await tx.sale.findFirst({ where: { id: note.originalSaleId, tenantId }, include: { items: true } });
+      if (!original) throw new NotFoundException('Venta original no encontrada.');
+      if (original.status === 'CANCELLED') return;
+      if (original.status !== 'COMPLETED') throw new BadRequestException('La venta original requiere revisión antes de aplicar la anulación.');
+      for (const item of original.items) await this.inventoryService.logMovement({ productId: item.productId, branchId: original.branchId, quantity: Number(item.quantity), type: MovementType.RETURN, reference: 'Nota de crédito confirmada ' + note.dteFolio, userId: original.userId || undefined }, tx);
+      await tx.sale.update({ where: { id: original.id }, data: { status: 'CANCELLED' } });
+      await tx.sale.update({ where: { id: note.id }, data: { status: 'CREDIT_NOTE' } });
     });
-    if (existingNc) {
-      throw new BadRequestException(
-        `Ya se emitió una Nota de Crédito (Folio #${existingNc.dteFolio}) para esta venta`,
-      );
-    }
-
-    const ncSale = await this.prisma.$transaction(async (prisma) => {
-      // 1. Marcar venta original como ANULADA (CANCELLED)
-      await prisma.sale.update({
-        where: { id: saleId },
-        data: { status: 'CANCELLED' },
-      });
-
-      // 2. Devolver productos al inventario
-      for (const item of originalSale.items) {
-        await this.inventoryService.logMovement(
-          {
-            productId: item.productId,
-            branchId: originalSale.branchId,
-            quantity: Number(item.quantity), // Positivo = Ingreso
-            type: MovementType.RETURN,
-            reference: `Nota de Crédito para venta ${originalSale.dteFolio ?? saleId}`,
-            userId: originalSale.userId || undefined,
-          },
-          prisma,
-        );
-      }
-
-      // 3. Crear nueva venta (tipo 61) con los mismos datos
-      return prisma.sale.create({
-        data: {
-          total: originalSale.total,
-          discountAmount: originalSale.discountAmount,
-          tenantId: originalSale.tenantId,
-          branchId: originalSale.branchId,
-          userId: originalSale.userId,
-          cashShiftId: originalSale.cashShiftId,
-          customerId: originalSale.customerId,
-          quoteId: originalSale.quoteId,
-          status: 'COMPLETED',
-          dteType: 61,
-          dteStatus: 'PENDING',
-          originalSaleId: originalSale.id,
-          items: {
-            create: originalSale.items.map((item) => ({
-              productId: item.productId,
-              quantity: item.quantity,
-              price: item.price,
-              discountAmount: item.discountAmount,
-            })),
-          },
-          payments: {
-            create: originalSale.payments.map((p) => ({
-              amount: p.amount,
-              paymentMethod: p.paymentMethod,
-            })),
-          },
-        },
-      });
-    });
-
-    // 4. Emitir el DTE para la nueva venta (tipo 61)
-    return this.dteService.emitirDte(ncSale.id);
   }
 
   private async emitDteAndReceipt(saleId: string) {
@@ -506,26 +457,19 @@ export class SalesService {
 
     let pdfBuffer: Buffer | null = null;
     let filename = `comprobante-${saleId}.pdf`;
-    let docTypeLabel = 'Comprobante';
+    const verified = !!sale.dteVerifiedAt && !!sale.dteProviderId && !!sale.dteFolio;
+    let docTypeLabel = 'Comprobante interno';
 
-    if (sale.dteType === 39) docTypeLabel = 'Boleta';
-    else if (sale.dteType === 33) docTypeLabel = 'Factura';
-    else if (sale.dteType === 52) docTypeLabel = 'Guía de Despacho';
+    if (verified && sale.dteType === 39) docTypeLabel = 'Boleta';
+    else if (verified && sale.dteType === 33) docTypeLabel = 'Factura';
+    else if (verified && sale.dteType === 52) docTypeLabel = 'Guía de Despacho';
 
-    const folio = sale.dteFolio ? String(sale.dteFolio) : sale.id.substring(0, 8).toUpperCase();
+    const folio = verified ? String(sale.dteFolio) : sale.id.substring(0, 8).toUpperCase();
     filename = `${docTypeLabel.toLowerCase().replace(/ /g, '_')}-${folio}.pdf`;
 
     // 1. Try DTE PDF if present
-    if (sale.dtePdfUrl && !sale.dtePdfUrl.includes('ejemplo-mock')) {
-      try {
-        const response = await fetch(sale.dtePdfUrl);
-        if (response.ok) {
-          const arrayBuffer = await response.arrayBuffer();
-          pdfBuffer = Buffer.from(arrayBuffer);
-        }
-      } catch (err) {
-        this.logger.error(`Error downloading DTE PDF from ${sale.dtePdfUrl}:`, err);
-      }
+    if (sale.dteVerifiedAt && sale.dteProviderId && sale.dtePdfUrl?.startsWith('/api/sales/')) {
+      pdfBuffer = await this.dteService.pdf(sale.id, { tenantId: sale.tenantId });
     }
 
     // 2. Fallback to Internal Receipt PDF
@@ -560,7 +504,7 @@ export class SalesService {
   async cancelInternalSale(saleId: string, tenantId: string, userId: string) {
     const sale = await this.prisma.sale.findUnique({
       where: { id: saleId },
-      include: { items: true },
+      include: { items: true, dteSubmission: true },
     });
 
     if (!sale) {
@@ -571,6 +515,7 @@ export class SalesService {
       throw new BadRequestException('La venta no pertenece a este inquilino');
     }
 
+    if (sale.dteSubmission || ['ERROR', 'ENVIANDO', 'PENDIENTE_CONFIRMACION', 'REQUIERE_REVISION'].includes(sale.dteStatus)) throw new BadRequestException('El envío tributario requiere conciliación antes de anular la venta. No se devolverá inventario.');
     if (sale.dteFolio) {
       throw new BadRequestException(
         'No se puede eliminar una venta con folio DTE asignado. Utilice Nota de Crédito.',

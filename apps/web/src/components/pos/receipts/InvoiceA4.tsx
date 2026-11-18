@@ -1,3 +1,5 @@
+import { openDtePdf } from '@/api/dte-config';
+import toast from 'react-hot-toast';
 import React from 'react';
 import { Sale } from '@/api/sales';
 import { formatPrice } from '@/utils/formatters';
@@ -24,7 +26,7 @@ export const InvoiceA4: React.FC<InvoiceA4Props> = ({
     tenantAddress = 'Santiago, Chile'
 }) => {
     const dteLabel = DTE_LABELS[sale.dteType ?? 39] ?? `DOCUMENTO DTE TIPO ${sale.dteType}`;
-    const hasRealPdf = sale.dtePdfUrl && !sale.dtePdfUrl.includes('ejemplo-mock');
+    const hasRealPdf = !!sale.dteVerifiedAt && !!sale.dteProviderId;
 
     return (
         <div className="invoice-a4" style={{
@@ -68,11 +70,12 @@ export const InvoiceA4: React.FC<InvoiceA4Props> = ({
                 `}
             </style>
 
+            {!hasRealPdf && <p style={{ border: '1px solid #92400e', padding: 12, color: '#92400e', fontWeight: 'bold' }}>Comprobante interno. No acredita emisión ni aceptación de un documento tributario.</p>}
             {/* Enlace al PDF oficial de Lioren (con TED real) — visible en pantalla, oculto al imprimir */}
             {hasRealPdf && (
                 <div className="lioren-banner no-print">
-                    ✅ <strong>Documento DTE aceptado por el SII</strong> —{' '}
-                    <a href={sale.dtePdfUrl!} target="_blank" rel="noopener noreferrer">
+                    ✅ <strong>Documento tributario confirmado en Lioren</strong> —{' '}
+                    <a href="#" onClick={event => { event.preventDefault(); openDtePdf('/sales/' + sale.id + '/dte/pdf').catch(() => toast.error('No se pudo consultar el PDF oficial.')); }}>
                         Ver / Imprimir documento oficial con Timbre Electrónico (TED) →
                     </a>
                 </div>
@@ -93,9 +96,9 @@ export const InvoiceA4: React.FC<InvoiceA4Props> = ({
                 </div>
                 <div className="doc-type">
                     <h2>R.U.T.: {tenantRut}</h2>
-                    <h1 style={{ margin: '10px 0', fontSize: '18px' }}>{dteLabel}</h1>
-                    <h2>Nº {sale.dteFolio ?? 'SIN FOLIO'}</h2>
-                    {sale.dteStatus === 'ACEPTADO' && (
+                    <h1 style={{ margin: '10px 0', fontSize: '18px' }}>{hasRealPdf ? dteLabel : 'COMPROBANTE INTERNO'}</h1>
+                    <h2>Nº {hasRealPdf ? sale.dteFolio : 'SIN VERIFICAR'}</h2>
+                    {hasRealPdf && sale.dteStatus === 'ACEPTADO' && (
                         <span style={{ fontSize: '11px', color: '#16a34a', fontWeight: 'bold' }}>
                             ✓ ACEPTADO SII
                         </span>

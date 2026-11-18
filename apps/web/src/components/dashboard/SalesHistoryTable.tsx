@@ -1,3 +1,5 @@
+import { openDtePdf } from '../../api/dte-config';
+import toast from 'react-hot-toast';
 import { Eye, FileX, ReceiptText, RefreshCw, Trash2 } from 'lucide-react';
 import type { SaleRecord } from '../../services/sales.service';
 import {
@@ -51,6 +53,7 @@ function StatusBadge({ status }: { status: SaleRecord['status'] }) {
             Completada
         </span>
     );
+    if (status === 'PENDING_CREDIT_NOTE' || status === 'CREDIT_NOTE') return <span className="rounded-full bg-amber-500/10 px-2.5 py-1 text-xs text-amber-500">{status === 'CREDIT_NOTE' ? 'Nota de crédito confirmada' : 'Nota de crédito pendiente'}</span>;
     if (status === 'CANCELLED') return (
         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold"
             style={{ background: C.redA(0.1), color: C.red, border: `1px solid ${C.redA(0.2)}` }}>
@@ -110,15 +113,13 @@ const COLS = ['Folio / ID', 'Fecha y Hora', 'Sucursal', 'Método de Pago', 'Tota
 
 export function SalesHistoryTable({ sales, isLoading, onEmitNotaCredito, emittingNcId, onDeleteInternalSale, deletingSaleId, userRole }: SalesHistoryTableProps) {
     const handleViewPdf = (sale: SaleRecord) => {
-        const pdfUrl = resolvePdfUrl(sale);
-        if (!pdfUrl) return;
-        const apiUrl  = import.meta.env.VITE_API_URL ?? '';
-        const fullUrl = pdfUrl.startsWith('/api/') ? `${apiUrl}${pdfUrl}` : pdfUrl;
-        window.open(fullUrl, '_blank', 'noopener,noreferrer');
+        if (sale.dteVerifiedAt && sale.dteProviderId) { openDtePdf('/sales/' + sale.id + '/dte/pdf').catch(() => toast.error('No se pudo consultar el PDF oficial.')); return; }
+        const url = sale.internalReceiptUrl;
+        if (url && url.startsWith('/api/')) window.open(url, '_blank', 'noopener,noreferrer');
     };
 
     const getPdfLabel = (sale: SaleRecord): string => {
-        if (!sale.dtePdfUrl || sale.dtePdfUrl.includes('ejemplo-mock')) return 'Ver Ticket';
+        if (!sale.dteVerifiedAt || !sale.dteProviderId) return 'Ver Ticket';
         const labels: Record<number, string> = { 39: 'Ver Boleta', 33: 'Ver Factura', 52: 'Ver Guía', 61: 'Ver NC' };
         return labels[sale.dteType ?? 39] ?? 'Ver DTE';
     };
@@ -150,9 +151,9 @@ export function SalesHistoryTable({ sales, isLoading, onEmitNotaCredito, emittin
                         ) : (
                             sales.map((sale, idx) => {
                                 const pdfAvailable = !!resolvePdfUrl(sale);
-                                const canEmitNC    = sale.status === 'COMPLETED' && !!sale.dteFolio && !!onEmitNotaCredito;
+                                const canEmitNC    = sale.status === 'COMPLETED' && !!sale.dteFolio && !!sale.dteVerifiedAt && ['ACEPTADO', 'REPARO'].includes(sale.dteStatus || '') && ['TENANT_ADMIN', 'SUPER_ADMIN'].includes(userRole || '') && !!onEmitNotaCredito;
                                 const isAdmin      = userRole === 'TENANT_ADMIN' || userRole === 'SUPER_ADMIN';
-                                const canDeleteInternal = sale.status === 'COMPLETED' && !sale.dteFolio && isAdmin && !!onDeleteInternalSale;
+                                const canDeleteInternal = sale.status === 'COMPLETED' && !sale.dteFolio && ['PENDING', 'BLOQUEADO'].includes(sale.dteStatus || 'PENDING') && isAdmin && !!onDeleteInternalSale;
                                 const isEven       = idx % 2 === 0;
 
                                 return (
@@ -172,6 +173,7 @@ export function SalesHistoryTable({ sales, isLoading, onEmitNotaCredito, emittin
                                                     </span>
                                                 )}
                                                 {sale.dteType && <DteTypeBadge dteType={sale.dteType} />}
+                                                {sale.dteFolio && !sale.dteVerifiedAt && <span className="text-[10px] text-amber-500">Sin confirmar en Lioren</span>}
                                             </div>
                                         </td>
 

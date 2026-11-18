@@ -32,4 +32,7 @@ export class DteService {
         return this.liorenService.emitirBoleta(saleId);
     }
   }
+  verify(saleId: string, tenantId: string) { return this.liorenService.verify(saleId, tenantId); }
+  pdf(saleId: string, user: { tenantId: string; role?: string; branchId?: string }) { return this.liorenService.salePdf(saleId, user); }
+
 }

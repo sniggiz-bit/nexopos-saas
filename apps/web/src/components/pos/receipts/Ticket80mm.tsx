@@ -67,9 +67,8 @@ export const Ticket80mm: React.FC<Ticket80mmProps> = ({
     
     // DTE logic
     const dteType = sale.dteType;
-    const isDte = !!sale.dteFolio;
-    const hasRealPdf = sale.dtePdfUrl && !sale.dtePdfUrl.includes('ejemplo-mock');
-    const folio = sale.dteFolio ? String(sale.dteFolio) : (sale.id?.split('-')[0]?.toUpperCase() ?? '');
+    const isDte = !!sale.dteFolio && !!sale.dteVerifiedAt && !!sale.dteProviderId;
+    const folio = isDte && sale.dteFolio ? String(sale.dteFolio) : (sale.id?.split('-')[0]?.toUpperCase() ?? '');
 
     let docTitle = 'Comprobante de Venta';
     if (isDte) {
@@ -268,26 +267,7 @@ export const Ticket80mm: React.FC<Ticket80mmProps> = ({
                 ) : null;
             })()}
 
-            {isDte && sale.dtePdfUrl && (
-                <>
-                    <div className="dash" />
-                    <div className="tc" style={{ margin: '8px 0' }}>
-                        <p className="bold" style={{ fontSize: '9px', marginBottom: '4px' }}>
-                            DOCUMENTO OFICIAL SII
-                        </p>
-                        <img 
-                            src={`https://api.qrserver.com/v1/create-qr-code/?size=130x130&data=${encodeURIComponent(sale.dtePdfUrl)}`} 
-                            alt="QR DTE" 
-                            style={{ width: '130px', height: '130px', margin: '0 auto', display: 'block' }} 
-                        />
-                        <p className="small" style={{ fontSize: '7.5px', marginTop: '4px', opacity: 0.8, lineHeight: '1.2' }}>
-                            {hasRealPdf 
-                                ? 'Escanee para descargar el PDF oficial con Timbre Electrónico (TED)' 
-                                : 'MOCK DTE — Escanee para ver ejemplo de PDF'}
-                        </p>
-                    </div>
-                </>
-            )}
+            <div className="tc small" style={{ marginTop: 8 }}>Comprobante interno de venta. El documento tributario y su timbre se consultan en el PDF oficial de Lioren.</div>
 
             <div className="dash" />
 

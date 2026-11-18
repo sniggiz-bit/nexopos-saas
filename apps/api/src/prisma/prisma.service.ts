@@ -180,6 +180,7 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
   }
 
   get tenantModuleOverride() { return this.prisma.tenantModuleOverride; }
+  get dteSubmission() { return this.client.dteSubmission; }
   get uploadAsset() { return this.prisma.uploadAsset; }
 
   get tenantModuleAddon() {

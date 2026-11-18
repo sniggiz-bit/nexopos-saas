@@ -11,7 +11,7 @@ import { apiClient } from '../api/client';
 // Strict TypeScript types
 // ─────────────────────────────────────────────
 
-export type SaleStatus = 'COMPLETED' | 'PRE_SALE' | 'CANCELLED';
+export type SaleStatus = 'COMPLETED' | 'PRE_SALE' | 'CANCELLED' | 'PENDING_CREDIT_NOTE' | 'CREDIT_NOTE';
 
 export type PaymentMethodKey =
     | 'EFECTIVO'
@@ -62,6 +62,8 @@ export interface SaleRecord {
     userId?: string;
     total: number;
     status: SaleStatus;
+    dteVerifiedAt?: string | null;
+    dteProviderId?: string | null;
     dteFolio?: number | null;
     dteStatus?: string | null;
     dteType?: number | null;
@@ -175,7 +177,7 @@ export function formatCLP(amount: number): string {
 
 /** Resolve which PDF URL to open for a given sale */
 export function resolvePdfUrl(sale: SaleRecord): string | null {
-    if (sale.dtePdfUrl && !sale.dtePdfUrl.includes('ejemplo-mock')) {
+    if (sale.dteVerifiedAt && sale.dteProviderId && sale.dtePdfUrl?.startsWith('/api/sales/')) {
         return sale.dtePdfUrl;
     }
     return sale.internalReceiptUrl ?? null;

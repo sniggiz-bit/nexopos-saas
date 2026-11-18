@@ -10,7 +10,9 @@ import {
   UseGuards,
   Delete,
   ForbiddenException,
+  Res,
 } from '@nestjs/common';
+import type { Response } from 'express';
 import { UserRole } from '@prisma/client';
 import { SalesService } from './sales.service';
 import { CreateSaleDto, CreatePaymentDto } from './dto/create-sale.dto';
@@ -107,7 +109,20 @@ export class SalesController {
   @Post(':id/nota-credito')
   @HttpCode(HttpStatus.OK)
   async emitNotaCredito(@Param('id') id: string, @CurrentUser() user: any) {
+    if (!['TENANT_ADMIN', 'SUPER_ADMIN'].includes(user.role)) throw new ForbiddenException('Solo el administrador puede emitir notas de crédito.');
     return this.salesService.emitirNotaCreditoForSale(id, user.tenantId);
+  }
+
+  @Post(':id/dte/verify')
+  async verifyDte(@Param('id') id: string, @CurrentUser() user: any) {
+    if (!['TENANT_ADMIN', 'SUPER_ADMIN'].includes(user.role)) throw new ForbiddenException('Solo el administrador puede conciliar documentos tributarios.');
+    return this.salesService.verifyDte(id, user.tenantId);
+  }
+  @Get(':id/dte/pdf')
+  async dtePdf(@Param('id') id: string, @CurrentUser() user: any, @Res() res: Response) {
+    const buffer = await this.salesService.dtePdf(id, user);
+    res.set({ 'Content-Type': 'application/pdf', 'Content-Disposition': 'inline; filename="dte.pdf"', 'Cache-Control': 'no-store' });
+    res.send(buffer);
   }
 
   @Post(':id/send-email')

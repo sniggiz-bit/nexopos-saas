@@ -125,7 +125,7 @@ export function SalesHistoryPage() {
         mutationFn: (saleId: string) => emitNotaCredito(saleId),
         onSuccess: (data) => {
             if (data.success) {
-                toast({ title: 'Nota de Crédito emitida', description: data.folio ? `Folio #${data.folio}` : 'DTE emitido exitosamente' });
+                toast({ title: data.status === 'ACEPTADO' ? 'Nota de crédito aceptada' : 'Nota emitida; pendiente de confirmación SII', description: data.folio ? `Folio #${data.folio}` : 'DTE emitido exitosamente' });
                 refetch();
             } else {
                 toast({ variant: 'destructive', title: 'Error al emitir NC', description: data.error || 'No se pudo emitir la Nota de Crédito' });
@@ -153,7 +153,7 @@ export function SalesHistoryPage() {
     const sales          = useMemo(() => !filters.status ? salesRaw : salesRaw.filter(s => s.status === filters.status), [salesRaw, filters.status]);
     const totalRevenue   = useMemo(() => sales.filter(s => s.status === 'COMPLETED' && s.dteType !== 61).reduce((a, s) => a + s.total, 0), [sales]);
     const completedCount = useMemo(() => sales.filter(s => s.status === 'COMPLETED' && s.dteType !== 61).length, [sales]);
-    const cancelledCount = useMemo(() => sales.filter(s => s.status === 'CANCELLED' || s.dteType === 61).length, [sales]);
+    const cancelledCount = useMemo(() => sales.filter(s => s.status === 'CANCELLED').length, [sales]);
 
     const set = <K extends keyof Filters>(key: K, value: Filters[K]) =>
         setFilters(prev => ({ ...prev, [key]: value }));

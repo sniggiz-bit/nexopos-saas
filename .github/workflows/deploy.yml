@@ -45,7 +45,7 @@ jobs:
       - name: Check welcome messages and admin notifications
         run: |
           docker run --rm -v "$PWD/apps/api/scripts:/app/apps/api/scripts:ro" -v "$PWD/apps/web/src:/app/apps/web/src:ro" nexopos-api-tests node scripts/check-admin-notifications.cjs
-          docker run --rm nexopos-api-tests npm test -- --runInBand --runTestsByPath src/email/email.service.spec.ts src/email/welcome-emails.service.spec.ts src/auth/auth.service.spec.ts src/users/users.service.spec.ts src/auth/resource-limit.guard.spec.ts
+          docker run --rm nexopos-api-tests npm test -- --runInBand --runTestsByPath src/email/email.service.spec.ts src/email/welcome-emails.service.spec.ts src/auth/auth.service.spec.ts src/users/users.service.spec.ts src/auth/resource-limit.guard.spec.ts src/dte/lioren-integrity.spec.ts
       - name: Build Web production image
         run: docker build -f apps/web/Dockerfile.prod -t nexopos-web-check .
       - name: Boot release against a disposable database
@@ -63,6 +63,8 @@ jobs:
           docker run --rm --network release-check -v "$PWD/apps/api/scripts:/app/apps/api/scripts:ro" -e NEXOPOS_CLIENT_CHECK=1 -e DATABASE_URL=postgresql://postgres:isolated-check@release-db:5432/migration_check nexopos-api-tests node scripts/check-client-migration.cjs before
           docker run --rm --network release-check -e DATABASE_URL=postgresql://postgres:isolated-check@release-db:5432/migration_check nexopos-api-check prisma db execute --schema prisma/schema.prisma --file prisma/migrations/20261118060000_client_management/migration.sql
           docker run --rm --network release-check -v "$PWD/apps/api/scripts:/app/apps/api/scripts:ro" -e NEXOPOS_CLIENT_CHECK=1 -e DATABASE_URL=postgresql://postgres:isolated-check@release-db:5432/migration_check nexopos-api-tests node scripts/check-client-migration.cjs after
+          docker run --rm --network release-check -e DATABASE_URL=postgresql://postgres:isolated-check@release-db:5432/migration_check nexopos-api-check prisma db execute --schema prisma/schema.prisma --file prisma/migrations/20261118070000_lioren_integrity/migration.sql
+          docker run --rm --network release-check -e DATABASE_URL=postgresql://postgres:isolated-check@release-db:5432/migration_check nexopos-api-tests node -e 'const {PrismaClient}=require("@prisma/client"); const p=new PrismaClient(); p.dteSubmission.count().then(n=>{if(n!==0) throw Error("Migration must preserve an empty submission table");}).finally(()=>p.$disconnect());'
           docker run --rm --network release-check -e DATABASE_URL=postgresql://postgres:isolated-check@release-db:5432/release_check nexopos-api-check prisma db push --skip-generate
           mkdir -p "$RUNNER_TEMP/client-check-uploads" "$RUNNER_TEMP/client-check-results"
           docker run -d --name release-api --network release-check --network-alias api -v "$RUNNER_TEMP/client-check-uploads:/app/uploads" -e DATABASE_URL=postgresql://postgres:isolated-check@release-db:5432/release_check -e JWT_SECRET=isolated-ci-check-secret -e NODE_ENV=production nexopos-api-check node dist/main.js
@@ -77,9 +79,14 @@ jobs:
       - name: Check complete client administration and deletion isolation
         run: |
           docker run --rm --network release-check -v "$PWD/apps/api/scripts:/app/apps/api/scripts:ro" -v "$RUNNER_TEMP/client-check-uploads:/app/uploads" -v "$RUNNER_TEMP/client-check-results:/checks-results" -e NEXOPOS_CLIENT_CHECK=1 -e JWT_SECRET=isolated-ci-check-secret -e DATABASE_URL=postgresql://postgres:isolated-check@release-db:5432/release_check nexopos-api-tests node scripts/check-client-management.cjs
+      - name: Check Lioren emission isolation and confirmed credit notes
+        run: docker run --rm --network release-check -v "$PWD/apps/api/scripts:/app/apps/api/scripts:ro" -v "$RUNNER_TEMP/client-check-results:/checks-results" -e NEXOPOS_LIOREN_CHECK=1 -e DATABASE_URL=postgresql://postgres:isolated-check@release-db:5432/release_check nexopos-api-tests node scripts/check-lioren-integrity.cjs
       - name: Check real client forms and mobile presentation
         run: |
           docker run --rm --network release-check -e PLAYWRIGHT_BROWSERS_PATH=/ms-playwright -v "$PWD/apps/api/scripts:/checks:ro" -v "$RUNNER_TEMP/client-check-results:/checks-results" mcr.microsoft.com/playwright:v1.56.1-noble sh -c 'npm install --prefix /tmp/ui-check playwright@1.56.1 --no-audit --no-fund && node /checks/check-client-ui.cjs'
+      - name: Check Lioren validation and metrics interface with provider fixtures
+        run: |
+          docker run --rm --network release-check -e PLAYWRIGHT_BROWSERS_PATH=/ms-playwright -v "$PWD/apps/api/scripts:/checks:ro" -v "$RUNNER_TEMP/client-check-results:/checks-results" mcr.microsoft.com/playwright:v1.56.1-noble sh -c 'npm install --prefix /tmp/ui-check playwright@1.56.1 --no-audit --no-fund && node /checks/check-lioren-ui.cjs'
       - name: Release startup diagnostics
         if: failure()
         run: docker logs release-api 2>&1 || true

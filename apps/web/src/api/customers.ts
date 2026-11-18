@@ -7,6 +7,7 @@ export interface CreateCustomerData {
     giro?: string;
     address?: string;
     comuna?: string;
+    city?: string;
     email?: string;
     phone?: string;
 }

@@ -1,227 +1,151 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
+import { randomUUID } from 'crypto';
 import axios from 'axios';
+import { Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { LiorenHelper } from './lioren.helper';
-
-const MOCK_TOKENS = ['TEST_TOKEN', 'YOUR_TOKEN'];
-
-function isMockToken(token: string) {
-  return MOCK_TOKENS.some((t) => token.startsWith(t) || token.includes(t));
-}
+import { LiorenAccountService } from './lioren-account.service';
+import { effectiveModuleCodes, moduleTenantInclude } from '../modules/module-access';
+import { chileDate, DTE_CODES, DTE_TYPES, LiorenApiError, LiorenApiService, normalizeRut, siiStatus } from './lioren-api.service';
 
 @Injectable()
 export class LiorenService {
   private readonly logger = new Logger(LiorenService.name);
-  private readonly apiUrl = 'https://lioren.cl/api/dte';
-  private readonly defaultToken = process.env.LIOREN_TOKEN;
-
-  constructor(private prisma: PrismaService) {}
-
-  // ─── Public entrypoints ────────────────────────────────────────────────────
-
-  async emitirBoleta(saleId: string) {
-    return this._emitir(saleId, 39);
-  }
-
-  async emitirFactura(saleId: string) {
-    return this._emitir(saleId, 33);
-  }
-
-  async emitirNotaCredito(saleId: string) {
-    return this._emitir(saleId, 61);
-  }
-
-  async emitirGuiaDespacho(saleId: string) {
-    return this._emitir(saleId, 52);
-  }
-
-  // ─── Core emission ─────────────────────────────────────────────────────────
-
-  private async _emitir(saleId: string, tipodoc: number) {
-    const docLabel = this._labelDoc(tipodoc);
+  constructor(private prisma: PrismaService, private api: LiorenApiService, private account: LiorenAccountService) {}
+  emitirBoleta(id: string) { return this.issue(id, 39); }
+  emitirFactura(id: string) { return this.issue(id, 33); }
+  emitirNotaCredito(id: string) { return this.issue(id, 61); }
+  emitirGuiaDespacho(id: string) { return this.issue(id, 52); }
+  private result(sale: any) { return { success: !!sale.dteFolio && !!sale.dteVerifiedAt && !['RECHAZADO', 'REQUIERE_REVISION'].includes(sale.dteStatus), folio: sale.dteFolio || undefined, url_pdf: sale.dtePdfUrl || undefined, status: sale.dteStatus }; }
+  async issue(saleId: string, type: number) {
+    const sale = await this.prisma.sale.findUnique({ where: { id: saleId }, include: { items: { include: { product: true } }, customer: true, dteSubmission: true } });
+    if (!sale) throw new NotFoundException('Venta no encontrada.');
+    if (sale.dteType !== type) throw new BadRequestException('El tipo de documento no coincide con la venta.');
+    if (sale.dteFolio) return this.result(sale);
+    if (sale.dteSubmission || !['PENDING', 'BLOQUEADO'].includes(sale.dteStatus)) return { success: false, status: sale.dteStatus, error: 'Este envío requiere conciliación. No se reemitirá automáticamente.' };
+    let connection: Awaited<ReturnType<LiorenAccountService['requireEmission']>>;
+    let payload: any;
     try {
-      this.logger.log(`[Lioren] Emitiendo ${docLabel} para venta ${saleId}...`);
-
-      const sale = await this.prisma.sale.findUnique({
-        where: { id: saleId },
-        include: {
-          items: { include: { product: true } },
-          payments: true,
-          customer: true,
-          tenant: { include: { dteConfig: true } },
-        },
-      });
-
-      if (!sale) throw new Error(`Venta ${saleId} no encontrada`);
-
-      const token = sale.tenant?.dteConfig?.liorenToken || this.defaultToken;
-      if (!token) throw new Error('Token de Lioren no configurado');
-
-      const detalles = sale.items.map((item) => ({
-        nombre: item.product.name,
-        cantidad: item.product.unitType === 'WEIGHT'
-          ? Number(item.quantity)
-          : Math.floor(Number(item.quantity)),
-        precio: Math.round(item.price),
-        exento: false
-      }));
-
-      const mainPayment = sale.payments[0];
-      const liorenPayment = LiorenHelper.mapPaymentMethod(mainPayment?.paymentMethod as any);
-
-      // Construct flat payload
-      const payload: any = {
-        emisor: {
-          tipodoc: String(tipodoc),
-          servicio: 1,
-        },
-        detalles,
-        pago: {
-          formapago: liorenPayment.formapago,
-          mediopago: liorenPayment.mediopago,
-          montopago: Math.round(sale.total),
-        },
-      };
-
-      // emisor.fecha is required for non-boletas (33, 52, 61)
-      if (tipodoc !== 39) {
-        payload.emisor.fecha = new Date().toLocaleDateString('sv-SE'); // YYYY-MM-DD
-      }
-
-      // Factura (33) and Nota de Crédito (61) require receptor
-      if (tipodoc === 33 || tipodoc === 61) {
-        if (!sale.customer) throw new Error(`Venta ${saleId} requiere receptor para ${docLabel}`);
-        
-        let comunaId = 295; // Default: Santiago Comuna ID 295
-        let ciudadId = 176; // Default: Santiago Ciudad ID 176
-
-        if (!isMockToken(token)) {
-          try {
-            // Fetch comunas list from Lioren
-            const comunasRes = await axios.get('https://www.lioren.cl/api/comunas', {
-              headers: { 'Authorization': `Bearer ${token}` },
-              timeout: 5000
-            });
-            const comunas = Array.isArray(comunasRes.data) ? comunasRes.data : [];
-            const normalize = (s: string) => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
-
-            if (sale.customer.comuna) {
-              const customerComunaNorm = normalize(sale.customer.comuna);
-              const matchedComuna = comunas.find(c => normalize(c.nombre) === customerComunaNorm);
-              if (matchedComuna) comunaId = matchedComuna.id;
-            }
-
-            // Fetch ciudades list from Lioren
-            const ciudadesRes = await axios.get('https://www.lioren.cl/api/ciudades', {
-              headers: { 'Authorization': `Bearer ${token}` },
-              timeout: 5000
-            });
-            const ciudades = Array.isArray(ciudadesRes.data) ? ciudadesRes.data : [];
-
-            if (sale.customer.comuna) {
-              const customerCityNorm = normalize(sale.customer.comuna);
-              const matchedCiudad = ciudades.find(c => normalize(c.nombre) === customerCityNorm);
-              if (matchedCiudad) ciudadId = matchedCiudad.id;
-            }
-          } catch (geoErr: any) {
-            this.logger.warn(`[Lioren] Error mapping comuna/ciudad IDs, using defaults: ${geoErr.message}`);
-          }
-        }
-
-        payload.receptor = {
-          rut: sale.customer.rut,
-          rs: sale.customer.name,
-          giro: sale.customer.giro || 'Sin giro',
-          direccion: sale.customer.address || 'Sin dirección',
-          comuna: comunaId,
-          ciudad: ciudadId,
-        };
-      }
-
-      // ── Referencia (Nota de Crédito 61) ────────────────────────────────────
-      if (tipodoc === 61) {
-        const originalId = (sale as any).originalSaleId || saleId;
-        const originalDte = await this.prisma.sale.findUnique({
-          where: { id: originalId },
-          select: { dteType: true, dteFolio: true },
-        });
-
-        if (originalDte?.dteFolio) {
-          payload.referencias = [
-            {
-              tipodoc_ref: String(originalDte.dteType),
-              folio_ref: originalDte.dteFolio,
-              razon: 'Anulación de documento',
-            }
-          ];
-        } else {
-          this.logger.warn(
-            `[Lioren] Nota de Crédito para venta ${saleId}: ` +
-            `no se encontró folio en venta original ${originalId}. Emitiendo sin referencia.`,
-          );
-        }
-      }
-
-      // Guía de Despacho (52) requires transport info
-      if (tipodoc === 52) {
-        payload.traslado = {
-          tipo_traslado: 1,
-          tipo_despacho: 2,
-        };
-      }
-
-      let responseData: any;
-      if (isMockToken(token)) {
-        this.logger.log(`[Lioren] MOCK MODE — simulando ${docLabel}`);
-        responseData = {
-          folio: Math.floor(Math.random() * 90000) + 10000,
-          pdf: `https://lioren.cl/ver/${this._slugDoc(tipodoc)}/ejemplo-mock`,
-        };
-      } else {
-        const url = tipodoc === 39 ? 'https://www.lioren.cl/api/boletas' : 'https://www.lioren.cl/api/dtes';
-        this.logger.log(`[Lioren] Enviando POST a ${url}`);
-        const response = await axios.post(url, payload, {
-          headers: {
-            'Accept': 'application/json',
-            'Authorization': `Bearer ${token}`,
-          },
-          timeout: 20000,
-        });
-        responseData = response.data;
-      }
-
-      if (responseData?.folio) {
-        const folio = responseData.folio;
-        const pdfUrl = responseData.pdf || responseData.url_pdf || `https://lioren.cl/ver/${this._slugDoc(tipodoc)}/ejemplo-mock`;
-        this.logger.log(`[Lioren] ✅ ${docLabel} emitida: Folio ${folio}`);
-        await this.prisma.sale.update({
-          where: { id: saleId },
-          data: {
-            dteFolio: Number(folio),
-            dtePdfUrl: pdfUrl,
-            dteStatus: 'ACEPTADO',
-            dteType: tipodoc,
-          },
-        });
-        return { success: true, folio: Number(folio), url_pdf: pdfUrl };
-      }
-
-      throw new Error(responseData?.message || 'Respuesta inválida de Lioren API');
-    } catch (error: any) {
-      const errMsg = error.response?.data?.message || error.response?.data?.errors 
-        ? JSON.stringify(error.response.data) 
-        : error.message;
-      this.logger.error(`[Lioren] ❌ Error ${docLabel} (Venta ${saleId}): ${errMsg}`);
-      await this.prisma.sale
-        .update({ where: { id: saleId }, data: { dteStatus: 'ERROR' } })
-        .catch(() => null);
-      return { success: false, error: errMsg };
+      connection = await this.account.requireEmission(sale.tenantId, type);
+      payload = await this.buildPayload(sale, type, connection.token, connection.status.company.rut);
+    } catch (error) {
+      await this.prisma.sale.updateMany({ where: { id: saleId, dteFolio: null, dteStatus: 'PENDING', dteSubmission: { is: null } }, data: { dteStatus: 'BLOQUEADO' } });
+      return { success: false, status: 'BLOQUEADO', error: error instanceof LiorenApiError || error instanceof BadRequestException || error instanceof ForbiddenException ? error.message : 'No se pudo validar el documento antes del envío.' };
+    }
+    const token = connection.token;
+    let submission: { id: string; payload: Prisma.JsonValue } | null;
+    try { submission = await this.prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+      await tx.$queryRawUnsafe('SELECT "id" FROM "Tenant" WHERE "id"=$1 FOR UPDATE', sale.tenantId);
+      await tx.$queryRawUnsafe('SELECT "id" FROM "Sale" WHERE "id"=$1 FOR UPDATE', saleId);
+      const current = await tx.sale.findUnique({ where: { id: saleId }, include: { dteSubmission: true } });
+      if (!current || current.dteSubmission || current.dteFolio || !['PENDING', 'BLOQUEADO'].includes(current.dteStatus)) return null;
+      if (current.updatedAt.getTime() !== sale.updatedAt.getTime()) throw new ConflictException('La venta cambió durante la validación. Actualiza antes de continuar.');
+      const config = await tx.dteConfig.findUnique({ where: { tenantId: sale.tenantId } });
+      if (config?.liorenToken?.trim() !== token || config?.updatedAt.getTime() !== connection.config?.updatedAt.getTime()) throw new ConflictException('La configuración cambió durante la validación. No se envió el documento.');
+      const tenant = await tx.tenant.findUnique({ where: { id: sale.tenantId }, include: moduleTenantInclude });
+      const catalog = await tx.module.findMany({ select: { code: true, isActive: true } });
+      const branch = await tx.branch.findUnique({ where: { id: sale.branchId } });
+      if (!tenant || tenant.status !== 'ACTIVE' || tenant.billingStatus !== 'ACTIVE' || normalizeRut(tenant.rut) !== normalizeRut(connection.status.company.rut) || !effectiveModuleCodes(tenant, catalog).includes(DTE_CODES[type]) || !branch?.isActive || branch.tenantId !== sale.tenantId) throw new ForbiddenException('La empresa, sucursal o servicio cambió durante la validación. No se envió el documento.');
+      const created = await tx.dteSubmission.create({ data: { id: randomUUID(), saleId, tenantId: sale.tenantId, tokenHash: this.account.fingerprint(token), payload } });
+      await tx.sale.update({ where: { id: saleId }, data: { dteStatus: 'ENVIANDO', dteIssuerRut: normalizeRut(connection.status.company.rut) } });
+      return created;
+    });
+    } catch (error) {
+      await this.prisma.sale.updateMany({ where: { id: saleId, dteFolio: null, dteStatus: { in: ['PENDING', 'BLOQUEADO'] }, dteSubmission: { is: null } }, data: { dteStatus: 'BLOQUEADO' } }).catch(() => undefined);
+      return { success: false, status: 'BLOQUEADO', error: error instanceof ConflictException || error instanceof ForbiddenException ? error.message : 'No se pudo registrar el envío. Actualiza la venta antes de continuar.' };
+    }
+    if (!submission) return { success: false, status: 'PENDIENTE_CONFIRMACION', error: 'Ya hay un envío registrado. No se duplicará el documento.' };
+    try {
+      const response = await this.api.issue(token, type, submission.payload as object, submission.id);
+      if (!Number.isSafeInteger(Number(response?.folio)) || Number(response.folio) <= 0 || Number(response?.tipodoc) !== type || !response?.id) throw new LiorenApiError(null, true);
+      const amountMatches = Number.isFinite(Number(response.montototal)) && Math.abs(Number(response.montototal) - Math.round(sale.total)) <= 1;
+      const saved = await this.prisma.sale.update({ where: { id: saleId }, data: {
+        dteFolio: Number(response.folio), dteProviderId: String(response.id), dteType: type,
+        dteIssuedAt: /^\d{4}-\d{2}-\d{2}$/.test(response.fecha || '') ? new Date(response.fecha + 'T12:00:00Z') : new Date(),
+        dteVerifiedAt: new Date(), dteStatus: amountMatches ? siiStatus(response.estado) : 'REQUIERE_REVISION',
+        dtePdfUrl: '/api/sales/' + saleId + '/dte/pdf',
+      } });
+      return { ...this.result(saved), ...(!amountMatches ? { error: 'Lioren informó un total diferente. El documento existe y requiere revisión; no se reemitirá.' } : {}) };
+    } catch (error) {
+      const uncertain = !(error instanceof LiorenApiError) || error.uncertain;
+      const status = uncertain ? 'PENDIENTE_CONFIRMACION' : 'ERROR';
+      await this.prisma.sale.updateMany({ where: { id: saleId, dteFolio: null }, data: { dteStatus: status } }).catch(() => undefined);
+      // Neither request headers nor provider error bodies are logged or returned.
+      return { success: false, status, error: uncertain ? 'El resultado del envío no está confirmado. Revisa Lioren antes de cualquier nuevo envío.' : (error as LiorenApiError).message };
     }
   }
+  private async buildPayload(sale: any, type: number, token: string, issuerRut: string) {
+    if (!sale.items.length || sale.items.length > 60) throw new BadRequestException('El documento debe tener entre 1 y 60 productos.');
+    const round = (value: number) => Math.round(value * 1000000) / 1000000;
+    const details = sale.items.map((item: any) => {
+      const quantity = Number(item.quantity); const price = Number(item.price); const discount = Number(item.discountAmount || 0);
+      if (!Number.isFinite(quantity) || quantity < 0.000001 || price < 0 || discount < 0 || discount > price * quantity || item.product?.tenantId !== sale.tenantId || !item.product?.name || item.product.name.length < 3 || item.product.name.length > 80) throw new BadRequestException('Revisa cantidad, nombre, precio y descuento de los productos antes de emitir.');
+      return { nombre: item.product.name, cantidad: quantity, precio: type === 39 ? price : round(price / 1.19), exento: false, ...(discount ? { descuento: type === 39 ? discount : round(discount / 1.19), tipodescuento: 1 } : {}) };
+    });
+    const payload: any = { emisor: { tipodoc: String(type), observaciones: 'NexoPOS ' + sale.id, ...(type === 39 ? { servicio: 3 } : { fecha: chileDate() }) }, detalles: details };
+    if (type === 39 && sale.customer) {
+      if (sale.customer.tenantId !== sale.tenantId) throw new BadRequestException('El receptor no pertenece a esta empresa.');
+      payload.receptor = { rut: normalizeRut(sale.customer.rut), rs: sale.customer.name };
+    }
+    if (type !== 39) {
+      const customer = sale.customer;
+      if (!customer || customer.tenantId !== sale.tenantId || !normalizeRut(customer.rut) || !customer.giro || !customer.address || !customer.comuna || !customer.city) throw new BadRequestException('Completa RUT, razón social, giro, dirección, comuna y ciudad del receptor para emitir este documento.');
+      const unwrap = (data: any, name: string) => Array.isArray(data) ? data : Array.isArray(data?.[name]) ? data[name] : [];
+      const normalize = (value: string) => value.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+      const communes = unwrap(await this.api.get(token, 'comunas'), 'comunas');
+      const commune = communes.find((row: any) => normalize(String(row.nombre)) === normalize(customer.comuna));
+      if (!commune) throw new BadRequestException('La comuna del receptor no fue reconocida por Lioren.');
+      const cities = unwrap(await this.api.get(token, 'ciudades', { region_id: commune.region_id }), 'ciudades');
+      const city = cities.find((row: any) => normalize(String(row.nombre)) === normalize(customer.city));
+      if (!city) throw new BadRequestException('La ciudad del receptor no fue reconocida en la región de su comuna.');
+      payload.receptor = { rut: normalizeRut(customer.rut), rs: customer.name, giro: customer.giro, direccion: customer.address, comuna: commune.id, ciudad: city.id };
+    }
+    if (type === 61) {
+      const original = sale.originalSaleId ? await this.prisma.sale.findFirst({ where: { id: sale.originalSaleId, tenantId: sale.tenantId }, include: { dteSubmission: true } }) : null;
+      if (!original?.dteFolio || !original.dteVerifiedAt || !original.dteIssuedAt || !['ACEPTADO', 'REPARO'].includes(original.dteStatus)) throw new BadRequestException('La nota de crédito requiere un documento original confirmado y una referencia válida.');
+      if (normalizeRut(original.dteIssuerRut) !== normalizeRut(issuerRut)) throw new BadRequestException('El documento original corresponde a otra empresa emisora.');
+      const originalPayload = original.dteSubmission?.payload as any;
+      if (!originalPayload?.receptor?.rut || normalizeRut(originalPayload.receptor.rut) !== normalizeRut(payload.receptor.rut)) throw new BadRequestException('El receptor debe coincidir con el documento original. Revisa su conciliación.');
+      if (originalPayload.receptor.giro && originalPayload.receptor.comuna && originalPayload.receptor.ciudad) payload.receptor = originalPayload.receptor;
+      else payload.receptor.rs = originalPayload.receptor.rs;
+      const response = await this.api.get(token, 'razonesref');
+      const reasons = Array.isArray(response) ? response : response?.razonesref || [];
+      const reason = reasons.find((row: any) => /anula/i.test(String(row.nombre)));
+      if (!reason?.id) throw new BadRequestException('Lioren no informó la razón de anulación.');
+      payload.referencias = [{ fecha: chileDate(original.dteIssuedAt), tipodoc: String(original.dteType), folio: String(original.dteFolio), razon: reason.id, glosa: 'Anulación del documento original' }];
+    }
+    if (type === 52) { payload.emisor.tipodespacho = 2; payload.emisor.tipotraslado = 1; }
+    return payload;
+  }
+  async verify(saleId: string, tenantId: string) {
+    const sale = await this.prisma.sale.findFirst({ where: { id: saleId, tenantId }, include: { dteSubmission: true } });
+    if (!sale) throw new NotFoundException('Venta no encontrada.');
+    if (!sale.dteFolio || !sale.dteProviderId || !sale.dteIssuerRut || !sale.dteSubmission) throw new ConflictException('Este registro necesita conciliación manual. No se asociará ni reemitirá automáticamente.');
+    const connection = await this.account.connection(tenantId, true);
+    if (!connection.status.connected || normalizeRut(connection.status.company?.rut) !== sale.dteIssuerRut || !connection.status.identityMatches) throw new ForbiddenException('La empresa actual del token no coincide con el emisor del documento.');
+    const document = await this.api.document(connection.token, sale.dteType, sale.dteFolio);
+    if (String(document.id) !== sale.dteProviderId || !Number.isFinite(Number(document.montototal)) || Math.abs(Number(document.montototal) - Math.round(sale.total)) > 1) throw new ConflictException('El documento consultado no coincide con el envío registrado. Requiere revisión manual.');
+    const saved = await this.prisma.sale.update({ where: { id: sale.id }, data: { dteStatus: siiStatus(document.estado), dteVerifiedAt: new Date() } });
+    return this.result(saved);
+  }
+  async documentPdf(tenantId: string, type: number, folio: number) {
+    if (!(DTE_TYPES as readonly number[]).includes(type) || !Number.isSafeInteger(folio) || folio <= 0) throw new BadRequestException('Tipo de documento o folio inválido.');
+    const connection = await this.account.connection(tenantId);
+    if (!connection.status.connected || !connection.status.identityMatches) throw new ForbiddenException('Valida la empresa emisora antes de consultar documentos.');
+    const document = await this.api.document(connection.token, type, folio, true);
+    return this.api.pdfBuffer(document.pdf);
+  }
+  async salePdf(saleId: string, user: { tenantId: string; role?: string; branchId?: string }) {
+    const sale = await this.prisma.sale.findFirst({ where: { id: saleId, tenantId: user.tenantId } });
+    if (!sale || !sale.dteVerifiedAt || !sale.dteProviderId || !sale.dteFolio) throw new NotFoundException('Documento confirmado no encontrado.');
+    if (user.role && !['TENANT_ADMIN', 'SUPER_ADMIN'].includes(user.role) && sale.branchId !== user.branchId) throw new ForbiddenException('El documento no pertenece a tu sucursal.');
+    const connection = await this.account.connection(user.tenantId);
+    if (normalizeRut(connection.status.company?.rut) !== sale.dteIssuerRut) throw new ForbiddenException('El token actual no corresponde al emisor de este documento.');
+    return this.documentPdf(user.tenantId, sale.dteType, sale.dteFolio);
+  }
+  async consultarFolios(tenantId: string) { return (await this.account.status(tenantId)).types; }
 
-  // ─── RUT lookup ────────────────────────────────────────────────────────────
-
-  async consultaRut(rut: string, tenantId?: string) {
+  async consultaRut(rut: string, _tenantId?: string) {
     try {
       const cleanRut = rut.replace(/\./g, '').replace(/-/g, '').trim();
       const dv = cleanRut.slice(-1);
@@ -293,113 +217,4 @@ export class LiorenService {
     }
   }
 
-  // ─── Consulta folios disponibles (CAF) ────────────────────────────────────
-
-  async consultarFolios(tenantId: string): Promise<{ tipodoc: number; label: string; disponibles: number; ultimoFolio: number }[]> {
-    const docLabels: Record<number, string> = {
-      39: 'Boleta Electrónica',
-      33: 'Factura Electrónica',
-      61: 'Nota de Crédito',
-      52: 'Guía de Despacho',
-    };
-    try {
-      const config = await this.prisma.dteConfig.findUnique({ where: { tenantId } });
-      const token = config?.liorenToken || this.defaultToken;
-      if (!token || isMockToken(token)) {
-        // Datos de prueba en modo mock
-        return [
-          { tipodoc: 39, label: 'Boleta Electrónica', disponibles: 500, ultimoFolio: 1000 },
-          { tipodoc: 33, label: 'Factura Electrónica', disponibles: 200, ultimoFolio: 500 },
-          { tipodoc: 61, label: 'Nota de Crédito', disponibles: 100, ultimoFolio: 200 },
-          { tipodoc: 52, label: 'Guía de Despacho', disponibles: 150, ultimoFolio: 300 },
-        ];
-      }
-
-      const docTypes = [39, 33, 61, 52];
-      const results = await Promise.all(
-        docTypes.map(async (tipodoc) => {
-          try {
-            const response = await axios.get('https://www.lioren.cl/api/cafs', {
-              params: { tipodoc },
-              headers: {
-                'Accept': 'application/json',
-                'Authorization': `Bearer ${token}`
-              },
-              timeout: 10000
-            });
-            const cafs = Array.isArray(response.data) ? response.data : [];
-            let disponibles = 0;
-            let maxFolio = 0;
-            let minDesde = Infinity;
-
-            for (const caf of cafs) {
-              disponibles += Number(caf.libres || 0);
-              const desde = Number(caf.desde);
-              const asignados = Number(caf.asignados || 0);
-              if (desde < minDesde) {
-                minDesde = desde;
-              }
-              if (asignados > 0) {
-                const lastInCaf = desde + asignados - 1;
-                if (lastInCaf > maxFolio) {
-                  maxFolio = lastInCaf;
-                }
-              }
-            }
-
-            const ultimoFolio = maxFolio > 0 ? maxFolio : (minDesde !== Infinity ? minDesde - 1 : 0);
-
-            return {
-              tipodoc,
-              label: docLabels[tipodoc],
-              disponibles,
-              ultimoFolio
-            };
-          } catch (err: any) {
-            this.logger.error(`[Lioren] Error consultando CAFs para tipodoc ${tipodoc}: ${err.message}`);
-            return {
-              tipodoc,
-              label: docLabels[tipodoc],
-              disponibles: 0,
-              ultimoFolio: 0
-            };
-          }
-        })
-      );
-
-      return results;
-    } catch (error: any) {
-      this.logger.error(`[Lioren] Error general consultando folios: ${error.message}`);
-      return [];
-    }
-  }
-
-  // ─── Helpers ───────────────────────────────────────────────────────────────
-
-  private _labelDoc(tipodoc: number): string {
-    const labels: Record<number, string> = {
-      39: 'Boleta Electrónica',
-      33: 'Factura Electrónica',
-      61: 'Nota de Crédito',
-      52: 'Guía de Despacho',
-    };
-    return labels[tipodoc] ?? `DTE tipo ${tipodoc}`;
-  }
-
-  private _slugDoc(tipodoc: number): string {
-    const slugs: Record<number, string> = {
-      39: 'boleta',
-      33: 'factura',
-      61: 'nota-credito',
-      52: 'guia-despacho',
-    };
-    return slugs[tipodoc] ?? 'dte';
-  }
-
-  private async _findOriginalDte(saleId: string) {
-    return this.prisma.sale.findUnique({
-      where: { id: saleId },
-      select: { dteType: true, dteFolio: true },
-    });
-  }
 }
