@@ -8,6 +8,7 @@ import TenantUsersPanel from './TenantUsersPanel';
 import TenantBranchesPanel from './TenantBranchesPanel';
 import TenantServicesPanel from './TenantServicesPanel';
 import TenantActionsPanel from './TenantActionsPanel';
+import TenantDteRecordsPanel from './TenantDteRecordsPanel';
 import { ClientRecord, cardClass, errorMessage, fieldClass, money, primaryClass, secondaryClass } from './client-record';
 
 const tabs = [
@@ -16,6 +17,7 @@ const tabs = [
   { id: 'branches', name: 'Sucursales', icon: Store },
   { id: 'services', name: 'Servicios y módulos', icon: Zap },
   { id: 'subscription', name: 'Suscripción y límites', icon: CreditCard },
+  { id: 'dte', name: 'Registros tributarios', icon: FileText },
   { id: 'activity', name: 'Actividad', icon: FileText },
   { id: 'actions', name: 'Acciones', icon: ShieldAlert },
 ];
@@ -67,6 +69,7 @@ export default function TenantDetailPage() {
       {tab === 'branches' && <TenantBranchesPanel tenant={tenant} onChanged={refresh} />}
       {tab === 'services' && <TenantServicesPanel tenantId={tenant.id} />}
       {tab === 'subscription' && <SubscriptionPanel key={tenant.updatedAt + ':' + tenant.plan?.id} tenant={tenant} onChanged={refresh} />}
+      {tab === 'dte' && <TenantDteRecordsPanel tenantId={tenant.id} />}
       {tab === 'activity' && <ActivityPanel tenantId={tenant.id} />}
       {tab === 'actions' && <TenantActionsPanel tenant={tenant} onChanged={refresh} onDeleted={() => navigate('/admin/tenants', { replace: true })} />}
     </section>

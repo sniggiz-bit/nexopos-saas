@@ -7,10 +7,11 @@ export interface DteConnection {
   company: { name: string; rut: string; resolution: string | null; resolutionDate: string | null; validFrom: string | null; validTo: string | null } | null;
   types: Array<{ type: number; label: string; providerActive: boolean | null; available: number | null; nextFolio: number | null; localEnabled: boolean; ready: boolean }>;
 }
+export interface LocalDteRecords { confirmed: number; unverified: number; errors: number; pending: number; needsSupport: number; reviewDocs: Array<{ id: string; dteType: number; dteFolio: number; dteStatus: string }> }
 export interface DteStats {
   connection: DteConnection;
   provider: { source: string; month: string; checkedAt: string; total: number | null; accepted: number | null; rejected: number | null; partial: boolean; types: Array<{ type: number; label: string; total: number | null; accepted: number | null; rejected: number | null; message: string }>; recent: Array<{ type: number; label: string; folio: number; date: string; total: number | null; state: string }> };
-  local: { confirmed: number; unverified: number; errors: number; pending: number; reviewDocs: Array<{ id: string; dteType: number; dteFolio: number; dteStatus: string }> };
+  local: LocalDteRecords;
 }
 export async function getDteConfig(_tenantId: string): Promise<DteConfig | null> { return (await apiClient.get('/dte-config')).data || null; }
 export async function upsertDteConfig(data: UpsertDteConfigData): Promise<DteConfig> { return (await apiClient.post('/dte-config', data)).data; }

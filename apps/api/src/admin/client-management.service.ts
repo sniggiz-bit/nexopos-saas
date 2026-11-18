@@ -2,6 +2,7 @@ import { BadRequestException, ConflictException, ForbiddenException, Injectable,
 import { Prisma } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service';
+import { getLocalDteRecords } from '../dte/local-records';
 import { NotificationsService } from '../notifications/notifications.service';
 import { TenantsService } from '../tenants/tenants.service';
 import { UpdateTenantSettingsDto } from '../tenants/dto/update-tenant-settings.dto';
@@ -33,6 +34,10 @@ export class ClientManagementService {
   }
   private audit(tx: Prisma.TransactionClient, tenantId: string, actorId: string, action: string, userId?: string) {
     return tx.systemLog.create({ data: { tenantId, level: 'INFO', message: 'CLIENT_ADMIN_ACTION', context: { actorId, action, ...(userId ? { userId } : {}) } } });
+  }
+  async dteRecords(tenantId: string) {
+    if (!await this.prisma.tenant.findUnique({ where: { id: tenantId }, select: { id: true } })) throw new NotFoundException('Empresa no encontrada.');
+    return getLocalDteRecords(this.prisma, tenantId);
   }
   async detail(id: string) {
     const tenant = await this.prisma.tenant.findUnique({
