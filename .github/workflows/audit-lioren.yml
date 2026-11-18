@@ -47,7 +47,7 @@ jobs:
                 await tx.$executeRawUnsafe('SET TRANSACTION READ ONLY');
                 const total = await tx.dteConfig.count();
                 if (total > 25) throw Error('Audit size limit');
-                const configs = await tx.dteConfig.findMany({ select: { tenantId: true, liorenToken: true } });
+                const configs = await tx.dteConfig.findMany({ select: { tenantId: true, liorenToken: true, dteResolution: true, resolutionDate: true } });
                 const entries = [];
                 for (const config of configs) {
                   const tenant = await tx.tenant.findUnique({ where: { id: config.tenantId }, include: moduleTenantInclude });
@@ -78,6 +78,11 @@ jobs:
                   result.tenantRutPresent = Boolean(cleanRut(entry.tenant.rut));
                   result.companyRutMatches = company.ok && result.providerRutPresent && result.tenantRutPresent ? cleanRut(company.body.rut) === cleanRut(entry.tenant.rut) : null;
                   result.companyResponseKeys = company.ok && company.body && typeof company.body === 'object' ? Object.keys(company.body).sort() : [];
+                  const validFrom = Date.parse(company.body?.validfrom || '');
+                  const validTo = Date.parse(company.body?.validto || '');
+                  result.certificateStatus = !Number.isFinite(validFrom) || !Number.isFinite(validTo) ? 'unknown' : Date.now() >= validFrom && Date.now() <= validTo ? 'within_validity_dates' : 'outside_validity_dates';
+                  result.resolutionNumberMatches = entry.config.dteResolution && company.body?.numeroresolucion ? String(entry.config.dteResolution).trim() === String(company.body.numeroresolucion).trim() : null;
+                  result.resolutionDateMatches = entry.config.resolutionDate && company.body?.fecharesolucion ? entry.config.resolutionDate.toISOString().slice(0, 10) === String(company.body.fecharesolucion).slice(0, 10) : null;
                   result.typesQueryStatus = types.status;
                   const list = Array.isArray(types.body) ? types.body : Array.isArray(types.body?.tipodocs) ? types.body.tipodocs : Array.isArray(types.body?.data) ? types.body.data : null;
                   result.typesShapeRecognized = list !== null;
