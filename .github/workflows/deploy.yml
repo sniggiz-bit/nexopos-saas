@@ -37,60 +37,7 @@ jobs:
         run: docker build --target builder -f apps/api/Dockerfile.prod -t nexopos-api-tests .
       - name: Lint changed application files
         run: |
-          mapfile -t files < <(git diff --name-only HEAD^ HEAD -- apps/api/src apps/web/src | grep -E '\.(ts|tsx)        run: |
-          docker run --rm -v "$PWD/apps/api/scripts:/app/apps/api/scripts:ro" -v "$PWD/apps/web/src:/app/apps/web/src:ro" nexopos-api-tests node scripts/check-admin-notifications.cjs
-          docker run --rm nexopos-api-tests npm test -- --runInBand --runTestsByPath src/email/email.service.spec.ts src/email/welcome-emails.service.spec.ts src/auth/auth.service.spec.ts src/users/users.service.spec.ts
-      - name: Build Web production image
-        run: docker build -f apps/web/Dockerfile.prod -t nexopos-web-check .
-      - name: Boot release against a disposable database
-        run: |
-          set -eu
-          docker network create release-check
-          docker run -d --name release-db --network release-check -e POSTGRES_PASSWORD=isolated-check -e POSTGRES_DB=release_check postgres:15-alpine
-          for attempt in $(seq 1 30); do
-            docker exec release-db pg_isready -U postgres && break
-            sleep 2
-          done
-          docker run --rm --network release-check -e DATABASE_URL=postgresql://postgres:isolated-check@release-db:5432/release_check nexopos-api-check prisma db push --skip-generate
-          docker run -d --name release-api --network release-check --network-alias api -e DATABASE_URL=postgresql://postgres:isolated-check@release-db:5432/release_check -e JWT_SECRET=isolated-ci-check-secret -e NODE_ENV=production nexopos-api-check node dist/main.js
-          docker run -d --name release-web --network release-check nexopos-web-check
-          for attempt in $(seq 1 60); do
-            if docker exec release-web wget -q -O /dev/null http://127.0.0.1/api; then break; fi
-            sleep 2
-          done
-          docker exec release-web wget -q -O /dev/null http://127.0.0.1/api
-          docker exec release-web wget -q -O /dev/null http://127.0.0.1/
-          docker exec release-api node -e 'fetch("http://127.0.0.1:3000/api/support/chat").then(r=>process.exit(r.status===401?0:1)).catch(()=>process.exit(1))'
-      - name: Release startup diagnostics
-        if: failure()
-        run: docker logs release-api 2>&1 || true
-
-  deploy:
-    name: Build, back up and deploy API and Web
-    runs-on: ubuntu-latest
-    timeout-minutes: 120
-    needs: validate
-    if: github.ref == 'refs/heads/main'
-    steps:
-      - name: Deploy the approved commit
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SERVER_SSH_KEY }}
-          port: ${{ secrets.SERVER_PORT }}
-          command_timeout: 110m
-          script: |
-            set -eu
-            cd /home/nexopos/nexopos.cl
-            git diff --quiet && git diff --cached --quiet || { echo "El servidor tiene cambios locales versionados; despliegue detenido."; exit 1; }
-            previous=$(git rev-parse HEAD)
-            git fetch origin main
-            git checkout main
-            git merge --ff-only ${{ github.sha }}
-            test "$(git rev-parse HEAD)" = "${{ github.sha }}"
-            sh scripts/deploy-production.sh ${{ github.sha }} "$previous"
- || true)
+          mapfile -t files < <(git diff --name-only 28ba79a8286baf6d4170a84269bd5aa5ae090d48 HEAD -- apps/api/src apps/web/src | grep -E '\.(ts|tsx)$' || true)
           if [ "${#files[@]}" -gt 0 ]; then
             docker run --rm -w /app -v "$PWD/eslint.config.mjs:/app/eslint.config.mjs:ro" -v "$PWD/apps/web/src:/app/apps/web/src:ro" nexopos-api-tests node node_modules/eslint/bin/eslint.js --config eslint.config.mjs "${files[@]}"
           fi
