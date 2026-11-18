@@ -72,6 +72,32 @@ async function counts(tenantId) {
     const own = await request('GET', '/tenants/' + a.tenant.id, tokenA);
     assert(!JSON.stringify(own.body).includes(a.user.password));
   });
+  await check('DTE diagnostics are read-only, tenant-scoped and restricted to the superadmin', async () => {
+    const records = [];
+    const add = async (fixture, data) => { const row = await prisma.sale.create({ data: { tenantId: fixture.tenant.id, branchId: fixture.branch.id, total: 100, ...data } }); records.push(row.id); return row; };
+    try {
+      await add(a, { dteStatus: 'ERROR' });
+      await add(a, { dteStatus: 'ACEPTADO', dteFolio: 123, dtePdfUrl: 'https://example.invalid/ejemplo-mock.pdf' });
+      const pending = await add(a, { dteStatus: 'PENDIENTE_SII', dteProviderId: 'fixture-provider', dteFolio: 124, dteVerifiedAt: new Date() });
+      const uncertain = await add(a, { dteStatus: 'PENDIENTE_CONFIRMACION' });
+      for (const row of [pending, uncertain]) await prisma.dteSubmission.create({ data: { saleId: row.id, tenantId: a.tenant.id, tokenHash: 'fixture-private-token-hash', payload: { private: 'fixture-private-payload' } } });
+      await add(b, { dteStatus: 'ERROR' }); await add(b, { dteStatus: 'ERROR' });
+      const before = await counts(a.tenant.id);
+      const endpoint = '/admin/tenants/' + a.tenant.id + '/dte-records';
+      assert.equal((await request('GET', endpoint)).status, 401);
+      assert.equal((await request('GET', endpoint, tokenA)).status, 403);
+      assert.equal((await request('GET', '/admin/tenants/' + b.tenant.id + '/dte-records', tokenA)).status, 403);
+      assert.equal((await request('GET', '/admin/tenants/' + id() + '/dte-records', rootToken)).status, 404);
+      const result = await request('GET', endpoint, rootToken);
+      assert.equal(result.status, 200, JSON.stringify(result.body));
+      assert.deepEqual({ ...result.body, reviewDocs: [] }, { confirmed: 1, unverified: 1, errors: 1, pending: 2, needsSupport: 1, reviewDocs: [] });
+      assert.equal(result.body.reviewDocs.length, 1); assert.equal(result.body.reviewDocs[0].id, pending.id);
+      assert(!JSON.stringify(result.body).includes('fixture-private'));
+      const own = await request('GET', '/dte-config/stats', tokenA);
+      assert.equal(own.status, 200); assert.deepEqual(own.body.local, result.body);
+      assert.deepEqual(await counts(a.tenant.id), before);
+    } finally { await prisma.sale.deleteMany({ where: { id: { in: records } } }); }
+  });
   await check('search finds customers by user email and supports state filters', async () => {
     const r = await request('GET', '/admin/tenants?search=' + encodeURIComponent(a.user.email) + '&status=ACTIVE', rootToken);
     assert.equal(r.status, 200); assert(r.body.data.some(t => t.id === a.tenant.id)); assert(!r.body.data.some(t => t.id === b.tenant.id));

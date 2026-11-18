@@ -22,6 +22,8 @@ export class ClientManagementController {
   updateSettings(@Param('id') id: string, @Body() dto: UpdateTenantSettingsDto, @Request() req: any) { return this.clients.updateSettings(id, dto, req.user.sub); }
   @Patch(':id')
   update(@Param('id') id: string, @Body() dto: ClientProfileDto, @Request() req: any) { return this.clients.updateProfile(id, dto, req.user.sub); }
+  @Get(':id/dte-records')
+  dteRecords(@Param('id') id: string) { return this.clients.dteRecords(id); }
   @Get(':id/deletion-preview')
   preview(@Param('id') id: string) { return this.deletion.preview(id); }
   @Delete(':id')

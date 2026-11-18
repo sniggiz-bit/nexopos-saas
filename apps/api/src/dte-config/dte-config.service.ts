@@ -1,5 +1,6 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { getLocalDteRecords } from '../dte/local-records';
 import { LiorenAccountService } from '../dte/lioren-account.service';
 import { chileMonth, DTE_TYPES, DTE_LABELS, LiorenApiService, usableToken } from '../dte/lioren-api.service';
 
@@ -39,14 +40,8 @@ export class DteConfigService {
       this.statsCache.set(key, cached);
     }
     const provider = await cached.value;
-    const [confirmed, unverified, errors, pending, reviewDocs] = await Promise.all([
-      this.prisma.sale.count({ where: { tenantId, dteVerifiedAt: { not: null }, dteFolio: { not: null } } }),
-      this.prisma.sale.count({ where: { tenantId, dteVerifiedAt: null, OR: [{ dteFolio: { not: null } }, { dtePdfUrl: { contains: 'ejemplo-mock' } }] } }),
-      this.prisma.sale.count({ where: { tenantId, dteStatus: { in: ['ERROR', 'RECHAZADO', 'REQUIERE_REVISION', 'BLOQUEADO'] } } }),
-      this.prisma.sale.count({ where: { tenantId, dteStatus: { in: ['ENVIANDO', 'PENDIENTE_CONFIRMACION', 'EMITIDO', 'PENDIENTE_SII', 'REPARO'] } } }),
-      this.prisma.sale.findMany({ where: { tenantId, dteProviderId: { not: null }, dteFolio: { not: null }, dteSubmission: { isNot: null }, dteStatus: { in: ['EMITIDO', 'PENDIENTE_SII', 'REPARO'] } }, orderBy: { createdAt: 'desc' }, take: 20, select: { id: true, dteType: true, dteFolio: true, dteStatus: true } }),
-    ]);
-    return { connection: connection.status, provider, local: { confirmed, unverified, errors, pending, reviewDocs }, thisMonth: provider.total, totalAccepted: provider.accepted, errorCount: errors };
+    const local = await getLocalDteRecords(this.prisma, tenantId);
+    return { connection: connection.status, provider, local, thisMonth: provider.total, totalAccepted: provider.accepted, errorCount: local.errors };
   }
   private async providerStats(connection: any, month: ReturnType<typeof chileMonth>) {
     const types = DTE_TYPES.map(type => ({ type, label: DTE_LABELS[type], total: null as number | null, accepted: null as number | null, rejected: null as number | null, message: '' }));

@@ -54,3 +54,9 @@ La rama feature/lioren-corrections valida sin desplegar. La publicación en main
 - check-lioren-ui.cjs usa respuestas de proveedor ficticias en Chromium para formularios, confirmación de emisor, token vacío, métricas, estados desconocidos y vistas de escritorio/móvil.
 
 Fuentes oficiales: [Mi Empresa](https://www.lioren.cl/docs#/api-miempresa), [Tipo Documentos](https://www.lioren.cl/docs#/api-tipodocs), [Boletas](https://www.lioren.cl/docs#/api-emisionboleta), [DTE](https://www.lioren.cl/docs#/api-emisiondte), [Consulta](https://www.lioren.cl/docs#/api-consultadte), [Idempotencia](https://www.lioren.cl/docs#/api-idempotencia).
+
+## Diagnóstico de registros por cliente
+
+El control de registros locales se consulta en Superadmin → Clientes → Ficha → Registros tributarios. Su ruta de lectura `/api/admin/tenants/:id/dte-records` exige SUPER_ADMIN, limita las consultas a la empresa seleccionada y no consulta al proveedor ni modifica documentos. Las categorías pueden superponerse y no se suman a los totales oficiales de Lioren.
+
+La configuración del cliente muestra los datos reales del proveedor, conserva la consulta de documentos con estado pendiente y avisa de intentos actuales que requieren soporte. Los errores históricos sin DteSubmission no activan ese aviso. El resumen del negocio utiliza los rechazos del SII consultados en Lioren, en lugar del contador de errores locales. No se eliminan ni reemiten registros al consultar estas pantallas.

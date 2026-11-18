@@ -331,14 +331,14 @@ export function DashboardOverviewPage() {
                         accentAlpha={(a) => `rgba(167,139,250,${a})`}
                     />
                     <DteMiniCard
-                        title="Revisión local DTE"
-                        value={dteStats?.local.errors ?? '—'}
-                        sub={dteStats?.local.errors ? 'requieren revisión' : 'sin errores'}
-                        accent={dteStats?.local.errors ? '#F59E0B' : '#34D399'}
-                        accentAlpha={dteStats?.local.errors
+                        title="Rechazados SII este mes"
+                        value={dteStats?.provider.rejected ?? '—'}
+                        sub={dteStats?.provider.rejected == null ? 'consulta no disponible' : 'informados por Lioren'}
+                        accent={dteStats?.provider.rejected ? '#F59E0B' : '#34D399'}
+                        accentAlpha={dteStats?.provider.rejected
                             ? (a: number) => `rgba(245,158,11,${a})`
                             : (a: number) => `rgba(52,211,153,${a})`}
-                        alert={!!(dteStats?.local.errors && dteStats.errorCount > 0)}
+                        alert={!!(dteStats?.provider.rejected && dteStats.provider.rejected > 0)}
                     />
                     <MiniKpiCard
                         title="Config. DTE"
