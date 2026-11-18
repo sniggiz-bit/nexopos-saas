@@ -109,9 +109,14 @@ async function check(name, run) { await run(); checks++; console.log('PASS: ' + 
   await check('credit note preview and emission reject foreign tenants and unauthorized roles over HTTP', async () => {
     const row = await sale();
     for (const method of ['GET', 'POST']) {
-      assert.equal((await request(method, '/sales/' + row.id + '/nota-credito', context.customerToken)).status, 404);
+      assert.equal((await request(method, '/sales/' + row.id + '/nota-credito', context.customerToken)).status, method === 'GET' ? 404 : 403);
       assert.equal((await request(method, '/sales/' + row.id + '/nota-credito', '')).status, 401);
     }
+    const ownWithoutModule = await prisma.sale.create({ data: { tenantId: context.customerId, branchId: context.customerUser.branchId, total: 119, status: 'COMPLETED' } });
+    const preview = await request('GET', '/sales/' + ownWithoutModule.id + '/nota-credito', context.customerToken);
+    assert.equal(preview.status, 200); assert.equal(preview.data.canEmit, false);
+    assert.equal((await request('POST', '/sales/' + ownWithoutModule.id + '/nota-credito', context.customerToken)).status, 403);
+    await prisma.sale.delete({ where: { id: ownWithoutModule.id } });
     const bcrypt = require('bcrypt'); const password = 'Fixture-password-1842';
     const worker = await prisma.user.create({ data: { tenantId: tenant.id, branchId: branch.id, role: 'CASHIER', email: randomUUID() + '@example.invalid', password: await bcrypt.hash(password, 4) } });
     const login = await request('POST', '/auth/login', '', { email: worker.email, password }); assert.equal(login.status, 200);
