@@ -109,6 +109,7 @@ export class AdminService {
       if (!tenant) throw new NotFoundException('Empresa no encontrada.');
       if (tenant.users.length) throw new ForbiddenException('Esta cuenta contiene administradores de la plataforma y está protegida.');
       const result = await tx.tenant.update({ where: { id }, data: { status } });
+      if (status === 'SUSPENDED' && tenant.status !== 'SUSPENDED') await tx.user.updateMany({ where: { tenantId: id }, data: { tokenVersion: { increment: 1 } } });
       await tx.systemLog.create({ data: { tenantId: id, level: 'INFO', message: 'CLIENT_ADMIN_ACTION', context: { actorId: actorId || 'superadmin', action: 'STATUS_UPDATED', status } } });
       return result;
     });

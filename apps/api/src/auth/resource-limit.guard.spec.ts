@@ -6,8 +6,6 @@ import { ExecutionContext, ForbiddenException, NotFoundException } from '@nestjs
 
 describe('ResourceLimitGuard', () => {
   let guard: ResourceLimitGuard;
-  let reflector: Reflector;
-  let prisma: PrismaService;
 
   const mockReflector = {
     getAllAndOverride: jest.fn(),
@@ -17,6 +15,7 @@ describe('ResourceLimitGuard', () => {
     tenantSettings: {
       findUnique: jest.fn(),
     },
+    user: { count: jest.fn() },
     branch: {
       count: jest.fn(),
     },
@@ -32,8 +31,6 @@ describe('ResourceLimitGuard', () => {
     }).compile();
 
     guard = module.get<ResourceLimitGuard>(ResourceLimitGuard);
-    reflector = module.get<Reflector>(Reflector);
-    prisma = module.get<PrismaService>(PrismaService);
     jest.clearAllMocks();
   });
 
@@ -105,7 +102,7 @@ describe('ResourceLimitGuard', () => {
     const result = await guard.canActivate(context);
     expect(result).toBe(true);
     expect(mockPrismaService.branch.count).toHaveBeenCalledWith({
-      where: { tenantId: 'tenant-1' },
+      where: { tenantId: 'tenant-1', isActive: true },
     });
   });
 
@@ -130,4 +127,17 @@ describe('ResourceLimitGuard', () => {
 
     await expect(guard.canActivate(context)).rejects.toThrow(ForbiddenException);
   });
+  it('counts only enabled users against the quota', async () => {
+    mockReflector.getAllAndOverride.mockReturnValue('maxUsers');
+    mockPrismaService.tenantSettings.findUnique.mockResolvedValue({ maxUsers: 3 });
+    mockPrismaService.user.count.mockResolvedValue(2);
+    await expect(guard.canActivate(getMockContext({ tenantId: 'tenant-1', role: 'TENANT_ADMIN' }))).resolves.toBe(true);
+    expect(mockPrismaService.user.count).toHaveBeenCalledWith({ where: { tenantId: 'tenant-1', isActive: true } });
+  });
+  it('leaves superadmin resource decisions to the scoped administration service', async () => {
+    mockReflector.getAllAndOverride.mockReturnValue('maxUsers');
+    await expect(guard.canActivate(getMockContext({ tenantId: 'platform', role: 'SUPER_ADMIN' }))).resolves.toBe(true);
+    expect(mockPrismaService.tenantSettings.findUnique).not.toHaveBeenCalled();
+  });
+
 });

@@ -91,7 +91,7 @@ export class ResourceLimitGuard implements CanActivate {
     }
 
     const currentCount: number = await prismaDelegate.count({
-      where: { [resource.field]: tenantId, ...(limitKey === 'maxUsers' ? { isActive: true } : {}) },
+      where: { [resource.field]: tenantId, ...(limitKey === 'maxUsers' || limitKey === 'maxBranches' ? { isActive: true } : {}) },
     });
 
     // 4. Enforce the limit (>= means "at or above the cap", block creation)

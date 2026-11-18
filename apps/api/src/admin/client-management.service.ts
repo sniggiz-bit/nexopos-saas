@@ -111,7 +111,7 @@ export class ClientManagementService {
       if (email && email !== user.email && await tx.user.findUnique({ where: { email } })) throw new ConflictException('El correo ya está registrado.');
       const updated = await tx.user.update({ where: { id: userId }, data: {
         ...dto, name: dto.name?.trim(), email, password,
-        ...(password ? { tokenVersion: { increment: 1 } } : {}),
+        ...(password || dto.isActive === false || dto.role !== undefined && dto.role !== user.role || dto.branchId !== undefined && dto.branchId !== user.branchId ? { tokenVersion: { increment: 1 } } : {}),
       }, select: clientUserSelect });
       await this.audit(tx, tenantId, actorId, password ? 'USER_PASSWORD_RESET' : 'USER_UPDATED', userId);
       return updated;

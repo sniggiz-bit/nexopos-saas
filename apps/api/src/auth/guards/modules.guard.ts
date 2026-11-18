@@ -20,7 +20,7 @@ export class ModulesGuard implements CanActivate {
     const user = request.user;
 
     // SuperAdmin role might bypass this, or maybe not. Let's assume SUPERADMIN has all access.
-    if (user?.role === 'SUPERADMIN') {
+    if (user?.role === 'SUPER_ADMIN') {
       return true;
     }
 

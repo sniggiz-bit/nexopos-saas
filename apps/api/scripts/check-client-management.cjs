@@ -112,6 +112,7 @@ async function counts(tenantId) {
   await check('superadmin retains control of the sole customer administrator', async () => {
     assert.equal((await request('PATCH', '/admin/tenants/' + a.tenant.id + '/users/' + a.user.id, rootToken, { isActive: false })).status, 200);
     assert.equal((await request('GET', '/products', tokenA)).status, 401);
+    assert.equal((await request('POST', '/admin/tenants/' + a.tenant.id + '/users/' + a.user.id + '/welcome-email', rootToken)).status, 404);
     await request('PATCH', '/admin/tenants/' + a.tenant.id + '/users/' + a.user.id, rootToken, { isActive: true });
     tokenA = await login(a.user);
   });
@@ -161,7 +162,7 @@ async function counts(tenantId) {
     assert.equal((await request('POST', '/auth/sso/token', tokenA, { userId: b.user.id, tenantId: b.tenant.id })).status, 403);
   });
   await check('a stale privileged role in a signed token cannot grant superadmin rights', async () => {
-    const signed = new JwtService({ secret: process.env.JWT_SECRET }).sign({ sub: a.user.id, tenantId: a.tenant.id, role: 'SUPER_ADMIN', tokenVersion: 0 });
+    const signed = new JwtService({ secret: process.env.JWT_SECRET }).sign({ sub: a.user.id, tenantId: a.tenant.id, role: 'SUPER_ADMIN', tokenVersion: (await prisma.user.findUnique({ where: { id: a.user.id } })).tokenVersion });
     assert.equal((await request('GET', '/admin/tenants/' + b.tenant.id, signed)).status, 403);
   });
   await check('disabling a branch blocks new operations but allows closing its existing cash shift', async () => {
@@ -215,8 +216,10 @@ async function counts(tenantId) {
   });
   await check('suspending the company blocks its existing sessions and reactivation restores access', async () => {
     assert.equal((await request('PATCH', '/admin/tenants/' + a.tenant.id + '/status', rootToken, { status: 'SUSPENDED' })).status, 200);
-    assert.equal((await request('GET', '/products', tokenA)).status, 403);
+    assert([401, 403].includes((await request('GET', '/products', tokenA)).status));
     await request('PATCH', '/admin/tenants/' + a.tenant.id + '/status', rootToken, { status: 'ACTIVE' });
+    assert.equal((await request('GET', '/products', tokenA)).status, 401);
+    tokenA = await login(a.user);
     assert.equal((await request('GET', '/products', tokenA)).status, 200);
   });
   const preview = await request('GET', '/admin/tenants/' + a.tenant.id + '/deletion-preview', rootToken);

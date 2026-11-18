@@ -45,7 +45,7 @@ jobs:
       - name: Check welcome messages and admin notifications
         run: |
           docker run --rm -v "$PWD/apps/api/scripts:/app/apps/api/scripts:ro" -v "$PWD/apps/web/src:/app/apps/web/src:ro" nexopos-api-tests node scripts/check-admin-notifications.cjs
-          docker run --rm nexopos-api-tests npm test -- --runInBand --runTestsByPath src/email/email.service.spec.ts src/email/welcome-emails.service.spec.ts src/auth/auth.service.spec.ts src/users/users.service.spec.ts
+          docker run --rm nexopos-api-tests npm test -- --runInBand --runTestsByPath src/email/email.service.spec.ts src/email/welcome-emails.service.spec.ts src/auth/auth.service.spec.ts src/users/users.service.spec.ts src/auth/resource-limit.guard.spec.ts
       - name: Build Web production image
         run: docker build -f apps/web/Dockerfile.prod -t nexopos-web-check .
       - name: Boot release against a disposable database
