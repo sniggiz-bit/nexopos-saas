@@ -61,6 +61,12 @@ async function auth(page, token, user) {
     console.log('PASS: browser disables a module and restores its inherited access');
     await page.setViewportSize({ width: 390, height: 844 });
     await page.getByRole('tab', { name: 'Ficha general', exact: true }).click();
+    await page.getByRole('button', { name: 'Abrir menú de administración' }).click();
+    await page.getByRole('dialog').getByRole('link', { name: 'Clientes', exact: true }).waitFor();
+    await page.keyboard.press('Escape');
+    await page.getByRole('dialog').waitFor({ state: 'hidden' });
+    const mobileMain = await page.locator('main').boundingBox();
+    assert(mobileMain.x < 20 && mobileMain.width >= 350, 'Mobile main content is obscured by navigation');
     await page.screenshot({ path: '/checks-results/client-record-mobile.png', fullPage: true });
     assert(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1), 'Customer record overflows the mobile viewport');
     await page.getByRole('tab', { name: 'Acciones', exact: true }).click();
@@ -93,6 +99,8 @@ async function auth(page, token, user) {
     await page.getByRole('heading', { name: 'Sucursales', exact: true }).waitFor();
     await page.getByRole('heading', { name: 'Sucursal de prueba visual', exact: true }).waitFor();
     assert.equal(await page.getByRole('button', { name: /Nueva Sucursal|Crear sucursal/i }).count(), 0);
+    const branchMain = await page.locator('main').boundingBox();
+    assert(branchMain.x < 20 && branchMain.width >= 350, 'Customer mobile content is obscured by navigation');
     assert(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1), 'Customer branch page overflows on mobile');
     await page.screenshot({ path: '/checks-results/customer-branches-mobile.png', fullPage: true });
     assert.deepEqual(errors, []);
