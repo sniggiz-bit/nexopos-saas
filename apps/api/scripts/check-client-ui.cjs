@@ -32,7 +32,7 @@ async function auth(page, token, user) {
     await dialog.waitFor({ state: 'hidden' });
     await page.getByRole('heading', { name: 'Usuario de prueba visual', exact: true }).waitFor();
     console.log('PASS: browser creates a customer user through the real form');
-    await page.getByRole('tab', { name: 'Sucursales', exact: true }).click();
+    await page.getByRole('tab', { name: 'Sucursales', exact: true, level: 1 }).click();
     await page.getByRole('button', { name: 'Crear sucursal', exact: true }).click();
     dialog = page.getByRole('dialog');
     await dialog.getByLabel('Nombre', { exact: true }).fill('Sucursal de prueba visual');
@@ -52,7 +52,11 @@ async function auth(page, token, user) {
     await page.getByText('Servicios actualizados para este cliente.', { exact: true }).waitFor();
     assert.equal(await quotes.getAttribute('aria-checked'), 'false');
     await quotes.locator('..').getByRole('button', { name: 'Usar base', exact: true }).click();
+    const restoredResponse = page.waitForResponse(response => response.url().endsWith('/admin/tenants/' + fixture.customerId + '/modules') && response.request().method() === 'PATCH');
     await page.getByRole('button', { name: 'Guardar servicios', exact: true }).click();
+    const restored = await restoredResponse;
+    assert.equal(restored.status(), 200);
+    assert((await restored.json()).allActive.some(mod => mod.code === 'QUOTES'));
     await page.waitForFunction(() => document.querySelector('[aria-label="Habilitar QUOTES"]')?.getAttribute('aria-checked') === 'true');
     console.log('PASS: browser disables a module and restores its inherited access');
     await page.setViewportSize({ width: 390, height: 844 });
