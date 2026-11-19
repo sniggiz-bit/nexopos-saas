@@ -11,7 +11,7 @@ export function renderAdminNotification(data: AdminNotificationData): string {
   const title = escapeHtml(data.title);
   const message = escapeHtml(data.message).replace(/\r?\n/g, '<br>');
   const label = data.type === 'CHAT' ? 'MENSAJE DE SOPORTE' : data.type === 'REGISTRATION' ? 'NUEVO REGISTRO' : 'ALERTA DEL SISTEMA';
-  const button = data.type === 'CHAT' ? 'Responder en el chat' : data.type === 'REGISTRATION' ? 'Ver usuario y empresa' : 'Ver detalle';
+  const button = data.type === 'CHAT' ? 'Ir directo al chat' : data.type === 'REGISTRATION' ? 'Ver usuario y empresa' : 'Ver detalle';
   let actionUrl: string | undefined;
   if (data.actionUrl) {
     const url = new URL(data.actionUrl);

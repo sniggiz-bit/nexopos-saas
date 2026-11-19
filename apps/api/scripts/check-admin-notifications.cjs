@@ -84,6 +84,8 @@ test('chat interno: conserva consulta, avisa a Gmail y abre la conversación exa
  const s = setup(); const result = await s.controller.chat(req, 'Necesito ayuda con una categoría'); await flush();
  assert.equal(s.sessions.size, 1); assert.equal(s.messages.length, 2); assert.equal(s.emails.length, 1);
  assert.equal(s.emails[0][0], 'sniggiz@gmail.com');
+ assert.equal(s.emails[0][1], 'Usuario de NexoPOS solicita soporte');
+ assert(s.emails[0][2].includes('Origen: Usuario registrado de NexoPOS'));
  assert.equal(s.emails[0][4], 'https://nexopos.cl/admin/live-chats?session=' + result.sessionId);
  assert(s.emails[0][2].includes('camila@example.cl')); assert(s.emails[0][2].includes('Almacén Las Palmas'));
  assert.equal(s.audit[0].message, 'ADMIN_EMAIL_NOTIFICATION'); assert.equal(s.audit[0].context.status, 'ACCEPTED');
@@ -142,7 +144,7 @@ test('login: conserva el chat seleccionado y bloquea destinos externos o de otro
 test('correo: escapa el mensaje y presenta el botón de respuesta sin contraseñas ni tokens', () => {
  const html = renderAdminNotification({ title: 'Soporte <script>x</script>', message: 'Usuario <img src=x>\nNecesito ayuda', type: 'CHAT', actionUrl: 'https://nexopos.cl/admin/live-chats?session=abc&source=email' });
  assert(!html.includes('<script>')); assert(!html.includes('<img src=x>')); assert(html.includes('&lt;img'));
- assert(html.includes('<br>')); assert(html.includes('Responder en el chat')); assert(html.includes('&amp;source=email'));
+ assert(html.includes('<br>')); assert(html.includes('Ir directo al chat')); assert(html.includes('&amp;source=email'));
  assert.throws(() => renderAdminNotification({ title: 'x', message: 'x', type: 'CHAT', actionUrl: 'javascript:alert(1)' }));
 });
 test('registro: envía los datos del nuevo administrador y enlace a su empresa', async () => {
@@ -182,7 +184,7 @@ test('transporte real del servicio con fetch simulado: destinatario, HTML y fall
  context.fetch = async (_url, init) => { payload = JSON.parse(init.body); return { ok: true, json: async () => ({ id: 'provider-id' }) }; };
  const email = new EmailService();
  const result = await email.sendSystemNotification('sniggiz@gmail.com', 'Soporte', 'Consulta <script>x</script>', 'CHAT', 'https://nexopos.cl/admin/live-chats?session=test');
- assert.equal(result.status, 'ACCEPTED'); assert.equal(payload.to, 'sniggiz@gmail.com'); assert(payload.html.includes('Responder en el chat')); assert(!payload.html.includes('<script>'));
+ assert.equal(result.status, 'ACCEPTED'); assert.equal(payload.to, 'sniggiz@gmail.com'); assert(payload.html.includes('Ir directo al chat')); assert(!payload.html.includes('<script>'));
  context.fetch = async () => ({ ok: false, status: 403, text: async () => 'SECRET_RESPONSE' });
  const failed = await email.sendSystemNotification('sniggiz@gmail.com', 'Soporte', 'Consulta', 'CHAT');
  assert.equal(failed.status, 'FAILED'); assert(!JSON.stringify(failed).includes('SECRET_RESPONSE'));

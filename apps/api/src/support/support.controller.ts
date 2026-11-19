@@ -64,8 +64,8 @@ export class SupportController {
       return { session, messages: [userMessage, botMessage] };
     });
     this.notificationsService.notifySuperAdmin(
-      'Nuevo mensaje de soporte',
-      `Usuario: ${user.name || 'Sin nombre'}\nCorreo: ${user.email}\nEmpresa: ${tenant?.name || 'Comercio'}\n\nMensaje:\n${message}`,
+      'Usuario de NexoPOS solicita soporte',
+      `Origen: Usuario registrado de NexoPOS\nUsuario: ${user.name || 'Sin nombre'}\nCorreo: ${user.email}\nEmpresa: ${tenant?.name || 'Comercio'}\n\nMensaje:\n${message}`,
       'CHAT',
       { actionPath: `/admin/live-chats?session=${encodeURIComponent(sessionId)}` },
     ).catch(() => console.error('Failed to notify superadmin about support chat'));

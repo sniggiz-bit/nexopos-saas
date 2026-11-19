@@ -13,7 +13,7 @@ Los avisos se envían al destinatario de ADMIN_EMAIL, con sniggiz@gmail.com como
 
 Cada mensaje del usuario desde su panel se guarda en una conversación asociada a su cuenta y empresa. La conversación se reutiliza entre pestañas y al volver a entrar al panel, sin mezclar empresas. Los mensajes que antes solo existían en la memoria del navegador no se reconstruyen.
 
-El correo incluye usuario, correo de contacto, empresa y texto del mensaje. Su botón Responder en el chat abre /admin/live-chats?session=UUID y selecciona la conversación indicada. El chat público conserva sus alertas y ahora también proporciona el enlace a su conversación concreta.
+El asunto identifica «NexoPOS Alerta: Usuario de NexoPOS solicita soporte». El contenido indica «Origen: Usuario registrado de NexoPOS» e incluye usuario, correo de contacto, empresa y texto del mensaje. Su botón Ir directo al chat abre /admin/live-chats?session=UUID y selecciona la conversación indicada. El chat público conserva sus alertas y ahora también proporciona el enlace a su conversación concreta.
 
 La respuesta del administrador se guarda y puede verse desde el chat interno del usuario, también al regresar después. El widget actualiza el historial cada cinco segundos mientras está abierto y la página está visible. El historial cargado contiene los últimos 200 mensajes. Las respuestas del administrador y las confirmaciones automáticas no generan nuevos correos al administrador.
 
