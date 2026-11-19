@@ -1,0 +1,44 @@
+name: Verify support email configuration (read-only)
+on:
+  push:
+    branches: [ops/verify-support-email]
+    paths: [.github/workflows/verify-support-email.yml]
+permissions:
+  contents: read
+concurrency:
+  group: nexopos-production
+  cancel-in-progress: false
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Verify the configured recipient without sending any messages
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          port: ${{ secrets.SERVER_PORT }}
+          command_timeout: 4m
+          script: |
+            set -eu
+            cd /home/nexopos/nexopos.cl
+            test "$(git rev-parse HEAD)" = "13b54afcac5ee138ed591a969dbc6d3f7e6c2698"
+            docker exec -i nexopos_api node <<'SUPPORT_EMAIL_READ_ONLY'
+            const { PrismaClient } = require('@prisma/client');
+            const prisma = new PrismaClient();
+            (async () => {
+              const recipientMatches = (process.env.ADMIN_EMAIL || 'sniggiz@gmail.com').trim().toLowerCase() === 'sniggiz@gmail.com';
+              const resendConfigured = Boolean(process.env.RESEND_API_KEY && process.env.RESEND_API_KEY.trim());
+              const frontend = new URL(process.env.FRONTEND_URL || 'https://nexopos.cl');
+              const publicOriginMatches = !frontend.username && !frontend.password && ['https://nexopos.cl', 'https://www.nexopos.cl'].includes(frontend.origin);
+              const since = new Date(Date.now() - 7 * 86400000);
+              const [accepted, failed] = await Promise.all([
+                prisma.systemLog.count({ where: { message: 'ADMIN_EMAIL_NOTIFICATION', createdAt: { gte: since }, AND: [{ context: { path: ['type'], equals: 'CHAT' } }, { context: { path: ['status'], equals: 'ACCEPTED' } }] } }),
+                prisma.systemLog.count({ where: { message: 'ADMIN_EMAIL_NOTIFICATION', createdAt: { gte: since }, AND: [{ context: { path: ['type'], equals: 'CHAT' } }, { context: { path: ['status'], equals: 'FAILED' } }] } }),
+              ]);
+              console.log(JSON.stringify({ readOnlyVerification: true, recipientMatches, resendConfigured, publicOriginMatches, acceptedChatNoticesLast7Days: accepted, failedChatNoticesLast7Days: failed, emailsSentByThisTask: 0 }));
+              if (!recipientMatches || !resendConfigured || !publicOriginMatches) process.exitCode = 1;
+            })().catch(error => { console.error(JSON.stringify({ verificationFailed: true, kind: error.name })); process.exitCode = 1; }).finally(() => prisma.$disconnect());
+            SUPPORT_EMAIL_READ_ONLY
