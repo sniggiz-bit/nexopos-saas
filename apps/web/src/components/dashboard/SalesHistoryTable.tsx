@@ -128,68 +128,52 @@ export function SalesHistoryTable({ sales, isLoading, onCreditNote, onDeleteInte
         const isAdmin = ['TENANT_ADMIN', 'SUPER_ADMIN'].includes(userRole || '');
         const canReviewNC = isAdmin && !!onCreditNote && (([33, 39].includes(sale.dteType ?? 39) && ['COMPLETED', 'CANCELLED'].includes(sale.status)) || sale.dteType === 61 && !!sale.originalSaleId);
         const canDeleteInternal = sale.status === 'COMPLETED' && !sale.dteFolio && ['PENDING', 'BLOQUEADO'].includes(sale.dteStatus || 'PENDING') && isAdmin && !!onDeleteInternalSale;
-        return (<div className="flex flex-wrap items-center gap-2 justify-end">
-                                                {/* PDF / Ticket */}
-                                                <button
-                                                    onClick={() => handleViewPdf(sale)}
-                                                    disabled={!pdfAvailable}
-                                                    title={pdfAvailable ? 'Abrir documento' : 'Documento no disponible'}
-                                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all duration-150 disabled:opacity-30 disabled:cursor-not-allowed"
-                                                    style={{ background: C.cyanA(0.08), border: `1px solid ${C.cyanA(0.2)}`, color: C.cyan }}
-                                                    onMouseEnter={e => !e.currentTarget.disabled && ((e.currentTarget as HTMLElement).style.background = C.cyanA(0.16))}
-                                                    onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = C.cyanA(0.08)}>
-                                                    {sale.dteFolio ? <ReceiptText className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                                                    {getPdfLabel(sale)}
-                                                </button>
-
-                                                {/* Nota de Crédito */}
-                                                {canReviewNC && (
-                                                    <button
-                                                        onClick={() => onCreditNote!(sale.dteType === 61 ? sale.originalSaleId! : sale.id)}
-                                                        title="Revisar nota de crédito"
-                                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all duration-150 disabled:opacity-50"
-                                                        style={{ background: C.amberA(0.08), border: `1px solid ${C.amberA(0.25)}`, color: C.amber }}
-                                                        onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = C.amberA(0.16)}
-                                                        onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = C.amberA(0.08)}>
-                                                        <ReceiptText className="w-3.5 h-3.5" />
-                                                        {sale.dteType === 61 ? 'Ver nota de crédito' : 'Nota de crédito'}
-                                                    </button>
-                                                )}
-
-                                                {/* Eliminar Venta Interna */}
-                                                {canDeleteInternal && (
-                                                    <button
-                                                        onClick={() => {
-                                                            if (window.confirm('¿Estás seguro de que deseas eliminar esta venta de control interno? Se devolverá el stock y el dinero de caja.')) {
-                                                                onDeleteInternalSale!(sale.id);
-                                                            }
-                                                        }}
-                                                        disabled={deletingSaleId === sale.id}
-                                                        title="Eliminar venta de control interno"
-                                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all duration-150 disabled:opacity-50"
-                                                        style={{ background: C.redA(0.08), border: `1px solid ${C.redA(0.25)}`, color: C.red }}
-                                                        onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = C.redA(0.16)}
-                                                        onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = C.redA(0.08)}>
-                                                        {deletingSaleId === sale.id
-                                                            ? <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                                                            : <Trash2 className="w-3.5 h-3.5" />}
-                                                        Eliminar
-                                                    </button>
-                                                )}
-                                            </div>);
+        const actionClass = 'inline-flex h-9 shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-lg border px-3 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-40';
+        const documentLabel = getPdfLabel(sale);
+        return <div className="flex items-center justify-end gap-2" role="group" aria-label="Acciones de la venta">
+            <button
+                type="button"
+                onClick={() => handleViewPdf(sale)}
+                disabled={!pdfAvailable}
+                aria-label={documentLabel}
+                title={pdfAvailable ? documentLabel : 'Documento no disponible'}
+                className={actionClass + ' border-cyan-500/20 bg-cyan-500/5 text-cyan-700 dark:text-cyan-400 enabled:hover:border-cyan-500/40 enabled:hover:bg-cyan-500/15'}>
+                <Eye className="h-4 w-4 shrink-0" aria-hidden="true" />
+                <span>{documentLabel.replace(/^Ver /, '')}</span>
+            </button>
+            {canReviewNC && <button
+                type="button"
+                onClick={() => onCreditNote!(sale.dteType === 61 ? sale.originalSaleId! : sale.id)}
+                title="Revisar nota de crédito"
+                className={actionClass + ' border-amber-500/25 bg-amber-500/10 text-amber-700 dark:text-amber-400 hover:border-amber-500/50 hover:bg-amber-500/20'}>
+                <ReceiptText className="h-4 w-4 shrink-0" aria-hidden="true" />
+                <span>{sale.dteType === 61 ? 'Ver nota de crédito' : 'Nota de crédito'}</span>
+            </button>}
+            {canDeleteInternal && <button
+                type="button"
+                onClick={() => {
+                    if (window.confirm('¿Estás seguro de que deseas eliminar esta venta de control interno? Se devolverá el stock y el dinero de caja.')) onDeleteInternalSale!(sale.id);
+                }}
+                disabled={deletingSaleId === sale.id}
+                aria-label="Eliminar venta de control interno"
+                title="Eliminar venta de control interno"
+                className={actionClass + ' !w-9 !px-0 border-red-500/15 text-red-600 dark:text-red-400 enabled:hover:border-red-500/40 enabled:hover:bg-red-500/10'}>
+                {deletingSaleId === sale.id ? <RefreshCw className="h-4 w-4 shrink-0 animate-spin" aria-hidden="true" /> : <Trash2 className="h-4 w-4 shrink-0" aria-hidden="true" />}
+            </button>}
+        </div>;
     };
 
     return (
         <div className="rounded-2xl overflow-hidden"
             style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}>
-            <div className="hidden overflow-x-auto md:block">
-                <table className="min-w-full text-[13px]">
+            <div className="hidden overflow-x-auto xl:block">
+                <table className="w-full text-[13px]">
                     {/* ── thead ── */}
                     <thead>
                         <tr style={{ borderBottom: '1px solid hsl(var(--border))' }}>
                             {COLS.map(col => (
                                 <th key={col}
-                                    className={'px-5 py-3.5 text-left text-[10px] font-bold uppercase tracking-widest whitespace-nowrap ' + (col === 'Acciones' ? 'sticky right-0 z-10' : '')}
+                                    className={'px-3 py-3.5 text-left text-[10px] font-bold uppercase tracking-widest whitespace-nowrap ' + (col === 'Acciones' ? 'w-px !text-right' : '')}
                                     style={{ color: 'hsl(var(--muted-foreground))', background: 'hsl(var(--muted))' }}>
                                     {col}
                                 </th>
@@ -214,7 +198,7 @@ export function SalesHistoryTable({ sales, isLoading, onCreditNote, onDeleteInte
                                         onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = isEven ? 'transparent' : 'hsl(var(--muted) / 0.4)'}>
 
                                         {/* Folio / ID */}
-                                        <td className="px-5 py-3.5 whitespace-nowrap font-mono">
+                                        <td className="px-3 py-3.5 whitespace-nowrap font-mono">
                                             <div className="flex items-center gap-2">
                                                 {sale.dteFolio ? (
                                                     <span className="font-bold" style={{ color: C.cyan }}>#{sale.dteFolio}</span>
@@ -229,32 +213,32 @@ export function SalesHistoryTable({ sales, isLoading, onCreditNote, onDeleteInte
                                         </td>
 
                                         {/* Fecha y Hora */}
-                                        <td className="px-5 py-3.5 whitespace-nowrap" style={{ color: C.muted }}>
+                                        <td className="px-3 py-3.5 whitespace-nowrap text-xs" style={{ color: C.muted }}>
                                             {formatSaleDate(sale.createdAt)}
                                         </td>
 
                                         {/* Sucursal */}
-                                        <td className="px-5 py-3.5 whitespace-nowrap" style={{ color: C.text }}>
+                                        <td className="px-3 py-3.5 whitespace-nowrap" style={{ color: C.text }}>
                                             {sale.branch?.name ?? <span style={{ color: C.subtle }}>—</span>}
                                         </td>
 
                                         {/* Método de Pago */}
-                                        <td className="px-5 py-3.5 whitespace-nowrap" style={{ color: C.muted }}>
+                                        <td className="px-3 py-3.5 whitespace-nowrap" style={{ color: C.muted }}>
                                             {formatPaymentMethods(sale.payments)}
                                         </td>
 
                                         {/* Total */}
-                                        <td className="px-5 py-3.5 whitespace-nowrap font-bold tabular-nums" style={{ color: C.text }}>
+                                        <td className="px-3 py-3.5 whitespace-nowrap font-bold tabular-nums" style={{ color: C.text }}>
                                             {formatCLP(sale.total)}
                                         </td>
 
                                         {/* Estado */}
-                                        <td className="px-5 py-3.5 whitespace-nowrap">
+                                        <td className="px-3 py-3.5 whitespace-nowrap">
                                             <StatusBadge status={sale.status} />
                                         </td>
 
                                         {/* Acciones */}
-                                        <td className="sticky right-0 z-10 bg-card px-5 py-3.5">
+                                        <td className="w-px whitespace-nowrap px-3 py-3.5">
                                             {renderActions(sale)}
                                         </td>
                                     </tr>
@@ -265,7 +249,7 @@ export function SalesHistoryTable({ sales, isLoading, onCreditNote, onDeleteInte
                 </table>
             </div>
 
-            <div className="divide-y divide-border md:hidden">
+            <div className="divide-y divide-border xl:hidden">
                 {isLoading ? <p className="p-6 text-sm text-muted-foreground">Cargando ventas...</p> : !sales.length ? <p className="p-6 text-sm text-muted-foreground">No hay ventas registradas. Ajusta los filtros o realiza una venta en el POS.</p> : sales.map(sale => <article key={sale.id} aria-label={'Venta ' + (sale.dteFolio || sale.id.slice(0, 8))} className="space-y-3 p-4">
                     <div className="flex flex-wrap items-start justify-between gap-2"><div className="flex flex-wrap items-center gap-2"><span className="font-mono text-sm font-semibold">{sale.dteFolio ? '#' + sale.dteFolio : sale.id.slice(0, 8) + '…'}</span><DteTypeBadge dteType={sale.dteType ?? 39} /></div><strong className="text-sm tabular-nums">{formatCLP(sale.total)}</strong></div>
                     <p className="text-xs text-muted-foreground">{formatSaleDate(sale.createdAt)} · {sale.branch?.name || 'Sin sucursal'}</p>

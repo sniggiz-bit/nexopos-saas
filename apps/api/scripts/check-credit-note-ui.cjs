@@ -6,7 +6,7 @@ const origin = 'http://release-web';
     const fixture = JSON.parse(await fs.readFile('/checks-results/context.json', 'utf8'));
     const browser = await chromium.launch({ headless: true, args: ['--unsafely-treat-insecure-origin-as-secure=http://release-web'] });
     try {
-        const page = await browser.newPage({ viewport: { width: 1440, height: 1000 }, timezoneId: 'America/Santiago' });
+        const page = await browser.newPage({ viewport: { width: 1366, height: 1000 }, timezoneId: 'America/Santiago' });
         const errors = []; page.on('pageerror', error => errors.push(error.message));
         await page.goto(origin);
         await page.evaluate(({ token, user }) => { localStorage.clear(); localStorage.setItem('token', token); localStorage.setItem('user', JSON.stringify(user)); }, { token: fixture.customerToken, user: fixture.customerUser });
@@ -31,6 +31,8 @@ const origin = 'http://release-web';
         await page.goto(origin + '/dashboard/sales');
         await page.getByRole('heading', { name: 'Historial de Ventas', exact: true }).waitFor();
         const actions = () => page.getByRole('button', { name: 'Nota de crédito', exact: true });
+        await actions().nth(1).waitFor();
+        await page.screenshot({ path: '/checks-results/sales-action-buttons-desktop.png', fullPage: true });
         await actions().nth(1).click(); let dialog = page.getByRole('dialog');
         await dialog.getByText('La venta debe tener una boleta o factura confirmada en Lioren.').waitFor();
         assert.equal(await dialog.getByRole('button', { name: 'Emitir nota de crédito', exact: true }).count(), 0); assert.equal(posts, 0);
