@@ -58,7 +58,7 @@ export class NotificationsService {
     }
   }
 
-  private async sendEmailNotification(notificationId: string, title: string, message: string, type: string, actionPath?: string) {
+  async sendEmailNotification(notificationId: string, title: string, message: string, type: string, actionPath?: string, idempotencyKey?: string) {
     const adminEmail = this.configService.get<string>('ADMIN_EMAIL')?.trim() || 'sniggiz@gmail.com';
     const frontend = new URL(this.configService.get<string>('FRONTEND_URL') || 'https://nexopos.cl');
     if (!['https:', 'http:'].includes(frontend.protocol) || frontend.username || frontend.password ||
@@ -67,12 +67,13 @@ export class NotificationsService {
     }
     const path = actionPath || (type === 'CHAT' ? '/admin/live-chats' : type === 'REGISTRATION' ? '/admin/tenants' : undefined);
     if (path && (!path.startsWith('/admin/') || path.includes('\\') || /[\r\n]/.test(path))) throw new Error('Invalid admin action path');
-    const result = await this.emailService.sendSystemNotification(adminEmail, title, message, type, path ? frontend.origin + path : undefined);
+    const result = await this.emailService.sendSystemNotification(adminEmail, title, message, type, path ? frontend.origin + path : undefined, idempotencyKey);
     await this.prisma.systemLog.create({ data: {
       level: result.status === 'ACCEPTED' ? 'INFO' : 'WARNING',
       message: 'ADMIN_EMAIL_NOTIFICATION',
       context: { notificationId, type, ...result },
     } });
+    return result;
   }
 
   async getHistory(limit = 50) {

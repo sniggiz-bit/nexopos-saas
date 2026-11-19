@@ -16,6 +16,7 @@ import {
     Sun,
     Moon,
     MessageSquare,
+    BookOpen,
     Menu,
 } from 'lucide-react';
 import { Logo } from '../components/ui/Logo';
@@ -52,6 +53,7 @@ export default function SuperAdminLayout() {
                 { name: 'Comunicados', path: '/admin/announcements', icon: Megaphone },
                 { name: 'Landing Page', path: '/admin/landing', icon: Globe },
                 { name: 'Chats en Vivo', path: '/admin/live-chats', icon: MessageSquare },
+                { name: 'Base de soporte', path: '/admin/support-knowledge', icon: BookOpen },
             ],
         },
     ];

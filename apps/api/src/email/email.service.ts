@@ -622,6 +622,7 @@ export class EmailService {
     message: string,
     type: string,
     actionUrl?: string,
+    idempotencyKey?: string,
   ): Promise<{ status: 'ACCEPTED' | 'FAILED' | 'NOT_CONFIGURED'; providerId?: string; error?: string }> {
     if (!this.resendApiKey) {
       this.logger.warn('Admin email skipped: RESEND_API_KEY is not configured.');
@@ -630,7 +631,7 @@ export class EmailService {
     try {
       const response = await fetch('https://api.resend.com/emails', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${this.resendApiKey}`, 'Content-Type': 'application/json' },
+        headers: { Authorization: `Bearer ${this.resendApiKey}`, 'Content-Type': 'application/json', ...(idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : {}) },
         signal: AbortSignal.timeout(10000),
         body: JSON.stringify({ from: this.fromEmail, to: email, subject: `NexoPOS Alerta: ${title.replace(/[\r\n]+/g, ' ')}`, html: renderAdminNotification({ title, message, type, actionUrl }) }),
       });
