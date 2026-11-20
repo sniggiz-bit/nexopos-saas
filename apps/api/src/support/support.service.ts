@@ -251,7 +251,7 @@ export class SupportService {
       ? await this.knowledge.requireArticle(request.articleId, context.audience)
       : null;
     await this.expireOne(context.sessionId);
-    const opened = await this.prisma.$transaction(async (tx) => {
+    const opened = await this.prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       await tx.chatSession.upsert({
         where: { id: context.sessionId },
         create: {
@@ -338,7 +338,7 @@ export class SupportService {
       } catch {
         answer = { action: 'handoff', text: HUMAN_REQUEST, sourceIds: [] };
       }
-      await this.prisma.$transaction(async (tx) => {
+      await this.prisma.$transaction(async (tx: Prisma.TransactionClient) => {
         const session = await this.lock(tx, context.sessionId);
         if (session.mode !== 'BOT' || session.pendingMessageId !== opened.id)
           return;
@@ -536,7 +536,7 @@ export class SupportService {
       },
     });
     if (!stale) return;
-    await this.prisma.$transaction(async (tx) => {
+    await this.prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       const session = await this.lock(tx, id);
       if (
         session.mode !== 'BOT' ||
@@ -570,7 +570,7 @@ export class SupportService {
       !['claim', 'resolve', 'resume'].includes(action)
     )
       throw new BadRequestException('Acción de conversación inválida.');
-    await this.prisma.$transaction(async (tx) => {
+    await this.prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       const session = await this.lock(tx, id);
       await tx.chatSession.update({
         where: { id },
@@ -614,7 +614,7 @@ export class SupportService {
     const message = this.validate({ message: content, clientMessageId });
     if (!UUID_PATTERN.test(sessionId))
       throw new BadRequestException('Conversación inválida.');
-    const saved = await this.prisma.$transaction(async (tx) => {
+    const saved = await this.prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       const session = await this.lock(tx, sessionId);
       const previous = await tx.chatMessage.findUnique({
         where: {

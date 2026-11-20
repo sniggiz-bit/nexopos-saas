@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import {
   BadRequestException,
   ConflictException,
@@ -284,7 +285,7 @@ export class SupportKnowledgeService {
   }
   async reserveAiCall() {
     const day = new Date().toISOString().slice(0, 10);
-    return this.prisma.$transaction(async (tx) => {
+    return this.prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       await tx.$queryRawUnsafe(
         'SELECT "id" FROM "SupportSettings" WHERE "id"=$1 FOR UPDATE',
         'main',

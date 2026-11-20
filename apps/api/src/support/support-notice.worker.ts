@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { randomUUID } from 'node:crypto';
@@ -40,7 +41,7 @@ export class SupportNoticeWorker {
     });
     for (const session of stale) await this.support.expireOne(session.id);
     for (let index = 0; index < 5; index++) {
-      const notice = await this.prisma.$transaction(async (tx) => {
+      const notice = await this.prisma.$transaction(async (tx: Prisma.TransactionClient) => {
         const rows = await tx.$queryRawUnsafe<Array<{ id: string }>>(
           `SELECT "id" FROM "SupportHandoffNotice" WHERE (("status" IN ('PENDING','RETRY') AND "nextAttemptAt"<=NOW()) OR ("status"='SENDING' AND "leaseUntil"<NOW())) ORDER BY "createdAt" FOR UPDATE SKIP LOCKED LIMIT 1`,
         );
