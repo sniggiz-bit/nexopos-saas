@@ -215,6 +215,12 @@ async function noOverflow(page) {
       await userPage.getByLabel('Clave de Google AI Studio').count(),
       0,
     );
+    const rootHeaders = { Authorization: 'Bearer ' + fixture.rootToken };
+    const landingResponse = await adminPage.request.get(origin + '/api/admin/landing', { headers: rootHeaders });
+    assert.equal(landingResponse.status(), 200);
+    const landing = await landingResponse.json() || {};
+    const enabledLanding = await adminPage.request.put(origin + '/api/admin/landing', { headers: rootHeaders, data: { ...landing, chatbot: { ...(landing.chatbot || {}), enabled: true } } });
+    assert.equal(enabledLanding.status(), 200);
     const publicContext = await browser.newContext({
       viewport: { width: 390, height: 844 },
     });
