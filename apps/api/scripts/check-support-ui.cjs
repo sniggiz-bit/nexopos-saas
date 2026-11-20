@@ -41,7 +41,7 @@ async function noOverflow(page) {
     await auth(page, fixture.rootToken, fixture.rootUser);
     await page.goto(origin + '/admin/support-knowledge');
     await page
-      .getByRole('heading', { name: 'Base de soporte', exact: true })
+      .getByRole('heading', { name: 'Base de soporte', exact: true, level: 1 })
       .waitFor();
     await page.getByRole('button', { name: 'Nueva pregunta' }).click();
     const question = '¿Cómo preparo el catálogo de prueba?';
@@ -56,7 +56,7 @@ async function noOverflow(page) {
     await page.getByRole('button', { name: 'Guardar pregunta' }).click();
     await page
       .getByRole('status')
-      .getByText('Pregunta publicada.', { exact: false })
+      .filter({ hasText: 'Pregunta publicada.' })
       .waitFor();
     await noOverflow(page);
     await page.screenshot({
@@ -133,7 +133,7 @@ async function noOverflow(page) {
       .click();
     await chat
       .getByRole('status')
-      .getByText('Solicitud en espera de atención')
+      .filter({ hasText: 'Solicitud en espera de atención' })
       .waitFor();
     history = await (
       await userPage.request.get(origin + '/api/support/chat', { headers })
@@ -195,7 +195,7 @@ async function noOverflow(page) {
       .waitFor();
     await chat
       .getByRole('status')
-      .getByText('Consulta resuelta')
+      .filter({ hasText: 'Consulta resuelta' })
       .waitFor({ timeout: 15000 });
     console.log(
       'PASS: email deep link selects exact conversation; human takeover, reply and resolution work in desktop/mobile UI',
@@ -232,6 +232,12 @@ async function noOverflow(page) {
     );
     assert.deepEqual(errors, []);
     console.log('SUPPORT_UI_CHECKS=6; real external messages=0');
+  } catch (error) {
+    let index = 0;
+    for (const context of browser.contexts()) for (const page of context.pages()) {
+      await page.screenshot({ path: '/checks-results/support-failure-' + index++ + '.png', fullPage: true }).catch(() => {});
+    }
+    throw error;
   } finally {
     await browser.close();
   }
