@@ -113,9 +113,9 @@ describe('Grounded support assistant', () => {
       sourceVersions: { 'article-a': 2 },
     });
   });
-  it.each([[], ['invented']])(
-    'rejects ungrounded answers with citations %j',
-    async (ids) => {
+  it.each([{ ids: [] as string[] }, { ids: ['invented'] }])(
+    'rejects ungrounded answers with citations $ids',
+    async ({ ids }) => {
       response({ action: 'answer', text: 'Respuesta', sourceIds: ids });
       await expect(new GeminiSupportService().answer(input)).rejects.toThrow(
         'GEMINI_UNGROUNDED',
