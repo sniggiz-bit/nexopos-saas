@@ -62,6 +62,10 @@ const p = new PrismaClient();
       await p.supportArticle.count({ where: { status: 'PUBLISHED' } }),
       9,
     );
+    const topics = await p.supportArticle.findMany();
+    assert(topics.every(topic => Array.isArray(topic.aliases) && topic.aliases.length > 0));
+    assert.equal(topics.filter(topic => topic.isStarter).length, 7);
+    assert.equal(topics.filter(topic => topic.audience === 'PUBLIC').length, 2);
     console.log(
       'PASS: additive support migration preserves history, pauses legacy bots and seeds scoped topics with Gemini disabled',
     );
