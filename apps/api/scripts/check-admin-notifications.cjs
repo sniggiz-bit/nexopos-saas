@@ -143,7 +143,7 @@ test('avisos: rechaza enlaces externos y configuración localhost en producción
  await assert.rejects(s.notifications.sendEmailNotification('n', 't', 'm', 'CHAT')); assert.equal(s.emails.length, 0);
 });
 // Sintaxis TSX de los puntos modificados, sin requerir dependencias del frontend.
-for (const file of ['apps/web/src/pages/LoginPage.tsx', 'apps/web/src/pages/admin/LiveChatsPage.tsx', 'apps/web/src/components/dashboard/SupportChatWidget.tsx', 'apps/web/src/components/admin/NotificationBell.tsx', 'apps/web/src/components/landing/PublicChatWidget.tsx', 'apps/web/src/components/support/SupportConversationWidget.tsx', 'apps/web/src/pages/admin/SupportKnowledgePage.tsx']) {
+for (const file of ['apps/web/src/pages/LoginPage.tsx', 'apps/web/src/pages/admin/LiveChatsPage.tsx', 'apps/web/src/components/dashboard/SupportChatWidget.tsx', 'apps/web/src/components/admin/NotificationBell.tsx', 'apps/web/src/components/landing/PublicChatWidget.tsx', 'apps/web/src/components/support/SupportConversationWidget.tsx', 'apps/web/src/pages/admin/SupportKnowledgePage.tsx', 'apps/web/src/pages/admin/AdminLandingPage.tsx']) {
  test('sintaxis: ' + file, () => { load(file); });
 }
 

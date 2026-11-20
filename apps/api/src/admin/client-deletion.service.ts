@@ -69,6 +69,8 @@ export class ClientDeletionService {
       await tx.category.deleteMany({ where: { tenantId: id } });
       await tx.supplier.deleteMany({ where: { tenantId: id } });
       await tx.customer.deleteMany({ where: { tenantId: id } });
+      const supportNotices = await tx.supportHandoffNotice.findMany({ where: { chatSession: { visitorId: { startsWith: 'account:' + id + ':' } } }, select: { notificationId: true } });
+      await tx.systemNotification.deleteMany({ where: { id: { in: supportNotices.map(notice => notice.notificationId) } } });
       await tx.chatSession.deleteMany({ where: { visitorId: { startsWith: 'account:' + id + ':' } } });
       await tx.user.deleteMany({ where: { tenantId: id } });
       await tx.branch.deleteMany({ where: { tenantId: id } });
