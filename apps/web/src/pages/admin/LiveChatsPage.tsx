@@ -1,3 +1,4 @@
+import { supportUuid } from '@/lib/support-id';
 import { useEffect, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -119,7 +120,7 @@ export default function LiveChatsPage() {
       pendingReply.current = {
         sessionId: target,
         text: text.trim(),
-        id: crypto.randomUUID(),
+        id: supportUuid(),
       };
     const clientMessageId = pendingReply.current.id;
     try {

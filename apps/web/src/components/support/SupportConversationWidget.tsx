@@ -1,3 +1,4 @@
+import { supportUuid } from '@/lib/support-id';
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Bot, Headphones, Loader2, MessageSquare, Send, X } from "lucide-react";
 import { api } from "@/lib/api";
@@ -76,10 +77,10 @@ export function SupportConversationWidget({
       try {
         const saved = localStorage.getItem("nexopos_visitor_id");
         visitor.current =
-          saved && uuid.test(saved) ? saved : crypto.randomUUID();
+          saved && uuid.test(saved) ? saved : supportUuid();
         localStorage.setItem("nexopos_visitor_id", visitor.current);
       } catch {
-        visitor.current = crypto.randomUUID();
+        visitor.current = supportUuid();
       }
     }
     return () => {
@@ -138,7 +139,7 @@ export function SupportConversationWidget({
     const request = ++revision.current;
     const fingerprint = JSON.stringify([text.trim(), articleId, human]);
     if (!pending.current || pending.current.fingerprint !== fingerprint)
-      pending.current = { fingerprint, id: crypto.randomUUID(), human };
+      pending.current = { fingerprint, id: supportUuid(), human };
     const clientMessageId = pending.current.id;
     sending.current = true;
     setBusy(true);

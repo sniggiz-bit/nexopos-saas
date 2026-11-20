@@ -14,6 +14,7 @@ async function auth(page, token, user) {
   );
 }
 async function noOverflow(page) {
+  await page.evaluate(() => window.scrollTo(0, 0));
   await page.waitForTimeout(600);
   assert(
     await page.evaluate(
@@ -37,7 +38,7 @@ async function noOverflow(page) {
     });
     const page = await context.newPage();
     const errors = [];
-    page.on('pageerror', (error) => errors.push(error.message));
+    page.on('pageerror', (error) => (errors.push(error.message), console.error('BROWSER_ERROR: ' + error.message)));
     await auth(page, fixture.rootToken, fixture.rootUser);
     await page.goto(origin + '/admin/support-knowledge');
     await page
@@ -100,7 +101,8 @@ async function noOverflow(page) {
     );
     const userPage = await context.newPage();
     await userPage.setViewportSize({ width: 390, height: 844 });
-    userPage.on('pageerror', (error) => errors.push(error.message));
+    userPage.on('pageerror', (error) => (errors.push(error.message), console.error('BROWSER_ERROR: ' + error.message)));
+    await userPage.addInitScript(() => { Object.defineProperty(Crypto.prototype, 'randomUUID', { value: undefined, configurable: true }); });
     await auth(userPage, fixture.customerToken, fixture.customerUser); // localStorage is shared: restore admin before later admin navigation.
     const headers = { Authorization: 'Bearer ' + fixture.customerToken };
     let history = await (
@@ -114,6 +116,7 @@ async function noOverflow(page) {
           data: { action: 'resume' },
         },
       );
+    console.log('SUPPORT_BROWSER_CRYPTO=' + JSON.stringify(await userPage.evaluate(() => ({ secure: isSecureContext, randomUUID: typeof crypto.randomUUID, randomValues: typeof crypto.getRandomValues }))));
     await userPage.goto(origin + '/dashboard/branches');
     await userPage
       .getByRole('button', { name: 'Abrir chat de soporte' })
@@ -121,7 +124,13 @@ async function noOverflow(page) {
     const chat = userPage.getByRole('dialog', {
       name: 'Chat de soporte NexoPOS',
     });
-    await chat.getByRole('button', { name: question, exact: true }).click();
+    const [faqResponse] = await Promise.all([
+      userPage.waitForResponse(response => response.url().endsWith('/api/support/chat') && response.request().method() === 'POST'),
+      chat.getByRole('button', { name: question, exact: true }).click(),
+    ]);
+    assert.equal(faqResponse.status(), 201, 'The FAQ message should be accepted');
+    const faqBody = await faqResponse.json();
+    assert(faqBody.messages?.some(message => message.content === answer), 'Expected the published answer; mode=' + faqBody.mode);
     await chat.getByText(answer, { exact: false }).waitFor();
     await noOverflow(userPage);
     await userPage.screenshot({
@@ -157,7 +166,7 @@ async function noOverflow(page) {
       timezoneId: 'America/Santiago',
     });
     const adminPage = await adminContext.newPage();
-    adminPage.on('pageerror', (error) => errors.push(error.message));
+    adminPage.on('pageerror', (error) => (errors.push(error.message), console.error('BROWSER_ERROR: ' + error.message)));
     await auth(adminPage, fixture.rootToken, fixture.rootUser);
     await adminPage.goto(
       origin + '/admin/live-chats?session=' + history.sessionId,

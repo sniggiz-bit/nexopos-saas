@@ -173,3 +173,12 @@ test('usuarios internos: avisa del alta sin exponer contraseña ni cambiar la re
  await assert.rejects(service.create({ email: 'x@example.cl' }, { role: 'CASHIER', tenantId }));
  assert.equal(s.emails.length, 1);
 });
+
+test('chat: genera UUID seguros cuando el navegador no expone randomUUID', () => {
+ const { supportUuid } = load('apps/web/src/lib/support-id.ts');
+ const provider = { getRandomValues: value => crypto.randomFillSync(value) };
+ const first = supportUuid(provider); const second = supportUuid(provider);
+ assert.match(first, /^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/);
+ assert.notEqual(first, second);
+ assert.throws(() => supportUuid({}));
+});
