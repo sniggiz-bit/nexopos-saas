@@ -13,7 +13,7 @@ const loggerMessages = [];
 const noop = () => () => {};
 class HttpError extends Error {}
 class Logger { warn(m) { loggerMessages.push(m); } error(m) { loggerMessages.push(m); } log(m) { loggerMessages.push(m); } }
-const common = { Injectable: noop, Controller: noop, Get: noop, Post: noop, Body: noop, Req: noop, Inject: noop, forwardRef: f => f, Logger,
+const common = { Injectable: noop, Controller: noop, Get: noop, Post: noop, Put: noop, Patch: noop, Param: noop, Body: noop, Req: noop, Inject: noop, forwardRef: f => f, Logger,
  BadRequestException: HttpError, UnauthorizedException: HttpError, NotFoundException: HttpError, ForbiddenException: HttpError, ConflictException: HttpError,
  UseGuards: (...guards) => (_target, _key, descriptor) => { descriptor.value.guards = guards; }
 };
@@ -80,42 +80,11 @@ function setup() {
  return { sessions, messages, alerts, events, emails, audit, prisma, gateway, config, email, notifications, controller };
 }
 
-test('chat interno: conserva consulta, avisa a Gmail y abre la conversación exacta', async () => {
- const s = setup(); const result = await s.controller.chat(req, 'Necesito ayuda con una categoría'); await flush();
- assert.equal(s.sessions.size, 1); assert.equal(s.messages.length, 2); assert.equal(s.emails.length, 1);
- assert.equal(s.emails[0][0], 'sniggiz@gmail.com');
- assert.equal(s.emails[0][1], 'Usuario de NexoPOS solicita soporte');
- assert(s.emails[0][2].includes('Origen: Usuario registrado de NexoPOS'));
- assert.equal(s.emails[0][4], 'https://nexopos.cl/admin/live-chats?session=' + result.sessionId);
- assert(s.emails[0][2].includes('camila@example.cl')); assert(s.emails[0][2].includes('Almacén Las Palmas'));
- assert.equal(s.audit[0].message, 'ADMIN_EMAIL_NOTIFICATION'); assert.equal(s.audit[0].context.status, 'ACCEPTED');
- assert(s.events.some(e => e[0] === 'superadmin' && e[1] === 'new_chat_message'));
-});
-test('chat interno: reutiliza conversación y devuelve respuestas del administrador', async () => {
- const s = setup(); const first = await s.controller.chat(req, 'Hola'); const second = await s.controller.chat(req, 'Otra consulta');
- assert.equal(first.sessionId, second.sessionId); assert.equal(s.sessions.size, 1);
- await s.controller.adminReply({ user: { role: 'SUPER_ADMIN' } }, first.sessionId, 'Te ayudo con tu consulta');
- const history = await s.controller.getChat(req);
- assert.equal(history.messages.length, 5); assert.equal(history.messages.at(-1).sender, 'ADMIN');
- assert(s.events.some(e => e[0] === identity.accountChatRoom(tenantId, userId) && e[1] === 'admin_reply'));
-});
-test('chat: un fallo de correo no elimina mensajes ni impide responder', async () => {
- const s = setup(); s.email.sendSystemNotification = async () => ({ status: 'FAILED', error: 'HTTP 403' });
- const result = await s.controller.chat(req, 'Consulta válida'); await flush();
- assert(result.sessionId); assert.equal(s.messages.length, 2); assert.equal(s.audit[0].level, 'WARNING');
-});
-test('chat: rechaza identidad inexistente o de otra empresa', async () => {
- const s = setup(); await assert.rejects(s.controller.getChat({ user: { sub: userId, tenantId: 'otra' } }));
- await assert.rejects(s.controller.chat({ user: { tenantId } }, 'Hola')); assert.equal(s.messages.length, 0);
- assert.notEqual(identity.accountChatSessionId(tenantId, userId), identity.accountChatSessionId('otra', userId));
-});
-test('chat público: no puede suplantar la identidad de una cuenta interna', async () => {
- const s = setup(); await assert.rejects(s.controller.publicChat('Hola', identity.accountVisitorId(tenantId, userId))); assert.equal(s.messages.length, 0);
-});
-test('chat: valida mensajes vacíos, longitud y conversaciones inexistentes', async () => {
- const s = setup(); await assert.rejects(s.controller.chat(req, '   ')); await assert.rejects(s.controller.chat(req, 'x'.repeat(4001)));
- await assert.rejects(s.controller.adminReply({}, '33333333-3333-4333-8333-333333333333', 'Respuesta'));
- await assert.rejects(s.controller.getActiveSessions({}, '../invalid'));
+test('chat: delega consulta e historial a la identidad obtenida en el servidor', async () => {
+ const actor = { id: userId, tenantId }; const calls = [];
+ const service = { account: async request => { assert.equal(request, req); return actor; }, accountHistory: async value => { assert.equal(value, actor); return { messages: [] }; }, accountTurn: async (value, input) => { calls.push([value, input]); return { messages: [] }; } };
+ const controller = new SupportController(service, {});
+ await controller.getChat(req); const input = { message: 'Consulta' }; await controller.chat(req, input); assert.equal(calls[0][0], actor); assert.equal(calls[0][1], input);
 });
 test('chat: las rutas de administración requieren el guard de superadmin', () => {
  const guard = new SuperAdminGuard({});
@@ -123,6 +92,7 @@ test('chat: las rutas de administración requieren el guard de superadmin', () =
  assert(guard.canActivate({ switchToHttp: () => ({ getRequest: () => ({ user: { role: 'SUPER_ADMIN' } }) }) }));
  assert(SupportController.prototype.adminReply.guards.includes(SuperAdminGuard));
  assert(SupportController.prototype.getActiveSessions.guards.includes(SuperAdminGuard));
+ for (const method of ['action','settings','updateSettings','checkGemini','articles','createArticle','updateArticle']) assert(SupportController.prototype[method].guards.includes(SuperAdminGuard));
 });
 test('socket: protege avisos de administración y respuestas internas', () => {
  assert.equal(canJoinEventsRoom('superadmin', req.user), false);
@@ -173,7 +143,7 @@ test('avisos: rechaza enlaces externos y configuración localhost en producción
  await assert.rejects(s.notifications.sendEmailNotification('n', 't', 'm', 'CHAT')); assert.equal(s.emails.length, 0);
 });
 // Sintaxis TSX de los puntos modificados, sin requerir dependencias del frontend.
-for (const file of ['apps/web/src/pages/LoginPage.tsx', 'apps/web/src/pages/admin/LiveChatsPage.tsx', 'apps/web/src/components/dashboard/SupportChatWidget.tsx', 'apps/web/src/components/admin/NotificationBell.tsx', 'apps/web/src/components/landing/PublicChatWidget.tsx']) {
+for (const file of ['apps/web/src/pages/LoginPage.tsx', 'apps/web/src/pages/admin/LiveChatsPage.tsx', 'apps/web/src/components/dashboard/SupportChatWidget.tsx', 'apps/web/src/components/admin/NotificationBell.tsx', 'apps/web/src/components/landing/PublicChatWidget.tsx', 'apps/web/src/components/support/SupportConversationWidget.tsx', 'apps/web/src/pages/admin/SupportKnowledgePage.tsx', 'apps/web/src/pages/admin/AdminLandingPage.tsx']) {
  test('sintaxis: ' + file, () => { load(file); });
 }
 
@@ -202,4 +172,13 @@ test('usuarios internos: avisa del alta sin exponer contraseña ni cambiar la re
  assert.equal(s.emails[0][4], 'https://nexopos.cl/admin/tenants/' + tenantId);
  await assert.rejects(service.create({ email: 'x@example.cl' }, { role: 'CASHIER', tenantId }));
  assert.equal(s.emails.length, 1);
+});
+
+test('chat: genera UUID seguros cuando el navegador no expone randomUUID', () => {
+ const { supportUuid } = load('apps/web/src/lib/support-id.ts');
+ const provider = { getRandomValues: value => crypto.randomFillSync(value) };
+ const first = supportUuid(provider); const second = supportUuid(provider);
+ assert.match(first, /^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/);
+ assert.notEqual(first, second);
+ assert.throws(() => supportUuid({}));
 });

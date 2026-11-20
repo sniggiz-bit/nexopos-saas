@@ -230,7 +230,9 @@ async function counts(tenantId) {
   await prisma.dteConfig.create({ data: { tenantId: a.tenant.id } });
   await prisma.invoice.create({ data: { tenantId: a.tenant.id, amount: 100, dueDate: new Date() } });
   await prisma.tenantModuleAddon.create({ data: { tenantId: a.tenant.id, moduleId: byCode.ECOMMERCE.id } });
-  await prisma.chatSession.create({ data: { visitorId: 'account:' + a.tenant.id + ':' + a.user.id, messages: { create: { sender: 'VISITOR', content: 'Fixture internal support' } } } });
+  const ownSupportAlert = await prisma.systemNotification.create({ data: { title: 'Fixture support', message: 'Private fixture support', type: 'CHAT' } });
+  const otherSupportAlert = await prisma.systemNotification.create({ data: { title: 'Unrelated fixture alert', message: 'Preserve unrelated data', type: 'CHAT' } });
+  const ownSupport = await prisma.chatSession.create({ data: { visitorId: 'account:' + a.tenant.id + ':' + a.user.id, messages: { create: { sender: 'VISITOR', content: 'Fixture internal support' } }, notices: { create: { cycle: 1, title: 'Fixture support', message: 'Private fixture support', notificationId: ownSupportAlert.id } } } });
   await fs.mkdir(path.join(uploadRoot, 'receipts', a.tenant.id), { recursive: true });
   await fs.writeFile(path.join(uploadRoot, 'receipts', a.tenant.id, 'fixture.pdf'), 'FIXTURE_RECEIPT');
   let unlinkedPath;
@@ -292,6 +294,9 @@ async function counts(tenantId) {
     await assert.rejects(fs.access(path.join(uploadRoot, 'receipts', a.tenant.id)));
     await fs.access(path.join(uploadRoot, sharedPath.slice('/api/static/'.length)));
     assert.deepEqual(await counts(b.tenant.id), bBefore);
+    assert.equal(await prisma.supportHandoffNotice.count({ where: { chatSessionId: ownSupport.id } }), 0);
+    assert.equal(await prisma.systemNotification.findUnique({ where: { id: ownSupportAlert.id } }), null);
+    assert(await prisma.systemNotification.findUnique({ where: { id: otherSupportAlert.id } }));
     assert.equal((await request('GET', '/products', tokenA)).status, 401);
     assert.equal((await request('GET', '/products', tokenB)).status, 200);
     const audit = await prisma.systemLog.findFirst({ where: { message: 'CLIENT_ACCOUNT_DELETED', context: { path: ['deletedTenantId'], equals: a.tenant.id } } });

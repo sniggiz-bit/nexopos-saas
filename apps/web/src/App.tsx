@@ -10,6 +10,7 @@ import AnnouncementsPage from './pages/admin/AnnouncementsPage';
 import AdminLandingPage from './pages/admin/AdminLandingPage';
 import AdminModulesPage from './pages/admin/AdminModulesPage';
 import LiveChatsPage from './pages/admin/LiveChatsPage';
+import SupportKnowledgePage from './pages/admin/SupportKnowledgePage';
 import { TerminosPage, PrivacidadPage, ContactoPage, SoportePage } from './pages/public/LegalPages';
 import { PosPage } from './pages/PosPage';
 import { Toaster } from 'react-hot-toast';
@@ -134,6 +135,7 @@ function App() {
                         <Route path="landing" element={<AdminLandingPage />} />
                         <Route path="modules" element={<AdminModulesPage />} />
                         <Route path="live-chats" element={<LiveChatsPage />} />
+                        <Route path="support-knowledge" element={<SupportKnowledgePage />} />
                       </Route>
                     </Route>
 

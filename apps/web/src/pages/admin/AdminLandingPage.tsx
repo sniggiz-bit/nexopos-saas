@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import api from '../../lib/api';
+import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import {
   Globe, Loader2, Save, RotateCcw, ExternalLink,
@@ -878,6 +879,8 @@ export default function AdminLandingPage() {
               <p className="text-xs text-neutral-500">Muestra un chat de triaje en la landing page para captar prospectos o derivar soporte.</p>
             </div>
             <button
+              aria-label="Mostrar chat en el sitio público"
+              aria-pressed={!!cfg.chatbot?.enabled}
               onClick={() => set('chatbot', { ...cfg.chatbot, enabled: !cfg.chatbot?.enabled })}
               className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${cfg.chatbot?.enabled ? 'bg-purple-600' : 'bg-neutral-600'}`}
             >
@@ -885,20 +888,9 @@ export default function AdminLandingPage() {
             </button>
           </div>
           
-          <div className={`space-y-4 pt-4 border-t border-neutral-700 ${!cfg.chatbot?.enabled && 'opacity-50 pointer-events-none'}`}>
-            <Field label="Mensaje de bienvenida" value={cfg.chatbot?.welcomeMessage || ''} onChange={v => set('chatbot', { ...cfg.chatbot, welcomeMessage: v })} multiline placeholder="¡Hola! Soy tu asistente inteligente NexoPOS..." />
-            
-            <div>
-              <label className="block text-xs font-medium text-neutral-400 mb-1.5 uppercase tracking-wide">Opciones Rápidas (Botones)</label>
-              <p className="text-[11px] text-neutral-500 mb-2">Ingresa las opciones separadas por comas.</p>
-              <input
-                type="text"
-                className="w-full bg-neutral-900 border border-neutral-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-purple-500 transition-colors"
-                value={(cfg.chatbot?.options || []).join(', ')}
-                onChange={e => set('chatbot', { ...cfg.chatbot, options: e.target.value.split(',').map(s => s.trim()).filter(Boolean) })}
-                placeholder="Ej. Ventas / Planes, Soporte, Facturación"
-              />
-            </div>
+          <div className="space-y-3 border-t border-neutral-700 pt-4">
+            <p className="text-sm text-neutral-400">El saludo, las preguntas iniciales y las respuestas se administran en la Base de soporte. Allí también puedes conectar Gemini y definir qué temas ven los visitantes.</p>
+            <Link to="/admin/support-knowledge" className="inline-flex items-center gap-2 rounded-xl border border-purple-500/30 bg-purple-500/10 px-4 py-2 text-sm font-semibold text-purple-400 hover:bg-purple-500/20">Administrar base de soporte <ExternalLink className="h-4 w-4" /></Link>
           </div>
         </div>
       )}
