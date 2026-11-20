@@ -259,7 +259,7 @@ export class SupportService {
           visitorId: context.visitorId,
           visitorName: context.visitorName,
         },
-        update: {},
+        update: { updatedAt: new Date() },
       });
       let session = await this.lock(tx, context.sessionId);
       if (session.visitorId !== context.visitorId)

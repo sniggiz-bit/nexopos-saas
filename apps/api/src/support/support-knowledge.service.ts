@@ -66,12 +66,11 @@ export class SupportKnowledgeService {
     private prisma: PrismaService,
     private gemini: GeminiSupportService,
   ) {}
-  settings() {
-    return this.prisma.supportSettings.upsert({
-      where: { id: 'main' },
-      create: { id: 'main' },
-      update: {},
-    });
+  async settings() {
+    const existing = await this.prisma.supportSettings.findUnique({ where: { id: 'main' } });
+    if (existing) return existing;
+    await this.prisma.supportSettings.createMany({ data: [{ id: 'main' }], skipDuplicates: true });
+    return this.prisma.supportSettings.findUniqueOrThrow({ where: { id: 'main' } });
   }
   key(settings: { encryptedApiKey: string | null }) {
     if (settings.encryptedApiKey)

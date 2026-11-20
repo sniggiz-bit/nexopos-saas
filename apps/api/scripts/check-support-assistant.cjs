@@ -80,6 +80,12 @@ const turn = (visitor, message, rest = {}) =>
     await fs.readFile('/checks-results/context.json', 'utf8'),
   );
   const admin = fixture.rootUser.id;
+  await check('simultaneous settings initialization creates one configuration', async () => {
+    await prisma.supportSettings.deleteMany();
+    const settings = await Promise.all(Array.from({ length: 8 }, () => knowledge.settings()));
+    assert(settings.every(value => value.id === 'main' && !value.aiEnabled));
+    assert.equal(await prisma.supportSettings.count(), 1);
+  });
   const article = await knowledge.saveArticle(
     null,
     {
