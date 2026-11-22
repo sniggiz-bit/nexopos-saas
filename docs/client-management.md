@@ -2,6 +2,16 @@
 
 Cada empresa tiene una ficha en Gestión de clientes con datos generales, usuarios, sucursales, servicios, suscripción, límites, actividad y acciones.
 
+## Alta de un cliente desde el superadmin
+
+En Clientes, el botón **Nuevo cliente** solicita nombre de empresa, teléfono, nombre y correo del administrador y una contraseña inicial (mínimo 8 caracteres y máximo 72 bytes). RUT, giro y dirección son opcionales. Al guardar se abre la ficha para configurar plan, servicios y límites.
+
+`POST /admin/tenants` exige una sesión SUPER_ADMIN. Reutiliza el alta transaccional para crear empresa activa, Casa Matriz habilitada, usuario TENANT_ADMIN y configuración base. El registro CLIENT_CREATED conserva el actor dentro de la misma transacción. La respuesta contiene identificadores y datos del cliente, sin hashes ni tokens; se conserva la sesión del superadmin.
+
+Se intenta la bienvenida mediante el servicio existente; un fallo de correo no revierte la cuenta. La bienvenida no incluye la contraseña inicial, que debe compartirse con el administrador. El correo se normaliza a minúsculas y se validan duplicados, RUT y campos obligatorios antes de completar el alta.
+
+Las pruebas de alta están en `auth.service.spec.ts`, `tenants.service.spec.ts` y `create-client.controller.spec.ts`. Con una vista local en el puerto 5174, `node apps/web/verify-create-client.cjs` comprueba el formulario en escritorio y móvil con API simulada, sin crear cuentas ni enviar correos reales.
+
 ## Control del superadmin
 
 - Crear, editar, habilitar, deshabilitar y eliminar usuarios sin historial. Las cuentas de plataforma se protegen. Si un usuario tiene actividad, se deshabilita para conservar la trazabilidad; eliminar la empresa completa permite retirar sus datos operativos.

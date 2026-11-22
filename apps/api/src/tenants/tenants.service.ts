@@ -16,6 +16,7 @@ export class TenantsService {
   async createWithDefaults(data: {
     tenant: Prisma.TenantCreateInput;
     admin: Omit<Prisma.UserCreateInput, 'tenant' | 'branch'>;
+    actorId?: string;
   }) {
     return this.prisma.$transaction(async (tx) => {
       // 1. Create Tenant
@@ -59,6 +60,13 @@ export class TenantsService {
           canHardDelete: false,
         },
       });
+
+      if (data.actorId) {
+        await tx.systemLog.create({ data: {
+          tenantId: tenant.id, level: 'INFO', message: 'CLIENT_ADMIN_ACTION',
+          context: { actorId: data.actorId, action: 'CLIENT_CREATED', userId: user.id },
+        } });
+      }
 
       return { tenant, branch, user, settings };
     });

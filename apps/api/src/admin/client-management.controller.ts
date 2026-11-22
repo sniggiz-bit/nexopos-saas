@@ -6,12 +6,16 @@ import { BranchesService } from '../branches/branches.service';
 import { ModulesService } from '../modules/modules.service';
 import { ClientManagementService } from './client-management.service';
 import { ClientDeletionService } from './client-deletion.service';
+import { AuthService } from '../auth/auth.service';
+import { CreateClientDto } from './dto/create-client.dto';
 import { ClientBranchDto, ClientModulesDto, ClientProfileDto, ClientUserDto, DeleteClientDto, DeleteClientUserDto } from './dto/client-management.dto';
 
 @Controller('admin/tenants')
 @UseGuards(JwtAuthGuard, SuperAdminGuard)
 export class ClientManagementController {
-  constructor(private clients: ClientManagementService, private branches: BranchesService, private modules: ModulesService, private deletion: ClientDeletionService) {}
+  constructor(private clients: ClientManagementService, private branches: BranchesService, private modules: ModulesService, private deletion: ClientDeletionService, private auth: AuthService) {}
+  @Post()
+  create(@Body() dto: CreateClientDto, @Request() req: { user: { sub: string } }) { return this.auth.createClient(dto, req.user.sub); }
   @Post('deleted-records/:auditId/cleanup')
   retryCleanup(@Param('auditId') auditId: string, @Request() req: any) { return this.deletion.retryCleanup(auditId, req.user.sub); }
   @Get(':id')

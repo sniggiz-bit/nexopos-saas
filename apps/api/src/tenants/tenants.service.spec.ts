@@ -58,6 +58,29 @@ describe('TenantsService', () => {
         });
     });
 
+    describe('administrative account creation', () => {
+        it('audits the actor inside the same transaction as the new account', async () => {
+            const tx = {
+                tenant: { create: jest.fn().mockResolvedValue({ id: 't1' }) },
+                branch: { create: jest.fn().mockResolvedValue({ id: 'b1' }) },
+                user: { create: jest.fn().mockResolvedValue({ id: 'u1' }) },
+                tenantSettings: { create: jest.fn().mockResolvedValue({}) },
+                systemLog: { create: jest.fn().mockResolvedValue({}) },
+            };
+            mockPrismaService.$transaction.mockImplementation(cb => cb(tx));
+            const data = { tenant: { name: 'Client', slug: 'client' }, admin: { email: 'admin@client.cl', password: 'hash', role: 'TENANT_ADMIN' as const }, actorId: 'superadmin' };
+            await service.createWithDefaults(data);
+            expect(tx.systemLog.create).toHaveBeenCalledWith({ data: {
+                tenantId: 't1', level: 'INFO', message: 'CLIENT_ADMIN_ACTION',
+                context: { actorId: 'superadmin', action: 'CLIENT_CREATED', userId: 'u1' },
+            } });
+            expect(tx.branch.create).toHaveBeenCalledWith({ data: expect.objectContaining({ isMain: true, isActive: true }) });
+            expect(tx.user.create).toHaveBeenCalledWith({ data: expect.objectContaining({ tenantId: 't1', branchId: 'b1' }) });
+            tx.systemLog.create.mockRejectedValueOnce(new Error('Audit unavailable'));
+            await expect(service.createWithDefaults(data)).rejects.toThrow('Audit unavailable');
+        });
+    });
+
     describe('suspend', () => {
         it('should update tenant status to SUSPENDED', async () => {
             (prisma.tenant.update as jest.Mock).mockResolvedValue({ id: 't1', status: 'SUSPENDED' });
