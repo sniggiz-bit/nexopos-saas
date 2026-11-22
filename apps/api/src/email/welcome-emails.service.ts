@@ -39,7 +39,7 @@ export class WelcomeEmailsService {
     return { ...this.email.getWelcomeConfiguration(), users };
   }
 
-  async send(tenantId: string, userId: string, requestedBy?: string) {
+  async send(tenantId: string, userId: string, requestedBy?: string, initialPassword?: string) {
     const user = await this.prisma.user.findFirst({
       where: { id: userId, tenantId, role: 'TENANT_ADMIN', isActive: true },
       select: { id: true, name: true, email: true, tenant: { select: { name: true, status: true } } },
@@ -60,6 +60,7 @@ export class WelcomeEmailsService {
       });
       const result = await this.email.sendWelcomeEmail(user.email, user.name || user.email, {
         email: user.email, companyName: user.tenant.name,
+        ...(initialPassword ? { initialPassword } : {}),
       });
       try {
         await this.prisma.systemLog.update({

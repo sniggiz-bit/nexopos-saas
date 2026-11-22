@@ -30,7 +30,7 @@ export class EmailService {
   async sendWelcomeEmail(
     email: string,
     name: string,
-    credentials: { email: string; companyName: string },
+    credentials: { email: string; companyName: string; initialPassword?: string },
   ): Promise<{ status: 'ACCEPTED' | 'FAILED' | 'NOT_CONFIGURED'; providerId?: string; error?: string }> {
     const configuration = this.getWelcomeConfiguration();
     if (!configuration.configured) {
@@ -67,7 +67,7 @@ export class EmailService {
 
   private generateWelcomeEmailHtml(
     name: string,
-    credentials: { email: string; companyName: string },
+    credentials: { email: string; companyName: string; initialPassword?: string },
   ): string {
     return renderWelcomeEmail({ name, ...credentials, frontendUrl: this.getFrontendUrl() });
   }

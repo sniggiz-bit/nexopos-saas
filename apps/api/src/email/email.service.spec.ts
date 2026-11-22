@@ -15,7 +15,7 @@ describe('Welcome email transport', () => {
   });
   afterEach(() => { process.env = { ...originalEnv }; global.fetch = originalFetch; jest.restoreAllMocks(); });
 
-  it('uses the public login URL, escapes user HTML, and never includes a password', async () => {
+  it('preserves the welcome template and omits initial credentials on a resend', async () => {
     const result = await new EmailService().sendWelcomeEmail(credentials.email, '<script>alert(1)</script>', { ...credentials, password: 'SECRET' } as typeof credentials);
     expect(result).toEqual({ status: 'ACCEPTED', providerId: 'provider-id' });
     const html = JSON.parse((global.fetch as jest.Mock).mock.calls[0][1].body).html;
@@ -30,6 +30,35 @@ describe('Welcome email transport', () => {
     expect(html).toContain('Paso 4. Registra los proveedores');
     expect(html).toContain('https://wa.me/56940082418');
     expect(html).toContain('https://nexopos.cl/dashboard');
+  });
+
+  it('includes the exact escaped initial password in the configured welcome email', async () => {
+    process.env.FROM_EMAIL = 'NexoPOS <welcome@example.test>';
+    const initialPassword = '  Clave<&>' + String.fromCharCode(34, 39) + '  ';
+    await new EmailService().sendWelcomeEmail(credentials.email, 'Owner', { ...credentials, initialPassword });
+    const request = (global.fetch as jest.Mock).mock.calls[0][1];
+    const payload = JSON.parse(request.body);
+    expect(payload.from).toBe(process.env.FROM_EMAIL);
+    expect(payload.to).toBe(credentials.email);
+    expect(payload.subject).toBe('\u00a1Bienvenido a NexoPOS!');
+    expect(payload.html).toContain('CONTRASE\u00d1A INICIAL');
+    expect(payload.html).toContain('>  Clave&lt;&amp;&gt;&quot;&#39;  </code>');
+    expect(payload.html).toContain('white-space:pre-wrap');
+    expect(payload.html).toContain(credentials.email);
+    expect(payload.html).toContain('https://nexopos.cl/login');
+    expect(payload.html).toContain('Paso 1. Crea las categor\u00edas');
+    expect(payload.html).toContain('https://wa.me/56940082418');
+    expect(payload.html).not.toContain(initialPassword);
+    expect(Logger.prototype.log).not.toHaveBeenCalled();
+  });
+
+  it('keeps the initial password out of logs and errors when sending fails', async () => {
+    const initialPassword = 'INITIAL_PASSWORD_ONLY_FOR_TEST';
+    (global.fetch as jest.Mock).mockRejectedValueOnce(new Error(initialPassword));
+    const result = await new EmailService().sendWelcomeEmail(credentials.email, 'Owner', { ...credentials, initialPassword });
+    expect(result.status).toBe('FAILED');
+    const calls = [Logger.prototype.log, Logger.prototype.warn, Logger.prototype.error].map(method => (method as jest.Mock).mock.calls);
+    expect(JSON.stringify({ result, calls })).not.toContain(initialPassword);
   });
 
   it('skips transport and content logging when no key is configured', async () => {

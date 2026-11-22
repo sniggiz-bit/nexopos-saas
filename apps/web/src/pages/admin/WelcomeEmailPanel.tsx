@@ -40,7 +40,7 @@ export default function WelcomeEmailPanel({ tenantId, active }: { tenantId: stri
                 <h3 className="text-sm font-semibold text-foreground flex items-center gap-2"><Mail size={16} />Correo de bienvenida</h3>
                 <button type="button" onClick={() => void load()} disabled={loading || !!sending} aria-label="Actualizar estado de bienvenida" className="text-neutral-400 hover:text-white disabled:opacity-50"><RefreshCw size={15} className={loading ? 'animate-spin' : ''} /></button>
             </div>
-            <p className="text-xs text-neutral-400">Envía los primeros pasos y el enlace de acceso. El reenvío conserva la contraseña actual.</p>
+            <p className="text-xs text-neutral-400">La bienvenida inicial incluye usuario y clave. Los reenvíos incluyen el enlace de acceso y no recuperan ni cambian la contraseña actual.</p>
             {loading ? <p className="text-xs text-neutral-400">Cargando estado...</p> : failed ? <p role="alert" className="text-xs text-red-300">No se pudo consultar el estado. Usa el botón actualizar para reintentar.</p> : data && <>
                 {!data.configured && <p role="alert" className="text-xs text-amber-300">{data.reason}</p>}
                 {!active && <p className="text-xs text-amber-300">La empresa debe estar activa para enviar la bienvenida.</p>}
