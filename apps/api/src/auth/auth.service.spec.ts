@@ -176,4 +176,58 @@ describe('AuthService', () => {
             })).rejects.toThrow(ConflictException);
         });
     });
+    describe('createClient', () => {
+        const dto = { companyName: 'Nuevo Cliente', userName: 'Admin', email: 'admin@nuevo.cl', phone: '123', password: 'securepassword123' };
+        beforeEach(() => {
+            mockPrismaService.user.findUnique.mockResolvedValue(null);
+            mockPrismaService.tenant.findUnique.mockResolvedValue(null);
+            mockTenantsService.createWithDefaults.mockReset();
+            mockTenantsService.createWithDefaults.mockResolvedValue({
+                tenant: { id: 'new-tenant', name: dto.companyName, slug: 'nuevo-cliente' },
+                branch: { id: 'new-branch', name: 'Casa Matriz' },
+                user: { id: 'new-admin', name: dto.userName, email: dto.email, role: 'TENANT_ADMIN', password: 'secret-hash', tokenVersion: 0 },
+            });
+            (bcrypt.hash as jest.Mock).mockResolvedValue('secret-hash');
+        });
+
+        it('creates an administrator without issuing a token or exposing password hashes', async () => {
+            const result = await service.createClient(dto, 'superadmin');
+            expect(result.tenant.id).toBe('new-tenant');
+            expect(result.user.role).toBe('TENANT_ADMIN');
+            expect(result).not.toHaveProperty('access_token');
+            expect(result.user).not.toHaveProperty('password');
+            expect(result.user).not.toHaveProperty('tokenVersion');
+            expect(jwt.signAsync).not.toHaveBeenCalled();
+            expect(tenants.createWithDefaults).toHaveBeenCalledWith(expect.objectContaining({
+                actorId: 'superadmin',
+                admin: expect.objectContaining({ password: 'secret-hash', role: 'TENANT_ADMIN' }),
+            }));
+            expect(email.send).toHaveBeenCalledWith('new-tenant', 'new-admin', 'superadmin');
+            expect(JSON.stringify(mockNotificationsService.notifySuperAdmin.mock.calls)).not.toContain(dto.password);
+        });
+
+        it('rejects an existing email before creating any resources', async () => {
+            mockPrismaService.user.findUnique.mockResolvedValue({ id: 'existing' });
+            await expect(service.createClient(dto, 'superadmin')).rejects.toThrow(ConflictException);
+            expect(tenants.createWithDefaults).not.toHaveBeenCalled();
+        });
+
+        it('rejects multibyte passwords exceeding the bcrypt byte limit', async () => {
+            await expect(service.createClient({ ...dto, password: '\u00f1'.repeat(37) }, 'superadmin')).rejects.toThrow('72 bytes');
+            expect(tenants.createWithDefaults).not.toHaveBeenCalled();
+        });
+
+        it('reports concurrent uniqueness conflicts without sending a welcome email', async () => {
+            mockTenantsService.createWithDefaults.mockRejectedValue({ code: 'P2002' });
+            await expect(service.createClient(dto, 'superadmin')).rejects.toThrow(ConflictException);
+            expect(email.send).not.toHaveBeenCalled();
+        });
+
+        it('keeps account creation successful when welcome processing fails', async () => {
+            mockWelcomeEmailsService.send.mockRejectedValueOnce(new Error('Email unavailable'));
+            await expect(service.createClient(dto, 'superadmin')).resolves.toHaveProperty('tenant.id', 'new-tenant');
+            expect(jwt.signAsync).not.toHaveBeenCalled();
+        });
+    });
+
 });

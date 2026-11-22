@@ -38,7 +38,7 @@ function load(file) {
    if (/module-access|chat-identity|event-room-access|notification.template|welcome-email.template|super-admin.guard/.test(name)) return load(path.resolve(path.dirname(file), name + '.ts'));
    return {};
  };
- const context = { module: mod, exports: mod.exports, require: requireMock, process: { env: { NODE_ENV: 'production' } }, URL, AbortSignal, console: { log() {}, error() {} }, Date, Set };
+ const context = { module: mod, exports: mod.exports, require: requireMock, process: { env: { NODE_ENV: 'production' } }, URL, AbortSignal, Buffer, console: { log() {}, error() {} }, Date, Set };
  contexts.set(file, context);
  vm.runInNewContext(result.outputText, context, { filename: file });
  return mod.exports;

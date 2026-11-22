@@ -171,6 +171,28 @@ export class AuthService {
    * Creates: Tenant, Branch (Casa Matriz), User (ADMIN)
    */
   async registerTenant(dto: RegisterTenantDto) {
+    const result = await this.provisionTenant(dto);
+    const token = await this.login(result.user);
+    return {
+      ...token,
+      tenant: { id: result.tenant.id, name: result.tenant.name, slug: result.tenant.slug },
+      branch: { id: result.branch.id, name: result.branch.name },
+    };
+  }
+
+  async createClient(dto: RegisterTenantDto, actorId: string) {
+    const result = await this.provisionTenant(dto, actorId);
+    return {
+      tenant: { id: result.tenant.id, name: result.tenant.name, slug: result.tenant.slug },
+      user: { id: result.user.id, name: result.user.name, email: result.user.email, role: result.user.role },
+      branch: { id: result.branch.id, name: result.branch.name },
+    };
+  }
+
+  private async provisionTenant(dto: RegisterTenantDto, actorId?: string) {
+    if (Buffer.byteLength(dto.password, 'utf8') > 72) {
+      throw new BadRequestException('La contrase\u00f1a excede 72 bytes.');
+    }
     // Check if email already exists
     const existingUser = await this.prisma.user.findUnique({
       where: { email: dto.email },
@@ -181,7 +203,7 @@ export class AuthService {
     }
 
     // Generate unique slug from company name
-    const baseSlug = this.generateSlug(dto.companyName);
+    const baseSlug = this.generateSlug(dto.companyName) || 'cliente';
     const slug = await this.ensureUniqueSlug(baseSlug);
 
     // Hash password
@@ -190,6 +212,7 @@ export class AuthService {
     try {
       // Use unified TenantsService to create Tenant, Branch, and User atomically
       const result = await this.tenantsService.createWithDefaults({
+        ...(actorId ? { actorId } : {}),
         tenant: {
           name: dto.companyName,
           slug,
@@ -208,11 +231,12 @@ export class AuthService {
       });
 
       // 4. Send welcome email (non-blocking)
-      this.welcomeEmailsService
-        .send(result.tenant.id, result.user.id)
-        .catch((err) => {
-          console.error('Failed to process welcome email:', err instanceof Error ? err.name : 'UnknownError');
-        });
+      const welcome = actorId
+        ? this.welcomeEmailsService.send(result.tenant.id, result.user.id, actorId)
+        : this.welcomeEmailsService.send(result.tenant.id, result.user.id);
+      welcome.catch((err) => {
+        console.error('Failed to process welcome email:', err instanceof Error ? err.name : 'UnknownError');
+      });
 
       // Avisar al administrador después de confirmar la creación; nunca incluir contraseñas.
       this.notificationsService.notifySuperAdmin(
@@ -230,22 +254,11 @@ export class AuthService {
         { actionPath: `/admin/tenants/${encodeURIComponent(result.tenant.id)}` },
       ).catch(() => console.error('Failed to notify superadmin about registration'));
 
-      // 5. Generate JWT token for auto-login
-      const token = await this.login(result.user);
-
-      return {
-        ...token,
-        tenant: {
-          id: result.tenant.id,
-          name: result.tenant.name,
-          slug: result.tenant.slug,
-        },
-        branch: {
-          id: result.branch.id,
-          name: result.branch.name,
-        },
-      };
+      return result;
     } catch (error) {
+      if ((error as { code?: string })?.code === 'P2002') {
+        throw new ConflictException('El correo o la empresa ya est\u00e1n registrados. Revisa los datos e intenta nuevamente.');
+      }
       console.error('🔴 ERROR REAL DE PRISMA AL REGISTRAR TENANT:', error);
       console.error('🔴 Código:', (error as any)?.code);
       console.error('🔴 Mensaje:', (error as any)?.message);
