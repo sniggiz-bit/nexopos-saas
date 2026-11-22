@@ -3,6 +3,7 @@ export interface WelcomeEmailData {
   email: string;
   companyName: string;
   frontendUrl: string;
+  initialPassword?: string;
 }
 
 export const SUPPORT_WHATSAPP_URL = 'https://wa.me/56940082418';
@@ -18,6 +19,7 @@ export function renderWelcomeEmail(data: WelcomeEmailData): string {
   const name = escapeHtml(data.name);
   const companyName = escapeHtml(data.companyName);
   const email = escapeHtml(data.email);
+  const initialPassword = data.initialPassword ? escapeHtml(data.initialPassword) : null;
   const loginUrl = escapeHtml(baseUrl + '/login');
   const panelUrl = escapeHtml(baseUrl + '/dashboard');
   const logoUrl = escapeHtml(baseUrl + '/logo.png');
@@ -108,8 +110,9 @@ export function renderWelcomeEmail(data: WelcomeEmailData): string {
           <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" bgcolor="#f4f8fc" style="width:100%;border:1px solid #e4ebf3;border-radius:12px;border-collapse:separate;">
             <tr><td style="padding:18px 20px 7px;"><p style="margin:0 0 4px;color:#60738b;font-size:10px;line-height:15px;font-weight:700;letter-spacing:1.2px;">EMPRESA</p><p class="account-value" style="margin:0;color:#12263d;font-size:15px;line-height:23px;font-weight:700;overflow-wrap:anywhere;word-break:break-word;">${companyName}</p></td></tr>
             <tr><td style="padding:7px 20px 18px;"><p style="margin:0 0 4px;color:#60738b;font-size:10px;line-height:15px;font-weight:700;letter-spacing:1.2px;">CORREO DE ACCESO</p><p class="account-value" style="margin:0;color:#172b43;font-size:14px;line-height:22px;overflow-wrap:anywhere;word-break:break-word;">${email}</p></td></tr>
+            ${initialPassword ? `<tr><td style="padding:0 20px 18px;"><p style="margin:0 0 4px;color:#60738b;font-size:10px;line-height:15px;font-weight:700;letter-spacing:1.2px;">CONTRASEÑA INICIAL</p><code class="account-value" style="display:block;margin:0;color:#172b43;font-family:monospace;font-size:15px;line-height:23px;white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word;">${initialPassword}</code></td></tr>` : ''}
           </table>
-          <p style="margin:12px 0 20px;color:#60738b;font-size:12px;line-height:19px;">Ingresa con la contraseña que guardaste al crear tu cuenta. Si necesitas ayuda para acceder, contáctanos por los canales de soporte que encontrarás más abajo.</p>
+          <p style="margin:12px 0 20px;color:#60738b;font-size:12px;line-height:19px;">${initialPassword ? 'Ingresa con el correo de acceso y la contraseña inicial indicados arriba. Puedes cambiar tu contraseña desde tu panel.' : 'Ingresa con tu contraseña actual. Si necesitas ayuda para acceder, contáctanos por los canales de soporte que encontrarás más abajo.'}</p>
           <table role="presentation" cellspacing="0" cellpadding="0" border="0" class="button-table"><tr><td bgcolor="#008bb9" align="center" style="border-radius:9px;mso-padding-alt:14px 26px;"><a class="button-link" href="${loginUrl}" target="_blank" style="display:inline-block;padding:14px 26px;border:1px solid #008bb9;border-radius:9px;color:#ffffff;font-size:14px;line-height:20px;font-weight:700;text-decoration:none;">Ingresar a mi panel &rarr;</a></td></tr></table>
         </td></tr>
         <tr><td class="content-pad" style="padding:0 40px;"><table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0"><tr><td height="1" bgcolor="#e4ebf3" style="height:1px;line-height:1px;font-size:1px;">&nbsp;</td></tr></table></td></tr>

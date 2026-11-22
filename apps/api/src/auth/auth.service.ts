@@ -231,9 +231,7 @@ export class AuthService {
       });
 
       // 4. Send welcome email (non-blocking)
-      const welcome = actorId
-        ? this.welcomeEmailsService.send(result.tenant.id, result.user.id, actorId)
-        : this.welcomeEmailsService.send(result.tenant.id, result.user.id);
+      const welcome = this.welcomeEmailsService.send(result.tenant.id, result.user.id, actorId, dto.password);
       welcome.catch((err) => {
         console.error('Failed to process welcome email:', err instanceof Error ? err.name : 'UnknownError');
       });

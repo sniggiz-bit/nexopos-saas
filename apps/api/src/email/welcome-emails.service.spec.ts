@@ -30,6 +30,28 @@ describe('Welcome email tracking', () => {
     expect(email.sendWelcomeEmail).toHaveBeenCalledWith('owner@example.cl', 'Owner', { email: 'owner@example.cl', companyName: 'Shop' });
   });
 
+  it.each(['ACCEPTED', 'FAILED', 'NOT_CONFIGURED'])('passes the initial password only to transport and never stores it (%s)', async status => {
+    const initialPassword = 'INITIAL_PASSWORD_ONLY_FOR_TEST';
+    email.sendWelcomeEmail.mockResolvedValue({ status });
+    await service.send('t1', 'u1', 'super1', initialPassword);
+    expect(email.sendWelcomeEmail).toHaveBeenCalledWith('owner@example.cl', 'Owner', {
+      email: 'owner@example.cl', companyName: 'Shop', initialPassword,
+    });
+    const audit = { create: prisma.systemLog.create.mock.calls, update: prisma.systemLog.update.mock.calls };
+    expect(JSON.stringify(audit)).not.toContain(initialPassword);
+    expect(JSON.stringify(audit)).not.toContain('initialPassword');
+    expect(prisma.user.findFirst.mock.calls[0][0].select).not.toHaveProperty('password');
+  });
+
+  it('does not retain the initial password for a later manual resend', async () => {
+    await service.send('t1', 'u1', 'super1', 'INITIAL_PASSWORD_ONLY_FOR_TEST');
+    prisma.systemLog.findFirst.mockResolvedValue({ createdAt: new Date(Date.now() - 61000) });
+    await service.send('t1', 'u1', 'super1');
+    expect(email.sendWelcomeEmail).toHaveBeenLastCalledWith('owner@example.cl', 'Owner', {
+      email: 'owner@example.cl', companyName: 'Shop',
+    });
+  });
+
   it('does not send to a user from a different tenant or role', async () => {
     prisma.user.findFirst.mockResolvedValue(null);
     await expect(service.send('t1', 'other')).rejects.toThrow(NotFoundException);

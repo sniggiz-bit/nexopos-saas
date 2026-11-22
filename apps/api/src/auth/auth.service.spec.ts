@@ -147,7 +147,7 @@ describe('AuthService', () => {
             expect(result).toBeDefined();
             expect(result.access_token).toBe('mock-token');
             expect(tenants.createWithDefaults).toHaveBeenCalled();
-            expect(email.send).toHaveBeenCalledWith('t1', 'u1');
+            expect(email.send).toHaveBeenCalledWith('t1', 'u1', undefined, dto.password);
             expect(mockNotificationsService.notifySuperAdmin).toHaveBeenCalledWith(
                 'Nuevo usuario registrado', expect.stringContaining(dto.email), 'REGISTRATION',
                 { actionPath: '/admin/tenants/t1' },
@@ -197,12 +197,13 @@ describe('AuthService', () => {
             expect(result).not.toHaveProperty('access_token');
             expect(result.user).not.toHaveProperty('password');
             expect(result.user).not.toHaveProperty('tokenVersion');
+            expect(JSON.stringify(result)).not.toContain(dto.password);
             expect(jwt.signAsync).not.toHaveBeenCalled();
             expect(tenants.createWithDefaults).toHaveBeenCalledWith(expect.objectContaining({
                 actorId: 'superadmin',
                 admin: expect.objectContaining({ password: 'secret-hash', role: 'TENANT_ADMIN' }),
             }));
-            expect(email.send).toHaveBeenCalledWith('new-tenant', 'new-admin', 'superadmin');
+            expect(email.send).toHaveBeenCalledWith('new-tenant', 'new-admin', 'superadmin', dto.password);
             expect(JSON.stringify(mockNotificationsService.notifySuperAdmin.mock.calls)).not.toContain(dto.password);
         });
 

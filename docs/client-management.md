@@ -8,7 +8,7 @@ En Clientes, el botón **Nuevo cliente** solicita nombre de empresa, teléfono, 
 
 `POST /admin/tenants` exige una sesión SUPER_ADMIN. Reutiliza el alta transaccional para crear empresa activa, Casa Matriz habilitada, usuario TENANT_ADMIN y configuración base. El registro CLIENT_CREATED conserva el actor dentro de la misma transacción. La respuesta contiene identificadores y datos del cliente, sin hashes ni tokens; se conserva la sesión del superadmin.
 
-Se intenta la bienvenida mediante el servicio existente; un fallo de correo no revierte la cuenta. La bienvenida no incluye la contraseña inicial, que debe compartirse con el administrador. El correo se normaliza a minúsculas y se validan duplicados, RUT y campos obligatorios antes de completar el alta.
+Se intenta la bienvenida mediante el servicio existente; un fallo de correo no revierte la cuenta. La misma plantilla de bienvenida incluye el correo de acceso y la contraseña inicial al crear la cuenta. La clave se pasa al servicio de correo solo en memoria; la base de datos conserva el hash y los registros de envío no almacenan la clave. Los reenvíos mantienen el acceso con la contraseña actual, sin recuperarla ni cambiarla. El correo se normaliza a minúsculas y se validan duplicados, RUT y campos obligatorios antes de completar el alta.
 
 Las pruebas de alta están en `auth.service.spec.ts`, `tenants.service.spec.ts` y `create-client.controller.spec.ts`. Con una vista local en el puerto 5174, `node apps/web/verify-create-client.cjs` comprueba el formulario en escritorio y móvil con API simulada, sin crear cuentas ni enviar correos reales.
 

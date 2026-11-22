@@ -68,7 +68,7 @@ export default function CreateClientDialog({ onClose }: { onClose: () => void })
               <input id="client-initial-password" className={fieldClass + ' pr-12'} type={showPassword ? 'text' : 'password'} autoComplete="new-password" required minLength={8} maxLength={72} aria-describedby="client-password-help" value={form.password} onChange={e => update('password', e.target.value)} />
               <button type="button" className="absolute inset-y-0 right-0 px-3 text-muted-foreground hover:text-foreground" aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'} onClick={() => setShowPassword(value => !value)}>{showPassword ? <EyeOff size={18} /> : <Eye size={18} />}</button>
             </div>
-            <p id="client-password-help" className="mt-2 text-sm text-muted-foreground">Mínimo 8 caracteres. Comparte esta contraseña con el administrador; el correo de bienvenida no la incluye.</p>
+            <p id="client-password-help" className="mt-2 text-sm text-muted-foreground">Mínimo 8 caracteres. El correo de bienvenida inicial incluye el usuario y esta contraseña.</p>
           </div>
         </fieldset>
         {error && <p role="alert" className="rounded-lg border border-red-500/20 bg-red-500/10 p-3 text-sm text-red-400">{error}</p>}
