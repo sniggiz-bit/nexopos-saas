@@ -173,6 +173,10 @@ async function check(name, run) { await run(); checks++; console.log('PASS: ' + 
     await configs.disconnect(tenant.id, owner.id);
     await assert.rejects(() => internalSales.createSale({ ...dto, dteType: 33 }), /desconectado/);
     assert.equal(await currentInventory(), beforeStock - 1);
+    await internalSales.cancelInternalSale(internal.id, tenant.id, owner.id);
+    assert.equal(await currentInventory(), beforeStock);
+    assert.equal((await prisma.sale.findUnique({ where: { id: internal.id } })).status, 'CANCELLED');
+    assert.equal(posts, beforePosts);
   });
   await check('new submission records are removed by complete account deletion without affecting other clients', async () => {
     const preview = await request('GET', '/admin/tenants/' + tenant.id + '/deletion-preview', context.rootToken);
