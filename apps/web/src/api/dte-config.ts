@@ -20,13 +20,20 @@ export async function upsertDteConfig(data: UpsertDteConfigData): Promise<DteCon
 export async function getDteStats(fresh = false): Promise<DteStats> { return (await apiClient.get('/dte-config/stats', { params: fresh ? { refresh: '1' } : {}, timeout: 60000 })).data; }
 export async function openDtePdf(path: string) {
   if (!/^\/(sales\/[a-zA-Z0-9-]+\/dte\/pdf|dte-config\/documents\/\d+\/\d+\/pdf)$/.test(path)) throw Error('Ruta de documento no válida.');
+  return openAuthenticatedPdf(path, 'documento-tributario.pdf');
+}
+export async function openInternalReceiptPdf(saleId: string) {
+  if (!/^[a-zA-Z0-9-]+$/.test(saleId)) throw Error('Identificador de comprobante no válido.');
+  return openAuthenticatedPdf('/receipts/' + saleId, 'comprobante-interno.pdf');
+}
+async function openAuthenticatedPdf(path: string, filename: string) {
   const preview = window.open('', '_blank'); if (preview) preview.opener = null;
   try {
     const response = await apiClient.get(path, { responseType: 'blob', timeout: 20000 });
-    if (!String(response.headers['content-type']).includes('application/pdf')) throw Error('El servicio de facturación no devolvió un PDF válido.');
+    if (String(response.headers['content-type']).split(';')[0].trim().toLowerCase() !== 'application/pdf') throw Error('No se recibió un documento PDF válido.');
     const url = URL.createObjectURL(response.data);
     if (preview) preview.location.href = url;
-    else { const link = document.createElement('a'); link.href = url; link.download = 'documento-tributario.pdf'; link.click(); }
+    else { const link = document.createElement('a'); link.href = url; link.download = filename; link.click(); }
     window.setTimeout(() => URL.revokeObjectURL(url), 60000);
   } catch (error) { preview?.close(); throw error; }
 }

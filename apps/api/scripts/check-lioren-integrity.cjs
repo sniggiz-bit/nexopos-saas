@@ -109,6 +109,8 @@ async function check(name, run) { await run(); checks++; console.log('PASS: ' + 
   const request = async (method, path, jwt, data) => { const r = await fetch('http://release-api:3000/api' + path, { method, headers: { Authorization: 'Bearer ' + jwt, ...(data ? { 'Content-Type': 'application/json' } : {}) }, body: data ? JSON.stringify(data) : undefined }); const text = await r.text(); return { status: r.status, data: text ? JSON.parse(text) : null }; };
   await check('credit note preview and emission reject foreign tenants and unauthorized roles over HTTP', async () => {
     const row = await sale();
+    assert.equal((await request('GET', '/sales/' + row.id + '/dte/pdf', '')).status, 401);
+    assert.equal((await request('GET', '/sales/' + row.id + '/dte/pdf', context.customerToken)).status, 404);
     for (const method of ['GET', 'POST']) {
       assert.equal((await request(method, '/sales/' + row.id + '/nota-credito', context.customerToken)).status, method === 'GET' ? 404 : 403);
       assert.equal((await request(method, '/sales/' + row.id + '/nota-credito', '')).status, 401);
@@ -162,9 +164,11 @@ async function check(name, run) { await run(); checks++; console.log('PASS: ' + 
     const dto = { tenantId: tenant.id, branchId: branch.id, userId: owner.id, items: [{ productId: product.id, quantity: 1, price: 119 }], payments: [{ paymentMethod: 'EFECTIVO', amount: 119 }], dteType: 39 };
     const beforeStock = await currentInventory(); const beforePosts = posts;
     const { InternalReceiptService } = require('../dist/dte/internal-receipt.service');
-    const internalSales = new SalesService(prisma, dte, new InternalReceiptService(prisma), {}, inventory, { emit: () => {} }, {});
+    const receipts = new InternalReceiptService(prisma);
+    const internalSales = new SalesService(prisma, dte, receipts, {}, inventory, { emit: () => {} }, {});
     const internal = await internalSales.createSale(dto);
     assert.equal(internal.dteType, 0); assert.equal(internal.dteStatus, 'INTERNO'); assert.equal(internal.dteFolio, null); assert.match(internal.internalReceiptUrl || '', /^\/api\/receipts\//);
+    await fs.writeFile('/checks-results/sale-pdf-fixture.pdf', await fs.readFile(receipts.getReceiptPath(internal.id)));
     assert.equal(await currentInventory(), beforeStock - 1); assert.equal(posts, beforePosts);
     assert.equal(await prisma.dteSubmission.count({ where: { saleId: internal.id } }), 0);
     const configs = new DteConfigService(prisma, account, api);

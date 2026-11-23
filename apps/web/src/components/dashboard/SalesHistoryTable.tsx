@@ -1,4 +1,4 @@
-import { openDtePdf } from '../../api/dte-config';
+import { openDtePdf, openInternalReceiptPdf } from '../../api/dte-config';
 import toast from 'react-hot-toast';
 import { Eye, FileX, ReceiptText, RefreshCw, Trash2 } from 'lucide-react';
 import type { SaleRecord } from '../../services/sales.service';
@@ -115,7 +115,7 @@ export function SalesHistoryTable({ sales, isLoading, onCreditNote, onDeleteInte
     const handleViewPdf = (sale: SaleRecord) => {
         if (sale.dteVerifiedAt && sale.dteProviderId) { openDtePdf('/sales/' + sale.id + '/dte/pdf').catch(() => toast.error('No se pudo consultar el PDF oficial.')); return; }
         const url = sale.internalReceiptUrl;
-        if (url && url.startsWith('/api/')) window.open(url, '_blank', 'noopener,noreferrer');
+        if (url) openInternalReceiptPdf(sale.id).catch(() => toast.error('No se pudo consultar el ticket interno.'));
     };
 
     const getPdfLabel = (sale: SaleRecord): string => {
