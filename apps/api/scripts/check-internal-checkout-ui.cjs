@@ -7,7 +7,7 @@ const origin = 'http://release-web';
   const pdfFixture = await fs.readFile('/checks-results/sale-pdf-fixture.pdf');
   const browser = await chromium.launch({ channel: 'chromium', headless: true, args: ['--unsafely-treat-insecure-origin-as-secure=http://release-web'] });
   try {
-    const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
+    const page = await browser.newPage({ viewport: { width: 1440, height: 1000 }, serviceWorkers: 'block' });
     const errors = []; page.on('pageerror', error => errors.push(error.message));
     const user = { ...fixture.customerUser, modules: ['POS'] };
     const product = { id: '20000000-0000-4000-8000-000000000005', name: 'Producto de control interno', sku: 'INTERNO-TEST', price: 1190, stock: 20, unitType: 'UNIT', priceTiers: [], isActive: true };
