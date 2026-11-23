@@ -3,6 +3,7 @@ import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import api from '../../lib/api';
+import BusinessRegistrationFields from '../../components/registration/BusinessRegistrationFields';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '../../components/ui/dialog';
 import { errorMessage, fieldClass, primaryClass, secondaryClass } from './client-record';
 
@@ -50,13 +51,8 @@ export default function CreateClientDialog({ onClose }: { onClose: () => void })
       <form onSubmit={save} className="space-y-5" aria-busy={saving}>
         <fieldset disabled={saving} className="space-y-4">
           <legend className="mb-3 text-base font-semibold">Datos de la empresa</legend>
-          <label className="block text-sm">Nombre de la empresa<input className={fieldClass + ' mt-1'} required maxLength={150} autoComplete="organization" value={form.companyName} onChange={e => update('companyName', e.target.value)} /></label>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <label className="block text-sm">Teléfono<input className={fieldClass + ' mt-1'} type="tel" required maxLength={30} autoComplete="tel" value={form.phone} onChange={e => update('phone', e.target.value)} /></label>
-            <label className="block text-sm">RUT (opcional)<input className={fieldClass + ' mt-1'} maxLength={30} placeholder="12.345.678-5" value={form.rut} onChange={e => update('rut', e.target.value)} /></label>
-          </div>
-          <label className="block text-sm">Giro comercial (opcional)<input className={fieldClass + ' mt-1'} maxLength={150} value={form.giro} onChange={e => update('giro', e.target.value)} /></label>
-          <label className="block text-sm">Dirección (opcional)<input className={fieldClass + ' mt-1'} maxLength={300} autoComplete="street-address" value={form.address} onChange={e => update('address', e.target.value)} /></label>
+          <BusinessRegistrationFields values={form} disabled={saving} onChange={updateBusiness => setForm(current => ({ ...current, ...updateBusiness(current) }))} />
+          <label className="block text-sm">Teléfono<input className={fieldClass + ' mt-1'} type="tel" required maxLength={30} autoComplete="tel" value={form.phone} onChange={e => update('phone', e.target.value)} /></label>
         </fieldset>
         <fieldset disabled={saving} className="space-y-4 border-t border-border pt-4">
           <legend className="px-1 text-base font-semibold">Usuario administrador</legend>

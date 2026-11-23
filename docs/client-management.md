@@ -12,6 +12,14 @@ Se intenta la bienvenida mediante el servicio existente; un fallo de correo no r
 
 Las pruebas de alta están en `auth.service.spec.ts`, `tenants.service.spec.ts` y `create-client.controller.spec.ts`. Con una vista local en el puerto 5174, `node apps/web/verify-create-client.cjs` comprueba el formulario en escritorio y móvil con API simulada, sin crear cuentas ni enviar correos reales.
 
+## Autocompletado tributario en el registro
+
+El registro público y Nuevo cliente del superadmin permiten consultar un RUT opcional y completar razón social, giro y dirección. Se reutiliza el proveedor tributario existente. El nombre del administrador se mantiene separado del nombre de la empresa. Los datos son editables y una consulta sin resultados no impide el registro manual.
+
+`GET /common/registration-rut-lookup/:rut` funciona antes de iniciar sesión. Valida el dígito verificador, limita solicitudes por origen y consultas totales al proveedor, comparte consultas simultáneas y conserva resultados brevemente en memoria. Devuelve solo campos tributarios permitidos, sin respuesta cruda del proveedor ni credenciales. El endpoint anterior de Clientes y Proveedores sigue autenticado. El registro no utiliza datos ficticios de desarrollo si falla el proveedor.
+
+La interfaz espera una pausa al escribir, evita consultas con RUT inválido y descarta respuestas de un RUT anterior. No reemplaza datos editados manualmente mientras se consulta. Las pruebas del workflow cubren ambos registros en escritorio y móvil, la edición manual, las respuestas tardías y la persistencia de los datos tributarios.
+
 ## Control del superadmin
 
 - Crear, editar, habilitar, deshabilitar y eliminar usuarios sin historial. Las cuentas de plataforma se protegen. Si un usuario tiene actividad, se deshabilita para conservar la trazabilidad; eliminar la empresa completa permite retirar sus datos operativos.

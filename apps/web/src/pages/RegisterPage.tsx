@@ -6,6 +6,7 @@ import toast from 'react-hot-toast';
 import { Eye, EyeOff, Copy, CheckCircle2, User, Mail, Phone, ArrowRight, Sparkles, Database, Compass } from 'lucide-react';
 import { Logo } from '../components/ui/Logo';
 import { api } from '../api/client';
+import BusinessRegistrationFields from '../components/registration/BusinessRegistrationFields';
 
 function generatePassword(): string {
     const chars = 'abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789!@#';
@@ -21,7 +22,7 @@ export function RegisterPage() {
     const [showPassword, setShowPassword] = useState(false);
     const [copiedPassword, setCopiedPassword] = useState(false);
 
-    const [formData, setFormData] = useState({ name: '', email: '', phone: '' });
+    const [formData, setFormData] = useState({ name: '', email: '', phone: '', companyName: '', rut: '', giro: '', address: '' });
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
@@ -35,7 +36,10 @@ export function RegisterPage() {
 
         try {
             const response = await api.post('/auth/register-tenant', {
-                companyName: formData.name,
+                companyName: formData.companyName.trim(),
+                rut: formData.rut || undefined,
+                giro: formData.giro.trim() || undefined,
+                address: formData.address.trim() || undefined,
                 userName: formData.name,
                 email: formData.email,
                 phone: formData.phone,
@@ -183,7 +187,7 @@ export function RegisterPage() {
 
             {/* ── Right form panel ── */}
             <div className="flex-1 flex items-center justify-center p-6 sm:p-12 lg:p-16 relative z-10">
-                <div className="w-full max-w-[420px] rounded-3xl p-8 bg-slate-900/30 border border-white/[0.06] backdrop-blur-2xl shadow-[0_20px_50px_rgba(0,0,0,0.3)] space-y-6">
+                <div className="w-full max-w-lg rounded-3xl p-8 bg-slate-900/30 border border-white/[0.06] backdrop-blur-2xl shadow-[0_20px_50px_rgba(0,0,0,0.3)] space-y-6">
                     {/* Header */}
                     <div className="flex flex-col items-center text-center space-y-2">
                         <div className="p-3 bg-white/[0.04] rounded-2xl border border-white/[0.05] mb-2">
@@ -199,6 +203,11 @@ export function RegisterPage() {
 
                     {/* Form */}
                     <form onSubmit={handleSubmit} className="space-y-4">
+                        <fieldset disabled={isLoading} className="space-y-4 border-b border-white/10 pb-5">
+                            <legend className="mb-3 text-base font-semibold text-slate-200">Datos del negocio</legend>
+                            <BusinessRegistrationFields values={formData} disabled={isLoading} onChange={updateBusiness => setFormData(current => ({ ...current, ...updateBusiness(current) }))} inputClassName="rounded-xl border-white/10 bg-white/[0.03] text-slate-200 placeholder:text-slate-500" />
+                        </fieldset>
+                        <h3 className="pt-1 text-base font-semibold text-slate-200">Datos del administrador</h3>
                         {/* Name */}
                         <div className="space-y-1.5 group">
                             <label htmlFor="name" className="block text-[11px] font-bold uppercase tracking-widest text-slate-400 group-focus-within:text-purple-400 transition-colors">

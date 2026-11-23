@@ -1,13 +1,21 @@
-import { Controller, Get, Param, BadRequestException } from '@nestjs/common';
+import { Controller, Get, Param, BadRequestException, Req } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { LiorenService } from '../dte/lioren.service';
 import { validateRut } from '@nexopos/shared';
+import { Public } from '../auth/decorators/public.decorator';
+import { RegistrationRutService } from './registration-rut.service';
 import { CurrentUser } from '../auth/user.decorator';
 
 @ApiTags('común')
 @Controller('common')
 export class CommonController {
-    constructor(private readonly liorenService: LiorenService) { }
+    constructor(private readonly liorenService: LiorenService, private readonly registrationRut: RegistrationRutService) { }
+
+    @Public()
+    @Get('registration-rut-lookup/:rut')
+    lookupRegistrationRut(@Param('rut') rut: string, @Req() request: { ip?: string; socket?: { remoteAddress?: string } }) {
+        return this.registrationRut.lookup(rut, request.ip || request.socket?.remoteAddress || 'unknown');
+    }
 
     @ApiOperation({
         summary: 'Consultar RUT Chileno',

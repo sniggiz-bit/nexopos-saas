@@ -165,7 +165,7 @@ export class LiorenService {
   }
   async consultarFolios(tenantId: string) { return (await this.account.status(tenantId)).types; }
 
-  async consultaRut(rut: string, _tenantId?: string) {
+  async consultaRut(rut: string, _tenantId?: string, allowDevelopmentMock = true) {
     try {
       const cleanRut = rut.replace(/\./g, '').replace(/-/g, '').trim();
       const dv = cleanRut.slice(-1);
@@ -218,7 +218,7 @@ export class LiorenService {
       this.logger.error(`[RUT Lookup] Error al consultar RUT: ${error.message}`);
       
       // Fallback a MOCK en desarrollo para no bloquear a los programadores locales
-      if (process.env.NODE_ENV !== 'production') {
+      if (allowDevelopmentMock && process.env.NODE_ENV !== 'production') {
         this.logger.log('[RUT Lookup] MOCK MODE: Devuelto datos de prueba en desarrollo.');
         return {
           success: true,
