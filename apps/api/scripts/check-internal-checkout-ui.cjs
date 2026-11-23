@@ -5,7 +5,7 @@ const origin = 'http://release-web';
 (async () => {
   const fixture = JSON.parse(await fs.readFile('/checks-results/context.json', 'utf8'));
   const pdfFixture = await fs.readFile('/checks-results/sale-pdf-fixture.pdf');
-  const browser = await chromium.launch({ headless: true, args: ['--unsafely-treat-insecure-origin-as-secure=http://release-web'] });
+  const browser = await chromium.launch({ channel: 'chromium', headless: true, args: ['--unsafely-treat-insecure-origin-as-secure=http://release-web'] });
   try {
     const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
     const errors = []; page.on('pageerror', error => errors.push(error.message));
