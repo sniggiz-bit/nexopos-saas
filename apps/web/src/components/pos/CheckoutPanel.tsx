@@ -11,6 +11,7 @@ import {
 import { PaymentMethod, type PaymentRequestData } from '@/api/sales';
 import { useQuery } from '@tanstack/react-query';
 import { getCustomers } from '@/api/customers';
+import { getSalesMode } from '@/api/dte-config';
 import { useAuth } from '@/context/AuthContext';
 import type { Customer } from '@/api/types';
 import { usePrintSettings } from '@/hooks/usePrintSettings';
@@ -44,6 +45,8 @@ export function CheckoutPanel({
     const [isSubmitting, setIsSubmitting] = useState(false);
     const { user } = useAuth();
     const { data: tenant } = useTenant(user?.tenantId);
+    const salesMode = useQuery({ queryKey: ['dte-sales-mode', user?.tenantId], queryFn: getSalesMode, enabled: !!user?.tenantId, staleTime: 0 });
+    const internalMode = salesMode.data?.mode === 'internal';
 
     const [paymentType, setPaymentType] = useState<PaymentType>('SINGLE');
     const [singleMethod, setSingleMethod] = useState<string>(PaymentMethod.DEBIT);
@@ -117,9 +120,10 @@ export function CheckoutPanel({
         return 0;
     }, [paymentType, singleMethod, cashReceived, total]);
 
-    const canConfirm = (dteType === 33 || isCreditPayment) ? !!selectedCustomer : true;
+    const canConfirm = salesMode.isSuccess && !salesMode.isFetching && (((!internalMode && dteType === 33) || isCreditPayment) ? !!selectedCustomer : true);
 
     const handleConfirm = useCallback(async () => {
+        if (!canConfirm) return;
         const customerId = selectedCustomer?.id;
         let payments: PaymentRequestData[];
         if (paymentType === 'SINGLE') {
@@ -132,7 +136,7 @@ export function CheckoutPanel({
 
         try {
             setIsSubmitting(true);
-            const result = await onConfirm(payments, dteType, customerId);
+            const result = await onConfirm(payments, internalMode ? 0 : dteType, customerId);
             if (autoPrint && result) {
                 // Impresión silenciosa USB si está disponible, fallback iframe
                 printSaleAction(result, defaultFormat, tenant, useWebSerial, printBytes);
@@ -142,7 +146,7 @@ export function CheckoutPanel({
         } finally {
             setIsSubmitting(false);
         }
-    }, [selectedCustomer, paymentType, singleMethod, total, dteType, mixedPayments, onConfirm, autoPrint, defaultFormat, tenant, useWebSerial, printBytes]);
+    }, [canConfirm, internalMode, selectedCustomer, paymentType, singleMethod, total, dteType, mixedPayments, onConfirm, autoPrint, defaultFormat, tenant, useWebSerial, printBytes]);
 
     useEffect(() => {
         if (isSuccess || isError) return;
@@ -155,6 +159,7 @@ export function CheckoutPanel({
             if (e.key === 'Escape') { e.preventDefault(); if (!isProcessing && !isSubmitting) onBack(); return; }
 
             // DTE type — always active → advances to payment step
+            if (internalMode && ['F1', 'F2', 'F3'].includes(e.key)) { e.preventDefault(); return; }
             if (e.key === 'F1') { e.preventDefault(); setDteType(39); setSelectedCustomer(null); setCustomerSearch(''); setActiveStep('payment'); return; }
             if (e.key === 'F2') { e.preventDefault(); setDteType(33); setSelectedCustomer(null); setCustomerSearch(''); setActiveStep('payment'); return; }
             if (e.key === 'F3') { e.preventDefault(); setDteType(52); setSelectedCustomer(null); setCustomerSearch(''); setActiveStep('payment'); return; }
@@ -183,7 +188,7 @@ export function CheckoutPanel({
         };
         window.addEventListener('keydown', onKey);
         return () => window.removeEventListener('keydown', onKey);
-    }, [isSuccess, isError, isProcessing, canConfirm, activeStep, paymentType, isTotalCovered, onBack, handleConfirm]);
+    }, [internalMode, isSuccess, isError, isProcessing, canConfirm, activeStep, paymentType, isTotalCovered, onBack, handleConfirm]);
 
     // ── Success state ─────────────────────────────────────────────────────────
     const hasRealDtePdf = saleResult?.dtePdfUrl && !saleResult.dtePdfUrl.includes('ejemplo-mock');
@@ -352,7 +357,9 @@ export function CheckoutPanel({
                     <p className={`text-[10px] font-bold uppercase tracking-wider mb-2 ${activeStep === 'dte' ? 'text-indigo-500' : 'text-slate-400'}`}>
                         1 · Documento
                     </p>
-                    <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
+                    {salesMode.isFetching && <p className="text-sm text-slate-500">Consultando modo de venta...</p>}
+                    {salesMode.isError && <p role="alert" className="text-sm text-rose-500">No se pudo consultar el modo de venta. <button onClick={() => salesMode.refetch()}>Reintentar</button></p>}
+                    {internalMode ? <p className="rounded-xl bg-cyan-500/10 p-3 text-sm font-semibold">Comprobante interno · Sin emisión tributaria</p> : salesMode.isSuccess && <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
                         {([
                             { type: 39 as const, label: 'Boleta', Icon: FileText, kbd: 'F1' },
                             { type: 33 as const, label: 'Factura', Icon: Building2, kbd: 'F2' },
@@ -376,9 +383,9 @@ export function CheckoutPanel({
                                 <span className="text-[9px] font-mono bg-slate-200 dark:bg-slate-600 text-slate-500 dark:text-slate-400 px-1 rounded">{kbd}</span>
                             </button>
                         ))}
-                    </div>
+                    </div>}
 
-                    {dteType === 33 && (
+                    {!internalMode && dteType === 33 && (
                         <div className="relative mt-2">
                             <Input
                                 placeholder="Buscar cliente por RUT o nombre..."
@@ -430,7 +437,7 @@ export function CheckoutPanel({
                 </div>
 
                 {/* Customer picker for CREDITO payment (single or mixed) — only shown if dteType !== 33 to avoid duplication */}
-                {isCreditPayment && dteType !== 33 && (
+                {isCreditPayment && (internalMode || dteType !== 33) && (
                     <div className={`rounded-xl transition-all duration-200 ring-2 ring-amber-400 p-2 bg-amber-50/30 dark:bg-amber-900/10`}>
                         <p className="text-[10px] font-bold uppercase tracking-wider mb-2 text-amber-500">
                             Cliente (requerido para Crédito)
