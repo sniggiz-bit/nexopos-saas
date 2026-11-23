@@ -4,7 +4,7 @@ const { chromium } = require('/tmp/ui-check/node_modules/playwright');
 const origin = 'http://release-web';
 (async () => {
   const fixture = JSON.parse(await fs.readFile('/checks-results/context.json', 'utf8'));
-  const browser = await chromium.launch({ headless: true });
+  const browser = await chromium.launch({ headless: true, args: ['--unsafely-treat-insecure-origin-as-secure=http://release-web'] });
   try {
     const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
     const errors = []; page.on('pageerror', error => errors.push(error.message));
@@ -17,7 +17,7 @@ const origin = 'http://release-web';
       else if (path === '/api/products') body = { data: [product], total: 1, page: 1, limit: 50, totalPages: 1 };
       else if (path === '/api/categories' || path === '/api/customers' || path === '/api/quotes') body = [];
       else if (path === '/api/branches') body = [{ id: user.branchId, name: 'Sucursal ficticia' }];
-      else if (path.startsWith('/api/shifts/current/')) body = { id: 'shift-fixture', branchId: user.branchId, status: 'OPEN', initialAmount: 0 };
+      else if (path.startsWith('/api/shifts/current/')) body = { id: 'shift-fixture', branchId: user.branchId, status: 'OPEN', startTime: new Date().toISOString(), openedByUserId: user.id, initialAmount: 0 };
       else if (path === '/api/tenants/' + user.tenantId) body = { id: user.tenantId, name: 'Negocio ficticio', settings: {} };
       else if (path === '/api/dte-config/sales-mode') {
         await route.fulfill({ status: unavailable ? 503 : 200, contentType: 'application/json', body: JSON.stringify(unavailable ? { message: 'Consulta no disponible' } : { mode }) }); return;
@@ -32,8 +32,15 @@ const origin = 'http://release-web';
     await page.evaluate(({ token, user }) => { localStorage.clear(); localStorage.setItem('token', token); localStorage.setItem('user', JSON.stringify(user)); }, { token: fixture.customerToken, user });
     const openCheckout = async () => {
       await page.goto(origin + '/pos');
-      await page.getByText(product.name, { exact: true }).first().click();
-      await page.getByRole('button', { name: /COBRAR/ }).click();
+      try {
+        await page.getByRole('heading', { name: 'Punto de Venta', exact: true }).waitFor();
+        await page.getByText(product.name, { exact: true }).first().click();
+        await page.getByRole('button', { name: /COBRAR/ }).click();
+      } catch (error) {
+        await page.screenshot({ path: '/checks-results/internal-checkout-failure.png', fullPage: true });
+        console.error({ url: page.url(), errors, screen: (await page.locator('body').innerText()).slice(0, 1500) });
+        throw error;
+      }
     };
     await openCheckout();
     await page.getByText('Comprobante interno · Sin emisión tributaria', { exact: true }).waitFor();
