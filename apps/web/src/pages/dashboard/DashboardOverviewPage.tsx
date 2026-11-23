@@ -314,26 +314,26 @@ export function DashboardOverviewPage() {
                     </div>
                 </div>
 
-                {/* ── Fila 2b: KPIs DTE Lioren ── */}
+                {/* ── Fila 2b: KPIs DTE El servicio de facturación ── */}
                 {dteAdmin && <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                     <DteMiniCard
                         title="Aceptados SII este mes"
                         value={dteStats?.provider.accepted ?? '—'}
-                        sub="consultados en Lioren"
+                        sub="consultados en el servicio de facturación"
                         accent={CYAN}
                         accentAlpha={CYAN_ALPHA}
                     />
                     <DteMiniCard
                         title="DTE Este Mes"
                         value={dteStats?.provider.total ?? '—'}
-                        sub="documentos en Lioren"
+                        sub="documentos en el servicio de facturación"
                         accent="#A78BFA"
                         accentAlpha={(a) => `rgba(167,139,250,${a})`}
                     />
                     <DteMiniCard
                         title="Rechazados SII este mes"
                         value={dteStats?.provider.rejected ?? '—'}
-                        sub={dteStats?.provider.rejected == null ? 'consulta no disponible' : 'informados por Lioren'}
+                        sub={dteStats?.provider.rejected == null ? 'consulta no disponible' : 'informados por el servicio de facturación'}
                         accent={dteStats?.provider.rejected ? '#F59E0B' : '#34D399'}
                         accentAlpha={dteStats?.provider.rejected
                             ? (a: number) => `rgba(245,158,11,${a})`
@@ -649,7 +649,7 @@ function TrendBadge({ value }: { value: number }) {
     );
 }
 
-// ── DteMiniCard ── tarjeta especializada para indicadores DTE Lioren ───────────
+// ── DteMiniCard ── tarjeta especializada para indicadores DTE El servicio de facturación ───────────
 interface DteMiniCardProps {
     title: string;
     value: number;
@@ -681,7 +681,7 @@ function DteMiniCard({ title, value, sub, accent: _accent, accentAlpha, alert }:
                 style={{ background: `radial-gradient(circle, ${accentAlpha(0.1)} 0%, transparent 70%)` }} />
 
             <div className="relative z-10">
-                {/* Badge Lioren */}
+                {/* Badge El servicio de facturación */}
                 <div className="flex items-center justify-between mb-2">
                     <p className="text-[9px] font-bold uppercase tracking-widest"
                         style={{ color: isDark ? accentAlpha(0.55) : accentAlpha(0.75) }}>
@@ -689,7 +689,7 @@ function DteMiniCard({ title, value, sub, accent: _accent, accentAlpha, alert }:
                     </p>
                     <span className="text-[8px] font-bold px-1.5 py-0.5 rounded tracking-wider"
                         style={{ background: accentAlpha(0.12), color: isDark ? accentAlpha(0.7) : accentAlpha(0.85) }}>
-                        LIOREN
+                        DTE
                     </span>
                 </div>
 

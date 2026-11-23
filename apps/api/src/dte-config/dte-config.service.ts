@@ -24,7 +24,7 @@ export class DteConfigService {
       const current = await tx.dteConfig.findUnique({ where: { tenantId } });
       if (!current?.liorenToken) return current;
       const updated = await tx.dteConfig.update({ where: { tenantId }, data: { liorenToken: null } });
-      await tx.systemLog.create({ data: { tenantId, level: 'INFO', message: 'LIOREN_DISCONNECTED', context: { actorId } } });
+      await tx.systemLog.create({ data: { tenantId, level: 'INFO', message: 'BILLING_DISCONNECTED', context: { actorId } } });
       return updated;
     });
     this.account.invalidate(tenantId);
@@ -37,7 +37,7 @@ export class DteConfigService {
       if (typeof data.liorenToken !== 'string') throw new BadRequestException('La credencial debe ser texto. Se conserva el token actual.');
       data.liorenToken = data.liorenToken.trim();
       if (!usableToken(data.liorenToken)) throw new BadRequestException('Ingresa una credencial real válida. Se conserva el token actual.');
-      await this.api.company(data.liorenToken).catch(() => { throw new BadRequestException('Lioren no pudo validar la nueva credencial. Se conserva el token actual.'); });
+      await this.api.company(data.liorenToken).catch(() => { throw new BadRequestException('El servicio de facturación no pudo validar la nueva credencial. Se conserva el token actual.'); });
     }
     if (data.resolutionDate && !Number.isFinite(data.resolutionDate.getTime())) throw new BadRequestException('La fecha de resolución no es válida.');
     const config = await this.prisma.dteConfig.upsert({ where: { tenantId }, create: { tenantId, ...data }, update: data });
@@ -65,7 +65,7 @@ export class DteConfigService {
   private async providerStats(connection: any, month: ReturnType<typeof chileMonth>) {
     const types = DTE_TYPES.map(type => ({ type, label: DTE_LABELS[type], total: null as number | null, accepted: null as number | null, rejected: null as number | null, message: '' }));
     const recent: any[] = [];
-    if (!connection.status.connected) return { source: 'lioren', month: month.label, from: month.from, to: month.to, checkedAt: new Date().toISOString(), total: null, accepted: null, rejected: null, partial: true, types, recent };
+    if (!connection.status.connected) return { source: 'billing', month: month.label, from: month.from, to: month.to, checkedAt: new Date().toISOString(), total: null, accepted: null, rejected: null, partial: true, types, recent };
     const jobs = types.flatMap(type => ['total', 'accepted', 'rejected'].map(metric => ({ type, metric })));
     let next = 0;
     await Promise.all(Array.from({ length: 3 }, async () => {
@@ -82,6 +82,6 @@ export class DteConfigService {
       }
     }));
     const sum = (key: 'total' | 'accepted' | 'rejected') => types.some(type => type[key] === null) ? null : types.reduce((value, type) => value + type[key]!, 0);
-    return { source: 'lioren', month: month.label, from: month.from, to: month.to, checkedAt: new Date().toISOString(), total: sum('total'), accepted: sum('accepted'), rejected: sum('rejected'), partial: types.some(type => !!type.message), types, recent: recent.sort((a, b) => b.date.localeCompare(a.date) || b.folio - a.folio).slice(0, 8) };
+    return { source: 'billing', month: month.label, from: month.from, to: month.to, checkedAt: new Date().toISOString(), total: sum('total'), accepted: sum('accepted'), rejected: sum('rejected'), partial: types.some(type => !!type.message), types, recent: recent.sort((a, b) => b.date.localeCompare(a.date) || b.folio - a.folio).slice(0, 8) };
   }
 }

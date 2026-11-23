@@ -24,7 +24,7 @@ const origin = 'http://release-web';
                 if (request.method() === 'POST') { assert(url.pathname.includes(originalId)); assert(!noFolios && !emitted); posts++; emitted = true; body = { success: true, noteId, folio: 2001, status: 'PENDIENTE_SII' }; }
                 else {
                     assert.equal(request.method(), 'GET'); const isLegacy = url.pathname.includes(legacyId); const row = isLegacy ? legacy() : original();
-                    body = { sale: { id: row.id, type: 39, folio: row.dteFolio, total: row.total, createdAt, branchName: row.branch.name }, canEmit: !isLegacy && !noFolios && !emitted, existingNote: emitted && !isLegacy ? { id: noteId, folio: 2001, status: accepted ? 'CREDIT_NOTE' : 'PENDING_CREDIT_NOTE', dteStatus: accepted ? 'ACEPTADO' : 'PENDIENTE_SII', canVerify: !accepted } : null, message: isLegacy ? 'La venta debe tener una boleta o factura confirmada en Lioren.' : emitted ? accepted ? 'La nota de crédito ya fue aceptada y la venta está anulada.' : 'Ya existe una nota de crédito asociada. Revisa su estado; no se creará otro documento.' : noFolios ? 'Este documento no tiene servicio habilitado o folios disponibles.' : 'Se emitirá una nota de crédito por el total del documento original.' };
+                    body = { sale: { id: row.id, type: 39, folio: row.dteFolio, total: row.total, createdAt, branchName: row.branch.name }, canEmit: !isLegacy && !noFolios && !emitted, existingNote: emitted && !isLegacy ? { id: noteId, folio: 2001, status: accepted ? 'CREDIT_NOTE' : 'PENDING_CREDIT_NOTE', dteStatus: accepted ? 'ACEPTADO' : 'PENDIENTE_SII', canVerify: !accepted } : null, message: isLegacy ? 'La venta debe tener una boleta o factura confirmada en el servicio de facturación.' : emitted ? accepted ? 'La nota de crédito ya fue aceptada y la venta está anulada.' : 'Ya existe una nota de crédito asociada. Revisa su estado; no se creará otro documento.' : noFolios ? 'Este documento no tiene servicio habilitado o folios disponibles.' : 'Se emitirá una nota de crédito por el total del documento original.' };
                 }
             } else throw Error('Unexpected sales operation: ' + request.method() + ' ' + url.pathname);
             await route.fulfill({ contentType: 'application/json', body: JSON.stringify(body) });
@@ -39,7 +39,7 @@ const origin = 'http://release-web';
         await actions().nth(1).waitFor();
         await page.screenshot({ path: '/checks-results/sales-action-buttons-desktop.png', fullPage: true });
         await actions().nth(1).click(); let dialog = page.getByRole('dialog');
-        await dialog.getByText('La venta debe tener una boleta o factura confirmada en Lioren.').waitFor();
+        await dialog.getByText('La venta debe tener una boleta o factura confirmada en el servicio de facturación.').waitFor();
         assert.equal(await dialog.getByRole('button', { name: 'Emitir nota de crédito', exact: true }).count(), 0); assert.equal(posts, 0);
         await dialog.getByRole('button', { name: 'Cerrar', exact: true }).click();
         noFolios = true; await actions().first().click(); dialog = page.getByRole('dialog');
@@ -65,7 +65,7 @@ const origin = 'http://release-web';
         await dialog.getByText(/Folio 2001 · Pendiente SII/).waitFor(); assert.equal(posts, 1); assert.equal(accepted, false);
         assert.equal(await dialog.getByRole('button', { name: 'Emitir nota de crédito', exact: true }).count(), 0);
         console.log('PASS: cancellation makes no request and emission requires explicit confirmation on desktop and mobile');
-        await dialog.getByRole('button', { name: 'Consultar estado en Lioren', exact: true }).click();
+        await dialog.getByRole('button', { name: 'Consultar estado tributario', exact: true }).click();
         await dialog.getByText('Folio 2001 · Aceptada y aplicada', { exact: true }).waitFor(); assert.equal(verifications, 1); assert.equal(posts, 1);
         await page.screenshot({ path: '/checks-results/credit-note-accepted.png', fullPage: true });
         await dialog.getByRole('button', { name: 'Cerrar', exact: true }).click();

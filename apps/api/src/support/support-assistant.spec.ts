@@ -1,6 +1,7 @@
 import { GeminiSupportService } from './gemini-support.service';
 import { decryptSupportKey, encryptSupportKey } from './support-secrets';
 import { rankSupportArticles } from './support-knowledge.service';
+import { neutralBillingText } from '@nexopos/shared';
 const key = 'fixture-gemini-key-never-real';
 const source = {
   id: 'article-a',
@@ -12,6 +13,13 @@ const source = {
   sortOrder: 0,
 };
 describe('Grounded support assistant', () => {
+  it('presents old support and audit text without the billing provider while preserving the source', () => {
+    const old = 'Documento en Lioren. Consulta https://cl.lioren.enterprises/docs. LIOREN_DISCONNECTED';
+    const visible = neutralBillingText(old);
+    expect(visible).not.toMatch(/lioren/i);
+    expect(visible).toContain('en el servicio de facturación');
+    expect(old).toContain('LIOREN_DISCONNECTED');
+  });
   const originalFetch = global.fetch;
   afterEach(() => {
     global.fetch = originalFetch;

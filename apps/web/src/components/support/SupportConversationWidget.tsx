@@ -1,3 +1,4 @@
+import { neutralBillingText } from '@nexopos/shared';
 import { supportUuid } from '@/lib/support-id';
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Bot, Headphones, Loader2, MessageSquare, Send, X } from "lucide-react";
@@ -267,12 +268,12 @@ export function SupportConversationWidget({
                         ? "Equipo de soporte"
                         : "Asistente NexoPOS"}
                   </p>
-                  {message.content}
+                  {neutralBillingText(message.content)}
                   {!!message.sources?.length && (
                     <div className="mt-2 border-t border-border pt-2 text-[11px] text-muted-foreground">
                       Fuente:{" "}
                       {message.sources
-                        .map((source) => source.question)
+                        .map((source) => neutralBillingText(source.question))
                         .join(" · ")}
                     </div>
                   )}

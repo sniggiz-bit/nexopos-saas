@@ -23,7 +23,7 @@ export async function openDtePdf(path: string) {
   const preview = window.open('', '_blank'); if (preview) preview.opener = null;
   try {
     const response = await apiClient.get(path, { responseType: 'blob', timeout: 20000 });
-    if (!String(response.headers['content-type']).includes('application/pdf')) throw Error('Lioren no devolvió un PDF válido.');
+    if (!String(response.headers['content-type']).includes('application/pdf')) throw Error('El servicio de facturación no devolvió un PDF válido.');
     const url = URL.createObjectURL(response.data);
     if (preview) preview.location.href = url;
     else { const link = document.createElement('a'); link.href = url; link.download = 'documento-tributario.pdf'; link.click(); }

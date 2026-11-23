@@ -6,6 +6,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { neutralBillingText } from '@nexopos/shared';
 import { GeminiSupportService } from './gemini-support.service';
 import { decryptSupportKey, encryptSupportKey } from './support-secrets';
 
@@ -195,17 +196,19 @@ export class SupportKnowledgeService {
     });
     return this.configuration();
   }
-  articles() {
-    return this.prisma.supportArticle.findMany({
+  async articles() {
+    const articles = await this.prisma.supportArticle.findMany({
       orderBy: [{ sortOrder: 'asc' }, { question: 'asc' }],
     });
+    return articles.map(article => ({ ...article, question: neutralBillingText(article.question), answer: neutralBillingText(article.answer), aliases: Array.isArray(article.aliases) ? article.aliases.map(alias => typeof alias === 'string' ? neutralBillingText(alias) : alias) : article.aliases }));
   }
-  published(audience: 'PUBLIC' | 'ACCOUNT') {
-    return this.prisma.supportArticle.findMany({
+  async published(audience: 'PUBLIC' | 'ACCOUNT') {
+    const articles = await this.prisma.supportArticle.findMany({
       where: { status: 'PUBLISHED', audience: { in: [audience, 'BOTH'] } },
       orderBy: [{ sortOrder: 'asc' }, { question: 'asc' }],
       take: 200,
     });
+    return articles.map(article => ({ ...article, question: neutralBillingText(article.question), answer: neutralBillingText(article.answer) }));
   }
   async saveArticle(id: string | null, input: any, actorId: string) {
     if (

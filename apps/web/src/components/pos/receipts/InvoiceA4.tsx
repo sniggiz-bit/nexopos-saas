@@ -64,17 +64,17 @@ export const InvoiceA4: React.FC<InvoiceA4Props> = ({
                 .totals-box { width: 300px; border: 1px solid #d1d5db; border-radius: 8px; padding: 15px; }
                 .flex-justify { display: flex; justify-content: space-between; margin-bottom: 8px; }
                 .grand-total { border-top: 2px solid #000; padding-top: 10px; font-weight: bold; font-size: 18px; color: #000; }
-                .lioren-banner { background: #f0fdf4; border: 1px solid #86efac; border-radius: 8px; padding: 12px; margin: 20px 0; text-align: center; }
-                .lioren-banner a { color: #16a34a; font-weight: bold; text-decoration: none; }
+                .billing-banner { background: #f0fdf4; border: 1px solid #86efac; border-radius: 8px; padding: 12px; margin: 20px 0; text-align: center; }
+                .billing-banner a { color: #16a34a; font-weight: bold; text-decoration: none; }
                 .draft-notice { background: #fef9c3; border: 1px solid #fde047; border-radius: 8px; padding: 12px; margin: 20px 0; text-align: center; font-size: 12px; color: #854d0e; }
                 `}
             </style>
 
             {!hasRealPdf && <p style={{ border: '1px solid #92400e', padding: 12, color: '#92400e', fontWeight: 'bold' }}>Comprobante interno. No acredita emisión ni aceptación de un documento tributario.</p>}
-            {/* Enlace al PDF oficial de Lioren (con TED real) — visible en pantalla, oculto al imprimir */}
+            {/* Enlace al PDF oficial del servicio de facturación (con TED real) — visible en pantalla, oculto al imprimir */}
             {hasRealPdf && (
-                <div className="lioren-banner no-print">
-                    ✅ <strong>Documento tributario confirmado en Lioren</strong> —{' '}
+                <div className="billing-banner no-print">
+                    ✅ <strong>Documento tributario confirmado en el servicio de facturación</strong> —{' '}
                     <a href="#" onClick={event => { event.preventDefault(); openDtePdf('/sales/' + sale.id + '/dte/pdf').catch(() => toast.error('No se pudo consultar el PDF oficial.')); }}>
                         Ver / Imprimir documento oficial con Timbre Electrónico (TED) →
                     </a>
@@ -84,7 +84,7 @@ export const InvoiceA4: React.FC<InvoiceA4Props> = ({
             {!hasRealPdf && sale.dteType !== 0 && (
                 <div className="draft-notice no-print">
                     ⚠️ Este es un comprobante interno de vista previa. El documento oficial con Timbre Electrónico (TED)
-                    estará disponible al completar la emisión DTE con Lioren.
+                    estará disponible al completar la emisión DTE con el servicio de facturación.
                 </div>
             )}
 
@@ -189,7 +189,7 @@ export const InvoiceA4: React.FC<InvoiceA4Props> = ({
                     </>
                 ) : (
                     <p>Este es un comprobante interno de control de venta. El Timbre Electrónico SII
-                    se incluye en el PDF oficial emitido por Lioren.</p>
+                    se incluye en el PDF oficial emitido por el servicio de facturación.</p>
                 )}
                 <p style={{ marginTop: 8 }}><strong>www.nexopos.cl</strong></p>
             </div>

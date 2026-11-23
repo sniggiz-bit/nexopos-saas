@@ -18,7 +18,7 @@ async function check(name, run) { await run(); checks++; console.log('PASS: ' + 
 (async () => {
   const context = JSON.parse(await fs.readFile('/checks-results/context.json', 'utf8'));
   const company = { rut: '76000000-0', name: 'Empresa ficticia', resolution: '80', resolutionDate: '2020-01-01', validFrom: '2020-01-01', validTo: '2099-01-01' };
-  const tenant = await prisma.tenant.create({ data: { name: 'Lioren isolated fixture', slug: randomUUID(), rut: company.rut, dteConfig: { create: { liorenToken: token, dteResolution: '80', resolutionDate: new Date('2020-01-01') } }, settings: { create: { enableBoletaDte: true, enableFacturaDte: true, enableNotaCreditoDte: true, enableGuiaDespachoDte: true } } } });
+  const tenant = await prisma.tenant.create({ data: { name: 'El servicio de facturación isolated fixture', slug: randomUUID(), rut: company.rut, dteConfig: { create: { liorenToken: token, dteResolution: '80', resolutionDate: new Date('2020-01-01') } }, settings: { create: { enableBoletaDte: true, enableFacturaDte: true, enableNotaCreditoDte: true, enableGuiaDespachoDte: true } } } });
   const branch = await prisma.branch.create({ data: { tenantId: tenant.id, name: 'Matriz de prueba', isMain: true, isActive: true } });
   const customer = await prisma.customer.create({ data: { tenantId: tenant.id, name: 'Receptor ficticio', rut: '11111111-1', giro: 'Actividad ficticia', address: 'Dirección ficticia 123', comuna: 'Providencia', city: 'Santiago' } });
   const product = await prisma.product.create({ data: { tenantId: tenant.id, name: 'Producto ficticio', price: 119 } });
@@ -171,7 +171,7 @@ async function check(name, run) { await run(); checks++; console.log('PASS: ' + 
     await configs.upsert({ tenantId: tenant.id, liorenToken: token });
     await dte.emitirDte(internal.id); assert.equal(posts, beforePosts);
     await configs.disconnect(tenant.id, owner.id);
-    await assert.rejects(() => internalSales.createSale({ ...dto, dteType: 33 }), /desconectado/);
+    await assert.rejects(() => internalSales.createSale({ ...dto, dteType: 33 }), /desconectada/);
     assert.equal(await currentInventory(), beforeStock - 1);
     await internalSales.cancelInternalSale(internal.id, tenant.id, owner.id);
     assert.equal(await currentInventory(), beforeStock);
