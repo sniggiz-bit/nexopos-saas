@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Patch, Body, Param, Query, UseGuards, ForbiddenException, Res } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, Query, UseGuards, ForbiddenException, Res } from '@nestjs/common';
 import { IsString, IsOptional, MaxLength, IsDateString, IsNotEmpty } from 'class-validator';
 import type { Response } from 'express';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -19,6 +19,8 @@ function requireAdmin(user: any) { if (!['TENANT_ADMIN', 'SUPER_ADMIN'].includes
 export class DteConfigController {
   constructor(private readonly config: DteConfigService, private readonly account: LiorenAccountService, private readonly lioren: LiorenService) {}
   @Get() find(@CurrentUser() user: any) { requireAdmin(user); return this.config.findByTenant(user.tenantId); }
+  @Get('sales-mode') salesMode(@CurrentUser() user: any) { return this.config.salesMode(user.tenantId); }
+  @Delete('token') disconnect(@CurrentUser() user: any) { requireAdmin(user); return this.config.disconnect(user.tenantId, user.id); }
   @Get('status') status(@CurrentUser() user: any, @Query('refresh') refresh?: string) { requireAdmin(user); return this.account.status(user.tenantId, refresh === '1'); }
   @Get('stats') stats(@CurrentUser() user: any, @Query('refresh') refresh?: string) { requireAdmin(user); return this.config.getStats(user.tenantId, refresh === '1'); }
   @Get('folios') async folios(@CurrentUser() user: any) { requireAdmin(user); return (await this.account.status(user.tenantId)).types; }

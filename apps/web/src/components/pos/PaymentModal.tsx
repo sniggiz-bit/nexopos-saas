@@ -21,6 +21,7 @@ import { PaymentMethod, type PaymentRequestData } from '@/api/sales';
 import { Badge } from '@/components/ui/badge';
 import { useQuery } from '@tanstack/react-query';
 import { getCustomers } from '@/api/customers';
+import { getSalesMode } from '@/api/dte-config';
 import { useAuth } from '@/context/AuthContext';
 import type { Customer } from '@/api/types';
 import { TransbankPaymentModal } from './TransbankPaymentModal';
@@ -66,6 +67,8 @@ export function PaymentModal({
     const [countdown, setCountdown] = useState(4);
     const { user } = useAuth();
     const { data: tenant } = useTenant(user?.tenantId);
+    const salesMode = useQuery({ queryKey: ['dte-sales-mode', user?.tenantId], queryFn: getSalesMode, enabled: isOpen && !!user?.tenantId, staleTime: 0 });
+    const internalMode = salesMode.data?.mode === 'internal';
 
     // Payment Logic States
     const [paymentType, setPaymentType] = useState<PaymentType>('SINGLE');
@@ -194,13 +197,15 @@ export function PaymentModal({
         return 0;
     }, [paymentType, singleMethod, cashReceived, total]);
 
-    const canConfirm = dteType === 33 ? !!selectedCustomer : true;
+    const canConfirm = salesMode.isSuccess && !salesMode.isFetching && (internalMode || dteType !== 33 || !!selectedCustomer);
 
     const isTransbankMethod = (method: string) =>
         method === PaymentMethod.DEBIT || method === PaymentMethod.CARD;
 
     const handleConfirm = () => {
-        const customerId = selectedCustomer?.id;
+        if (!canConfirm) return;
+        const documentType = internalMode ? 0 : dteType;
+        const customerId = internalMode ? undefined : selectedCustomer?.id;
         let payments: PaymentRequestData[];
 
         if (paymentType === 'SINGLE') {
@@ -217,13 +222,13 @@ export function PaymentModal({
 
         if (isSingleCardPayment && !transbankResult) {
             setPendingPayments(payments);
-            setPendingDteType(dteType);
+            setPendingDteType(documentType);
             setPendingCustomerId(customerId);
             setTransbankOpen(true);
             return;
         }
 
-        onConfirm(payments, dteType, customerId);
+        onConfirm(payments, documentType, customerId);
         // Auto-print al finalizar la venta
         // El resultado llega via saleResult prop cuando isSuccess===true
     };
@@ -501,7 +506,9 @@ export function PaymentModal({
                         {/* DTE Type Selector */}
                         <div>
                             <h4 className="font-bold text-xs uppercase text-slate-400 tracking-wider mb-2">Tipo de Documento</h4>
-                            <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
+                            {salesMode.isError && <p role="alert" className="text-sm text-rose-500">No se pudo consultar el modo de venta. <button onClick={() => salesMode.refetch()}>Reintentar</button></p>}
+                            {salesMode.isFetching && <p className="text-sm text-slate-500">Consultando modo de venta...</p>}
+                            {internalMode ? <p className="rounded-xl bg-cyan-500/10 p-3 text-sm font-semibold">Comprobante interno · Sin emisión tributaria</p> : salesMode.isSuccess && <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
                                 <button
                                     onClick={() => setDteType(39)}
                                     className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-bold transition-all ${dteType === 39 ? 'bg-white dark:bg-slate-700 shadow-sm text-indigo-600' : 'text-slate-500'}`}
@@ -520,9 +527,9 @@ export function PaymentModal({
                                 >
                                     <Truck className="w-3.5 h-3.5" /> Guía
                                 </button>
-                            </div>
+                            </div>}
 
-                            {dteType === 33 && (
+                            {!internalMode && dteType === 33 && (
                                 <div className="relative mt-2">
                                     <Input
                                         placeholder="Buscar cliente por RUT o nombre..."

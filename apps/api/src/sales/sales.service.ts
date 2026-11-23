@@ -115,6 +115,13 @@ export class SalesService {
     }
 
     const sale = await this.prisma.$transaction(async (prisma) => {
+      // A missing credential means internal sales, including older POS clients.
+      await prisma.$queryRawUnsafe('SELECT "id" FROM "Tenant" WHERE "id"=$1 FOR UPDATE', tenantId);
+      const fiscal = await prisma.dteConfig.findUnique({ where: { tenantId }, select: { liorenToken: true } });
+      const requestedType = dteType ?? 39;
+      if (![0, 39, 33, 52].includes(requestedType)) throw new BadRequestException('Tipo de documento no válido para una venta.');
+      if (!fiscal?.liorenToken?.trim() && [33, 52].includes(requestedType)) throw new BadRequestException('Lioren está desconectado. Usa un comprobante interno.');
+      const documentType = !fiscal?.liorenToken?.trim() && requestedType === 39 ? 0 : requestedType;
       // 1.1. Validate customer if provided
       if (customerId) {
         const customer = await prisma.customer.findFirst({
@@ -227,7 +234,8 @@ export class SalesService {
           status,
           customerId,
           quoteId,
-          dteType: dteType ?? 39,
+          dteType: documentType,
+          ...(documentType === 0 ? { dteStatus: 'INTERNO' } : {}),
           items: {
             create: items.map((item) => {
               const product = productMap.get(item.productId);

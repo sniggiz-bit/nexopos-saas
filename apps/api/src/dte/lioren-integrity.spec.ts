@@ -4,6 +4,7 @@ import { LiorenAccountService } from './lioren-account.service';
 import { LiorenService } from './lioren.service';
 import { DteConfigService } from '../dte-config/dte-config.service';
 import { DteConfigController } from '../dte-config/dte-config.controller';
+import { DteService } from './dte.service';
 jest.mock('axios');
 const http = axios as jest.Mocked<typeof axios>;
 const token = 'fixture-lioren-key-never-real';
@@ -16,6 +17,38 @@ function fixture() {
 }
 describe('Lioren contract and isolation', () => {
   beforeEach(() => jest.clearAllMocks());
+  it('disconnects only the authenticated tenant and retains issuer settings and history', async () => {
+    const f = fixture(); const service = new DteConfigService(f.db, f.account, f.api);
+    f.tenant.dteConfig.liorenLogo = '/uploads/logo.png';
+    await f.account.status('tenant-a');
+    f.db.dteConfig.update.mockImplementation(async ({ data }) => Object.assign(f.tenant.dteConfig, data));
+    const result = await service.disconnect('tenant-a', 'admin');
+    expect(result).toMatchObject({ hasToken: false, liorenLogo: '/uploads/logo.png', dteResolution: '80' });
+    expect(f.db.dteConfig.update).toHaveBeenCalledWith({ where: { tenantId: 'tenant-a' }, data: { liorenToken: null } });
+    expect(f.db.$queryRawUnsafe).toHaveBeenCalledWith(expect.stringContaining('FOR UPDATE'), 'tenant-a');
+    expect(f.db.tenant.update).not.toHaveBeenCalled();
+    expect(JSON.stringify(result) + JSON.stringify(f.db.systemLog.create.mock.calls)).not.toContain(token);
+    f.api.company.mockClear(); f.api.types.mockClear();
+    expect(await f.account.status('tenant-a')).toMatchObject({ configured: false, connected: false, company: null });
+    expect(await service.salesMode('tenant-a')).toEqual({ mode: 'internal' });
+    await service.disconnect('tenant-a', 'admin');
+    expect(f.db.dteConfig.update).toHaveBeenCalledTimes(1);
+    expect(f.api.company).not.toHaveBeenCalled(); expect(f.api.types).not.toHaveBeenCalled();
+  });
+  it('rejects non-admin disconnection and derives the tenant exclusively from the user', async () => {
+    const config = { disconnect: jest.fn() }; const f = fixture();
+    const controller = new DteConfigController(config as any, f.account, {} as any);
+    for (const role of ['CASHIER', 'MANAGER']) expect(() => controller.disconnect({ role, tenantId: 'tenant-b' })).toThrow('administrador');
+    expect(config.disconnect).not.toHaveBeenCalled();
+    controller.disconnect({ id: 'admin', tenantId: 'tenant-a', role: 'TENANT_ADMIN' });
+    expect(config.disconnect).toHaveBeenCalledWith('tenant-a', 'admin');
+  });
+  it('never sends an internal receipt to Lioren even after reconnecting', async () => {
+    const provider: any = { emitirBoleta: jest.fn() };
+    const db: any = { sale: { findUnique: jest.fn(async () => ({ dteType: 0, tenant: { status: 'ACTIVE' } })) } };
+    expect(await new DteService(provider, db).emitirDte('internal-sale')).toEqual({ success: true, status: 'INTERNO' });
+    expect(provider.emitirBoleta).not.toHaveBeenCalled();
+  });
   it('uses Chile calendar at UTC month boundary', () => { expect(chileDate(new Date('2026-12-01T01:00:00Z'))).toBe('2026-11-30'); expect(chileMonth(new Date('2026-12-01T01:00:00Z'))).toEqual({ from: '2026-11-01', to: '2026-11-30', label: '2026-11' }); });
   it('reads available and NEXT folio from tipodocs, never inferring a last folio', async () => {
     http.get.mockResolvedValueOnce({ data: { tipodocs: [{ codigosii: '39', folios: { disponibles: 100, siguiente: 16008 } }] } });

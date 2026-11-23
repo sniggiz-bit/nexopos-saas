@@ -10,6 +10,7 @@ export class LiorenAccountService {
   private readonly cache = new Map<string, { until: number; value: Promise<any> }>();
   constructor(private prisma: PrismaService, private api: LiorenApiService) {}
   fingerprint(token: string) { return createHash('sha256').update(token).digest('hex'); }
+  invalidate(tenantId: string) { for (const key of this.cache.keys()) if (key.startsWith(tenantId + ':')) this.cache.delete(key); }
   async connection(tenantId: string, fresh = false) {
     const tenant = await this.prisma.tenant.findUnique({ where: { id: tenantId }, include: { ...moduleTenantInclude, dteConfig: true } });
     if (!tenant) throw new NotFoundException('Empresa no encontrada.');
@@ -18,7 +19,7 @@ export class LiorenAccountService {
     const config = tenant.dteConfig;
     const token = config?.liorenToken?.trim() || '';
     const empty = DTE_TYPES.map(type => ({ type, label: DTE_LABELS[type], providerActive: null as boolean | null, available: null as number | null, nextFolio: null as number | null, localEnabled: enabled.includes(DTE_CODES[type]), ready: false }));
-    const base = { registeredRut: tenant.rut, configured: !!token, checkedAt: new Date().toISOString(), connected: false, state: 'not_configured', message: 'Configura un token de Lioren para consultar los servicios.', company: null as any, identityMatches: false, resolutionMatches: false, certificateValid: false, types: empty };
+    const base = { registeredRut: tenant.rut, configured: !!token, checkedAt: new Date().toISOString(), connected: false, state: 'not_configured', message: 'Control de ventas interno activo. Las ventas generan comprobantes internos sin emisión tributaria en Lioren.', company: null as any, identityMatches: false, resolutionMatches: false, certificateValid: false, types: empty };
     if (!usableToken(token)) return { tenant, config, token: '', status: { ...base, state: token ? 'invalid_token' : 'not_configured', message: token ? 'La credencial es de prueba o no tiene un formato válido. No se habilita emisión.' : base.message } };
     const key = tenantId + ':' + this.fingerprint(token);
     let cached = this.cache.get(key);
