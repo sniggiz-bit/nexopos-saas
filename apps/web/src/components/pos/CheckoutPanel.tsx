@@ -11,11 +11,12 @@ import {
 import { PaymentMethod, type PaymentRequestData } from '@/api/sales';
 import { useQuery } from '@tanstack/react-query';
 import { getCustomers } from '@/api/customers';
-import { getSalesMode } from '@/api/dte-config';
+import { getSalesMode, openDtePdf, openInternalReceiptPdf } from '@/api/dte-config';
+import toast from 'react-hot-toast';
 import { useAuth } from '@/context/AuthContext';
 import type { Customer } from '@/api/types';
 import { usePrintSettings } from '@/hooks/usePrintSettings';
-import { printSaleAction } from './receipts/ReceiptRenderer';
+import { isRealDtePdf, printSaleAction } from './receipts/ReceiptRenderer';
 import { useTenant } from '@/hooks/useTenant';
 import { useWebSerialPrinter } from '@/hooks/useWebSerialPrinter';
 
@@ -42,6 +43,7 @@ export function CheckoutPanel({
     const { autoPrint, defaultFormat, setDefaultFormat, useWebSerial } = usePrintSettings();
     const { printBytes } = useWebSerialPrinter();
     const [countdown, setCountdown] = useState(4);
+    const [reviewingReceipt, setReviewingReceipt] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const { user } = useAuth();
     const { data: tenant } = useTenant(user?.tenantId);
@@ -99,11 +101,12 @@ export function CheckoutPanel({
     // para evitar doble llamada al diálogo de impresión.
 
     useEffect(() => {
-        if (!isSuccess) { setCountdown(4); return; }
+        if (!isSuccess) { setCountdown(4); setReviewingReceipt(false); return; }
+        if (reviewingReceipt) return;
         if (countdown <= 0) { onBack(); return; }
         const t = setTimeout(() => setCountdown(c => c - 1), 1000);
         return () => clearTimeout(t);
-    }, [isSuccess, countdown, onBack]);
+    }, [isSuccess, countdown, onBack, reviewingReceipt]);
 
     const totalMixed = useMemo(
         () => Object.values(mixedPayments).reduce((sum: number, v) => sum + (Number(v) || 0), 0),
@@ -139,7 +142,8 @@ export function CheckoutPanel({
             const result = await onConfirm(payments, internalMode ? 0 : dteType, customerId);
             if (autoPrint && result) {
                 // Impresión silenciosa USB si está disponible, fallback iframe
-                printSaleAction(result, defaultFormat, tenant, useWebSerial, printBytes);
+                try { await printSaleAction(result, defaultFormat, tenant, useWebSerial, printBytes); }
+                catch { toast.error('Venta guardada. No se pudo abrir el comprobante. Puedes volver a abrirlo desde Ventas.'); }
             }
         } catch (_err) {
             // Handled in mutation/toast
@@ -191,7 +195,7 @@ export function CheckoutPanel({
     }, [internalMode, isSuccess, isError, isProcessing, canConfirm, activeStep, paymentType, isTotalCovered, onBack, handleConfirm]);
 
     // ── Success state ─────────────────────────────────────────────────────────
-    const hasRealDtePdf = saleResult?.dtePdfUrl && !saleResult.dtePdfUrl.includes('ejemplo-mock');
+    const hasRealDtePdf = !!saleResult?.dteVerifiedAt && !!saleResult?.dteProviderId && !!saleResult?.dteFolio && isRealDtePdf(saleResult?.dtePdfUrl);
 
     if (isSuccess) {
         return (
@@ -220,17 +224,14 @@ export function CheckoutPanel({
 
                     {hasRealDtePdf && (
                         <Button className="w-full" variant="outline"
-                            onClick={() => window.open(saleResult!.dtePdfUrl!, '_blank')}>
+                            onClick={() => { setReviewingReceipt(true); openDtePdf('/sales/' + saleResult!.id + '/dte/pdf').catch(() => toast.error('Venta guardada. No se pudo abrir el PDF oficial. Puedes volver a abrirlo desde Ventas.')); }}>
                             📄 Abrir / Imprimir PDF oficial (con TED)
                         </Button>
                     )}
 
                     {saleResult?.internalReceiptUrl && (
                         <Button className="w-full" variant="outline"
-                            onClick={() => {
-                                const apiUrl = import.meta.env.VITE_API_URL || '';
-                                window.open(`${apiUrl}${saleResult!.internalReceiptUrl}`, '_blank');
-                            }}>
+                            onClick={() => { setReviewingReceipt(true); openInternalReceiptPdf(saleResult!.id).catch(() => toast.error('Venta guardada. No se pudo abrir el ticket interno. Puedes volver a abrirlo desde Ventas.')); }}>
                             Ver Ticket Interno
                         </Button>
                     )}
@@ -239,7 +240,7 @@ export function CheckoutPanel({
                         <Button
                             className="flex-1"
                             variant="secondary"
-                            onClick={() => printSaleAction(saleResult, defaultFormat, tenant, useWebSerial, printBytes)}
+                            onClick={() => { setReviewingReceipt(true); printSaleAction(saleResult, defaultFormat, tenant, useWebSerial, printBytes).catch(() => toast.error('Venta guardada. No se pudo abrir el comprobante. Puedes volver a abrirlo desde Ventas.')); }}
                         >
                             {hasRealDtePdf ? '🖨 Reimprimir PDF DTE' : 'Reimprimir Ticket'}
                         </Button>
@@ -259,7 +260,7 @@ export function CheckoutPanel({
 
                 <div className="p-4 border-t border-slate-100 dark:border-slate-700">
                     <Button onClick={onBack} className="w-full" variant="outline">
-                        Cerrar ({countdown}s)
+                        {reviewingReceipt ? 'Cerrar' : `Cerrar (${countdown}s)`}
                     </Button>
                 </div>
             </div>

@@ -14,14 +14,14 @@ import { type CartItemData } from '@/context/CartContext';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { usePrintSettings } from '@/hooks/usePrintSettings';
-import { printSaleAction } from './receipts/ReceiptRenderer';
+import { isRealDtePdf, printSaleAction } from './receipts/ReceiptRenderer';
 import { useTenant } from '@/hooks/useTenant';
 import { useEffect, useState, useMemo } from 'react';
 import { PaymentMethod, type PaymentRequestData } from '@/api/sales';
 import { Badge } from '@/components/ui/badge';
 import { useQuery } from '@tanstack/react-query';
 import { getCustomers } from '@/api/customers';
-import { getSalesMode } from '@/api/dte-config';
+import { getSalesMode, openDtePdf, openInternalReceiptPdf } from '@/api/dte-config';
 import { useAuth } from '@/context/AuthContext';
 import type { Customer } from '@/api/types';
 import { TransbankPaymentModal } from './TransbankPaymentModal';
@@ -120,7 +120,7 @@ export function PaymentModal({
         // Disparar auto-print UNA SOLA VEZ al éxito
         if (autoPrint && saleResult && !hasAttemptedAutoPrint) {
             setHasAttemptedAutoPrint(true);
-            printSaleAction(saleResult, defaultFormat, tenant, useWebSerial, printBytes);
+            printSaleAction(saleResult, defaultFormat, tenant, useWebSerial, printBytes).catch(() => toast.error('Venta guardada. No se pudo abrir el comprobante. Puedes volver a abrirlo desde Ventas.'));
         }
 
         if (countdown <= 0) { onClose(); return; }
@@ -256,7 +256,7 @@ export function PaymentModal({
         );
     }
 
-    const hasRealDtePdf = saleResult?.dtePdfUrl && !saleResult.dtePdfUrl.includes('ejemplo-mock');
+    const hasRealDtePdf = !!saleResult?.dteVerifiedAt && !!saleResult?.dteProviderId && !!saleResult?.dteFolio && isRealDtePdf(saleResult?.dtePdfUrl);
 
     if (isSuccess) {
         return (
@@ -289,17 +289,14 @@ export function PaymentModal({
 
                         {hasRealDtePdf && (
                             <Button className="w-full" variant="outline"
-                                onClick={() => window.open(saleResult!.dtePdfUrl!, '_blank')}>
+                                onClick={() => openDtePdf('/sales/' + saleResult!.id + '/dte/pdf').catch(() => toast.error('Venta guardada. No se pudo abrir el PDF oficial. Puedes volver a abrirlo desde Ventas.'))}>
                                 📄 Abrir / Imprimir PDF oficial (con TED)
                             </Button>
                         )}
 
                         {saleResult?.internalReceiptUrl && (
                             <Button className="w-full" variant="outline"
-                                onClick={() => {
-                                    const apiUrl = import.meta.env.VITE_API_URL || '';
-                                    window.open(`${apiUrl}${saleResult!.internalReceiptUrl}`, '_blank');
-                                }}>
+                                onClick={() => openInternalReceiptPdf(saleResult!.id).catch(() => toast.error('Venta guardada. No se pudo abrir el ticket interno. Puedes volver a abrirlo desde Ventas.'))}>
                                 Ver Ticket Interno (PDF)
                             </Button>
                         )}
@@ -307,7 +304,7 @@ export function PaymentModal({
                         {/* Reprint + format selector */}
                         <div className="flex gap-2">
                             <Button className="flex-1" variant="secondary"
-                                onClick={() => printSaleAction(saleResult, defaultFormat, tenant, useWebSerial, printBytes)}>
+                                onClick={() => printSaleAction(saleResult, defaultFormat, tenant, useWebSerial, printBytes).catch(() => toast.error('Venta guardada. No se pudo abrir el comprobante. Puedes volver a abrirlo desde Ventas.'))}>
                                 {hasRealDtePdf ? '🖨 Reimprimir PDF DTE' : 'Reimprimir Ticket'}
                             </Button>
                             {!hasRealDtePdf && (

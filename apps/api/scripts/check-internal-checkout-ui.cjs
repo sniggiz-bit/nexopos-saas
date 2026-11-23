@@ -4,14 +4,19 @@ const { chromium } = require('/tmp/ui-check/node_modules/playwright');
 const origin = 'http://release-web';
 (async () => {
   const fixture = JSON.parse(await fs.readFile('/checks-results/context.json', 'utf8'));
+  const pdfFixture = await fs.readFile('/checks-results/sale-pdf-fixture.pdf');
   const browser = await chromium.launch({ headless: true, args: ['--unsafely-treat-insecure-origin-as-secure=http://release-web'] });
   try {
     const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
     const errors = []; page.on('pageerror', error => errors.push(error.message));
     const user = { ...fixture.customerUser, modules: ['POS'] };
     const product = { id: '20000000-0000-4000-8000-000000000005', name: 'Producto de control interno', sku: 'INTERNO-TEST', price: 1190, stock: 20, unitType: 'UNIT', priceTiers: [], isActive: true };
-    let mode = 'internal'; let unavailable = false; const submissions = [];
-    await page.route('**/api/**', async route => {
+    let mode = 'internal'; let unavailable = false; let saveSucceeds = false; let pdfFailure = false;
+    const submissions = []; const pdfRequests = [];
+    const saleId = '40000000-0000-4000-8000-000000000001';
+    const internalId = '40000000-0000-4000-8000-000000000002';
+    const savedSale = () => ({ id: saleId, tenantId: user.tenantId, branchId: user.branchId, branch: { name: 'Sucursal ficticia' }, total: 1190, status: 'COMPLETED', dteType: 39, dteFolio: 16608, dteStatus: 'PENDIENTE_SII', dteProviderId: 'provider-fixture', dteVerifiedAt: new Date().toISOString(), createdAt: new Date().toISOString(), dtePdfUrl: '/api/sales/' + saleId + '/dte/pdf', internalReceiptUrl: '/api/receipts/' + saleId, items: [], payments: [] });
+    await page.context().route('**/api/**', async route => {
       const request = route.request(); const path = new URL(request.url()).pathname; let body;
       if (path === '/api/auth/me') body = { user };
       else if (path === '/api/products') body = { data: [product], total: 1, page: 1, limit: 50, totalPages: 1 };
@@ -21,10 +26,20 @@ const origin = 'http://release-web';
       else if (path === '/api/tenants/' + user.tenantId) body = { id: user.tenantId, name: 'Negocio ficticio', settings: {} };
       else if (path === '/api/dte-config/sales-mode') {
         await route.fulfill({ status: unavailable ? 503 : 200, contentType: 'application/json', body: JSON.stringify(unavailable ? { message: 'Consulta no disponible' } : { mode }) }); return;
+      } else if (/^\/api\/(sales\/[a-zA-Z0-9-]+\/dte\/pdf|receipts\/[a-zA-Z0-9-]+)$/.test(path)) {
+        assert.equal(request.method(), 'GET');
+        assert.equal(request.headers().authorization === 'Bearer ' + fixture.customerToken, true, 'PDF requests must carry the current session');
+        pdfRequests.push(path);
+        await route.fulfill(pdfFailure ? { status: 401, contentType: 'application/json', body: JSON.stringify({ message: 'Unauthorized' }) } : { status: 200, contentType: 'application/pdf', body: pdfFixture }); return;
+      } else if (path === '/api/sales' && request.method() === 'GET') {
+        body = [savedSale(), { ...savedSale(), id: internalId, dteType: 0, dteStatus: 'INTERNO', dteFolio: null, dteProviderId: null, dteVerifiedAt: null, dtePdfUrl: null, internalReceiptUrl: '/api/receipts/' + internalId }];
       } else if (path === '/api/sales' && request.method() === 'POST') {
         submissions.push(request.postDataJSON());
+        if (saveSucceeds) { await route.fulfill({ status: 201, contentType: 'application/json', body: JSON.stringify(savedSale()) }); return; }
         // Exercise the real submit handler without creating data or printing.
         await route.fulfill({ status: 400, contentType: 'application/json', body: JSON.stringify({ message: 'Fin de prueba de interfaz' }) }); return;
+      } else if (path.startsWith('/api/sales/') && request.method() !== 'GET') {
+        throw Error('Opening a document must not modify a sale or emit another document.');
       } else { await route.continue(); return; }
       await route.fulfill({ contentType: 'application/json', body: JSON.stringify(body) });
     });
@@ -61,6 +76,49 @@ const origin = 'http://release-web';
     await page.keyboard.press('F12');
     assert(await page.getByRole('button', { name: /CONFIRMAR PAGO/ }).isDisabled());
     assert.equal(submissions.length, 1);
+    unavailable = false; mode = 'fiscal'; saveSucceeds = true;
+    await openCheckout();
+    await page.getByRole('button', { name: /CONFIRMAR PAGO/ }).click();
+    await page.getByRole('heading', { name: '¡Venta exitosa!', exact: true }).waitFor();
+    const openAndCheckPdf = async (button, path) => {
+      const popupCreated = page.context().waitForEvent('page');
+      const fetched = page.waitForResponse(response => new URL(response.url()).pathname === path);
+      await button.click();
+      const popup = await popupCreated;
+      assert.equal((await fetched).status(), 200);
+      await popup.waitForURL(/^blob:/, { waitUntil: 'commit' });
+      assert.equal(popup.url().includes(fixture.customerToken), false);
+      await popup.close();
+    };
+    await openAndCheckPdf(page.getByRole('button', { name: /Abrir \/ Imprimir PDF oficial/ }), '/api/sales/' + saleId + '/dte/pdf');
+    await openAndCheckPdf(page.getByRole('button', { name: 'Ver Ticket Interno', exact: true }), '/api/receipts/' + saleId);
+    await openAndCheckPdf(page.getByRole('button', { name: /Reimprimir PDF DTE/ }), '/api/sales/' + saleId + '/dte/pdf');
+    assert.equal(submissions.length, 2, 'Opening or reprinting a PDF must not create another sale');
+    pdfFailure = true;
+    const failedPopupCreated = page.context().waitForEvent('page');
+    await page.getByRole('button', { name: /Abrir \/ Imprimir PDF oficial/ }).click();
+    const failedPopup = await failedPopupCreated;
+    await page.getByText('Venta guardada. No se pudo abrir el PDF oficial. Puedes volver a abrirlo desde Ventas.', { exact: true }).waitFor();
+    assert(failedPopup.isClosed());
+    assert.equal(await page.getByRole('heading', { name: 'Error en la venta', exact: true }).count(), 0);
+    assert.equal(submissions.length, 2);
+    await page.screenshot({ path: '/checks-results/sale-pdf-error-preserves-sale.png', fullPage: true });
+    pdfFailure = false;
+    await page.goto(origin + '/dashboard/sales');
+    await openAndCheckPdf(page.getByRole('button', { name: 'Ver Boleta', exact: true }), '/api/sales/' + saleId + '/dte/pdf');
+    await openAndCheckPdf(page.getByRole('button', { name: 'Ver Ticket', exact: true }), '/api/receipts/' + internalId);
+    assert.equal(submissions.length, 2);
+    pdfFailure = true;
+    await page.evaluate(() => localStorage.setItem('nexopos_print_settings', JSON.stringify({ autoPrint: true, defaultFormat: '80mm', useWebSerial: false })));
+    await openCheckout();
+    const automaticPdf = page.waitForResponse(response => new URL(response.url()).pathname === '/api/sales/' + saleId + '/dte/pdf');
+    await page.getByRole('button', { name: /CONFIRMAR PAGO/ }).click();
+    await automaticPdf;
+    await page.getByText('Venta guardada. No se pudo abrir el comprobante. Puedes volver a abrirlo desde Ventas.', { exact: true }).waitFor();
+    assert.equal(submissions.length, 3, 'Automatic printing failure must not resubmit a saved sale');
+    assert.equal(await page.getByRole('heading', { name: 'Error en la venta', exact: true }).count(), 0);
+    assert(pdfRequests.every(path => !path.includes('/api/api/')));
+    console.log('PASS: actual POS and sales history open official and internal PDFs with authentication through blob URLs; read/print failures preserve saved sales without duplicate emission');
     assert.deepEqual(errors, []);
     console.log('PASS: active POS checkout submits internal type 0, ignores fiscal shortcuts, retains fiscal customer validation and blocks payment when mode lookup fails');
   } finally { await browser.close(); }
