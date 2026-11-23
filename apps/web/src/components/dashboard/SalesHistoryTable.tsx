@@ -209,7 +209,7 @@ export function SalesHistoryTable({ sales, isLoading, onCreditNote, onDeleteInte
                                                     </span>
                                                 )}
                                                 <DteTypeBadge dteType={sale.dteType ?? 39} />
-                                                {sale.dteFolio && !sale.dteVerifiedAt && <span className="text-[10px] text-amber-500">Sin confirmar en Lioren</span>}
+                                                {sale.dteFolio && !sale.dteVerifiedAt && <span className="text-[10px] text-amber-500">Sin confirmar en el servicio de facturación</span>}
                                             </div>
                                         </td>
 
@@ -254,7 +254,7 @@ export function SalesHistoryTable({ sales, isLoading, onCreditNote, onDeleteInte
                 {isLoading ? <p className="p-6 text-sm text-muted-foreground">Cargando ventas...</p> : !sales.length ? <p className="p-6 text-sm text-muted-foreground">No hay ventas registradas. Ajusta los filtros o realiza una venta en el POS.</p> : sales.map(sale => <article key={sale.id} aria-label={'Venta ' + (sale.dteFolio || sale.id.slice(0, 8))} className="space-y-3 p-4">
                     <div className="flex flex-wrap items-start justify-between gap-2"><div className="flex flex-wrap items-center gap-2"><span className="font-mono text-sm font-semibold">{sale.dteFolio ? '#' + sale.dteFolio : sale.id.slice(0, 8) + '…'}</span><DteTypeBadge dteType={sale.dteType ?? 39} /></div><strong className="text-sm tabular-nums">{formatCLP(sale.total)}</strong></div>
                     <p className="text-xs text-muted-foreground">{formatSaleDate(sale.createdAt)} · {sale.branch?.name || 'Sin sucursal'}</p>
-                    <div className="flex flex-wrap items-center gap-2"><StatusBadge status={sale.status} />{sale.dteFolio && !sale.dteVerifiedAt && <span className="text-xs text-amber-500">Sin confirmar en Lioren</span>}</div>
+                    <div className="flex flex-wrap items-center gap-2"><StatusBadge status={sale.status} />{sale.dteFolio && !sale.dteVerifiedAt && <span className="text-xs text-amber-500">Sin confirmar en el servicio de facturación</span>}</div>
                     {renderActions(sale)}
                 </article>)}
             </div>

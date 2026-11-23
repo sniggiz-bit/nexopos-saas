@@ -227,7 +227,7 @@ export const Ticket58mm: React.FC<Ticket58mmProps> = ({
                 ))}
             </div>
 
-            <div className="tc small" style={{ marginTop: 8 }}>Comprobante interno de venta. El documento tributario y su timbre se consultan en el PDF oficial de Lioren.</div>
+            <div className="tc small" style={{ marginTop: 8 }}>Comprobante interno de venta. El documento tributario y su timbre se consultan en el PDF oficial del servicio de facturación.</div>
 
             <div className="double" />
 

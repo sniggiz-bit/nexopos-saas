@@ -25,7 +25,7 @@ export class LiorenService {
     const blocked = (message: string) => ({ ...base, canEmit: false, message });
     if (existing && (existing.dteFolio || existing.dteSubmission || !['PENDING', 'BLOQUEADO'].includes(existing.dteStatus))) return blocked(existing.status === 'CREDIT_NOTE' ? 'La nota de crédito ya fue aceptada y la venta está anulada.' : 'Ya existe una nota de crédito asociada. Revisa su estado; no se creará otro documento.');
     if (![33, 39].includes(original.dteType)) return blocked('Esta acción permite anular una boleta o factura electrónica.');
-    if (original.status !== 'COMPLETED' || !original.dteVerifiedAt || !original.dteProviderId || !original.dteFolio || !original.dteIssuedAt || !['ACEPTADO', 'REPARO'].includes(original.dteStatus)) return blocked('La venta debe tener una boleta o factura confirmada en Lioren. Los tickets internos y registros históricos sin verificar requieren revisión previa.');
+    if (original.status !== 'COMPLETED' || !original.dteVerifiedAt || !original.dteProviderId || !original.dteFolio || !original.dteIssuedAt || !['ACEPTADO', 'REPARO'].includes(original.dteStatus)) return blocked('La venta debe tener una boleta o factura confirmada en el servicio de facturación. Los tickets internos y registros históricos sin verificar requieren revisión previa.');
     if (original.credit) return blocked('La venta tiene un crédito asociado. Contacta a soporte para revisar su conciliación antes de anularla.');
     if (!original.branch?.isActive) return blocked('La sucursal está deshabilitada. Solicita su habilitación al administrador de la plataforma.');
     try {
@@ -85,13 +85,13 @@ export class LiorenService {
         dteVerifiedAt: new Date(), dteStatus: amountMatches ? siiStatus(response.estado) : 'REQUIERE_REVISION',
         dtePdfUrl: '/api/sales/' + saleId + '/dte/pdf',
       } });
-      return { ...this.result(saved), ...(!amountMatches ? { error: 'Lioren informó un total diferente. El documento existe y requiere revisión; no se reemitirá.' } : {}) };
+      return { ...this.result(saved), ...(!amountMatches ? { error: 'El servicio de facturación informó un total diferente. El documento existe y requiere revisión; no se reemitirá.' } : {}) };
     } catch (error) {
       const uncertain = !(error instanceof LiorenApiError) || error.uncertain;
       const status = uncertain ? 'PENDIENTE_CONFIRMACION' : 'ERROR';
       await this.prisma.sale.updateMany({ where: { id: saleId, dteFolio: null }, data: { dteStatus: status } }).catch(() => undefined);
       // Neither request headers nor provider error bodies are logged or returned.
-      return { success: false, status, error: uncertain ? 'El resultado del envío no está confirmado. Revisa Lioren antes de cualquier nuevo envío.' : (error as LiorenApiError).message };
+      return { success: false, status, error: uncertain ? 'El resultado del envío no está confirmado. Revisa el servicio de facturación antes de cualquier nuevo envío.' : (error as LiorenApiError).message };
     }
   }
   private async buildPayload(sale: any, type: number, token: string, issuerRut: string) {
@@ -114,7 +114,7 @@ export class LiorenService {
       const normalize = (value: string) => value.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
       const communes = unwrap(await this.api.get(token, 'comunas'), 'comunas');
       const commune = communes.find((row: any) => normalize(String(row.nombre)) === normalize(customer.comuna));
-      if (!commune) throw new BadRequestException('La comuna del receptor no fue reconocida por Lioren.');
+      if (!commune) throw new BadRequestException('La comuna del receptor no fue reconocida por el servicio de facturación.');
       const cities = unwrap(await this.api.get(token, 'ciudades', { region_id: commune.region_id }), 'ciudades');
       const city = cities.find((row: any) => normalize(String(row.nombre)) === normalize(customer.city));
       if (!city) throw new BadRequestException('La ciudad del receptor no fue reconocida en la región de su comuna.');
@@ -131,7 +131,7 @@ export class LiorenService {
       const response = await this.api.get(token, 'razonesref');
       const reasons = Array.isArray(response) ? response : response?.razonesref || [];
       const reason = reasons.find((row: any) => /anula/i.test(String(row.nombre)));
-      if (!reason?.id) throw new BadRequestException('Lioren no informó la razón de anulación.');
+      if (!reason?.id) throw new BadRequestException('El servicio de facturación no informó la razón de anulación.');
       payload.referencias = [{ fecha: chileDate(original.dteIssuedAt), tipodoc: String(original.dteType), folio: String(original.dteFolio), razon: reason.id, glosa: 'Anulación del documento original' }];
     }
     if (type === 52) { payload.emisor.tipodespacho = 2; payload.emisor.tipotraslado = 1; }

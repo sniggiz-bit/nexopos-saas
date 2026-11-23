@@ -20,7 +20,7 @@ const origin = 'http://release-web';
         company: { name: 'Empresa ficticia para revisión visual', rut: '76.000.000-0', resolution: '80', resolutionDate: '2020-01-01', validFrom: '2020-01-01', validTo: '2099-01-01' },
         types: [39, 33, 61, 52].map((type, index) => ({ type, label: ['Boleta electrónica', 'Factura electrónica', 'Nota de crédito', 'Guía de despacho'][index], providerActive: partial ? null : true, available: partial ? null : type === 39 ? 1031 : 0, nextFolio: partial || type !== 39 ? null : 16608, localEnabled: true, ready: synced && !partial && type === 39 })),
       },
-      provider: { source: 'lioren', month: '2026-11', checkedAt: '2026-11-18T12:00:00Z', total: partial ? null : 130, accepted: partial ? null : 125, rejected: partial ? null : 3, partial, types: [{ type: 39, label: 'Boleta electrónica', total: partial ? null : 130, accepted: partial ? null : 125, rejected: partial ? null : 3, message: partial ? 'Consulta incompleta' : '' }], recent: [{ type: 39, label: 'Boleta electrónica', folio: 16607, date: '2026-11-18', total: 2500, state: 'acepta' }] },
+      provider: { source: 'billing', month: '2026-11', checkedAt: '2026-11-18T12:00:00Z', total: partial ? null : 130, accepted: partial ? null : 125, rejected: partial ? null : 3, partial, types: [{ type: 39, label: 'Boleta electrónica', total: partial ? null : 130, accepted: partial ? null : 125, rejected: partial ? null : 3, message: partial ? 'Consulta incompleta' : '' }], recent: [{ type: 39, label: 'Boleta electrónica', folio: 16607, date: '2026-11-18', total: 2500, state: 'acepta' }] },
       local: { confirmed: 0, unverified: 7, errors: 60, pending: showReview ? 1 : 0, needsSupport, reviewDocs: showReview ? [{ id: '00000000-0000-4000-8000-000000000001', dteType: 39, dteFolio: 16608, dteStatus: 'PENDIENTE_SII' }] : [] },
     });
     await page.route(/\/api\/dte-config(?:\/|\?|$)/, async route => {
@@ -33,8 +33,9 @@ const origin = 'http://release-web';
       await route.fulfill({ contentType: 'application/json', body: JSON.stringify(body) });
     });
     await page.goto(origin + '/dashboard/settings');
-    await page.getByRole('heading', { name: 'Conexión con Lioren', exact: true }).waitFor();
-    const credential = page.getByLabel('Reemplazar token de Lioren', { exact: true }); await credential.waitFor(); assert.equal(await credential.inputValue(), '');
+    await page.getByRole('heading', { name: 'Conexión de facturación', exact: true }).waitFor();
+    assert.doesNotMatch(await page.locator('body').innerText(), /lioren/i, 'Configuration must not name the billing provider');
+    const credential = page.getByLabel('Reemplazar token de facturación', { exact: true }); await credential.waitFor(); assert.equal(await credential.inputValue(), '');
     await page.getByText('El RUT registrado no coincide con la empresa del token.', { exact: true }).waitFor();
     await page.getByRole('row', { name: /Boleta electrónica/ }).getByText('16.608', { exact: true }).waitFor();
     assert.equal(await page.getByRole('row', { name: /Factura electrónica/ }).locator('td').nth(3).innerText(), '0');
@@ -66,30 +67,30 @@ const origin = 'http://release-web';
     await page.getByRole('button', { name: 'Actualizar datos', exact: true }).click();
     await page.getByRole('heading', { name: 'Documentos pendientes de confirmación' }).waitFor();
     assert.equal(await page.getByRole('link', { name: 'Revisar ventas' }).getAttribute('href'), '/dashboard/sales');
-    await page.getByRole('button', { name: 'Consultar estado en Lioren' }).click();
+    await page.getByRole('button', { name: 'Consultar estado tributario' }).click();
     await page.getByRole('heading', { name: 'Documentos pendientes de confirmación' }).waitFor({ state: 'hidden' });
     assert.equal(await page.getByRole('link', { name: 'Revisar ventas' }).count(), 0);
     console.log('PASS: current incidents show an actionable notice and pending documents retain read-only provider verification');
     await page.setViewportSize({ width: 390, height: 844 }); await page.goto(origin + '/dashboard/settings');
     await page.getByText('Datos verificados', { exact: true }).waitFor();
     await page.evaluate(() => window.scrollTo(0, 0));
-    assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), 'Lioren screen overflows mobile width');
+    assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), 'El servicio de facturación screen overflows mobile width');
     await page.screenshot({ path: '/checks-results/lioren-validation-mobile.png', fullPage: true });
     partial = true; await page.getByRole('button', { name: 'Actualizar datos', exact: true }).click();
     await page.getByText('Consulta de folios no disponible.', { exact: true }).waitFor();
     assert.equal(await page.getByRole('row', { name: /Factura electrónica/ }).locator('td').nth(3).innerText(), '—');
     await page.screenshot({ path: '/checks-results/lioren-unavailable-mobile.png', fullPage: true });
-    await page.getByRole('button', { name: 'Desconectar Lioren', exact: true }).click();
+    await page.getByRole('button', { name: 'Desconectar facturación', exact: true }).click();
     await page.getByRole('dialog').getByRole('button', { name: 'Cancelar', exact: true }).click();
     assert.equal(disconnects, 0);
-    await page.getByRole('button', { name: 'Desconectar Lioren', exact: true }).click();
+    await page.getByRole('button', { name: 'Desconectar facturación', exact: true }).click();
     await page.getByRole('dialog').getByRole('button', { name: 'Quitar token y usar ventas internas', exact: true }).click();
     await page.getByText('Control de ventas interno', { exact: true }).waitFor();
-    await page.getByLabel('Token de Lioren', { exact: true }).waitFor();
+    await page.getByLabel('Token de facturación', { exact: true }).waitFor();
     assert.equal(disconnects, 1);
-    assert.equal(await page.getByRole('heading', { name: 'Actividad confirmada por Lioren' }).count(), 0);
+    assert.equal(await page.getByRole('heading', { name: 'Actividad de facturación' }).count(), 0);
     assert.equal(await page.getByText(/^Empresa ficticia para revisi/).count(), 0);
-    assert.equal(await page.getByRole('button', { name: 'Desconectar Lioren', exact: true }).count(), 0);
+    assert.equal(await page.getByRole('button', { name: 'Desconectar facturación', exact: true }).count(), 0);
     await page.screenshot({ path: '/checks-results/lioren-disconnected-mobile.png', fullPage: true });
     console.log('PASS: cancellation preserves token; explicit disconnection clears provider details and enables internal mode');
     partial = false;
@@ -102,6 +103,7 @@ const origin = 'http://release-web';
     await page.setViewportSize({ width: 1440, height: 1000 });
     await page.goto(origin + '/admin/tenants/' + fixture.customerId + '?tab=dte');
     await page.getByRole('heading', { name: 'Control de registros de NexoPOS', exact: true }).waitFor();
+    assert.doesNotMatch(await page.locator('body').innerText(), /lioren/i, 'Client records must not name the billing provider');
     assert.equal(await page.getByRole('tab', { name: 'Registros tributarios', exact: true }).getAttribute('aria-selected'), 'true');
     await page.getByText('60', { exact: true }).waitFor(); await page.getByText('7', { exact: true }).waitFor();
     await page.screenshot({ path: '/checks-results/lioren-admin-records-desktop.png', fullPage: true });

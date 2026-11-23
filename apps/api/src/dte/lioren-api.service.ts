@@ -20,7 +20,7 @@ export function siiStatus(value: unknown): string {
 }
 export class LiorenApiError extends Error {
   constructor(public readonly status: number | null, public readonly uncertain = false) {
-    super(status === 401 ? 'Lioren rechazó el token. Revisa la credencial.' : status === 403 || status === 426 ? 'Lioren no autoriza esta operación con el token o servicio actual.' : status === 429 ? 'Lioren limitó temporalmente las consultas. Intenta más tarde.' : uncertain ? 'No se pudo confirmar la respuesta de Lioren. No reenvíes el documento.' : 'No se pudo completar la consulta a Lioren.');
+    super(status === 401 ? 'El servicio de facturación rechazó el token. Revisa la credencial.' : status === 403 || status === 426 ? 'El servicio de facturación no autoriza esta operación con el token o servicio actual.' : status === 429 ? 'El servicio de facturación limitó temporalmente las consultas. Intenta más tarde.' : uncertain ? 'No se pudo confirmar la respuesta del servicio de facturación. No reenvíes el documento.' : 'No se pudo completar la consulta al servicio de facturación.');
   }
 }
 @Injectable()

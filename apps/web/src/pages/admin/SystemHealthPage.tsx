@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { neutralBillingText } from '@nexopos/shared';
 import api from '../../lib/api';
 import toast from 'react-hot-toast';
 import { Activity, AlertTriangle, Info, RefreshCw, Loader2, ServerCrash } from 'lucide-react';
@@ -135,10 +136,10 @@ export default function SystemHealthPage() {
                         </span>
                       </td>
                       <td className="px-5 py-4 text-neutral-300 max-w-sm">
-                        <p className="truncate">{log.message}</p>
+                        <p className="truncate">{neutralBillingText(log.message)}</p>
                         {log.context && (
                           <pre className="mt-1 text-xs text-neutral-500 overflow-x-auto max-w-xs whitespace-pre-wrap break-all">
-                            {typeof log.context === 'string' ? log.context : JSON.stringify(log.context, null, 2)}
+                            {neutralBillingText(typeof log.context === 'string' ? log.context : JSON.stringify(log.context, null, 2))}
                           </pre>
                         )}
                       </td>

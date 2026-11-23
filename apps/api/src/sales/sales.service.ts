@@ -120,7 +120,7 @@ export class SalesService {
       const fiscal = await prisma.dteConfig.findUnique({ where: { tenantId }, select: { liorenToken: true } });
       const requestedType = dteType ?? 39;
       if (![0, 39, 33, 52].includes(requestedType)) throw new BadRequestException('Tipo de documento no válido para una venta.');
-      if (!fiscal?.liorenToken?.trim() && [33, 52].includes(requestedType)) throw new BadRequestException('Lioren está desconectado. Usa un comprobante interno.');
+      if (!fiscal?.liorenToken?.trim() && [33, 52].includes(requestedType)) throw new BadRequestException('La facturación está desconectada. Usa un comprobante interno.');
       const documentType = !fiscal?.liorenToken?.trim() && requestedType === 39 ? 0 : requestedType;
       // 1.1. Validate customer if provided
       if (customerId) {

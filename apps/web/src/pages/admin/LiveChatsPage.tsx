@@ -1,3 +1,4 @@
+import { neutralBillingText } from '@nexopos/shared';
 import { supportUuid } from '@/lib/support-id';
 import { useEffect, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
@@ -233,8 +234,8 @@ export default function LiveChatsPage() {
                     {session.visitorName}
                   </p>
                   <p className="mt-1 line-clamp-2 break-words text-xs leading-relaxed text-muted-foreground">
-                    {session.messages[session.messages.length - 1]?.content ||
-                      "Sin mensajes"}
+                    {neutralBillingText(session.messages[session.messages.length - 1]?.content ||
+                      "Sin mensajes")}
                   </p>
                 </button>
               ))
@@ -355,14 +356,14 @@ export default function LiveChatsPage() {
                             ? "Asistente"
                             : "Equipo de soporte"}
                       </p>
-                      {message.content}
+                      {neutralBillingText(message.content)}
                       {!!message.sources?.length && (
                         <p className="mt-2 text-[10px] opacity-75">
                           Fuente:{" "}
                           {message.sources
                             .map(
                               (source) =>
-                                source.question + " · v" + source.version,
+                                neutralBillingText(source.question) + " · v" + source.version,
                             )
                             .join(" / ")}
                         </p>
