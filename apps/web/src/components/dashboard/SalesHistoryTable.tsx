@@ -29,6 +29,7 @@ const C = {
 // ── DTE type badge ─────────────────────────────────────────────────────────────
 function DteTypeBadge({ dteType }: { dteType: number }) {
     const map: Record<number, { label: string; color: string; alpha: (a: number) => string }> = {
+        0: { label: 'Interno', color: C.cyan, alpha: C.cyanA },
         39: { label: 'Boleta',      color: C.cyan,   alpha: C.cyanA   },
         33: { label: 'Factura',     color: C.green,  alpha: C.greenA  },
         52: { label: 'G.Despacho',  color: C.violet, alpha: C.violetA },
@@ -127,7 +128,7 @@ export function SalesHistoryTable({ sales, isLoading, onCreditNote, onDeleteInte
         const pdfAvailable = !!resolvePdfUrl(sale);
         const isAdmin = ['TENANT_ADMIN', 'SUPER_ADMIN'].includes(userRole || '');
         const canReviewNC = isAdmin && !!onCreditNote && (([33, 39].includes(sale.dteType ?? 39) && ['COMPLETED', 'CANCELLED'].includes(sale.status)) || sale.dteType === 61 && !!sale.originalSaleId);
-        const canDeleteInternal = sale.status === 'COMPLETED' && !sale.dteFolio && ['PENDING', 'BLOQUEADO'].includes(sale.dteStatus || 'PENDING') && isAdmin && !!onDeleteInternalSale;
+        const canDeleteInternal = sale.status === 'COMPLETED' && !sale.dteFolio && ['INTERNO', 'PENDING', 'BLOQUEADO'].includes(sale.dteStatus || 'PENDING') && isAdmin && !!onDeleteInternalSale;
         const actionClass = 'inline-flex h-9 shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-lg border px-3 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-40';
         const documentLabel = getPdfLabel(sale);
         return <div className="flex items-center justify-end gap-2" role="group" aria-label="Acciones de la venta">
@@ -207,7 +208,7 @@ export function SalesHistoryTable({ sales, isLoading, onCreditNote, onDeleteInte
                                                         {sale.id.slice(0, 8)}…
                                                     </span>
                                                 )}
-                                                {sale.dteType && <DteTypeBadge dteType={sale.dteType} />}
+                                                <DteTypeBadge dteType={sale.dteType ?? 39} />
                                                 {sale.dteFolio && !sale.dteVerifiedAt && <span className="text-[10px] text-amber-500">Sin confirmar en Lioren</span>}
                                             </div>
                                         </td>

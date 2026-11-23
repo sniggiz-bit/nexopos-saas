@@ -14,7 +14,8 @@ const origin = 'http://release-web';
         const createdAt = new Date().toISOString(); let emitted = false; let accepted = false; let noFolios = false; let posts = 0; let verifications = 0;
         const original = () => ({ id: originalId, tenantId: fixture.customerId, branchId: fixture.customerUser.branchId, total: 11900, status: accepted ? 'CANCELLED' : 'COMPLETED', dteType: 39, dteFolio: 1001, dteStatus: 'ACEPTADO', dteProviderId: 'fictional-provider', dteVerifiedAt: createdAt, createdAt, updatedAt: createdAt, branch: { name: 'Sucursal ficticia' } });
         const legacy = () => ({ ...original(), id: legacyId, dteFolio: null, dteProviderId: null, dteVerifiedAt: null, dteStatus: 'PENDING', status: 'COMPLETED' });
-        const records = () => [original(), legacy(), ...(emitted ? [{ ...original(), id: noteId, originalSaleId: originalId, dteType: 61, dteFolio: 2001, status: accepted ? 'CREDIT_NOTE' : 'PENDING_CREDIT_NOTE', dteStatus: accepted ? 'ACEPTADO' : 'PENDIENTE_SII' }] : [])];
+        const internal = () => ({ ...legacy(), id: '20000000-0000-4000-8000-000000000004', dteType: 0, dteStatus: 'INTERNO' });
+        const records = () => [original(), legacy(), internal(), ...(emitted ? [{ ...original(), id: noteId, originalSaleId: originalId, dteType: 61, dteFolio: 2001, status: accepted ? 'CREDIT_NOTE' : 'PENDING_CREDIT_NOTE', dteStatus: accepted ? 'ACEPTADO' : 'PENDIENTE_SII' }] : [])];
         await page.route(/\/api\/sales(?:\/|\?|$)/, async route => {
             const request = route.request(); const url = new URL(request.url()); let body;
             if (url.pathname === '/api/sales') { assert.equal(request.method(), 'GET'); body = records(); }
@@ -30,6 +31,10 @@ const origin = 'http://release-web';
         });
         await page.goto(origin + '/dashboard/sales');
         await page.getByRole('heading', { name: 'Historial de Ventas', exact: true }).waitFor();
+        const internalRow = page.getByRole('row').filter({ hasText: '20000000' });
+        await internalRow.getByText('Interno', { exact: true }).waitFor();
+        await internalRow.getByRole('button', { name: 'Eliminar venta de control interno', exact: true }).waitFor();
+        assert.equal(await internalRow.getByRole('button', { name: 'Nota de crédito', exact: true }).count(), 0);
         const actions = () => page.getByRole('button', { name: 'Nota de crédito', exact: true });
         await actions().nth(1).waitFor();
         await page.screenshot({ path: '/checks-results/sales-action-buttons-desktop.png', fullPage: true });

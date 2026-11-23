@@ -1,5 +1,6 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { Prisma } from '@prisma/client';
 import { getLocalDteRecords } from '../dte/local-records';
 import { LiorenAccountService } from '../dte/lioren-account.service';
 import { chileMonth, DTE_TYPES, DTE_LABELS, LiorenApiService, usableToken } from '../dte/lioren-api.service';
@@ -12,6 +13,24 @@ export class DteConfigService {
   constructor(private prisma: PrismaService, private account: LiorenAccountService, private api: LiorenApiService) {}
   private response(config: any): DteConfigResponseDto { return { id: config.id, tenantId: config.tenantId, hasToken: !!config.liorenToken, liorenLogo: config.liorenLogo, dteResolution: config.dteResolution, resolutionDate: config.resolutionDate }; }
   async findByTenant(tenantId: string) { const config = await this.prisma.dteConfig.findUnique({ where: { tenantId } }); return config ? this.response(config) : null; }
+  async salesMode(tenantId: string) {
+    const config = await this.prisma.dteConfig.findUnique({ where: { tenantId }, select: { liorenToken: true } });
+    return { mode: config?.liorenToken?.trim() ? 'fiscal' : 'internal' };
+  }
+  async disconnect(tenantId: string, actorId: string) {
+    const config = await this.prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+      // Serialize with the final emission check; never alter sales or submissions.
+      await tx.$queryRawUnsafe('SELECT "id" FROM "Tenant" WHERE "id"=$1 FOR UPDATE', tenantId);
+      const current = await tx.dteConfig.findUnique({ where: { tenantId } });
+      if (!current?.liorenToken) return current;
+      const updated = await tx.dteConfig.update({ where: { tenantId }, data: { liorenToken: null } });
+      await tx.systemLog.create({ data: { tenantId, level: 'INFO', message: 'LIOREN_DISCONNECTED', context: { actorId } } });
+      return updated;
+    });
+    this.account.invalidate(tenantId);
+    for (const key of this.statsCache.keys()) if (key.startsWith(tenantId + ':')) this.statsCache.delete(key);
+    return config ? this.response(config) : null;
+  }
   async upsert(input: ConfigInput) {
     const { tenantId, ...data } = input;
     if (data.liorenToken !== undefined) {

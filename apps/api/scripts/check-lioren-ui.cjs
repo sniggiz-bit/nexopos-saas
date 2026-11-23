@@ -10,8 +10,8 @@ const origin = 'http://release-web';
     const errors = []; page.on('pageerror', error => errors.push(error.message));
     await page.goto(origin);
     await page.evaluate(({ token, user }) => { localStorage.clear(); localStorage.setItem('token', token); localStorage.setItem('user', JSON.stringify(user)); }, { token: fixture.customerToken, user: fixture.customerUser });
-    let synced = false; let partial = false; let showReview = false; let needsSupport = 0; const updates = [];
-    const config = () => ({ id: 'fictional-config', tenantId: fixture.customerId, hasToken: true, liorenLogo: null, dteResolution: synced ? '80' : '53', resolutionDate: synced ? '2020-01-01T00:00:00Z' : '2025-04-29T00:00:00Z' });
+    let disconnected = false; let disconnects = 0; let synced = false; let partial = false; let showReview = false; let needsSupport = 0; const updates = [];
+    const config = () => ({ id: 'fictional-config', tenantId: fixture.customerId, hasToken: !disconnected, liorenLogo: null, dteResolution: synced ? '80' : '53', resolutionDate: synced ? '2020-01-01T00:00:00Z' : '2025-04-29T00:00:00Z' });
     const stats = () => ({
       connection: {
         registeredRut: synced ? '76.000.000-0' : '11.111.111-1', configured: true, connected: true,
@@ -26,7 +26,8 @@ const origin = 'http://release-web';
     await page.route(/\/api\/dte-config(?:\/|\?|$)/, async route => {
       const request = route.request(); const url = new URL(request.url()); let body;
       if (url.pathname.endsWith('/sync-issuer')) { assert.equal(request.method(), 'POST'); assert.deepEqual(request.postDataJSON(), { expectedRut: '76.000.000-0' }); synced = true; body = stats().connection; }
-      else if (url.pathname.endsWith('/stats')) body = stats();
+      else if (url.pathname.endsWith('/token')) { assert.equal(request.method(), 'DELETE'); disconnected = true; disconnects++; body = config(); }
+      else if (url.pathname.endsWith('/stats')) { body = stats(); if (disconnected) body.connection = { ...body.connection, configured: false, connected: false, state: 'not_configured', company: null, message: 'Control de ventas interno activo.' }; }
       else if (request.method() === 'POST') { updates.push(request.postDataJSON()); body = config(); }
       else body = config();
       await route.fulfill({ contentType: 'application/json', body: JSON.stringify(body) });
@@ -78,6 +79,19 @@ const origin = 'http://release-web';
     await page.getByText('Consulta de folios no disponible.', { exact: true }).waitFor();
     assert.equal(await page.getByRole('row', { name: /Factura electrónica/ }).locator('td').nth(3).innerText(), '—');
     await page.screenshot({ path: '/checks-results/lioren-unavailable-mobile.png', fullPage: true });
+    await page.getByRole('button', { name: 'Desconectar Lioren', exact: true }).click();
+    await page.getByRole('dialog').getByRole('button', { name: 'Cancelar', exact: true }).click();
+    assert.equal(disconnects, 0);
+    await page.getByRole('button', { name: 'Desconectar Lioren', exact: true }).click();
+    await page.getByRole('dialog').getByRole('button', { name: 'Quitar token y usar ventas internas', exact: true }).click();
+    await page.getByText('Control de ventas interno', { exact: true }).waitFor();
+    await page.getByLabel('Token de Lioren', { exact: true }).waitFor();
+    assert.equal(disconnects, 1);
+    assert.equal(await page.getByRole('heading', { name: 'Actividad confirmada por Lioren' }).count(), 0);
+    assert.equal(await page.getByText(/^Empresa ficticia para revisi/).count(), 0);
+    assert.equal(await page.getByRole('button', { name: 'Desconectar Lioren', exact: true }).count(), 0);
+    await page.screenshot({ path: '/checks-results/lioren-disconnected-mobile.png', fullPage: true });
+    console.log('PASS: cancellation preserves token; explicit disconnection clears provider details and enables internal mode');
     partial = false;
     await page.evaluate(({ token, user }) => { localStorage.setItem('token', token); localStorage.setItem('user', JSON.stringify(user)); }, { token: fixture.rootToken, user: fixture.rootUser });
     let diagnosticsFailed = false;

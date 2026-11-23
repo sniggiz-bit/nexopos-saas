@@ -2,6 +2,12 @@
 
 La configuración se administra por empresa y solo por TENANT_ADMIN/SUPER_ADMIN. GET /dte-config informa hasToken y nunca devuelve la credencial. El campo vacío en el formulario conserva el token existente. Una credencial nueva se valida con Mi Empresa antes de reemplazar la anterior. PATCH /dte-config/:id exige que el id pertenezca a la empresa autenticada.
 
+## Desconectar y usar ventas internas
+
+En Configuración → Conexión con Lioren, el administrador puede elegir **Desconectar Lioren** y confirmar **Quitar token y usar ventas internas**. DELETE /dte-config/token elimina únicamente la credencial de la empresa autenticada, registra la acción sin secretos y conserva logo, RUT, resolución, ventas y documentos. No modifica otras cuentas ni anula envíos ya realizados. La operación es idempotente y comparte el bloqueo de empresa con la comprobación final de emisión.
+
+GET /dte-config/sales-mode permite al personal autenticado consultar solamente el modo, sin descargar configuración ni credenciales. Sin token, el POS muestra comprobante interno y oculta factura y guía. Las nuevas ventas normales se guardan con dteType 0 y estado INTERNO, mantienen pagos, caja, inventario y PDF interno y nunca se envían a Lioren. Siguen siendo internas si se conecta una credencial posteriormente. Las solicitudes explícitas de factura o guía sin credencial se rechazan antes de modificar inventario. Los documentos históricos conservan su tipo y estado para conciliación.
+
 ## Empresa y servicios
 
 GET /dte-config/status consulta Mi Empresa y Tipo Documentos. Distingue conexión, coincidencia de RUT, resolución, certificado, módulos NexoPOS y folios. No usa una credencial global como respaldo de otra empresa ni genera cifras de prueba si falta token. Un fallo se representa como dato no disponible; un cero se reserva para una respuesta válida con cero folios.

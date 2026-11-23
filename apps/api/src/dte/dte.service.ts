@@ -18,6 +18,8 @@ export class DteService {
 
     if (!sale) throw new NotFoundException('Venta no encontrada.');
     const tipodoc = sale.dteType ?? 39;
+    // Internal receipts remain internal even if Lioren is connected again later.
+    if (tipodoc === 0) return { success: true, status: 'INTERNO' };
     const code = ({ 33: 'DTE_FACTURA', 61: 'DTE_NOTA_CREDITO', 52: 'DTE_GUIA_DESPACHO' } as Record<number, string>)[tipodoc] || 'DTE_BOLETA';
     if (sale.tenant.status !== 'ACTIVE' || !effectiveModuleCodes(sale.tenant).includes(code)) throw new ForbiddenException('Este servicio de emisión está deshabilitado para la empresa.');
 

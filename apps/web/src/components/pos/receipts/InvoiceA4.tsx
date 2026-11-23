@@ -81,7 +81,7 @@ export const InvoiceA4: React.FC<InvoiceA4Props> = ({
                 </div>
             )}
 
-            {!hasRealPdf && (
+            {!hasRealPdf && sale.dteType !== 0 && (
                 <div className="draft-notice no-print">
                     ⚠️ Este es un comprobante interno de vista previa. El documento oficial con Timbre Electrónico (TED)
                     estará disponible al completar la emisión DTE con Lioren.
@@ -97,7 +97,7 @@ export const InvoiceA4: React.FC<InvoiceA4Props> = ({
                 <div className="doc-type">
                     <h2>R.U.T.: {tenantRut}</h2>
                     <h1 style={{ margin: '10px 0', fontSize: '18px' }}>{hasRealPdf ? dteLabel : 'COMPROBANTE INTERNO'}</h1>
-                    <h2>Nº {hasRealPdf ? sale.dteFolio : 'SIN VERIFICAR'}</h2>
+                    <h2>Nº {hasRealPdf ? sale.dteFolio : sale.dteType === 0 ? sale.id.slice(0, 8).toUpperCase() : 'SIN VERIFICAR'}</h2>
                     {hasRealPdf && sale.dteStatus === 'ACEPTADO' && (
                         <span style={{ fontSize: '11px', color: '#16a34a', fontWeight: 'bold' }}>
                             ✓ ACEPTADO SII
