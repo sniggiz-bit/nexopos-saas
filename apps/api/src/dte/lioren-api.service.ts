@@ -61,8 +61,8 @@ export class LiorenApiService {
     if (!Array.isArray(data?.data) || !Number.isSafeInteger(Number(data.total)) || Number(data.total) < 0) throw new LiorenApiError(null);
     return { total: Number(data.total), rows: data.data };
   }
-  async document(token: string, type: number, folio: number, pdf = false) {
-    const data = await this.get(token, type === 39 ? 'boletas' : 'dtes', { tipodoc: type, folio, ...(pdf ? { expects: 'pdf' } : {}) });
+  async document(token: string, type: number, folio: number, representation: boolean | 'xml' = false) {
+    const data = await this.get(token, type === 39 ? 'boletas' : 'dtes', { tipodoc: type, folio, ...(representation ? { expects: representation === 'xml' ? 'xml' : 'pdf' } : {}) });
     if (Number(data?.folio) !== folio || Number(data?.tipodoc) !== type || !data?.id) throw new LiorenApiError(null);
     return data;
   }

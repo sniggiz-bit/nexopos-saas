@@ -45,7 +45,11 @@ jobs:
       - name: Check welcome messages and admin notifications
         run: |
           docker run --rm -v "$PWD/apps/api/scripts:/app/apps/api/scripts:ro" -v "$PWD/apps/web/src:/app/apps/web/src:ro" nexopos-api-tests node scripts/check-admin-notifications.cjs
-          docker run --rm nexopos-api-tests npm test -- --runInBand --runTestsByPath src/email/email.service.spec.ts src/email/welcome-emails.service.spec.ts src/auth/auth.service.spec.ts src/tenants/tenants.service.spec.ts src/admin/create-client.controller.spec.ts src/common/registration-rut.service.spec.ts src/common/registration-rut.controller.spec.ts src/users/users.service.spec.ts src/auth/resource-limit.guard.spec.ts src/dte/lioren-integrity.spec.ts src/support/support-assistant.spec.ts
+          docker run --rm -v "$PWD/apps/api/scripts:/app/apps/api/scripts:ro" nexopos-api-tests npm test -- --runInBand --runTestsByPath src/email/email.service.spec.ts src/email/welcome-emails.service.spec.ts src/auth/auth.service.spec.ts src/tenants/tenants.service.spec.ts src/admin/create-client.controller.spec.ts src/common/registration-rut.service.spec.ts src/common/registration-rut.controller.spec.ts src/users/users.service.spec.ts src/auth/resource-limit.guard.spec.ts src/dte/lioren-integrity.spec.ts src/dte/boleta-pdf.spec.ts src/support/support-assistant.spec.ts
+      - name: Verify NexoPOS boleta and original PDF417 at printer resolution
+        run: |
+          mkdir -p "$RUNNER_TEMP/client-check-results"
+          docker run --rm -u root -v "$PWD/apps/api/scripts:/app/apps/api/scripts:ro" -v "$RUNNER_TEMP/client-check-results:/checks-results" nexopos-api-tests sh -c 'apk add --no-cache poppler-utils font-liberation && node scripts/check-boleta-pdf.cjs'
       - name: Build Web production image
         run: docker build -f apps/web/Dockerfile.prod -t nexopos-web-check .
       - name: Boot release against a disposable database

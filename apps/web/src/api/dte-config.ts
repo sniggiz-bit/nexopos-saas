@@ -18,9 +18,9 @@ export async function disconnectLioren(): Promise<DteConfig | null> { return (aw
 export async function getSalesMode(): Promise<{ mode: 'internal' | 'fiscal' }> { return (await apiClient.get('/dte-config/sales-mode')).data; }
 export async function upsertDteConfig(data: UpsertDteConfigData): Promise<DteConfig> { return (await apiClient.post('/dte-config', data)).data; }
 export async function getDteStats(fresh = false): Promise<DteStats> { return (await apiClient.get('/dte-config/stats', { params: fresh ? { refresh: '1' } : {}, timeout: 60000 })).data; }
-export async function openDtePdf(path: string) {
+export async function openDtePdf(path: string, format?: '58mm' | '80mm' | 'A4') {
   if (!/^\/(sales\/[a-zA-Z0-9-]+\/dte\/pdf|dte-config\/documents\/\d+\/\d+\/pdf)$/.test(path)) throw Error('Ruta de documento no válida.');
-  return openAuthenticatedPdf(path, 'documento-tributario.pdf');
+  return openAuthenticatedPdf(path + (format ? '?format=' + encodeURIComponent(format) : ''), 'documento-tributario.pdf');
 }
 export async function openInternalReceiptPdf(saleId: string) {
   if (!/^[a-zA-Z0-9-]+$/.test(saleId)) throw Error('Identificador de comprobante no válido.');

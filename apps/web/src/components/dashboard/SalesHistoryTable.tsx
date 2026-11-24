@@ -1,4 +1,5 @@
 import { openDtePdf, openInternalReceiptPdf } from '../../api/dte-config';
+import { usePrintSettings } from '../../hooks/usePrintSettings';
 import toast from 'react-hot-toast';
 import { Eye, FileX, ReceiptText, RefreshCw, Trash2 } from 'lucide-react';
 import type { SaleRecord } from '../../services/sales.service';
@@ -112,8 +113,9 @@ interface SalesHistoryTableProps {
 const COLS = ['Folio / ID', 'Fecha y Hora', 'Sucursal', 'Método de Pago', 'Total', 'Estado', 'Acciones'];
 
 export function SalesHistoryTable({ sales, isLoading, onCreditNote, onDeleteInternalSale, deletingSaleId, userRole }: SalesHistoryTableProps) {
+    const { defaultFormat } = usePrintSettings();
     const handleViewPdf = (sale: SaleRecord) => {
-        if (sale.dteVerifiedAt && sale.dteProviderId) { openDtePdf('/sales/' + sale.id + '/dte/pdf').catch(() => toast.error('No se pudo consultar el PDF oficial.')); return; }
+        if (sale.dteVerifiedAt && sale.dteProviderId) { openDtePdf('/sales/' + sale.id + '/dte/pdf', defaultFormat).catch(() => toast.error('No se pudo consultar la boleta.')); return; }
         const url = sale.internalReceiptUrl;
         if (url) openInternalReceiptPdf(sale.id).catch(() => toast.error('No se pudo consultar el ticket interno.'));
     };

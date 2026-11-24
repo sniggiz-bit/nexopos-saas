@@ -224,7 +224,7 @@ export function CheckoutPanel({
 
                     {hasRealDtePdf && (
                         <Button className="w-full" variant="outline"
-                            onClick={() => { setReviewingReceipt(true); openDtePdf('/sales/' + saleResult!.id + '/dte/pdf').catch(() => toast.error('Venta guardada. No se pudo abrir el PDF oficial. Puedes volver a abrirlo desde Ventas.')); }}>
+                            onClick={() => { setReviewingReceipt(true); openDtePdf('/sales/' + saleResult!.id + '/dte/pdf', defaultFormat).catch(() => toast.error('Venta guardada. No se pudo abrir el PDF oficial. Puedes volver a abrirlo desde Ventas.')); }}>
                             📄 Abrir / Imprimir PDF oficial (con TED)
                         </Button>
                     )}
@@ -244,8 +244,9 @@ export function CheckoutPanel({
                         >
                             {hasRealDtePdf ? '🖨 Reimprimir PDF DTE' : 'Reimprimir Ticket'}
                         </Button>
-                        {!hasRealDtePdf && (
+                        {(!hasRealDtePdf || saleResult?.dteType === 39) && (
                             <select
+                                aria-label="Formato de impresión"
                                 value={defaultFormat}
                                 onChange={(e) => setDefaultFormat(e.target.value as '80mm' | '58mm' | 'A4')}
                                 className="px-2 py-1 text-xs border border-slate-200 rounded-lg bg-white text-slate-600 focus:outline-none"
