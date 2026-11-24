@@ -111,6 +111,8 @@ async function check(name, run) { await run(); checks++; console.log('PASS: ' + 
     const row = await sale();
     assert.equal((await request('GET', '/sales/' + row.id + '/dte/pdf', '')).status, 401);
     assert.equal((await request('GET', '/sales/' + row.id + '/dte/pdf', context.customerToken)).status, 404);
+    assert.equal((await request('GET', '/sales/' + row.id + '/dte/print-data', '')).status, 401);
+    assert.equal((await request('GET', '/sales/' + row.id + '/dte/print-data', context.customerToken)).status, 404);
     for (const method of ['GET', 'POST']) {
       assert.equal((await request(method, '/sales/' + row.id + '/nota-credito', context.customerToken)).status, method === 'GET' ? 404 : 403);
       assert.equal((await request(method, '/sales/' + row.id + '/nota-credito', '')).status, 401);

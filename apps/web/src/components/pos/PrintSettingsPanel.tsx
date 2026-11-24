@@ -53,7 +53,7 @@ export function PrintSettingsPanel({ compact = false, onClose }: PrintSettingsPa
                     {(['80mm', '58mm', 'A4'] as const).map(format => <button key={format} type="button" aria-pressed={defaultFormat === format} onClick={() => { setDefaultFormat(format); setTestResult(null); }} className={'h-9 rounded-lg border text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ' + (defaultFormat === format ? 'border-primary bg-primary/10 text-primary' : 'border-border bg-muted/40 text-muted-foreground hover:bg-muted')}>{format}</button>)}
                 </div>
             </fieldset>
-            <ToggleRow label="Auto-imprimir al vender" description="Al finalizar una venta" value={autoPrint} onChange={setAutoPrint} />
+            <ToggleRow label="Auto-imprimir al vender" description={direct ? 'Siempre activo en modo Directa' : 'Al finalizar una venta'} value={autoPrint} disabled={direct} onChange={setAutoPrint} />
             <fieldset className="space-y-2">
                 <legend className="text-xs font-semibold text-foreground">Modo de impresión</legend>
                 <div className="grid grid-cols-2 gap-2">
@@ -84,17 +84,17 @@ export function PrintSettingsPanel({ compact = false, onClose }: PrintSettingsPa
                     </div>
                 </details>
             </div> : <p className="rounded-lg bg-muted/40 p-3 text-xs leading-5 text-muted-foreground">{defaultFormat === 'A4' ? 'A4 utiliza el diálogo de impresión del sistema.' : 'Elige una impresora instalada en el diálogo del sistema.'}</p>}
-            <p className="text-[11px] leading-4 text-muted-foreground">Las boletas con timbre se abren desde su PDF.</p>
+            <p className="text-[11px] leading-4 text-muted-foreground">{direct ? 'Al confirmar el pago se imprime el comprobante o la boleta con su timbre, sin diálogos.' : 'Las boletas con timbre se abren desde su PDF.'}</p>
         </div>
         <div data-testid="print-settings-actions" className="shrink-0 space-y-2 border-t border-border bg-muted/20 px-4 py-3">
             <Button size="sm" className="h-9 w-full gap-2" disabled={busy || (direct && !isConnected)} onClick={printTest}><Printer className="h-3.5 w-3.5" />{testing ? 'Enviando prueba...' : 'Imprimir prueba sin venta'}</Button>
-            <p role="status" className="text-center text-[11px] leading-4 text-muted-foreground">{testResult || (direct ? isConnected ? 'Conexión lista para comprobantes internos' : 'Conecta la impresora para probar' : 'No registra una venta ni emite documentos')}</p>
+            <p role="status" className="text-center text-[11px] leading-4 text-muted-foreground">{testResult || (direct ? isConnected ? 'Imprime al confirmar el pago' : 'Conecta la impresora para probar' : 'No registra una venta ni emite documentos')}</p>
         </div>
     </div>;
 }
-function ToggleRow({ label, description, value, onChange }: { label: string; description: string; value: boolean; onChange: (value: boolean) => void }) {
+function ToggleRow({ label, description, value, onChange, disabled = false }: { label: string; description: string; value: boolean; onChange: (value: boolean) => void; disabled?: boolean }) {
     return <div className="flex items-center justify-between gap-3">
         <div className="min-w-0"><p className="text-xs font-medium">{label}</p><p className="text-[11px] leading-4 text-muted-foreground">{description}</p></div>
-        <button type="button" role="switch" aria-label={label} aria-checked={value} onClick={() => onChange(!value)} className={'inline-flex h-5 w-9 shrink-0 items-center rounded-full p-0.5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ' + (value ? 'bg-primary' : 'bg-muted-foreground/40')}><span className={'h-4 w-4 rounded-full bg-white shadow-sm transition-transform ' + (value ? 'translate-x-4' : 'translate-x-0')} /></button>
+        <button type="button" role="switch" disabled={disabled} aria-label={label} aria-checked={value} onClick={() => onChange(!value)} className={'inline-flex h-5 w-9 shrink-0 items-center rounded-full p-0.5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ' + (value ? 'bg-primary' : 'bg-muted-foreground/40')}><span className={'h-4 w-4 rounded-full bg-white shadow-sm transition-transform ' + (value ? 'translate-x-4' : 'translate-x-0')} /></button>
     </div>;
 }

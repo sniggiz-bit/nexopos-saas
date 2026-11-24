@@ -51,7 +51,7 @@ jobs:
       - name: Verify NexoPOS boleta and original PDF417 at printer resolution
         run: |
           mkdir -p "$RUNNER_TEMP/client-check-results"
-          docker run --rm -u root -v "$PWD/apps/api/scripts:/app/apps/api/scripts:ro" -v "$RUNNER_TEMP/client-check-results:/checks-results" nexopos-api-tests sh -c 'apk add --no-cache poppler-utils font-liberation && node scripts/check-boleta-pdf.cjs'
+          docker run --rm -u root -v "$PWD/apps/api/scripts:/app/apps/api/scripts:ro" -v "$RUNNER_TEMP/client-check-results:/checks-results" nexopos-api-tests sh -c 'apk add --no-cache poppler-utils font-liberation && node scripts/check-boleta-pdf.cjs && node scripts/check-silent-boleta.cjs'
       - name: Build Web production image
         run: docker build -f apps/web/Dockerfile.prod -t nexopos-web-check .
       - name: Boot release against a disposable database

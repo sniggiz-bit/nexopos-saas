@@ -37,3 +37,14 @@ async function openAuthenticatedPdf(path: string, filename: string) {
     window.setTimeout(() => URL.revokeObjectURL(url), 60000);
   } catch (error) { preview?.close(); throw error; }
 }
+
+export async function getDtePrintData(saleId: string, format: '58mm' | '80mm', options: { columns80?: 42 | 48; cutPaper?: boolean } = {}): Promise<Uint8Array> {
+  if (!/^[a-zA-Z0-9-]+$/.test(saleId)) throw Error('Identificador de boleta no válido.');
+  const response = await apiClient.get('/sales/' + saleId + '/dte/print-data', { responseType: 'arraybuffer', timeout: 30000, params: { format, columns: options.columns80 || 48, cut: options.cutPaper === false ? '0' : '1' } });
+  const type = String(response.headers['content-type']).split(';')[0].trim().toLowerCase();
+  const width = format === '58mm' ? 384 : (options.columns80 || 48) * 12;
+  if (type !== 'application/vnd.nexopos.escpos' || response.headers['x-nexopos-print-format'] !== format || Number(response.headers['x-nexopos-print-width']) !== width) throw Error('No se recibieron datos de impresión válidos.');
+  const bytes = new Uint8Array(response.data);
+  if (bytes.length < 12 || bytes.length > 4 * 1024 * 1024 || bytes[0] !== 0x1b || bytes[1] !== 0x40) throw Error('Datos de impresión incompletos.');
+  return bytes;
+}

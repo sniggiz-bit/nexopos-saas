@@ -38,4 +38,5 @@ export class DteService {
   verify(saleId: string, tenantId: string) { return this.liorenService.verify(saleId, tenantId); }
   pdf(saleId: string, user: { tenantId: string; role?: string; branchId?: string }, format?: string) { return this.liorenService.salePdf(saleId, user, format); }
 
+  printData(saleId: string, user: { tenantId: string; role?: string; branchId?: string }, format?: string, columns?: string, cut?: string) { return this.liorenService.salePrintData(saleId, user, format, columns, cut); }
 }

@@ -9,7 +9,8 @@ const origin = 'http://release-web';
   try {
     const page = await browser.newPage({ viewport: { width: 1440, height: 1000 }, serviceWorkers: 'block' });
     await page.addInitScript(() => {
-      const state = window.__directPrinter = { writes: [], releases: 0, opens: [], closes: 0, fail: false, fallbackFrames: 0 };
+      const state = window.__directPrinter = { writes: [], releases: 0, opens: [], closes: 0, fail: false, fallbackFrames: 0, popups: 0 };
+      const nativeOpen = window.open; window.open = (...args) => { state.popups++; return nativeOpen.apply(window, args); };
       const events = new EventTarget();
       const port = {
         open: async options => { state.opens.push(options.baudRate); },
@@ -25,7 +26,7 @@ const origin = 'http://release-web';
     const product = { id: '20000000-0000-4000-8000-000000000005', name: 'Producto de control interno', sku: 'INTERNO-TEST', price: 1190, stock: 20, unitType: 'UNIT', priceTiers: [], isActive: true };
     let mode = 'internal'; let unavailable = false; let saveSucceeds = false; let pdfFailure = false;
     let internalSuccess = false;
-    const submissions = []; const pdfRequests = [];
+    const submissions = []; const pdfRequests = []; const thermalRequests = [];
     const saleId = '40000000-0000-4000-8000-000000000001';
     const internalId = '40000000-0000-4000-8000-000000000002';
     const savedSale = () => ({ id: saleId, tenantId: user.tenantId, branchId: user.branchId, branch: { name: 'Sucursal ficticia' }, total: 1190, status: 'COMPLETED', dteType: 39, dteFolio: 16608, dteStatus: 'PENDIENTE_SII', dteProviderId: 'provider-fixture', dteVerifiedAt: new Date().toISOString(), createdAt: new Date().toISOString(), dtePdfUrl: '/api/sales/' + saleId + '/dte/pdf', internalReceiptUrl: '/api/receipts/' + saleId, items: [], payments: [] });
@@ -39,6 +40,12 @@ const origin = 'http://release-web';
       else if (path === '/api/tenants/' + user.tenantId) body = { id: user.tenantId, name: 'Negocio ficticio', settings: {} };
       else if (path === '/api/dte-config/sales-mode') {
         await route.fulfill({ status: unavailable ? 503 : 200, contentType: 'application/json', body: JSON.stringify(unavailable ? { message: 'Consulta no disponible' } : { mode }) }); return;
+      } else if (path === '/api/sales/' + saleId + '/dte/print-data') {
+        assert.equal(request.method(), 'GET'); assert.equal(request.headers().authorization, 'Bearer ' + fixture.customerToken);
+        const params = new URL(request.url()).searchParams; const format = params.get('format');
+        assert(['58mm', '80mm'].includes(format)); assert(['42', '48'].includes(params.get('columns'))); assert(['0', '1'].includes(params.get('cut')));
+        thermalRequests.push(path); const dots = format === '58mm' ? 384 : Number(params.get('columns')) * 12;
+        await route.fulfill({ status: 200, headers: { 'Content-Type': 'application/vnd.nexopos.escpos', 'X-NexoPOS-Print-Format': format, 'X-NexoPOS-Print-Width': String(dots) }, body: Buffer.from([27,64,29,76,0,0,29,87,dots & 255,dots >> 8,10,10]) }); return;
       } else if (/^\/api\/(sales\/[a-zA-Z0-9-]+\/dte\/pdf|receipts\/[a-zA-Z0-9-]+)$/.test(path)) {
         assert.equal(request.method(), 'GET');
         assert.equal(request.headers().authorization === 'Bearer ' + fixture.customerToken, true, 'PDF requests must carry the current session');
@@ -136,7 +143,8 @@ const origin = 'http://release-web';
     assert.deepEqual(await page.evaluate(() => window.__directPrinter.opens), [115200]);
     assert.equal(submissions.length, 0, 'Printer tests must not create sales');
     await page.getByRole('button', { name: '58mm', exact: true }).click();
-    await page.getByRole('switch', { name: 'Auto-imprimir al vender', exact: true }).click();
+    assert(await page.getByRole('switch', { name: 'Auto-imprimir al vender', exact: true }).isChecked());
+    assert(await page.getByRole('switch', { name: 'Auto-imprimir al vender', exact: true }).isDisabled());
     await page.getByRole('switch', { name: 'Auto-imprimir al vender', exact: true }).waitFor({ state: 'visible' });
     await page.screenshot({ path: '/checks-results/print-settings-advanced-desktop.png' });
     await panel.locator('summary').click();
@@ -167,6 +175,40 @@ const origin = 'http://release-web';
     assert(await test.isDisabled());
     console.log('PASS: printer popover fits laptop and mobile screens, hides serial options in system mode, supports Escape and native test printing without sales');
     console.log('PASS: real POS shares its port with settings; test tickets cover 58mm and 80mm (42/48 columns); failed writes preserve the sale without automatic duplicate prints');
+    await page.getByRole('button', { name: 'Cerrar configuración de impresión', exact: true }).click();
+    await page.getByRole('button', { name: /Cerrar/ }).last().click();
+    // Direct mode always auto-prints, including settings saved before this change.
+    await page.evaluate(() => localStorage.setItem('nexopos_print_settings', JSON.stringify({ autoPrint: false, defaultFormat: '58mm', useWebSerial: true })));
+    await openCheckout(); await page.getByRole('button', { name: /CONFIRMAR PAGO/ }).click();
+    await page.getByText('Venta guardada. Impresión pendiente.', { exact: true }).waitFor();
+    assert.equal(await page.evaluate(() => window.__directPrinter.fallbackFrames), 0);
+    assert.equal(await page.evaluate(() => window.__directPrinter.popups), 0);
+    await page.getByTitle('Configuración de impresión', { exact: true }).click();
+    await page.getByRole('button', { name: 'Conectar impresora serial', exact: true }).click();
+    await page.getByText('Conectado (serial)', { exact: true }).waitFor();
+    await page.getByRole('button', { name: 'Cerrar configuración de impresión', exact: true }).click();
+    const beforeRetry = submissions.length;
+    await page.getByRole('button', { name: 'Reimprimir Ticket', exact: true }).click();
+    await page.getByText('Enviado a la impresora', { exact: true }).waitFor(); assert.equal(submissions.length, beforeRetry);
+    // Fiscal confirmation uses the same strict silent path and never opens a PDF.
+    await page.getByRole('button', { name: /Cerrar/ }).last().click();
+    mode = 'fiscal'; internalSuccess = false;
+    for (const format of ['58mm', '80mm']) {
+      // Keep the shared connection: navigation inside the POS must not release it.
+      await page.getByTitle('Configuración de impresión', { exact: true }).click();
+      await page.getByRole('button', { name: format, exact: true }).click();
+      await page.getByRole('button', { name: 'Cerrar configuración de impresión', exact: true }).click();
+      await page.getByText(product.name, { exact: true }).first().click(); await page.getByRole('button', { name: /COBRAR/ }).click();
+      const beforeSale = submissions.length, beforeJob = thermalRequests.length;
+      await page.getByRole('button', { name: /CONFIRMAR PAGO/ }).click();
+      await page.getByText('Enviado a la impresora', { exact: true }).waitFor();
+      assert.equal(submissions.length, beforeSale + 1); assert.equal(thermalRequests.length, beforeJob + 1);
+      assert.equal(pdfRequests.length, 0); assert.equal(await page.evaluate(() => window.__directPrinter.popups), 0);
+      assert.equal(await page.evaluate(() => window.__directPrinter.fallbackFrames), 0);
+      await page.getByRole('button', { name: /Cerrar/ }).last().click();
+    }
+    console.log('PASS: Confirmar pago silently prints internal receipts and stamped boletas; offline jobs stay pending; explicit retry never creates another sale or PDF window');
+    mode = 'internal';
     submissions.length = 0; internalSuccess = false; saveSucceeds = false;
     await page.evaluate(() => localStorage.setItem('nexopos_print_settings', JSON.stringify({ autoPrint: false, defaultFormat: '80mm', useWebSerial: false })));
     await openCheckout();

@@ -131,6 +131,13 @@ export class SalesController {
     res.send(buffer);
   }
 
+  @Get(':id/dte/print-data')
+  async dtePrintData(@Param('id') id: string, @CurrentUser() user: any, @Res() res: Response, @Query('format') format?: string, @Query('columns') columns?: string, @Query('cut') cut?: string) {
+    const result = await this.salesService.dtePrintData(id, user, format, columns, cut);
+    res.set({ 'Content-Type': 'application/vnd.nexopos.escpos', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff', 'X-NexoPOS-Print-Format': result.format, 'X-NexoPOS-Print-Width': String(result.widthDots) });
+    res.send(result.data);
+  }
+
   @Post(':id/send-email')
   @HttpCode(HttpStatus.OK)
   async sendEmail(
