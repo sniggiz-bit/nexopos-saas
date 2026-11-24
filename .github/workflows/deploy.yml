@@ -31,6 +31,8 @@ jobs:
           fetch-depth: 0
       - name: Check deployment and recovery procedure
         run: node apps/api/scripts/check-deployment.cjs
+      - name: Check local print connector authentication and duplicate protection
+        run: node --test apps/print-agent/test.cjs
       - name: Build API production image
         run: docker build -f apps/api/Dockerfile.prod -t nexopos-api-check .
       - name: Build API test image
@@ -97,7 +99,7 @@ jobs:
           docker run --rm --network release-check -e PLAYWRIGHT_BROWSERS_PATH=/ms-playwright -v "$PWD/apps/api/scripts:/checks:ro" -v "$RUNNER_TEMP/client-check-results:/checks-results" -v "$PWD/apps/web/verify-create-client.cjs:/tmp/create-client-ui.cjs:ro" -v "$PWD/apps/web/verify-registration-rut.cjs:/tmp/registration-rut-ui.cjs:ro" mcr.microsoft.com/playwright:v1.56.1-noble sh -c 'npm install --prefix /tmp/ui-check playwright@1.56.1 --no-audit --no-fund && node /checks/check-client-ui.cjs && NODE_PATH=/tmp/ui-check/node_modules CLIENT_UI_BASE=http://release-web CLIENT_UI_BROWSER=chromium CLIENT_UI_OUTPUT=/checks-results node /tmp/create-client-ui.cjs && NODE_PATH=/tmp/ui-check/node_modules CLIENT_UI_BASE=http://release-web CLIENT_UI_BROWSER=chromium CLIENT_UI_OUTPUT=/checks-results node /tmp/registration-rut-ui.cjs'
       - name: Check Lioren validation and metrics interface with provider fixtures
         run: |
-          docker run --rm --network release-check -e PLAYWRIGHT_BROWSERS_PATH=/ms-playwright -v "$PWD/apps/api/scripts:/checks:ro" -v "$RUNNER_TEMP/client-check-results:/checks-results" mcr.microsoft.com/playwright:v1.56.1-noble sh -c 'npm install --prefix /tmp/ui-check playwright@1.56.1 --no-audit --no-fund && node /checks/check-lioren-ui.cjs && node /checks/check-internal-checkout-ui.cjs && node /checks/check-credit-note-ui.cjs && node /checks/check-support-ui.cjs'
+          docker run --rm --network release-check -e PLAYWRIGHT_BROWSERS_PATH=/ms-playwright -v "$PWD/apps/api/scripts:/checks:ro" -v "$RUNNER_TEMP/client-check-results:/checks-results" mcr.microsoft.com/playwright:v1.56.1-noble sh -c 'npm install --prefix /tmp/ui-check playwright@1.56.1 --no-audit --no-fund && node /checks/check-lioren-ui.cjs && node /checks/check-internal-checkout-ui.cjs && node /checks/check-local-print-ui.cjs && node /checks/check-credit-note-ui.cjs && node /checks/check-support-ui.cjs'
       - name: Release startup diagnostics
         if: failure()
         run: docker logs release-api 2>&1 || true

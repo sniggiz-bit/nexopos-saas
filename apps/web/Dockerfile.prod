@@ -21,6 +21,9 @@ COPY apps/web/public ./public
 COPY apps/web/index.html apps/web/vite.config.ts apps/web/tailwind.config.js apps/web/postcss.config.js ./
 COPY apps/web/tsconfig.json apps/web/tsconfig.app.json apps/web/tsconfig.node.json ./
 
+COPY apps/print-agent /app/apps/print-agent
+RUN node /app/apps/print-agent/package.cjs
+
 # Skip tsc type-check; vite uses esbuild for TS transpilation
 RUN npm exec -- vite build
 

@@ -1,3 +1,4 @@
+import { localPrinter, LocalPrintError } from '@/utils/localPrinter';
 import { sendSaleToPrinter, SilentPrintError } from '@/utils/silentSalePrint';
 import { DirectPrintWriteError, serialPrinter } from '@/utils/serialPrinter';
 import React from 'react';
@@ -54,11 +55,11 @@ export async function printSaleAction(
     tenant?: Tenant | null,
     useWebSerial?: boolean,
     printBytes?: (data: Uint8Array) => Promise<boolean>,
-    options: ThermalOptions = {},
+    options: ThermalOptions & { connection?: 'serial' | 'local' } = {},
 ): Promise<void> {
     if (useWebSerial && format !== 'A4') {
         if (!printBytes) throw new SilentPrintError('Venta guardada. Vincula una impresora directa y pulsa Reimprimir.');
-        await sendSaleToPrinter(sale, format, tenant, options, { isReady: () => serialPrinter.getSnapshot().status === 'connected', write: printBytes }, getDtePrintData);
+        await sendSaleToPrinter(sale, format, tenant, options, { isReady: () => (options.connection === 'local' ? localPrinter : serialPrinter).getSnapshot().status === 'connected', write: printBytes }, getDtePrintData);
         return;
     }
     if (sale.dteVerifiedAt && sale.dteProviderId && isRealDtePdf(sale.dtePdfUrl)) {
@@ -97,5 +98,5 @@ export async function printSaleAction(
 }
 
 export function printSaleErrorMessage(error: unknown): string {
-    return error instanceof DirectPrintWriteError || error instanceof SilentPrintError ? error.message : 'Venta guardada. No se pudo abrir el comprobante. Puedes volver a abrirlo desde Ventas.';
+    return error instanceof DirectPrintWriteError || error instanceof LocalPrintError || error instanceof SilentPrintError ? error.message : 'Venta guardada. No se pudo abrir el comprobante. Puedes volver a abrirlo desde Ventas.';
 }

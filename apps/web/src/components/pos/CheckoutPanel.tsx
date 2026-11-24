@@ -19,7 +19,7 @@ import { usePrintSettings } from '@/hooks/usePrintSettings';
 import { useReceiptPrinter } from '@/hooks/useReceiptPrinter';
 import { isRealDtePdf } from './receipts/ReceiptRenderer';
 import { useTenant } from '@/hooks/useTenant';
-import { useWebSerialPrinter } from '@/hooks/useWebSerialPrinter';
+import { useDirectPrinter } from '@/hooks/useDirectPrinter';
 
 interface CheckoutPanelProps {
     subtotal: number;
@@ -41,14 +41,14 @@ export function CheckoutPanel({
     onConfirm, onBack,
     isProcessing, isSuccess, isError, saleResult,
 }: CheckoutPanelProps) {
-    const { autoPrint, defaultFormat, setDefaultFormat, useWebSerial, columns80, cutPaper } = usePrintSettings();
-    const { printBytes } = useWebSerialPrinter();
+    const { autoPrint, defaultFormat, setDefaultFormat, useWebSerial, columns80, cutPaper, directConnection } = usePrintSettings();
+    const { printBytes } = useDirectPrinter();
     const [countdown, setCountdown] = useState(4);
     const [reviewingReceipt, setReviewingReceipt] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const { user } = useAuth();
     const { data: tenant } = useTenant(user?.tenantId);
-    const receiptPrinter = useReceiptPrinter(defaultFormat, tenant, useWebSerial, printBytes, columns80, cutPaper);
+    const receiptPrinter = useReceiptPrinter(defaultFormat, tenant, useWebSerial, printBytes, columns80, cutPaper, directConnection);
     const salesMode = useQuery({ queryKey: ['dte-sales-mode', user?.tenantId], queryFn: getSalesMode, enabled: !!user?.tenantId, staleTime: 0 });
     const internalMode = salesMode.data?.mode === 'internal';
 

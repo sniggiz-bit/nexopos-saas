@@ -111,6 +111,17 @@ function fake() {
   const cancelled = fake(); cancelled.info.cancel = true; assert.equal(await cancelled.printer.connect(), null); assert.equal(cancelled.printer.getSnapshot().status, 'disconnected');
   cancelled.info.cancel = false; cancelled.info.syncThrow = true; assert.equal(await cancelled.printer.connect(), null); assert.equal(await cancelled.printer.connect(), cancelled.port);
   cancelled.info.listeners[0]({ target: cancelled.port }); assert.equal(cancelled.printer.getSnapshot().status, 'disconnected'); assert.equal(await cancelled.printer.printBytes(b), false); assert.equal(cancelled.info.listeners.length, 1);
+  const pending = fake(); let select;
+  pending.api.requestPort = () => new Promise(resolve => { select = resolve; });
+  const selection = pending.printer.connect(); pending.printer.cancelConnect(); select(pending.port);
+  assert.equal(await selection, null); assert.equal(pending.printer.getSnapshot().status, 'disconnected'); assert.deepEqual(pending.info.rates, []);
+  console.log('PASS cancelled native selection never opens a late port');
+  const stalled = fake(); let finishOpen;
+  stalled.port.open = () => new Promise(resolve => { finishOpen = resolve; });
+  assert.equal(await stalled.printer.connect(), null); assert.equal(stalled.printer.getSnapshot().status, 'error');
+  finishOpen(); await new Promise(resolve => setImmediate(resolve));
+  assert.equal(stalled.info.closes, 1); assert.equal(stalled.printer.getSnapshot().status, 'error');
+  console.log('PASS stalled open times out and a late connection is closed without becoming ready');
   const unsupported = new SerialPrinter(() => undefined); assert.equal(unsupported.getSnapshot().status, 'unavailable'); assert.equal(await unsupported.connect(), null);
   console.log('PASS cancellation, reconnect, unplug events and unsupported browsers');
 })().catch(error => { console.error(error); process.exitCode = 1; });
