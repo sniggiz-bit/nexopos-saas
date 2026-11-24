@@ -10,7 +10,7 @@ export function useDirectPrinter() {
         const prefix = '#nexopos-printer=';
         if (!location.hash.startsWith(prefix)) return;
         const fragment = location.hash.slice(prefix.length);
-        history.replaceState(null, '', location.pathname + location.search);
+        history.replaceState(history.state, '', location.pathname + location.search);
         try {
             const config = JSON.parse(decodeURIComponent(fragment));
             if (typeof config.token !== 'string' || !/^[a-f0-9]{64}$/.test(config.token) || typeof config.printer !== 'string' || !config.printer || config.printer.length > 256) return;

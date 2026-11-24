@@ -74,7 +74,7 @@ function createHandler({ token, list = () => windows('list'), print = job => win
 }
 if (require.main === module) {
   if (process.platform !== 'win32') throw Error('Este conector requiere Windows.');
-  const home = process.env.NEXOPOS_PRINT_HOME || path.join(os.homedir(), 'AppData', 'Local', 'NexoPOS', 'Print');
+  const home = process.env.NEXOPOS_PRINT_HOME || path.join(process.env.LOCALAPPDATA || path.join(os.homedir(), 'AppData', 'Local'), 'NexoPOS', 'Print');
   const config = JSON.parse(fs.readFileSync(path.join(home, 'config.json'), 'utf8').replace(/^\uFEFF/, ''));
   if (!/^[a-f0-9]{64}$/.test(config.token)) throw Error('Vinculación local no válida.');
   const server = https.createServer({ pfx: fs.readFileSync(path.join(home, 'localhost.pfx')), passphrase: config.passphrase, minVersion: 'TLSv1.2' }, createHandler(config));
