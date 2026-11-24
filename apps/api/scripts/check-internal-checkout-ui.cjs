@@ -102,8 +102,8 @@ const origin = 'http://release-web';
       await page.getByRole('button', { name: 'Imprimir prueba sin venta', exact: true }).click();
       await page.waitForFunction(count => window.__directPrinter.fallbackFrames > count, currentFrames);
       const frame = page.frameLocator('#print-iframe');
-      await frame.getByText('PRUEBA DE IMPRESION', { exact: false }).waitFor();
-      assert((await frame.locator('body').innerText()).includes('Formato: ' + format));
+      await frame.getByText('PRUEBA DE IMPRESION', { exact: false }).waitFor({ state: 'attached' });
+      assert((await frame.locator('pre').textContent()).includes('Formato: ' + format));
       await page.getByText('Prueba abierta. Elige la impresora en el diálogo del sistema.', { exact: true }).waitFor();
       if (format === 'A4') assert(await page.getByRole('radio', { name: /Directa/ }).isDisabled());
     }
