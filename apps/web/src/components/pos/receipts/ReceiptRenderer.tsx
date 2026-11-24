@@ -1,3 +1,4 @@
+import { DirectPrintWriteError } from '@/utils/serialPrinter';
 import React from 'react';
 import { openDtePdf } from '@/api/dte-config';
 import { renderToString } from 'react-dom/server';
@@ -43,7 +44,7 @@ export function isRealDtePdf(url?: string | null): boolean {
  * Acción de impresión principal del POS.
  *
  * Comportamiento:
- *  1. Si la venta tiene un PDF oficial de Lioren (DTE real), abre ese PDF en
+ *  1. Si la venta tiene un PDF verificado del sistema (DTE real), abre ese PDF en
  *     una nueva pestaña para que el usuario lo imprima desde el visor del navegador.
  *  2. Si Web Serial está activo y disponible, genera código ESC/POS y lo envía por el puerto serial.
  *  3. En caso contrario, renderiza el ticket HTML y lo imprime vía iframe (diálogo del SO).
@@ -98,4 +99,8 @@ export async function printSaleAction(
 </html>`;
 
     await printThroughIframe(fullHtml);
+}
+
+export function printSaleErrorMessage(error: unknown): string {
+    return error instanceof DirectPrintWriteError ? error.message : 'Venta guardada. No se pudo abrir el comprobante. Puedes volver a abrirlo desde Ventas.';
 }

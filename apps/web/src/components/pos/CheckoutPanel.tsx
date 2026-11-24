@@ -16,7 +16,7 @@ import toast from 'react-hot-toast';
 import { useAuth } from '@/context/AuthContext';
 import type { Customer } from '@/api/types';
 import { usePrintSettings } from '@/hooks/usePrintSettings';
-import { isRealDtePdf, printSaleAction } from './receipts/ReceiptRenderer';
+import { isRealDtePdf, printSaleAction, printSaleErrorMessage } from './receipts/ReceiptRenderer';
 import { useTenant } from '@/hooks/useTenant';
 import { useWebSerialPrinter } from '@/hooks/useWebSerialPrinter';
 
@@ -143,7 +143,7 @@ export function CheckoutPanel({
             if (autoPrint && result) {
                 // Impresión silenciosa USB si está disponible, fallback iframe
                 try { await printSaleAction(result, defaultFormat, tenant, useWebSerial, printBytes, { columns80, cutPaper }); }
-                catch { toast.error('Venta guardada. No se pudo abrir el comprobante. Puedes volver a abrirlo desde Ventas.'); }
+                catch (error) { toast.error(printSaleErrorMessage(error)); }
             }
         } catch (_err) {
             // Handled in mutation/toast
@@ -240,7 +240,7 @@ export function CheckoutPanel({
                         <Button
                             className="flex-1"
                             variant="secondary"
-                            onClick={() => { setReviewingReceipt(true); printSaleAction(saleResult, defaultFormat, tenant, useWebSerial, printBytes, { columns80, cutPaper }).catch(() => toast.error('Venta guardada. No se pudo abrir el comprobante. Puedes volver a abrirlo desde Ventas.')); }}
+                            onClick={() => { setReviewingReceipt(true); printSaleAction(saleResult, defaultFormat, tenant, useWebSerial, printBytes, { columns80, cutPaper }).catch(error => toast.error(printSaleErrorMessage(error))); }}
                         >
                             {hasRealDtePdf ? '🖨 Reimprimir PDF DTE' : 'Reimprimir Ticket'}
                         </Button>

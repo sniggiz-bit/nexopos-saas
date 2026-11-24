@@ -106,7 +106,7 @@ const origin = 'http://release-web';
     assert.equal(submissions.length, 1, 'Closing the settings panel must preserve the printer for the checkout');
     await page.evaluate(() => { window.__directPrinter.fail = true; });
     await page.getByRole('button', { name: 'Reimprimir Ticket', exact: true }).click();
-    await page.getByText('Venta guardada. No se pudo abrir el comprobante. Puedes volver a abrirlo desde Ventas.', { exact: true }).waitFor();
+    await page.getByText('Se interrumpió el envío a la impresora. Revisa el papel antes de volver a imprimir.', { exact: true }).waitFor();
     assert.equal(await page.evaluate(() => window.__directPrinter.fallbackFrames), 0, 'Partial write must not trigger another print via iframe');
     assert.equal(submissions.length, 1);
     assert.equal(await page.evaluate(() => window.__directPrinter.closes), 1);
