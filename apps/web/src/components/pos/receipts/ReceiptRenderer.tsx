@@ -56,7 +56,7 @@ export async function printSaleAction(
 ): Promise<void> {
     // ── 1. Si hay PDF oficial del DTE, abrir en nueva pestaña (tiene TED) ──
     if (sale.dteVerifiedAt && sale.dteProviderId && isRealDtePdf(sale.dtePdfUrl)) {
-        await openDtePdf('/sales/' + sale.id + '/dte/pdf');
+        await openDtePdf('/sales/' + sale.id + '/dte/pdf', format);
         return;
     }
 

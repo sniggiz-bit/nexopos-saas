@@ -50,7 +50,9 @@
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
     "socket.io": "^4.8.3",
-    "swagger-ui-express": "^5.0.1"
+    "swagger-ui-express": "^5.0.1",
+    "bwip-js": "4.11.4",
+    "fast-xml-parser": "5.12.1"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",
@@ -80,7 +82,8 @@
     "tsconfig-paths": "^4.2.0",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.20.0"
+    "typescript-eslint": "^8.20.0",
+    "zxing-wasm": "3.1.7"
   },
   "jest": {
     "moduleFileExtensions": [

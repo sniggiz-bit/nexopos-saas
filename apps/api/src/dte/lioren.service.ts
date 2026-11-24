@@ -1,12 +1,15 @@
 import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { randomUUID } from 'crypto';
+import { readFile } from 'fs/promises';
+import { join } from 'path';
 import axios from 'axios';
 import { Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { LiorenAccountService } from './lioren-account.service';
 import { effectiveModuleCodes, moduleTenantInclude } from '../modules/module-access';
 import { chileDate, DTE_CODES, DTE_TYPES, LiorenApiError, LiorenApiService, normalizeRut, siiStatus } from './lioren-api.service';
+import { BoletaRepresentationError, boletaPrintFormat, readIssuedBoleta, renderBoletaPdf } from './boleta-pdf';
 
 @Injectable()
 export class LiorenService {
@@ -155,13 +158,34 @@ export class LiorenService {
     const document = await this.api.document(connection.token, type, folio, true);
     return this.api.pdfBuffer(document.pdf);
   }
-  async salePdf(saleId: string, user: { tenantId: string; role?: string; branchId?: string }) {
+  async salePdf(saleId: string, user: { tenantId: string; role?: string; branchId?: string }, format?: string) {
     const sale = await this.prisma.sale.findFirst({ where: { id: saleId, tenantId: user.tenantId } });
     if (!sale || !sale.dteVerifiedAt || !sale.dteProviderId || !sale.dteFolio) throw new NotFoundException('Documento confirmado no encontrado.');
     if (user.role && !['TENANT_ADMIN', 'SUPER_ADMIN'].includes(user.role) && sale.branchId !== user.branchId) throw new ForbiddenException('El documento no pertenece a tu sucursal.');
     const connection = await this.account.connection(user.tenantId);
     if (normalizeRut(connection.status.company?.rut) !== sale.dteIssuerRut) throw new ForbiddenException('El token actual no corresponde al emisor de este documento.');
-    return this.documentPdf(user.tenantId, sale.dteType, sale.dteFolio);
+    if (sale.dteType !== 39) return this.documentPdf(user.tenantId, sale.dteType, sale.dteFolio);
+    if (!connection.status.connected || !connection.status.identityMatches) throw new ForbiddenException('Valida la empresa emisora antes de consultar documentos.');
+    try {
+      const printFormat = boletaPrintFormat(format);
+      const document = await this.api.document(connection.token, 39, sale.dteFolio, 'xml');
+      const boleta = readIssuedBoleta(document, { folio: sale.dteFolio, providerId: sale.dteProviderId, issuerRut: sale.dteIssuerRut!, total: Number(sale.total) });
+      const logo = await this.boletaLogo(user.tenantId, connection.config?.liorenLogo);
+      return await renderBoletaPdf(boleta, { name: connection.tenant.name, logo, resolution: connection.status.company.resolution, resolutionDate: connection.status.company.resolutionDate }, printFormat);
+    } catch (error) {
+      if (error instanceof BoletaRepresentationError) throw new BadRequestException(error.message);
+      throw error;
+    }
+  }
+  private async boletaLogo(tenantId: string, url?: string | null): Promise<Buffer | undefined> {
+    const match = url?.match(/^\/api\/static\/logos\/([a-zA-Z0-9_-]+\.(?:png|jpe?g))$/i);
+    if (!match) return;
+    const asset = await this.prisma.uploadAsset.findFirst({ where: { tenantId, path: url! } });
+    if (!asset) return;
+    try {
+      const bytes = await readFile(join(process.cwd(), '..', '..', 'uploads', 'logos', match[1]));
+      if (bytes.length <= 2 * 1024 * 1024) return bytes;
+    } catch { /* Optional branding must not prevent a receipt download. */ }
   }
   async consultarFolios(tenantId: string) { return (await this.account.status(tenantId)).types; }
 

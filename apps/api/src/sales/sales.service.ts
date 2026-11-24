@@ -430,7 +430,7 @@ export class SalesService {
     if (result.status === 'ACEPTADO') await this.applyCreditNote(saleId, tenantId);
     return result;
   }
-  dtePdf(saleId: string, user: { tenantId: string; role?: string; branchId?: string }) { return this.dteService.pdf(saleId, user); }
+  dtePdf(saleId: string, user: { tenantId: string; role?: string; branchId?: string }, format?: string) { return this.dteService.pdf(saleId, user, format); }
   private async applyCreditNote(noteId: string, tenantId: string) {
     await this.prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       const note = await tx.sale.findFirst({ where: { id: noteId, tenantId, dteType: 61, dteStatus: 'ACEPTADO', dteVerifiedAt: { not: null } } });

@@ -36,6 +36,6 @@ export class DteService {
   }
   creditNotePreview(saleId: string, tenantId: string) { return this.liorenService.creditNotePreview(saleId, tenantId); }
   verify(saleId: string, tenantId: string) { return this.liorenService.verify(saleId, tenantId); }
-  pdf(saleId: string, user: { tenantId: string; role?: string; branchId?: string }) { return this.liorenService.salePdf(saleId, user); }
+  pdf(saleId: string, user: { tenantId: string; role?: string; branchId?: string }, format?: string) { return this.liorenService.salePdf(saleId, user, format); }
 
 }

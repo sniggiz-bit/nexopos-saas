@@ -29,6 +29,7 @@ const origin = 'http://release-web';
       } else if (/^\/api\/(sales\/[a-zA-Z0-9-]+\/dte\/pdf|receipts\/[a-zA-Z0-9-]+)$/.test(path)) {
         assert.equal(request.method(), 'GET');
         assert.equal(request.headers().authorization === 'Bearer ' + fixture.customerToken, true, 'PDF requests must carry the current session');
+        if (path.includes('/dte/pdf')) assert(['58mm', '80mm', 'A4'].includes(new URL(request.url()).searchParams.get('format')), 'Fiscal boleta must use the selected system format');
         pdfRequests.push(path);
         await route.fulfill(pdfFailure ? { status: 401, contentType: 'application/json', body: JSON.stringify({ message: 'Unauthorized' }) } : { status: 200, contentType: 'application/pdf', body: pdfFixture }); return;
       } else if (path === '/api/sales' && request.method() === 'GET') {
@@ -92,6 +93,7 @@ const origin = 'http://release-web';
     };
     await openAndCheckPdf(page.getByRole('button', { name: /Abrir \/ Imprimir PDF oficial/ }), '/api/sales/' + saleId + '/dte/pdf');
     await openAndCheckPdf(page.getByRole('button', { name: 'Ver Ticket Interno', exact: true }), '/api/receipts/' + saleId);
+    await page.getByRole('combobox', { name: 'Formato de impresión' }).selectOption('58mm');
     await openAndCheckPdf(page.getByRole('button', { name: /Reimprimir PDF DTE/ }), '/api/sales/' + saleId + '/dte/pdf');
     assert.equal(submissions.length, 2, 'Opening or reprinting a PDF must not create another sale');
     pdfFailure = true;

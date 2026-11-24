@@ -125,8 +125,8 @@ export class SalesController {
     return this.salesService.verifyDte(id, user.tenantId);
   }
   @Get(':id/dte/pdf')
-  async dtePdf(@Param('id') id: string, @CurrentUser() user: any, @Res() res: Response) {
-    const buffer = await this.salesService.dtePdf(id, user);
+  async dtePdf(@Param('id') id: string, @CurrentUser() user: any, @Res() res: Response, @Query('format') format?: string) {
+    const buffer = await this.salesService.dtePdf(id, user, format);
     res.set({ 'Content-Type': 'application/pdf', 'Content-Disposition': 'inline; filename="dte.pdf"', 'Cache-Control': 'no-store' });
     res.send(buffer);
   }
