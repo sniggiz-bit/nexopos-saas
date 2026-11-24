@@ -109,6 +109,7 @@ const origin = 'http://release-web';
     }
     assert.equal(submissions.length, 0); assert.equal(await page.evaluate(() => window.__directPrinter.writes.length), 0);
     await page.keyboard.press('Escape'); await panel.waitFor({ state: 'hidden' });
+    await page.waitForFunction(() => document.activeElement?.getAttribute('aria-label') === 'Configuración de impresión', null, { timeout: 3000 });
     assert(await trigger.evaluate(el => el === document.activeElement), 'Escape returns focus to the printer button');
     await trigger.click(); await page.getByRole('button', { name: '80mm', exact: true }).click();
     await page.getByRole('radio', { name: /Directa/ }).check();
@@ -233,5 +234,12 @@ const origin = 'http://release-web';
     console.log('PASS: actual POS and sales history open official and internal PDFs with authentication through blob URLs; read/print failures preserve saved sales without duplicate emission');
     assert.deepEqual(errors, []);
     console.log('PASS: active POS checkout submits internal type 0, ignores fiscal shortcuts, retains fiscal customer validation and blocks payment when mode lookup fails');
+  } catch (error) {
+    const current = browser.contexts().flatMap(context => context.pages()).find(page => page.url().startsWith(origin));
+    if (current && !current.isClosed()) {
+      await current.screenshot({ path: '/checks-results/print-settings-failure.png', fullPage: true });
+      console.error({ active: await current.evaluate(() => ({ tag: document.activeElement?.tagName, label: document.activeElement?.getAttribute('aria-label'), id: document.activeElement?.id })), viewport: current.viewportSize() });
+    }
+    throw error;
   } finally { await browser.close(); }
 })().catch(error => { console.error(error); process.exitCode = 1; });
