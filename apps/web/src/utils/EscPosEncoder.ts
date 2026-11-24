@@ -1,3 +1,4 @@
+import { receiptText } from './thermalLayout';
 /**
  * Utilidad ligera para codificar comandos ESC/POS básicos.
  * Genera un buffer de bytes (Uint8Array) que puede enviarse a una impresora serial/USB.
@@ -11,6 +12,12 @@ export class EscPosEncoder {
         return this;
     }
 
+    /** Font A, left margin zero, width in the printer's native motion units. */
+    printWidth(columns: number) {
+        const dots = columns * 12;
+        this.buffer.push(0x1B, 0x4D, 0, 0x1D, 0x4C, 0, 0, 0x1D, 0x57, dots & 0xFF, dots >> 8);
+        return this;
+    }
     /** Cambia el tamaño de texto. multiplier de 1 a 8. (GS !) */
     size(width: number, height: number) {
         const w = Math.min(Math.max(1, width), 8) - 1;
@@ -45,16 +52,7 @@ export class EscPosEncoder {
 
     /** Escribe texto. Se asume codificación ASCII/ISO-8859-1 para caracteres básicos. */
     text(str: string) {
-        // Soporte muy básico para reemplazar acentos comunes por caracteres sin acento para evitar errores
-        // en impresoras sin páginas de códigos configuradas.
-        const normalized = str
-            .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-            .replace(/ñ/g, "n")
-            .replace(/Ñ/g, "N");
-
-        for (let i = 0; i < normalized.length; i++) {
-            this.buffer.push(normalized.charCodeAt(i));
-        }
+        for (const character of receiptText(str)) this.buffer.push(character.charCodeAt(0));
         return this;
     }
 

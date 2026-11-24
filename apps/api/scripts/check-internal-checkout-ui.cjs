@@ -8,10 +8,23 @@ const origin = 'http://release-web';
   const browser = await chromium.launch({ channel: 'chromium', headless: true, args: ['--unsafely-treat-insecure-origin-as-secure=http://release-web'] });
   try {
     const page = await browser.newPage({ viewport: { width: 1440, height: 1000 }, serviceWorkers: 'block' });
+    await page.addInitScript(() => {
+      const state = window.__directPrinter = { writes: [], releases: 0, opens: [], closes: 0, fail: false, fallbackFrames: 0 };
+      const events = new EventTarget();
+      const port = {
+        open: async options => { state.opens.push(options.baudRate); },
+        close: async () => { state.closes++; },
+        writable: { getWriter: () => ({ write: async bytes => { state.writes.push(Array.from(bytes)); if (state.fail) throw Error('Simulated partial printer failure'); }, releaseLock: () => { state.releases++; } }) },
+      };
+      Object.defineProperty(navigator, 'serial', { configurable: true, value: { requestPort: async () => port, addEventListener: (...args) => events.addEventListener(...args) } });
+      window.__disconnectPrinter = () => { const event = new Event('disconnect'); Object.defineProperty(event, 'port', { value: port }); events.dispatchEvent(event); };
+      new MutationObserver(records => { for (const record of records) for (const node of record.addedNodes) if (node.id === 'print-iframe') state.fallbackFrames++; }).observe(document, { childList: true, subtree: true });
+    });
     const errors = []; page.on('pageerror', error => errors.push(error.message));
     const user = { ...fixture.customerUser, modules: ['POS'] };
     const product = { id: '20000000-0000-4000-8000-000000000005', name: 'Producto de control interno', sku: 'INTERNO-TEST', price: 1190, stock: 20, unitType: 'UNIT', priceTiers: [], isActive: true };
     let mode = 'internal'; let unavailable = false; let saveSucceeds = false; let pdfFailure = false;
+    let internalSuccess = false;
     const submissions = []; const pdfRequests = [];
     const saleId = '40000000-0000-4000-8000-000000000001';
     const internalId = '40000000-0000-4000-8000-000000000002';
@@ -36,7 +49,7 @@ const origin = 'http://release-web';
         body = [savedSale(), { ...savedSale(), id: internalId, dteType: 0, dteStatus: 'INTERNO', dteFolio: null, dteProviderId: null, dteVerifiedAt: null, dtePdfUrl: null, internalReceiptUrl: '/api/receipts/' + internalId }];
       } else if (path === '/api/sales' && request.method() === 'POST') {
         submissions.push(request.postDataJSON());
-        if (saveSucceeds) { await route.fulfill({ status: 201, contentType: 'application/json', body: JSON.stringify(savedSale()) }); return; }
+        if (saveSucceeds) { const sale = savedSale(); if (internalSuccess) Object.assign(sale, { dteType: 0, dteStatus: 'INTERNO', dteFolio: null, dteProviderId: null, dteVerifiedAt: null, dtePdfUrl: null, items: [{ quantity: 1, price: 1190, product }], payments: [{ paymentMethod: 'CASH', amount: 1190 }] }); await route.fulfill({ status: 201, contentType: 'application/json', body: JSON.stringify(sale) }); return; }
         // Exercise the real submit handler without creating data or printing.
         await route.fulfill({ status: 400, contentType: 'application/json', body: JSON.stringify({ message: 'Fin de prueba de interfaz' }) }); return;
       } else if (path.startsWith('/api/sales/') && request.method() !== 'GET') {
@@ -58,6 +71,55 @@ const origin = 'http://release-web';
         throw error;
       }
     };
+    // Exercise the actual settings panel and POS against a simulated serial port.
+    await page.goto(origin + '/pos');
+    await page.getByRole('heading', { name: 'Punto de Venta', exact: true }).waitFor();
+    await page.getByTitle('Configuración de impresión', { exact: true }).click();
+    await page.getByRole('combobox', { name: 'Velocidad serial', exact: true }).selectOption('115200');
+    await page.getByRole('button', { name: '58mm', exact: true }).click();
+    await page.getByRole('switch', { name: 'Corte automático de papel', exact: true }).click();
+    await page.getByRole('button', { name: 'Conectar impresora serial', exact: true }).click();
+    await page.getByText('Conectado (serial)', { exact: true }).waitFor();
+    const test = page.getByRole('button', { name: 'Imprimir prueba sin venta', exact: true });
+    await test.click(); await page.getByText('Prueba enviada al puerto. Comprueba el texto y el ancho en el papel.', { exact: true }).waitFor();
+    const width = bytes => { for (let i = 0; i < bytes.length - 3; i++) if (bytes[i] === 29 && bytes[i + 1] === 87) return bytes[i + 2] + bytes[i + 3] * 256; return null; };
+    assert.equal(width(await page.evaluate(() => window.__directPrinter.writes.at(-1))), 384);
+    await page.getByRole('button', { name: '80mm', exact: true }).click();
+    await page.getByRole('combobox', { name: 'Columnas para 80 mm', exact: true }).selectOption('42');
+    await test.click(); await page.waitForFunction(() => window.__directPrinter.writes.length === 2);
+    assert.equal(width(await page.evaluate(() => window.__directPrinter.writes.at(-1))), 504);
+    await page.getByRole('combobox', { name: 'Columnas para 80 mm', exact: true }).selectOption('48');
+    await test.click(); await page.waitForFunction(() => window.__directPrinter.writes.length === 3);
+    assert.equal(width(await page.evaluate(() => window.__directPrinter.writes.at(-1))), 576);
+    assert.deepEqual(await page.evaluate(() => window.__directPrinter.opens), [115200]);
+    assert.equal(submissions.length, 0, 'Printer tests must not create sales');
+    await page.getByRole('button', { name: '58mm', exact: true }).click();
+    await page.getByRole('switch', { name: 'Auto-imprimir al vender', exact: true }).click();
+    await page.screenshot({ path: '/checks-results/direct-printer-settings.png', fullPage: true });
+    await page.getByRole('button', { name: 'Cerrar configuración de impresión', exact: true }).click({ position: { x: 10, y: 300 } });
+    internalSuccess = true; saveSucceeds = true;
+    await page.getByText(product.name, { exact: true }).first().click();
+    await page.getByRole('button', { name: /COBRAR/ }).click();
+    await page.getByRole('button', { name: /CONFIRMAR PAGO/ }).click();
+    await page.waitForFunction(() => window.__directPrinter.writes.length === 4);
+    assert.equal(width(await page.evaluate(() => window.__directPrinter.writes.at(-1))), 384);
+    assert.equal(submissions.length, 1, 'Closing the settings panel must preserve the printer for the checkout');
+    await page.evaluate(() => { window.__directPrinter.fail = true; });
+    await page.getByRole('button', { name: 'Reimprimir Ticket', exact: true }).click();
+    await page.getByText('Se interrumpió el envío a la impresora. Revisa el papel antes de volver a imprimir.', { exact: true }).waitFor();
+    assert.equal(await page.evaluate(() => window.__directPrinter.fallbackFrames), 0, 'Partial write must not trigger another print via iframe');
+    assert.equal(submissions.length, 1);
+    assert.equal(await page.evaluate(() => window.__directPrinter.closes), 1);
+    await page.getByTitle('Configuración de impresión', { exact: true }).click();
+    await page.evaluate(() => { window.__directPrinter.fail = false; });
+    await page.getByRole('button', { name: 'Conectar impresora serial', exact: true }).click();
+    await page.getByText('Conectado (serial)', { exact: true }).waitFor();
+    await page.evaluate(() => window.__disconnectPrinter());
+    await page.getByText('Impresora desconectada. Vuelve a conectarla para imprimir.', { exact: true }).waitFor();
+    assert(await test.isDisabled());
+    console.log('PASS: real POS shares its port with settings; test tickets cover 58mm and 80mm (42/48 columns); failed writes preserve the sale without automatic duplicate prints');
+    submissions.length = 0; internalSuccess = false; saveSucceeds = false;
+    await page.evaluate(() => localStorage.setItem('nexopos_print_settings', JSON.stringify({ autoPrint: false, defaultFormat: '80mm', useWebSerial: false })));
     await openCheckout();
     await page.getByText('Comprobante interno · Sin emisión tributaria', { exact: true }).waitFor();
     for (const name of ['Boleta', 'Factura', 'Guía']) assert.equal(await page.getByRole('button', { name: new RegExp(name) }).count(), 0);

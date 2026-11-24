@@ -16,7 +16,7 @@ import toast from 'react-hot-toast';
 import { useAuth } from '@/context/AuthContext';
 import type { Customer } from '@/api/types';
 import { usePrintSettings } from '@/hooks/usePrintSettings';
-import { isRealDtePdf, printSaleAction } from './receipts/ReceiptRenderer';
+import { isRealDtePdf, printSaleAction, printSaleErrorMessage } from './receipts/ReceiptRenderer';
 import { useTenant } from '@/hooks/useTenant';
 import { useWebSerialPrinter } from '@/hooks/useWebSerialPrinter';
 
@@ -40,7 +40,7 @@ export function CheckoutPanel({
     onConfirm, onBack,
     isProcessing, isSuccess, isError, saleResult,
 }: CheckoutPanelProps) {
-    const { autoPrint, defaultFormat, setDefaultFormat, useWebSerial } = usePrintSettings();
+    const { autoPrint, defaultFormat, setDefaultFormat, useWebSerial, columns80, cutPaper } = usePrintSettings();
     const { printBytes } = useWebSerialPrinter();
     const [countdown, setCountdown] = useState(4);
     const [reviewingReceipt, setReviewingReceipt] = useState(false);
@@ -142,15 +142,15 @@ export function CheckoutPanel({
             const result = await onConfirm(payments, internalMode ? 0 : dteType, customerId);
             if (autoPrint && result) {
                 // Impresión silenciosa USB si está disponible, fallback iframe
-                try { await printSaleAction(result, defaultFormat, tenant, useWebSerial, printBytes); }
-                catch { toast.error('Venta guardada. No se pudo abrir el comprobante. Puedes volver a abrirlo desde Ventas.'); }
+                try { await printSaleAction(result, defaultFormat, tenant, useWebSerial, printBytes, { columns80, cutPaper }); }
+                catch (error) { toast.error(printSaleErrorMessage(error)); }
             }
         } catch (_err) {
             // Handled in mutation/toast
         } finally {
             setIsSubmitting(false);
         }
-    }, [canConfirm, internalMode, selectedCustomer, paymentType, singleMethod, total, dteType, mixedPayments, onConfirm, autoPrint, defaultFormat, tenant, useWebSerial, printBytes]);
+    }, [canConfirm, internalMode, selectedCustomer, paymentType, singleMethod, total, dteType, mixedPayments, onConfirm, autoPrint, defaultFormat, tenant, useWebSerial, printBytes, columns80, cutPaper]);
 
     useEffect(() => {
         if (isSuccess || isError) return;
@@ -240,7 +240,7 @@ export function CheckoutPanel({
                         <Button
                             className="flex-1"
                             variant="secondary"
-                            onClick={() => { setReviewingReceipt(true); printSaleAction(saleResult, defaultFormat, tenant, useWebSerial, printBytes).catch(() => toast.error('Venta guardada. No se pudo abrir el comprobante. Puedes volver a abrirlo desde Ventas.')); }}
+                            onClick={() => { setReviewingReceipt(true); printSaleAction(saleResult, defaultFormat, tenant, useWebSerial, printBytes, { columns80, cutPaper }).catch(error => toast.error(printSaleErrorMessage(error))); }}
                         >
                             {hasRealDtePdf ? '🖨 Reimprimir PDF DTE' : 'Reimprimir Ticket'}
                         </Button>

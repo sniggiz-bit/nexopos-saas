@@ -1,3 +1,4 @@
+import { DirectPrintWriteError } from '@/utils/serialPrinter';
 import React from 'react';
 import { openDtePdf } from '@/api/dte-config';
 import { renderToString } from 'react-dom/server';
@@ -8,6 +9,7 @@ import { InvoiceA4 } from './InvoiceA4';
 import { printThroughIframe } from '@/utils/print';
 import { PrintFormat } from '@/hooks/usePrintSettings';
 import { Tenant } from '@nexopos/shared';
+import type { ThermalOptions } from '@/utils/thermalLayout';
 import { generateReceiptEscPos } from './ReceiptToEscPos';
 
 interface ReceiptRendererProps {
@@ -30,7 +32,7 @@ export const ReceiptRenderer: React.FC<ReceiptRendererProps> = ({ sale, format, 
 };
 
 /**
- * Retorna true si la URL apunta a un PDF oficial de Lioren (no es un mock).
+ * Retorna true si la URL apunta a un PDF verificado del sistema (no es un mock).
  */
 export function isRealDtePdf(url?: string | null): boolean {
     if (!url) return false;
@@ -42,9 +44,9 @@ export function isRealDtePdf(url?: string | null): boolean {
  * Acción de impresión principal del POS.
  *
  * Comportamiento:
- *  1. Si la venta tiene un PDF oficial de Lioren (DTE real), abre ese PDF en
+ *  1. Si la venta tiene un PDF verificado del sistema (DTE real), abre ese PDF en
  *     una nueva pestaña para que el usuario lo imprima desde el visor del navegador.
- *  2. Si Web Serial está activo y disponible, genera código ESC/POS y lo envía por USB.
+ *  2. Si Web Serial está activo y disponible, genera código ESC/POS y lo envía por el puerto serial.
  *  3. En caso contrario, renderiza el ticket HTML y lo imprime vía iframe (diálogo del SO).
  */
 export async function printSaleAction(
@@ -53,6 +55,7 @@ export async function printSaleAction(
     tenant?: Tenant | null,
     useWebSerial?: boolean,
     printBytes?: (data: Uint8Array) => Promise<boolean>,
+    options: ThermalOptions = {},
 ): Promise<void> {
     // ── 1. Si hay PDF oficial del DTE, abrir en nueva pestaña (tiene TED) ──
     if (sale.dteVerifiedAt && sale.dteProviderId && isRealDtePdf(sale.dtePdfUrl)) {
@@ -62,17 +65,10 @@ export async function printSaleAction(
 
     // ── 2. Intentar impresión directa vía Web Serial API (ESC/POS) ──
     if (useWebSerial && printBytes && format !== 'A4') {
-        try {
-            console.log(`[Web Serial] Generando ESC/POS y enviando a impresora USB...`);
-            const bytes = generateReceiptEscPos(sale, tenant || undefined);
-            const success = await printBytes(bytes);
-            if (success) {
-                return; // éxito silencioso
-            }
-            console.warn('[Web Serial] Error o puerto no listo, cayendo a iframe...');
-        } catch (err) {
-            console.warn('[Web Serial] Falló la impresión directa, usando fallback iframe:', err);
-        }
+        const success = await printBytes(generateReceiptEscPos(sale, tenant || undefined, format, options));
+        if (success) return;
+        // False means no writable port before sending. A write failure throws,
+        // so an uncertain partial ticket never causes an automatic second copy.
     }
 
     // ── 3. Fallback: renderizar ticket HTML y usar diálogo del SO ──
@@ -103,4 +99,8 @@ export async function printSaleAction(
 </html>`;
 
     await printThroughIframe(fullHtml);
+}
+
+export function printSaleErrorMessage(error: unknown): string {
+    return error instanceof DirectPrintWriteError ? error.message : 'Venta guardada. No se pudo abrir el comprobante. Puedes volver a abrirlo desde Ventas.';
 }

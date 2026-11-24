@@ -14,7 +14,7 @@ import { type CartItemData } from '@/context/CartContext';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { usePrintSettings } from '@/hooks/usePrintSettings';
-import { isRealDtePdf, printSaleAction } from './receipts/ReceiptRenderer';
+import { isRealDtePdf, printSaleAction, printSaleErrorMessage } from './receipts/ReceiptRenderer';
 import { useTenant } from '@/hooks/useTenant';
 import { useEffect, useState, useMemo } from 'react';
 import { PaymentMethod, type PaymentRequestData } from '@/api/sales';
@@ -61,7 +61,7 @@ export function PaymentModal({
     isError,
     saleResult,
 }: PaymentModalProps) {
-    const { autoPrint, defaultFormat, setDefaultFormat, useWebSerial } = usePrintSettings();
+    const { autoPrint, defaultFormat, setDefaultFormat, useWebSerial, columns80, cutPaper } = usePrintSettings();
     const { printBytes } = useWebSerialPrinter();
     const [hasAttemptedAutoPrint, setHasAttemptedAutoPrint] = useState(false);
     const [countdown, setCountdown] = useState(4);
@@ -120,13 +120,13 @@ export function PaymentModal({
         // Disparar auto-print UNA SOLA VEZ al éxito
         if (autoPrint && saleResult && !hasAttemptedAutoPrint) {
             setHasAttemptedAutoPrint(true);
-            printSaleAction(saleResult, defaultFormat, tenant, useWebSerial, printBytes).catch(() => toast.error('Venta guardada. No se pudo abrir el comprobante. Puedes volver a abrirlo desde Ventas.'));
+            printSaleAction(saleResult, defaultFormat, tenant, useWebSerial, printBytes, { columns80, cutPaper }).catch(error => toast.error(printSaleErrorMessage(error)));
         }
 
         if (countdown <= 0) { onClose(); return; }
         const t = setTimeout(() => setCountdown(c => c - 1), 1000);
         return () => clearTimeout(t);
-    }, [isSuccess, countdown, onClose, autoPrint, saleResult, hasAttemptedAutoPrint, defaultFormat, tenant, useWebSerial, printBytes]);
+    }, [isSuccess, countdown, onClose, autoPrint, saleResult, hasAttemptedAutoPrint, defaultFormat, tenant, useWebSerial, printBytes, columns80, cutPaper]);
 
 
     const [receiptEmail, setReceiptEmail] = useState('');
@@ -304,7 +304,7 @@ export function PaymentModal({
                         {/* Reprint + format selector */}
                         <div className="flex gap-2">
                             <Button className="flex-1" variant="secondary"
-                                onClick={() => printSaleAction(saleResult, defaultFormat, tenant, useWebSerial, printBytes).catch(() => toast.error('Venta guardada. No se pudo abrir el comprobante. Puedes volver a abrirlo desde Ventas.'))}>
+                                onClick={() => printSaleAction(saleResult, defaultFormat, tenant, useWebSerial, printBytes, { columns80, cutPaper }).catch(error => toast.error(printSaleErrorMessage(error)))}>
                                 {hasRealDtePdf ? '🖨 Reimprimir PDF DTE' : 'Reimprimir Ticket'}
                             </Button>
                             {(!hasRealDtePdf || saleResult?.dteType === 39) && (

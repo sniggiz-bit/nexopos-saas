@@ -23,6 +23,7 @@ import { es } from 'date-fns/locale';
 import { usePrintSettings } from '@/hooks/usePrintSettings';
 import { printThroughIframe } from '@/utils/print';
 import { useWebSerialPrinter } from '@/hooks/useWebSerialPrinter';
+import { receiptText, thermalColumns } from '@/utils/thermalLayout';
 import { EscPosEncoder } from '@/utils/EscPosEncoder';
 
 interface CloseShiftModalProps {
@@ -64,7 +65,7 @@ export function CloseShiftModal({ isOpen, onClose, shiftId, currentShift }: Clos
     const { user } = useAuth();
     const queryClient = useQueryClient();
     const { data: summary, isLoading: isLoadingSummary } = useShiftLiveSummary(isOpen && !!shiftId ? shiftId : null);
-    const { useWebSerial } = usePrintSettings();
+    const { useWebSerial, defaultFormat, columns80, cutPaper } = usePrintSettings();
     const { printBytes } = useWebSerialPrinter();
 
     const calculatedTotal = useMemo(() => {
@@ -124,13 +125,17 @@ export function CloseShiftModal({ isOpen, onClose, shiftId, currentShift }: Clos
         if (!closedShift?.textReport) return;
 
         // Impresión directa USB (ESC/POS)
-        if (useWebSerial && printBytes) {
+        if (useWebSerial && printBytes && defaultFormat !== 'A4') {
             try {
                 const encoder = new EscPosEncoder();
-                encoder.initialize();
-                encoder.text(closedShift.textReport);
+                const columns = thermalColumns(defaultFormat, { columns80 });
+                encoder.initialize().printWidth(columns);
+                for (const line of receiptText(closedShift.textReport).split('\n')) {
+                    if (!line) encoder.newline();
+                    for (let start = 0; start < line.length; start += columns) encoder.line(line.slice(start, start + columns));
+                }
                 encoder.newline(4);
-                encoder.cut();
+                if (cutPaper) encoder.cut();
                 
                 const success = await printBytes(encoder.encode());
                 if (success) {
@@ -138,21 +143,23 @@ export function CloseShiftModal({ isOpen, onClose, shiftId, currentShift }: Clos
                 }
                 console.warn('[Web Serial] Falló la impresión del reporte Z, usando fallback');
             } catch (err) {
-                console.warn('[Web Serial] Error en impresión directa:', err);
+                toast({ variant: 'destructive', title: 'Revisa la impresión', description: err instanceof Error ? err.message : 'No se pudo enviar el reporte.' });
+                return;
             }
         }
 
+        const escapedReport = receiptText(closedShift.textReport).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
         const reportHtml = `<!DOCTYPE html><html>
 <head>
     <meta charset="utf-8">
     <title>Reporte Z - NexoPOS</title>
     <style>
-        @media print { @page { size: 80mm auto; margin: 0; } body { margin: 0; } }
-        body { font-family: 'Courier New', Courier, monospace; white-space: pre; font-size: 13px;
+        @media print { @page { size: ${defaultFormat === 'A4' ? 'A4' : defaultFormat + ' auto'}; margin: 0; } body { margin: 0; } }
+        body { font-family: 'Courier New', Courier, monospace; white-space: pre-wrap; overflow-wrap: anywhere; font-size: 11px;
                padding: 8px; color: #000; background: #fff; }
     </style>
 </head>
-<body>${closedShift.textReport}</body>
+<body>${escapedReport}</body>
 </html>`;
 
         // Fallback: iframe

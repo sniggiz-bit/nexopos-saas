@@ -134,11 +134,13 @@ export function PosUserToolbar({ currentShift, branchName }: PosUserToolbarProps
                     {showPrintSettings && (
                         <>
                             {/* Overlay para cerrar */}
-                            <div
+                            <button
+                                type="button"
+                                aria-label="Cerrar configuración de impresión"
                                 className="fixed inset-0 z-40"
                                 onClick={() => setShowPrintSettings(false)}
                             />
-                            <div className="absolute right-0 top-full mt-2 w-80 z-50 shadow-2xl rounded-xl border border-border bg-background">
+                            <div className="absolute right-0 top-full mt-2 w-80 max-h-[calc(100dvh-4rem)] overflow-y-auto z-50 shadow-2xl rounded-xl border border-border bg-background">
                                 <PrintSettingsPanel compact />
                             </div>
                         </>
