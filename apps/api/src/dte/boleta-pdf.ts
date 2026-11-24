@@ -141,9 +141,11 @@ export async function renderBoletaPdf(boleta: IssuedBoleta, branding: BoletaBran
   const amountWidth = format === 'A4' ? 95 : inner * 0.32;
   row([{ text: 'DETALLE', x: 0, width: inner - amountWidth, size: 8, bold: true }, { text: 'IMPORTE', x: inner - amountWidth, width: amountWidth, size: 8, bold: true, align: 'right' }], 5);
   for (const item of boleta.items) {
+    const itemIndex = blocks.length;
     row([{ text: item.name, x: 0, width: inner - amountWidth - 3, size: 9, bold: true }, { text: money(item.amount), x: inner - amountWidth, width: amountWidth, size: 9, align: 'right' }], 1);
     const detail = [item.quantity === null ? '' : item.quantity.toLocaleString('es-CL', { maximumFractionDigits: 6 }) + (item.unit ? ' ' + item.unit : ''), item.price === null ? '' : 'x ' + money(item.price), item.discount ? 'Dcto. ' + money(item.discount) : ''].filter(Boolean).join(' ');
     if (detail) row([{ text: detail, x: 0, width: inner, size: 8 }], 5);
+    blocks[itemIndex].keepHeight = blocks.slice(itemIndex).reduce((sum, block) => sum + block.height + (block.gap || 0), 0);
   }
   line();
   for (const item of boleta.adjustments) row([{ text: item.label, x: 0, width: inner - amountWidth, size: 8 }, { text: item.percent ? item.value + '%' : money(item.value), x: inner - amountWidth, width: amountWidth, size: 8, align: 'right' }]);
