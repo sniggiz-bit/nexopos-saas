@@ -95,10 +95,21 @@ export function readIssuedBoleta(document: any, expected: IssuedBoletaExpectatio
   };
 }
 
-export async function boletaStamp(boleta: IssuedBoleta, format: BoletaPrintFormat): Promise<Buffer> {
-  const options: bwipjs.RenderOptions & { columns: number; eclevel: number } = { bcid: 'pdf417', text: boleta.ted.toString('latin1'), binarytext: true, columns: format === '58mm' ? 10 : 12, eclevel: 5, scale: 3, padding: 3, backgroundcolor: 'FFFFFF' };
-  try { return await bwipjs.toBuffer(options); }
-  catch { throw new BoletaRepresentationError('No se pudo representar el timbre original en este formato. Prueba 80mm o A4; no se realizará otra emisión.'); }
+export async function boletaStamp(boleta: IssuedBoleta, format: BoletaPrintFormat, printWidthDots?: number): Promise<Buffer> {
+  const options: bwipjs.RenderOptions & { columns: number; eclevel: number } = { bcid: 'pdf417', text: boleta.ted.toString('latin1'), binarytext: true, columns: printWidthDots ? Math.floor((printWidthDots / 2 - 12 - 69) / 17) : format === '58mm' ? 10 : 12, eclevel: 5, scale: printWidthDots ? 2 : 3, padding: 3, backgroundcolor: 'FFFFFF' };
+  try {
+    if (printWidthDots === 384) {
+      // Rotate the complete symbol on narrow heads rather than thinning its modules.
+      // Preserve the original bytes, correction level and two-dot modules.
+      for (let columns = 12; columns <= 30; columns++) {
+        let image: Buffer;
+        try { const rotated: typeof options = { ...options, columns, rotate: 'R' }; image = await bwipjs.toBuffer(rotated); } catch { continue; }
+        if (image.readUInt32BE(16) <= printWidthDots && image.readUInt32BE(20) >= 360) return image;
+      }
+      throw new Error('Stamp does not fit');
+    }
+    return await bwipjs.toBuffer(options);
+  } catch { throw new BoletaRepresentationError('No se pudo representar el timbre original en este formato. Prueba 80mm o A4; no se realizará otra emisión.'); }
 }
 
 export interface BoletaBranding { name?: string; logo?: Buffer; resolution: string; resolutionDate: string }
@@ -109,10 +120,10 @@ const money = (value: number) => '$' + value.toLocaleString('es-CL', { maximumFr
 const displayRut = (value: string) => { const clean = rut(value); return clean.length < 2 ? value : clean.slice(0, -1).replace(/\B(?=(\d{3})+(?!\d))/g, '.') + '-' + clean.slice(-1); };
 
 /** NexoPOS representation of the existing boleta, with the unchanged issued TED. */
-export async function renderBoletaPdf(boleta: IssuedBoleta, branding: BoletaBranding, format: BoletaPrintFormat): Promise<Buffer> {
-  const stamp = await boletaStamp(boleta, format);
-  const width = format === 'A4' ? 595.28 : mm(format === '58mm' ? 58 : 80);
-  const margin = format === 'A4' ? 40 : mm(2.5); const inner = width - margin * 2;
+export async function renderBoletaPdf(boleta: IssuedBoleta, branding: BoletaBranding, format: BoletaPrintFormat, printWidthDots?: 384 | 504 | 576): Promise<Buffer> {
+  const stamp = await boletaStamp(boleta, format, printWidthDots);
+  const width = printWidthDots ? (printWidthDots + 40) * 72 / 203 : format === 'A4' ? 595.28 : mm(format === '58mm' ? 58 : 80);
+  const margin = printWidthDots ? 20 * 72 / 203 : format === 'A4' ? 40 : mm(2.5); const inner = width - margin * 2;
   const measure = new PDFDocument({ size: 'A4', margin: 0 });
   const blocks: Block[] = [];
   const row = (cells: Cell[], gap = 3) => {
@@ -153,7 +164,7 @@ export async function renderBoletaPdf(boleta: IssuedBoleta, branding: BoletaBran
     if (value !== null) row([{ text: label, x: 0, width: inner - amountWidth, size: 9 }, { text: money(value), x: inner - amountWidth, width: amountWidth, size: 9, align: 'right' }]);
   }
   line(); row([{ text: 'TOTAL', x: 0, width: inner - amountWidth, size: 13, bold: true }, { text: money(boleta.total), x: inner - amountWidth, width: amountWidth, size: 13, bold: true, align: 'right' }], 9);
-  const stampWidth = Math.min(inner, mm(72)); const stampHeight = stampWidth * stamp.readUInt32BE(20) / stamp.readUInt32BE(16);
+  const stampWidth = printWidthDots ? stamp.readUInt32BE(16) * 72 / 203 : Math.min(inner, mm(72)); const stampHeight = stampWidth * stamp.readUInt32BE(20) / stamp.readUInt32BE(16);
   const stampIndex = blocks.length;
   const stampBlock: Block = { height: stampHeight, image: { bytes: stamp, width: stampWidth, height: stampHeight }, gap: 3 };
   blocks.push(stampBlock);
@@ -176,7 +187,10 @@ export async function renderBoletaPdf(boleta: IssuedBoleta, branding: BoletaBran
       doc.font('Helvetica-Bold').fontSize(9).text('BOLETA ELECTRONICA N.º ' + boleta.folio + ' - ' + boleta.issuer.name, margin, y, { width: inner }); y = doc.y + 9;
     }
     if (block.line) doc.moveTo(margin, y).lineTo(width - margin, y).lineWidth(0.5).stroke('#000000');
-    if (block.image) doc.image(block.image.bytes, margin + (inner - block.image.width) / 2, y, { width: block.image.width, height: block.image.height });
+    if (block.image) {
+      const alignDot = (value: number) => printWidthDots ? Math.round(value * 203 / 72) * 72 / 203 : value;
+      doc.image(block.image.bytes, alignDot(margin + (inner - block.image.width) / 2), alignDot(y), { width: block.image.width, height: block.image.height });
+    }
     for (const cell of block.cells || []) doc.font(cell.bold ? 'Helvetica-Bold' : 'Helvetica').fontSize(cell.size).fillColor('#000000').text(cell.text, margin + cell.x, y, { width: cell.width, height: block.height + 1, lineGap: 1, align: cell.align || 'left' });
     y += block.height + (block.gap || 0);
   }

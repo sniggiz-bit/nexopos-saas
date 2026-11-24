@@ -1,3 +1,4 @@
+import { boletaPrintData, thermalPrintOptions, ThermalPrintError } from './thermal-raster';
 import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { randomUUID } from 'crypto';
@@ -158,10 +159,11 @@ export class LiorenService {
     const document = await this.api.document(connection.token, type, folio, true);
     return this.api.pdfBuffer(document.pdf);
   }
-  async salePdf(saleId: string, user: { tenantId: string; role?: string; branchId?: string }, format?: string) {
+  async salePdf(saleId: string, user: { tenantId: string; role?: string; branchId?: string }, format?: string, boletaOnly = false, printWidthDots?: 384 | 504 | 576) {
     const sale = await this.prisma.sale.findFirst({ where: { id: saleId, tenantId: user.tenantId } });
     if (!sale || !sale.dteVerifiedAt || !sale.dteProviderId || !sale.dteFolio) throw new NotFoundException('Documento confirmado no encontrado.');
     if (user.role && !['TENANT_ADMIN', 'SUPER_ADMIN'].includes(user.role) && sale.branchId !== user.branchId) throw new ForbiddenException('El documento no pertenece a tu sucursal.');
+    if (boletaOnly && sale.dteType !== 39) throw new BadRequestException('La impresión directa con timbre admite boletas electrónicas.');
     const connection = await this.account.connection(user.tenantId);
     if (normalizeRut(connection.status.company?.rut) !== sale.dteIssuerRut) throw new ForbiddenException('El token actual no corresponde al emisor de este documento.');
     if (sale.dteType !== 39) return this.documentPdf(user.tenantId, sale.dteType, sale.dteFolio);
@@ -171,9 +173,19 @@ export class LiorenService {
       const document = await this.api.document(connection.token, 39, sale.dteFolio, 'xml');
       const boleta = readIssuedBoleta(document, { folio: sale.dteFolio, providerId: sale.dteProviderId, issuerRut: sale.dteIssuerRut!, total: Number(sale.total) });
       const logo = await this.boletaLogo(user.tenantId, connection.config?.liorenLogo);
-      return await renderBoletaPdf(boleta, { name: connection.tenant.name, logo, resolution: connection.status.company.resolution, resolutionDate: connection.status.company.resolutionDate }, printFormat);
+      return await renderBoletaPdf(boleta, { name: connection.tenant.name, logo, resolution: connection.status.company.resolution, resolutionDate: connection.status.company.resolutionDate }, printFormat, printWidthDots);
     } catch (error) {
       if (error instanceof BoletaRepresentationError) throw new BadRequestException(error.message);
+      throw error;
+    }
+  }
+  async salePrintData(saleId: string, user: { tenantId: string; role?: string; branchId?: string }, format?: string, columns?: string, cut?: string) {
+    try {
+      const options = thermalPrintOptions(format, columns, cut);
+      const pdf = await this.salePdf(saleId, user, options.format, true, options.format === '58mm' ? 384 : options.columns80 === 42 ? 504 : 576);
+      return await boletaPrintData(pdf, options);
+    } catch (error) {
+      if (error instanceof ThermalPrintError) throw new BadRequestException(error.message);
       throw error;
     }
   }

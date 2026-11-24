@@ -14,7 +14,8 @@ import { type CartItemData } from '@/context/CartContext';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { usePrintSettings } from '@/hooks/usePrintSettings';
-import { isRealDtePdf, printSaleAction, printSaleErrorMessage } from './receipts/ReceiptRenderer';
+import { useReceiptPrinter } from '@/hooks/useReceiptPrinter';
+import { isRealDtePdf } from './receipts/ReceiptRenderer';
 import { useTenant } from '@/hooks/useTenant';
 import { useEffect, useState, useMemo } from 'react';
 import { PaymentMethod, type PaymentRequestData } from '@/api/sales';
@@ -67,6 +68,7 @@ export function PaymentModal({
     const [countdown, setCountdown] = useState(4);
     const { user } = useAuth();
     const { data: tenant } = useTenant(user?.tenantId);
+    const receiptPrinter = useReceiptPrinter(defaultFormat, tenant, useWebSerial, printBytes, columns80, cutPaper);
     const salesMode = useQuery({ queryKey: ['dte-sales-mode', user?.tenantId], queryFn: getSalesMode, enabled: isOpen && !!user?.tenantId, staleTime: 0 });
     const internalMode = salesMode.data?.mode === 'internal';
 
@@ -110,23 +112,22 @@ export function PaymentModal({
         ).slice(0, 8);
     }, [customers, customerSearch]);
 
-    // Auto-print: disparado una sola vez desde onConfirm cuando la venta es exitosa.
-    // El useEffect redundante fue eliminado para evitar doble llamada.
-
-    // Auto-print al éxito + countdown de cierre
+        // Auto-print al éxito + countdown de cierre
     useEffect(() => {
         if (!isSuccess) { setCountdown(4); setHasAttemptedAutoPrint(false); return; }
 
         // Disparar auto-print UNA SOLA VEZ al éxito
         if (autoPrint && saleResult && !hasAttemptedAutoPrint) {
             setHasAttemptedAutoPrint(true);
-            printSaleAction(saleResult, defaultFormat, tenant, useWebSerial, printBytes, { columns80, cutPaper }).catch(error => toast.error(printSaleErrorMessage(error)));
+            void receiptPrinter.print(saleResult);
+            return;
         }
 
+        if (receiptPrinter.status === 'printing' || receiptPrinter.status === 'failed') return;
         if (countdown <= 0) { onClose(); return; }
         const t = setTimeout(() => setCountdown(c => c - 1), 1000);
         return () => clearTimeout(t);
-    }, [isSuccess, countdown, onClose, autoPrint, saleResult, hasAttemptedAutoPrint, defaultFormat, tenant, useWebSerial, printBytes, columns80, cutPaper]);
+    }, [isSuccess, countdown, onClose, autoPrint, saleResult, hasAttemptedAutoPrint, receiptPrinter.print, receiptPrinter.status]);
 
 
     const [receiptEmail, setReceiptEmail] = useState('');
@@ -163,6 +164,7 @@ export function PaymentModal({
     // Reset all states when modal opens
     useEffect(() => {
         if (isOpen) {
+            receiptPrinter.reset();
             setHasAttemptedAutoPrint(false);
             setPaymentType('SINGLE');
             setSingleMethod(PaymentMethod.CASH);
@@ -180,7 +182,7 @@ export function PaymentModal({
             setReceiptEmail('');
             setIsSendingReceiptEmail(false);
         }
-    }, [isOpen]);
+    }, [isOpen, receiptPrinter.reset]);
 
     const totalMixed: number = useMemo(() => {
         return Object.values(mixedPayments).reduce((sum: number, val) => sum + (Number(val) || 0), 0);
@@ -271,11 +273,7 @@ export function PaymentModal({
                             <span className="text-xs text-slate-400">Cerrando en {countdown}s</span>
                         </div>
                         <DialogDescription>
-                            {autoPrint
-                                ? hasRealDtePdf
-                                    ? 'Abriendo PDF oficial con Timbre Electrónico (TED)...'
-                                    : 'Imprimiendo ticket automáticamente...'
-                                : 'La venta se ha procesado correctamente.'}
+                            {receiptPrinter.description}
                         </DialogDescription>
                     </DialogHeader>
 
@@ -304,8 +302,8 @@ export function PaymentModal({
                         {/* Reprint + format selector */}
                         <div className="flex gap-2">
                             <Button className="flex-1" variant="secondary"
-                                onClick={() => printSaleAction(saleResult, defaultFormat, tenant, useWebSerial, printBytes, { columns80, cutPaper }).catch(error => toast.error(printSaleErrorMessage(error)))}>
-                                {hasRealDtePdf ? '🖨 Reimprimir PDF DTE' : 'Reimprimir Ticket'}
+                                disabled={receiptPrinter.status === 'printing'} onClick={() => { void receiptPrinter.print(saleResult); }}>
+                                {receiptPrinter.status === 'printing' ? 'Enviando...' : hasRealDtePdf ? useWebSerial && defaultFormat !== 'A4' ? 'Reimprimir boleta' : '🖨 Reimprimir PDF DTE' : 'Reimprimir Ticket'}
                             </Button>
                             {(!hasRealDtePdf || saleResult?.dteType === 39) && (
                                 <select

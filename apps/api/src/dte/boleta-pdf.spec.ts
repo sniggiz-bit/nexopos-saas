@@ -49,6 +49,21 @@ describe('NexoPOS issued boleta representation', () => {
     f.connection.status.company.rut = '11111111-1';
     await expect(f.service.salePdf('sale', { tenantId: 'a' })).rejects.toThrow('emisor'); expect(f.api.document).not.toHaveBeenCalled();
   });
+  it('prepares a private thermal job from an already issued boleta without emitting again', async () => {
+    const f = serviceFixture(); const job = await f.service.salePrintData('sale', { tenantId: 'a', role: 'TENANT_ADMIN' }, '80mm', '42', '0');
+    expect(job.widthDots).toBe(504); expect(job.data.subarray(0, 2)).toEqual(Buffer.from([27, 64]));
+    expect(f.api.document).toHaveBeenCalledWith('fixture-only', 39, 16608, 'xml');
+    expect(f.api.issue).not.toHaveBeenCalled(); expect(f.db.sale.update).not.toHaveBeenCalled(); expect(f.account.requireEmission).not.toHaveBeenCalled();
+  });
+  it('rejects invalid formats, other tenants, branches and non-boletas before a thermal job', async () => {
+    const f = serviceFixture();
+    await expect(f.service.salePrintData('sale', { tenantId: 'a' }, 'A4')).rejects.toThrow('58mm');
+    await expect(f.service.salePrintData('sale', { tenantId: 'b' })).rejects.toThrow('no encontrado');
+    await expect(f.service.salePrintData('sale', { tenantId: 'a', role: 'CASHIER', branchId: 'b' })).rejects.toThrow('sucursal');
+    f.sale.dteType = 33;
+    await expect(f.service.salePrintData('sale', { tenantId: 'a' })).rejects.toThrow('boletas');
+    expect(f.api.document).not.toHaveBeenCalled();
+  });
   it('requests signed XML through the documented consultation endpoint', async () => {
     const f = issuedBoleta(); const api = new LiorenApiService(); jest.spyOn(api, 'get').mockResolvedValue(f.document);
     await api.document('fixture-only', 39, 16608, 'xml'); expect(api.get).toHaveBeenCalledWith('fixture-only', 'boletas', { tipodoc: 39, folio: 16608, expects: 'xml' });

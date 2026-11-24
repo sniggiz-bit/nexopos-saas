@@ -16,7 +16,8 @@ import toast from 'react-hot-toast';
 import { useAuth } from '@/context/AuthContext';
 import type { Customer } from '@/api/types';
 import { usePrintSettings } from '@/hooks/usePrintSettings';
-import { isRealDtePdf, printSaleAction, printSaleErrorMessage } from './receipts/ReceiptRenderer';
+import { useReceiptPrinter } from '@/hooks/useReceiptPrinter';
+import { isRealDtePdf } from './receipts/ReceiptRenderer';
 import { useTenant } from '@/hooks/useTenant';
 import { useWebSerialPrinter } from '@/hooks/useWebSerialPrinter';
 
@@ -47,6 +48,7 @@ export function CheckoutPanel({
     const [isSubmitting, setIsSubmitting] = useState(false);
     const { user } = useAuth();
     const { data: tenant } = useTenant(user?.tenantId);
+    const receiptPrinter = useReceiptPrinter(defaultFormat, tenant, useWebSerial, printBytes, columns80, cutPaper);
     const salesMode = useQuery({ queryKey: ['dte-sales-mode', user?.tenantId], queryFn: getSalesMode, enabled: !!user?.tenantId, staleTime: 0 });
     const internalMode = salesMode.data?.mode === 'internal';
 
@@ -102,11 +104,11 @@ export function CheckoutPanel({
 
     useEffect(() => {
         if (!isSuccess) { setCountdown(4); setReviewingReceipt(false); return; }
-        if (reviewingReceipt) return;
+        if (reviewingReceipt || receiptPrinter.status === 'printing' || receiptPrinter.status === 'failed') return;
         if (countdown <= 0) { onBack(); return; }
         const t = setTimeout(() => setCountdown(c => c - 1), 1000);
         return () => clearTimeout(t);
-    }, [isSuccess, countdown, onBack, reviewingReceipt]);
+    }, [isSuccess, countdown, onBack, reviewingReceipt, receiptPrinter.status]);
 
     const totalMixed = useMemo(
         () => Object.values(mixedPayments).reduce((sum: number, v) => sum + (Number(v) || 0), 0),
@@ -140,17 +142,13 @@ export function CheckoutPanel({
         try {
             setIsSubmitting(true);
             const result = await onConfirm(payments, internalMode ? 0 : dteType, customerId);
-            if (autoPrint && result) {
-                // Impresión silenciosa USB si está disponible, fallback iframe
-                try { await printSaleAction(result, defaultFormat, tenant, useWebSerial, printBytes, { columns80, cutPaper }); }
-                catch (error) { toast.error(printSaleErrorMessage(error)); }
-            }
+            if (autoPrint && result) await receiptPrinter.print(result);
         } catch (_err) {
             // Handled in mutation/toast
         } finally {
             setIsSubmitting(false);
         }
-    }, [canConfirm, internalMode, selectedCustomer, paymentType, singleMethod, total, dteType, mixedPayments, onConfirm, autoPrint, defaultFormat, tenant, useWebSerial, printBytes, columns80, cutPaper]);
+    }, [canConfirm, internalMode, selectedCustomer, paymentType, singleMethod, total, dteType, mixedPayments, onConfirm, autoPrint, receiptPrinter.print]);
 
     useEffect(() => {
         if (isSuccess || isError) return;
@@ -207,11 +205,7 @@ export function CheckoutPanel({
                     <div className="text-center">
                         <h3 className="text-lg font-black text-slate-900 dark:text-foreground">¡Venta exitosa!</h3>
                         <p className="text-sm text-slate-400 mt-1">
-                            {autoPrint
-                                ? hasRealDtePdf
-                                    ? 'Abriendo PDF con Timbre Electrónico (TED)...'
-                                    : 'Imprimiendo ticket...'
-                                : 'Procesada correctamente'}
+                            {receiptPrinter.description}
                         </p>
                     </div>
 
@@ -240,9 +234,10 @@ export function CheckoutPanel({
                         <Button
                             className="flex-1"
                             variant="secondary"
-                            onClick={() => { setReviewingReceipt(true); printSaleAction(saleResult, defaultFormat, tenant, useWebSerial, printBytes, { columns80, cutPaper }).catch(error => toast.error(printSaleErrorMessage(error))); }}
+                            disabled={receiptPrinter.status === 'printing'}
+                            onClick={() => { setReviewingReceipt(true); void receiptPrinter.print(saleResult); }}
                         >
-                            {hasRealDtePdf ? '🖨 Reimprimir PDF DTE' : 'Reimprimir Ticket'}
+                            {receiptPrinter.status === 'printing' ? 'Enviando...' : hasRealDtePdf ? useWebSerial && defaultFormat !== 'A4' ? 'Reimprimir boleta' : '🖨 Reimprimir PDF DTE' : 'Reimprimir Ticket'}
                         </Button>
                         {(!hasRealDtePdf || saleResult?.dteType === 39) && (
                             <select

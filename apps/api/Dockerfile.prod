@@ -2,7 +2,7 @@
 FROM node:20-alpine AS builder
 
 # OpenSSL required by Prisma schema engine (used by prisma generate + migrate)
-RUN apk add --no-cache openssl
+RUN apk add --no-cache openssl poppler-utils font-liberation
 
 WORKDIR /app
 
@@ -40,7 +40,7 @@ RUN NODE_OPTIONS=--max-old-space-size=512 npm run build
 FROM node:20-alpine AS runner
 
 # OpenSSL required by Prisma schema engine (used by prisma migrate deploy)
-RUN apk add --no-cache openssl
+RUN apk add --no-cache openssl poppler-utils font-liberation
 
 WORKDIR /app
 

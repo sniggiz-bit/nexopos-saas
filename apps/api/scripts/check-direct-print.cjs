@@ -15,6 +15,7 @@ function load(name) {
 }
 const { SerialPrinter, DirectPrintWriteError } = load('utils/serialPrinter');
 const { generateReceiptEscPos, generatePrinterTest } = load('components/pos/receipts/ReceiptToEscPos');
+const { sendSaleToPrinter, SilentPrintError } = load('utils/silentSalePrint');
 const { receiptText } = load('utils/thermalLayout');
 const { printerTestHtml } = load('utils/printerTest');
 function inspect(bytes) {
@@ -72,6 +73,25 @@ function fake() {
   console.log('PASS native test layouts for 58mm, 80mm and A4 without a sale or fiscal document');
   const attack = inspect(generateReceiptEscPos({ ...sale, items: [{ ...sale.items[0], product: { name: 'Producto\x1b@\x1dVB\x00<script>😀' } }] }, undefined, '58mm'));
   assert.equal(attack.cuts, 1);
+  const fiscal = { ...sale, dteType: 39, dteVerifiedAt: '2026-11-24', dteProviderId: 'issued', dteFolio: 16608 };
+  let ready = true, loads = 0; const jobs = [];
+  const transport = { isReady: () => ready, write: async bytes => { jobs.push(bytes); return true; } };
+  const packet = new Uint8Array([27,64,29,118,48,0,1,0,1,0,128]);
+  const loadBoleta = async (id, format, options) => { loads++; assert.equal(id, sale.id); assert.equal(format, '58mm'); assert.equal(options.cutPaper, false); return packet; };
+  await sendSaleToPrinter({ ...sale, dteType: 0 }, '58mm', null, { cutPaper: false }, transport, loadBoleta);
+  assert.equal(loads, 0); assert.equal(inspect(jobs[0]).columns, 32);
+  await sendSaleToPrinter(fiscal, '58mm', null, { cutPaper: false }, transport, loadBoleta);
+  assert.equal(jobs[1], packet); assert.equal(loads, 1);
+  ready = false;
+  await assert.rejects(sendSaleToPrinter(fiscal, '58mm', null, {}, transport, loadBoleta), SilentPrintError);
+  assert.equal(loads, 1); assert.equal(jobs.length, 2);
+  ready = true;
+  await assert.rejects(sendSaleToPrinter({ ...fiscal, dteVerifiedAt: null }, '58mm', null, {}, transport, loadBoleta), SilentPrintError);
+  await assert.rejects(sendSaleToPrinter({ ...fiscal, dteType: 33 }, '58mm', null, {}, transport, loadBoleta), SilentPrintError);
+  await assert.rejects(sendSaleToPrinter(fiscal, '58mm', null, {}, transport, async () => { throw Error('unavailable'); }), SilentPrintError);
+  await assert.rejects(sendSaleToPrinter(fiscal, '58mm', null, {}, transport, async () => { ready = false; return packet; }), SilentPrintError);
+  assert.equal(jobs.length, 2, 'Failed or disconnected fiscal jobs never fall back or resend');
+  console.log('PASS strict silent internal/fiscal routing, offline preflight, validated boletas and no fallback after fetch failure or disconnection');
   const f = fake(); let updates = 0; const unsubscribe = f.printer.subscribe(() => updates++);
   const connected = await Promise.all([f.printer.connect(115200), f.printer.connect(115200)]);
   assert.equal(connected[0], f.port); assert.equal(f.info.requests, 1); assert.deepEqual(f.info.rates, [115200]);

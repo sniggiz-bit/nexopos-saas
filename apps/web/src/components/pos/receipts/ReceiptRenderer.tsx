@@ -1,6 +1,7 @@
-import { DirectPrintWriteError } from '@/utils/serialPrinter';
+import { sendSaleToPrinter, SilentPrintError } from '@/utils/silentSalePrint';
+import { DirectPrintWriteError, serialPrinter } from '@/utils/serialPrinter';
 import React from 'react';
-import { openDtePdf } from '@/api/dte-config';
+import { getDtePrintData, openDtePdf } from '@/api/dte-config';
 import { renderToString } from 'react-dom/server';
 import { Sale } from '@/api/sales';
 import { Ticket80mm } from './Ticket80mm';
@@ -10,7 +11,6 @@ import { printThroughIframe } from '@/utils/print';
 import { PrintFormat } from '@/hooks/usePrintSettings';
 import { Tenant } from '@nexopos/shared';
 import type { ThermalOptions } from '@/utils/thermalLayout';
-import { generateReceiptEscPos } from './ReceiptToEscPos';
 
 interface ReceiptRendererProps {
     sale: Sale;
@@ -44,10 +44,9 @@ export function isRealDtePdf(url?: string | null): boolean {
  * Acción de impresión principal del POS.
  *
  * Comportamiento:
- *  1. Si la venta tiene un PDF verificado del sistema (DTE real), abre ese PDF en
- *     una nueva pestaña para que el usuario lo imprima desde el visor del navegador.
- *  2. Si Web Serial está activo y disponible, genera código ESC/POS y lo envía por el puerto serial.
- *  3. En caso contrario, renderiza el ticket HTML y lo imprime vía iframe (diálogo del SO).
+ * En modo directo envía el comprobante o la boleta con timbre al puerto conectado.
+ * Los errores nunca cambian automáticamente al diálogo del sistema.
+ * En modo sistema se conserva el PDF o el diálogo HTML.
  */
 export async function printSaleAction(
     sale: Sale,
@@ -57,18 +56,14 @@ export async function printSaleAction(
     printBytes?: (data: Uint8Array) => Promise<boolean>,
     options: ThermalOptions = {},
 ): Promise<void> {
-    // ── 1. Si hay PDF oficial del DTE, abrir en nueva pestaña (tiene TED) ──
+    if (useWebSerial && format !== 'A4') {
+        if (!printBytes) throw new SilentPrintError('Venta guardada. Vincula una impresora directa y pulsa Reimprimir.');
+        await sendSaleToPrinter(sale, format, tenant, options, { isReady: () => serialPrinter.getSnapshot().status === 'connected', write: printBytes }, getDtePrintData);
+        return;
+    }
     if (sale.dteVerifiedAt && sale.dteProviderId && isRealDtePdf(sale.dtePdfUrl)) {
         await openDtePdf('/sales/' + sale.id + '/dte/pdf', format);
         return;
-    }
-
-    // ── 2. Intentar impresión directa vía Web Serial API (ESC/POS) ──
-    if (useWebSerial && printBytes && format !== 'A4') {
-        const success = await printBytes(generateReceiptEscPos(sale, tenant || undefined, format, options));
-        if (success) return;
-        // False means no writable port before sending. A write failure throws,
-        // so an uncertain partial ticket never causes an automatic second copy.
     }
 
     // ── 3. Fallback: renderizar ticket HTML y usar diálogo del SO ──
@@ -102,5 +97,5 @@ export async function printSaleAction(
 }
 
 export function printSaleErrorMessage(error: unknown): string {
-    return error instanceof DirectPrintWriteError ? error.message : 'Venta guardada. No se pudo abrir el comprobante. Puedes volver a abrirlo desde Ventas.';
+    return error instanceof DirectPrintWriteError || error instanceof SilentPrintError ? error.message : 'Venta guardada. No se pudo abrir el comprobante. Puedes volver a abrirlo desde Ventas.';
 }
