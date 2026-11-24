@@ -46,5 +46,9 @@ New-ItemProperty -Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Run' -Na
 $process = Start-Process -FilePath $nodePath -ArgumentList @('"' + $server + '"') -WindowStyle Hidden -PassThru -RedirectStandardOutput (Join-Path $destination 'agent.log') -RedirectStandardError (Join-Path $destination 'agent-error.log')
 Start-Sleep -Seconds 2
 if ($process.HasExited) { throw 'El conector no pudo iniciarse. Revisa agent-error.log en la carpeta de instalacion.' }
+$sha = [System.Security.Cryptography.SHA256]::Create()
+$fingerprint = ($sha.ComputeHash($cert.RawData) | ForEach-Object { $_.ToString('x2') }) -join ':'
+$sha.Dispose()
+Write-Output ('Certificado local SHA-256: ' + $fingerprint)
 Write-Output 'Conector NexoPOS instalado. Abre https://localhost:18443/ en el mismo navegador que usas para el POS y selecciona tu impresora.'
 if (-not $NoBrowser) { Start-Process 'https://localhost:18443/' -WindowStyle Hidden }

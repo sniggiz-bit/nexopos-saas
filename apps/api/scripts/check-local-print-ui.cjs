@@ -64,7 +64,7 @@ const local = 'https://localhost:18443';
       assert.equal(new URL(page.url()).hash, '', 'Pairing credential must be removed from the URL');
       assert.equal(await page.getByRole('combobox', { name: 'Conexión directa', exact: true }).inputValue(), 'local');
       assert.equal(await page.getByRole('combobox', { name: 'Impresora instalada', exact: true }).inputValue(), printer);
-      assert(await page.locator('option').filter({ hasText: 'POS-58-Series' }).isDisabled());
+      assert(await page.getByRole('combobox', { name: 'Impresora instalada', exact: true }).locator('option').filter({ hasText: 'POS-58-Series' }).evaluate(option => option.disabled), 'Offline printer option must be disabled');
       assert.equal(await page.getByRole('combobox', { name: 'Velocidad serial', exact: true }).count(), 0);
       await page.screenshot({ path: '/checks-results/local-print-' + name + '.png' });
       await page.getByRole('button', { name: 'Cerrar configuración de impresión', exact: true }).click();
