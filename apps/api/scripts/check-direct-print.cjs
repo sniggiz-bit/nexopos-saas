@@ -16,6 +16,7 @@ function load(name) {
 const { SerialPrinter, DirectPrintWriteError } = load('utils/serialPrinter');
 const { generateReceiptEscPos, generatePrinterTest } = load('components/pos/receipts/ReceiptToEscPos');
 const { receiptText } = load('utils/thermalLayout');
+const { printerTestHtml } = load('utils/printerTest');
 function inspect(bytes) {
   const lines = []; let line = ''; let width = 1; let columns = 0; let cuts = 0;
   for (let i = 0; i < bytes.length;) {
@@ -63,6 +64,12 @@ function fake() {
     const test = inspect(generatePrinterTest(format, options)); assert.equal(test.columns, columns); assert(test.text.replace(/\s/g, '').includes('SINVENTANIDOCUMENTOTRIBUTARIO'));
     console.log('PASS width ' + format + ': ' + columns + ' columns, amounts and complete names, cutter option');
   }
+  for (const format of ['58mm', '80mm', 'A4']) {
+    const html = printerTestHtml(format);
+    assert(html.includes('Formato: ' + format)); assert(html.replace(/\s+/g, ' ').includes('SIN VENTA NI DOCUMENTO TRIBUTARIO'));
+    assert(html.includes('width:' + (format === 'A4' ? '100%' : format))); assert(!html.includes('<script'));
+  }
+  console.log('PASS native test layouts for 58mm, 80mm and A4 without a sale or fiscal document');
   const attack = inspect(generateReceiptEscPos({ ...sale, items: [{ ...sale.items[0], product: { name: 'Producto\x1b@\x1dVB\x00<script>😀' } }] }, undefined, '58mm'));
   assert.equal(attack.cuts, 1);
   const f = fake(); let updates = 0; const unsubscribe = f.printer.subscribe(() => updates++);

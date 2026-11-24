@@ -8,6 +8,8 @@ import { Shift } from '@/api/shifts';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { PrintSettingsPanel } from './PrintSettingsPanel';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { usePrintSettings } from '@/hooks/usePrintSettings';
 import { useWebSerialPrinter } from '@/hooks/useWebSerialPrinter';
 
 
@@ -37,6 +39,8 @@ export function PosUserToolbar({ currentShift, branchName }: PosUserToolbarProps
     const [isOnline, setIsOnline]     = useState(navigator.onLine);
     const [showPrintSettings, setShowPrintSettings] = useState(false);
     const { isConnected: isWebSerialConnected } = useWebSerialPrinter();
+    const { useWebSerial, defaultFormat } = usePrintSettings();
+    const directMode = useWebSerial && defaultFormat !== 'A4';
 
     useEffect(() => {
         const tick = setInterval(() => setNow(new Date()), 1000);
@@ -71,12 +75,12 @@ export function PosUserToolbar({ currentShift, branchName }: PosUserToolbarProps
         <div className="h-11 flex items-center justify-between px-4 bg-slate-900 dark:bg-slate-950 border-b border-slate-800 shrink-0 z-30">
 
             {/* Left: Logo + Branch */}
-            <div className="flex items-center gap-3 min-w-0">
+            <div className="flex min-w-0 flex-col items-start gap-0.5 sm:flex-row sm:items-center sm:gap-3">
                 <Logo variant="full" mode="dark" className="h-6" />
                 {branchName && (
                     <>
-                        <span className="text-slate-700 select-none">·</span>
-                        <span className="text-slate-400 text-xs font-medium truncate max-w-[160px]">
+                        <span className="hidden select-none text-slate-700 sm:inline">·</span>
+                        <span className="max-w-[96px] truncate text-[10px] font-medium leading-tight text-slate-400 sm:max-w-[160px] sm:text-xs">
                             {branchName}
                         </span>
                     </>
@@ -84,7 +88,7 @@ export function PosUserToolbar({ currentShift, branchName }: PosUserToolbarProps
             </div>
 
             {/* Center: Clock + shift elapsed */}
-            <div className="flex items-center gap-2 absolute left-1/2 -translate-x-1/2">
+            <div className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-2 lg:flex">
                 <span className="text-slate-100 font-mono font-bold text-sm tracking-wider tabular-nums">
                     {timeStr}
                 </span>
@@ -110,42 +114,17 @@ export function PosUserToolbar({ currentShift, branchName }: PosUserToolbarProps
                     }
                 </div>
 
-                {/* Botón de configuración de impresora */}
-                <div className="relative">
-                    <button
-                        onClick={() => setShowPrintSettings(s => !s)}
-                        title="Configuración de impresión"
-                        className={[
-                            'flex items-center gap-1 px-2 py-1 rounded-lg text-xs transition-colors',
-                            showPrintSettings
-                                ? 'bg-slate-700 text-slate-200'
-                                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800',
-                        ].join(' ')}
-                    >
-                        <Printer className="w-3.5 h-3.5" />
-                        {/* Indicador Web Serial */}
-                        <span className={[
-                            'w-1.5 h-1.5 rounded-full -mt-2 -mr-1',
-                            isWebSerialConnected ? 'bg-emerald-400' : 'bg-red-500',
-                        ].join(' ')} />
-                    </button>
-
-                    {/* Popover de configuración */}
-                    {showPrintSettings && (
-                        <>
-                            {/* Overlay para cerrar */}
-                            <button
-                                type="button"
-                                aria-label="Cerrar configuración de impresión"
-                                className="fixed inset-0 z-40"
-                                onClick={() => setShowPrintSettings(false)}
-                            />
-                            <div className="absolute right-0 top-full mt-2 w-80 max-h-[calc(100dvh-4rem)] overflow-y-auto z-50 shadow-2xl rounded-xl border border-border bg-background">
-                                <PrintSettingsPanel compact />
-                            </div>
-                        </>
-                    )}
-                </div>
+                <Popover open={showPrintSettings} onOpenChange={setShowPrintSettings}>
+                    <PopoverTrigger asChild>
+                        <button type="button" title="Configuración de impresión" aria-label="Configuración de impresión" className={'flex items-center gap-1 rounded-lg px-2 py-1 text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ' + (showPrintSettings ? 'bg-slate-700 text-slate-200' : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200')}>
+                            <Printer className="h-3.5 w-3.5" />
+                            <span className={'-mr-1 -mt-2 h-1.5 w-1.5 rounded-full ' + (directMode ? isWebSerialConnected ? 'bg-emerald-400' : 'bg-amber-400' : 'bg-cyan-400')} />
+                        </button>
+                    </PopoverTrigger>
+                    <PopoverContent onFocusOutside={event => { if (document.getElementById('print-iframe')) event.preventDefault(); }} align="end" sideOffset={8} collisionPadding={8} aria-label="Configuración de impresión" className="flex max-h-[min(680px,var(--radix-popover-content-available-height))] w-[400px] max-w-[calc(100vw-1rem)] flex-col overflow-hidden rounded-xl p-0 shadow-2xl">
+                        <PrintSettingsPanel compact onClose={() => setShowPrintSettings(false)} />
+                    </PopoverContent>
+                </Popover>
 
                 {/* Pantalla completa */}
                 <button
