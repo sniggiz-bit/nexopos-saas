@@ -58,7 +58,7 @@ export function PrintSettingsPanel({ compact = false, onClose }: PrintSettingsPa
                 <legend className="text-xs font-semibold text-foreground">Modo de impresión</legend>
                 <div className="grid grid-cols-2 gap-2">
                     {[{ value: false, title: 'Sistema', detail: 'USB, red o Bluetooth', icon: Monitor }, { value: true, title: 'Directa', detail: 'Serial / USB-COM', icon: Usb }].map(mode => <label key={mode.title} className={'relative ' + (mode.value && defaultFormat === 'A4' ? 'cursor-not-allowed opacity-50' : 'cursor-pointer')}>
-                        <input type="radio" name={modeId} checked={direct === mode.value} disabled={mode.value && defaultFormat === 'A4'} onChange={() => { setUseWebSerial(mode.value); setTestResult(null); }} className="peer sr-only" />
+                        <input type="radio" name={modeId} checked={direct === mode.value} disabled={mode.value && defaultFormat === 'A4'} onChange={() => { setUseWebSerial(mode.value); setTestResult(null); }} className="peer absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0 disabled:cursor-not-allowed" />
                         <span className="flex h-full items-start gap-2 rounded-lg border border-border p-2.5 peer-checked:border-primary peer-checked:bg-primary/10 peer-focus-visible:ring-2 peer-focus-visible:ring-primary">
                             <mode.icon className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" /><span><span className="block text-xs font-semibold">{mode.title}</span><span className="block text-[10px] leading-4 text-muted-foreground">{mode.detail}</span></span>
                         </span>
