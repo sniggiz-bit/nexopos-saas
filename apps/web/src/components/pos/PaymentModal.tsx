@@ -44,7 +44,7 @@ interface PaymentModalProps {
     saleResult?: any;
 }
 
-import { useWebSerialPrinter } from '@/hooks/useWebSerialPrinter';
+import { useDirectPrinter } from '@/hooks/useDirectPrinter';
 
 type PaymentType = 'SINGLE' | 'MIXED';
 
@@ -62,13 +62,13 @@ export function PaymentModal({
     isError,
     saleResult,
 }: PaymentModalProps) {
-    const { autoPrint, defaultFormat, setDefaultFormat, useWebSerial, columns80, cutPaper } = usePrintSettings();
-    const { printBytes } = useWebSerialPrinter();
+    const { autoPrint, defaultFormat, setDefaultFormat, useWebSerial, columns80, cutPaper, directConnection } = usePrintSettings();
+    const { printBytes } = useDirectPrinter();
     const [hasAttemptedAutoPrint, setHasAttemptedAutoPrint] = useState(false);
     const [countdown, setCountdown] = useState(4);
     const { user } = useAuth();
     const { data: tenant } = useTenant(user?.tenantId);
-    const receiptPrinter = useReceiptPrinter(defaultFormat, tenant, useWebSerial, printBytes, columns80, cutPaper);
+    const receiptPrinter = useReceiptPrinter(defaultFormat, tenant, useWebSerial, printBytes, columns80, cutPaper, directConnection);
     const salesMode = useQuery({ queryKey: ['dte-sales-mode', user?.tenantId], queryFn: getSalesMode, enabled: isOpen && !!user?.tenantId, staleTime: 0 });
     const internalMode = salesMode.data?.mode === 'internal';
 

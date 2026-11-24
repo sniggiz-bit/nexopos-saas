@@ -22,7 +22,7 @@ import { formatDistanceToNow, format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { usePrintSettings } from '@/hooks/usePrintSettings';
 import { printThroughIframe } from '@/utils/print';
-import { useWebSerialPrinter } from '@/hooks/useWebSerialPrinter';
+import { useDirectPrinter } from '@/hooks/useDirectPrinter';
 import { receiptText, thermalColumns } from '@/utils/thermalLayout';
 import { EscPosEncoder } from '@/utils/EscPosEncoder';
 
@@ -66,7 +66,7 @@ export function CloseShiftModal({ isOpen, onClose, shiftId, currentShift }: Clos
     const queryClient = useQueryClient();
     const { data: summary, isLoading: isLoadingSummary } = useShiftLiveSummary(isOpen && !!shiftId ? shiftId : null);
     const { useWebSerial, defaultFormat, columns80, cutPaper } = usePrintSettings();
-    const { printBytes } = useWebSerialPrinter();
+    const { printBytes } = useDirectPrinter();
 
     const calculatedTotal = useMemo(() => {
         return DENOMINATIONS.reduce((sum, d) => {

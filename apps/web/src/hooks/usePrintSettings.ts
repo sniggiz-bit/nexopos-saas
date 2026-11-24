@@ -2,7 +2,7 @@ import { useMemo, useSyncExternalStore } from 'react';
 export type PrintFormat = '80mm' | '58mm' | 'A4';
 interface PrintSettings {
     autoPrint: boolean; defaultFormat: PrintFormat; useWebSerial: boolean;
-    serialBaudRate: number; columns80: 42 | 48; cutPaper: boolean;
+    directConnection: 'serial' | 'local'; serialBaudRate: number; columns80: 42 | 48; cutPaper: boolean;
 }
 const key = 'nexopos_print_settings';
 const event = 'nexopos:print-settings';
@@ -13,7 +13,7 @@ function readSettings(raw: string): PrintSettings {
     const format: PrintFormat = ['80mm', '58mm', 'A4'].includes(saved.defaultFormat) ? saved.defaultFormat : '80mm';
     return {
         autoPrint: saved.autoPrint === true || (saved.useWebSerial === true && format !== 'A4'), useWebSerial: saved.useWebSerial === true,
-        defaultFormat: format,
+        defaultFormat: format, directConnection: saved.directConnection === 'local' ? 'local' : saved.directConnection === 'serial' ? 'serial' : typeof navigator !== 'undefined' && navigator.serial ? 'serial' : 'local',
         serialBaudRate: [9600, 19200, 38400, 57600, 115200].includes(saved.serialBaudRate) ? saved.serialBaudRate : 9600,
         columns80: saved.columns80 === 42 ? 42 : 48, cutPaper: saved.cutPaper !== false,
     };
@@ -35,6 +35,7 @@ export function usePrintSettings() {
         setAutoPrint: (autoPrint: boolean) => update({ autoPrint }),
         setDefaultFormat: (defaultFormat: PrintFormat) => update({ defaultFormat }),
         setUseWebSerial: (useWebSerial: boolean) => update({ useWebSerial, ...(useWebSerial ? { autoPrint: true } : {}) }),
+        setDirectConnection: (directConnection: 'serial' | 'local') => update({ directConnection }),
         setSerialBaudRate: (serialBaudRate: number) => update({ serialBaudRate }),
         setColumns80: (columns80: 42 | 48) => update({ columns80 }),
         setCutPaper: (cutPaper: boolean) => update({ cutPaper }),

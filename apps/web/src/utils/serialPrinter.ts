@@ -20,6 +20,7 @@ export class DirectPrintWriteError extends Error {
 export class SerialPrinter {
     private api: () => PrinterSerial | undefined;
     private port: PrinterPort | null = null;
+    private connectGeneration = 0;
     private pendingConnect: Promise<PrinterPort | null> | null = null;
     private queue: Promise<unknown> = Promise.resolve();
     private disconnecting = false;
@@ -53,17 +54,28 @@ export class SerialPrinter {
             });
             this.listenedApi = api;
         }
+        const generation = ++this.connectGeneration;
         this.update({ status: 'connecting', error: null });
         // requestPort runs directly inside the user's click gesture.
         const pending = (async () => {
             try {
                 const port = await api.requestPort();
-                await port.open({ baudRate });
+                if (generation !== this.connectGeneration) return null;
+                const opening = port.open({ baudRate });
+                let timer: ReturnType<typeof setTimeout> | undefined;
+                try {
+                    await Promise.race([opening, new Promise<never>((_, reject) => { timer = setTimeout(() => reject(new Error('Open timeout')), 10000); })]);
+                } catch (error) {
+                    void opening.then(() => this.port !== port ? port.close().catch(() => undefined) : undefined, () => undefined);
+                    throw error;
+                } finally { clearTimeout(timer); }
+                if (generation !== this.connectGeneration) { if (this.port !== port) await port.close().catch(() => undefined); return null; }
                 if (!port.writable) { await port.close(); throw new Error('Port not writable'); }
                 this.port = port;
                 this.update({ status: 'connected', error: null });
                 return port;
             } catch (error) {
+                if (generation !== this.connectGeneration) return null;
                 const cancelled = error instanceof DOMException && error.name === 'NotFoundError';
                 this.update({ status: cancelled ? 'disconnected' : 'error', error: cancelled ? null : 'No se pudo abrir el puerto. Revisa la conexión, la velocidad y si otra aplicación está usando la impresora.' });
                 return null;
@@ -73,7 +85,13 @@ export class SerialPrinter {
         void pending.then(() => { if (this.pendingConnect === pending) this.pendingConnect = null; });
         return pending;
     };
+    cancelConnect = () => {
+        if (this.state.status !== 'connecting') return;
+        this.connectGeneration++; this.pendingConnect = null;
+        this.update({ status: 'disconnected', error: null });
+    };
     disconnect = async () => {
+        this.cancelConnect();
         this.disconnecting = true;
         try {
             await this.enqueue(async () => {

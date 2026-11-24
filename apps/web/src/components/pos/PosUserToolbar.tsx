@@ -10,7 +10,7 @@ import { es } from 'date-fns/locale';
 import { PrintSettingsPanel } from './PrintSettingsPanel';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { usePrintSettings } from '@/hooks/usePrintSettings';
-import { useWebSerialPrinter } from '@/hooks/useWebSerialPrinter';
+import { useDirectPrinter } from '@/hooks/useDirectPrinter';
 
 
 const ROLE_LABELS: Record<string, string> = {
@@ -38,7 +38,7 @@ export function PosUserToolbar({ currentShift, branchName }: PosUserToolbarProps
     const [now, setNow]               = useState(new Date());
     const [isOnline, setIsOnline]     = useState(navigator.onLine);
     const [showPrintSettings, setShowPrintSettings] = useState(false);
-    const { isConnected: isWebSerialConnected } = useWebSerialPrinter();
+    const { isConnected: isWebSerialConnected } = useDirectPrinter();
     const { useWebSerial, defaultFormat } = usePrintSettings();
     const directMode = useWebSerial && defaultFormat !== 'A4';
 
