@@ -1,7 +1,7 @@
 // Deterministic, uncompressed ZIP of reviewed source only. Never include local credentials.
 const fs = require('node:fs');
 const path = require('node:path');
-const files = ['server.cjs', 'windows.ps1', 'install-windows.ps1', 'uninstall-windows.ps1', 'install.cmd', 'README.md'];
+const files = ['server.cjs', 'worker.cjs', 'windows.ps1', 'install-windows.ps1', 'uninstall-windows.ps1', 'install.cmd', 'README.md'];
 const table = Array.from({ length: 256 }, (_, n) => { for (let i = 0; i < 8; i++) n = n & 1 ? 0xedb88320 ^ n >>> 1 : n >>> 1; return n >>> 0; });
 function crc(data) { let value = 0xffffffff; for (const byte of data) value = table[(value ^ byte) & 255] ^ value >>> 8; return (value ^ 0xffffffff) >>> 0; }
 const local = [], central = []; let offset = 0;

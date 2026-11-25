@@ -4,23 +4,12 @@ const fs = require('node:fs');
 const path = require('node:path');
 const os = require('node:os');
 const crypto = require('node:crypto');
-const { spawn } = require('node:child_process');
+const { WindowsWorker } = require('./worker.cjs');
 const PORT = 18443;
 const WEB = 'https://nexopos.cl';
 const MAX = 4 * 1024 * 1024;
-function windows(action, input) {
-  return new Promise((resolve, reject) => {
-    const child = spawn('powershell.exe', ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-File', path.join(__dirname, 'windows.ps1'), '-Action', action], { windowsHide: true, stdio: ['pipe', 'pipe', 'pipe'] });
-    let output = ''; let stderr = ''; let overflow = false;
-    const timer = setTimeout(() => { overflow = true; child.kill(); }, action === 'list' ? 15000 : 30000);
-    child.stdout.setEncoding('utf8'); child.stdout.on('data', data => { if (output.length + data.length > 100000) { overflow = true; child.kill(); } else output += data; });
-    child.stderr.setEncoding('utf8'); child.stderr.on('data', data => { stderr = (stderr + data).slice(-2000); });
-    child.stdin.on('error', () => undefined);
-    child.once('error', error => { clearTimeout(timer); reject(error); });
-    child.once('close', code => { clearTimeout(timer); if (code || overflow) reject(new Error(action === 'list' ? 'No se pudo consultar las impresoras de Windows.' : 'No se confirmó el envío a Windows. Revisa el papel antes de reimprimir.')); else { try { resolve(JSON.parse(output.replace(/^\uFEFF/, ''))); } catch { reject(new Error('Respuesta local no válida.')); } } });
-    child.stdin.end(input ? JSON.stringify(input) : '');
-  });
-}
+const worker = new WindowsWorker();
+function windows(action, input) { return worker.request(action, input); }
 function createHandler({ token, list = () => windows('list'), print = job => windows('print', job), port = PORT }) {
   const jobs = new Map(); let queued = 0; let queue = Promise.resolve();
   const own = 'https://localhost:' + port;
@@ -42,7 +31,7 @@ function createHandler({ token, list = () => windows('list'), print = job => win
     }
     if (!sameToken((req.headers.authorization || '').replace(/^Bearer /, ''))) return send(res, 401, { error: 'Vincula este navegador desde el conector local.' });
     if (req.method === 'GET' && req.url === '/printers') {
-      try { return send(res, 200, { ok: true, printers: await list() }); } catch (error) { return send(res, 503, { error: error.message }); }
+      try { return send(res, 200, { ok: true, version: '1.1.0', printers: await list() }); } catch (error) { return send(res, 503, { error: error.message }); }
     }
     if (req.method !== 'POST' || req.url !== '/jobs') return send(res, 404, { error: 'Ruta no disponible.' });
     if (String(req.headers['content-type']).split(';')[0] !== 'application/json') return send(res, 415, { error: 'Formato no válido.' });
@@ -79,7 +68,9 @@ if (require.main === module) {
   if (!/^[a-f0-9]{64}$/.test(config.token)) throw Error('Vinculación local no válida.');
   const server = https.createServer({ pfx: fs.readFileSync(path.join(home, 'localhost.pfx')), passphrase: config.passphrase, minVersion: 'TLSv1.2' }, createHandler(config));
   server.requestTimeout = 45000; server.headersTimeout = 10000; server.maxConnections = 16;
-  server.on('error', error => { console.error(error.code === 'EADDRINUSE' ? 'El conector ya está abierto.' : 'No se pudo iniciar el conector local.'); process.exitCode = 1; });
+  server.on('error', error => { worker.close(); console.error(error.code === 'EADDRINUSE' ? 'El conector ya está abierto.' : 'No se pudo iniciar el conector local.'); process.exitCode = 1; });
+  void worker.ready().catch(() => console.error('El proceso local de impresión necesita reconectarse.'));
+  process.once('exit', () => worker.close());
   server.listen(PORT, '127.0.0.1', () => console.log('Conector de impresión NexoPOS listo en https://localhost:' + PORT));
 }
 module.exports = { createHandler, windows };

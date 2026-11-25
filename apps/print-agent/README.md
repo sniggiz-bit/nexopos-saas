@@ -2,7 +2,7 @@
 
 Usa las impresoras térmicas ESC/POS instaladas en Windows, incluidas las genéricas USB, de red y Bluetooth que tengan un controlador y una cola de impresión. No filtra por marca y no depende de Web Serial. El equipo conectado a la impresora debe ejecutar este conector; instalarlo en otro equipo no permite imprimir por USB.
 
-Requiere Windows y Node.js 20 o posterior. No instala controladores, no cambia el puerto de la impresora y no emite documentos tributarios. Los bytes del comprobante o de la boleta con su TED original se entregan a la cola de Windows como RAW. El controlador debe corresponder a una impresora que acepte ESC/POS; no se presupone que todas las impresoras interpreten ese lenguaje.
+Requiere Windows y Node.js 20 o posterior. No instala controladores, no cambia el puerto de la impresora y no emite documentos tributarios. La versión 1.1 mantiene un proceso de Windows preparado para reutilizarlo entre impresiones. La integración nativa se compila al iniciar el conector y la impresión consulta directamente la cola seleccionada, sin enumerar todas las impresoras ni abrir PowerShell por cada venta. Los bytes del comprobante o de la boleta con su TED original se entregan a la cola de Windows como RAW. El controlador debe corresponder a una impresora que acepte ESC/POS; no se presupone que todas las impresoras interpreten ese lenguaje.
 
 ## Instalación
 
@@ -31,3 +31,5 @@ El conector usa HTTPS local y la cola de Windows, por lo que Firefox no necesita
 ## Desinstalación
 
 Ejecutar `uninstall-windows.ps1` desde la carpeta instalada. El script detiene únicamente el proceso de este conector y elimina su inicio automático, su certificado y su directorio verificado. No elimina impresoras ni ventas.
+
+Para actualizar un conector existente, cerrar la operación de caja y ejecutar el instalador de la nueva versión con el mismo usuario. Se conservan la credencial de vinculación y el certificado vigente, de modo que la actualización habitual no exige volver a autorizar ni vincular el navegador.

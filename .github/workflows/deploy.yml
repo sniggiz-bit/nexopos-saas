@@ -32,7 +32,7 @@ jobs:
       - name: Check deployment and recovery procedure
         run: node apps/api/scripts/check-deployment.cjs
       - name: Check local print connector authentication and duplicate protection
-        run: node --test apps/print-agent/test.cjs
+        run: node --test apps/print-agent/test.cjs apps/print-agent/worker.test.cjs
       - name: Build API production image
         run: docker build -f apps/api/Dockerfile.prod -t nexopos-api-check .
       - name: Build API test image

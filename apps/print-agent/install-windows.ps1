@@ -36,6 +36,7 @@ if (Test-Path -LiteralPath $configPath) {
     @{ token = $token; passphrase = $password; thumbprint = $cert.Thumbprint } | ConvertTo-Json | Set-Content -LiteralPath $configPath -Encoding UTF8
 }
 Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'server.cjs') -Destination $destination -Force
+Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'worker.cjs') -Destination $destination -Force
 Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'windows.ps1') -Destination $destination -Force
 Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'uninstall-windows.ps1') -Destination $destination -Force
 $server = Join-Path $destination 'server.cjs'
