@@ -2,7 +2,6 @@ import { useEffect, useSyncExternalStore } from 'react';
 import { localPrinter } from '@/utils/localPrinter';
 import { useWebSerialPrinter } from './useWebSerialPrinter';
 import { usePrintSettings } from './usePrintSettings';
-let localPrinterStartup: Promise<boolean> | null = null;
 export function useDirectPrinter() {
     const serial = useWebSerialPrinter();
     const local = useSyncExternalStore(localPrinter.subscribe, localPrinter.getSnapshot, localPrinter.getSnapshot);
@@ -22,15 +21,14 @@ export function useDirectPrinter() {
     }, [setDirectConnection, setUseWebSerial, defaultFormat, setDefaultFormat]);
     useEffect(() => {
         if (localPrinter.isPaired && directConnection !== 'local') return;
-        if (!localPrinterStartup) {
-            localPrinterStartup = localPrinter.initialize().then(discovered => {
-                if (!discovered) return false;
-                setDirectConnection('local'); setUseWebSerial(true);
-                if (defaultFormat === 'A4') setDefaultFormat('80mm');
-                return true;
-            });
-        }
-    }, [directConnection, setDirectConnection, setUseWebSerial, defaultFormat, setDefaultFormat]);
+        void localPrinter.initialize();
+        return localPrinter.startAutoReconnect();
+    }, [directConnection]);
+    useEffect(() => {
+        if (local.status !== 'connected' || !localPrinter.consumeAutoPairing()) return;
+        setDirectConnection('local'); setUseWebSerial(true);
+        if (defaultFormat === 'A4') setDefaultFormat('80mm');
+    }, [local.status, setDirectConnection, setUseWebSerial, defaultFormat, setDefaultFormat]);
     return directConnection === 'local'
         ? { ...local, connect: localPrinter.connect, cancelConnect: () => undefined, disconnect: localPrinter.disconnect, printBytes: localPrinter.printBytes, isConnected: local.status === 'connected', localError: local.error }
         : { ...serial, printers: [], printer: '', localError: local.error };

@@ -22,13 +22,14 @@ const local = 'https://localhost:18443';
       const product = { id: '20000000-0000-4000-8000-000000000005', name: 'Prueba USB genérica', sku: 'USB-TEST', price: 1190, stock: 20, unitType: 'UNIT', priceTiers: [], isActive: true };
       const saleId = '40000000-0000-4000-8000-000000000001';
       const token = 'a'.repeat(64); const printer = 'POS-80-Series';
-      let mode = 'internal'; let failed = false; const sales = [], jobs = [], printData = [];
+      let mode = 'internal'; let failed = false; let printerFailures = 2; const sales = [], jobs = [], printData = [];
       const headers = { 'Access-Control-Allow-Origin': origin, 'Access-Control-Allow-Headers': 'Authorization, Content-Type', 'Access-Control-Allow-Methods': 'GET, POST, OPTIONS', 'Content-Type': 'application/json' };
       await page.context().route(local + '/**', async route => {
         const req = route.request();
         if (req.method() === 'OPTIONS') return route.fulfill({ status: 204, headers });
         assert.equal(req.headers().authorization, 'Bearer ' + token);
         const path = new URL(req.url()).pathname;
+        if (path === '/printers' && printerFailures > 0) { printerFailures--; return route.fulfill({ status: 503, headers, body: JSON.stringify({ error: 'Connector starting' }) }); }
         if (path === '/printers') return route.fulfill({ headers, body: JSON.stringify({ ok: true, printers: [{ name: printer, port: 'USB005', offline: false }, { name: 'POS-58-Series', port: 'USB003', offline: true }] }) });
         assert.equal(path, '/jobs'); assert.equal(req.method(), 'POST');
         const job = req.postDataJSON(); jobs.push(job); assert.equal(job.printer, printer); assert.match(job.id, /^[a-f0-9-]{36}$/);
