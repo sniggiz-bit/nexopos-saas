@@ -7,10 +7,13 @@ function newJobId(): string {
     return [hex.slice(0, 8), hex.slice(8, 12), hex.slice(12, 16), hex.slice(16, 20), hex.slice(20)].join('-');
 }
 interface LocalConfig { token: string; printer: string }
-export interface InstalledPrinter { name: string; port: string; offline: boolean }
+export interface InstalledPrinter { name: string; port: string; offline: boolean; default?: boolean }
 export class LocalPrintError extends Error {}
 export class LocalPrinter {
     private config: LocalConfig | null = null;
+    private startupAttempted = false;
+    private startupPromise: Promise<boolean> | null = null;
+    private discoveryPromise: Promise<boolean> | null = null;
     private listeners = new Set<() => void>();
     private state: WebSerialState & { printers: InstalledPrinter[]; printer: string } = { status: 'disconnected', error: null, isPrinting: false, printers: [], printer: '' };
     constructor() { try { this.config = JSON.parse(localStorage.getItem(key) || 'null'); } catch { /* The user can pair again. */ } }
@@ -18,6 +21,50 @@ export class LocalPrinter {
     subscribe = (listener: () => void) => { this.listeners.add(listener); return () => { this.listeners.delete(listener); }; };
     private update(patch: Partial<typeof this.state>) { this.state = { ...this.state, ...patch }; this.listeners.forEach(listener => listener()); }
     private save() { try { localStorage.setItem(key, JSON.stringify(this.config)); } catch { /* Keep the pairing for this page. */ } }
+    get isPaired() { return Boolean(this.config?.token); }
+    private async bootstrap() {
+        const controller = new AbortController(); const timer = setTimeout(() => controller.abort(), 5000);
+        try {
+            const response = await fetch(base + '/bootstrap', { credentials: 'omit', cache: 'no-store', redirect: 'error', signal: controller.signal });
+            const result = await response.json();
+            if (!response.ok || result.ok !== true || typeof result.token !== 'string' || !/^[a-f0-9]{64}$/.test(result.token) || !Array.isArray(result.printers) || !result.printers.every((p: InstalledPrinter) => typeof p.name === 'string' && typeof p.offline === 'boolean' && (p.default === undefined || typeof p.default === 'boolean'))) {
+                throw new LocalPrintError('El conector local no informó una configuración válida.');
+            }
+            return { token: result.token, printers: result.printers as InstalledPrinter[] };
+        } catch (error) {
+            if (error instanceof LocalPrintError) throw error;
+            throw new LocalPrintError('No se pudo detectar el conector local. Comprueba que esté instalado y activo en este equipo.');
+        } finally { clearTimeout(timer); }
+    }
+    private discover = () => {
+        if (this.discoveryPromise) return this.discoveryPromise;
+        this.update({ status: 'connecting', error: null });
+        this.discoveryPromise = (async () => {
+            try {
+                const result = await this.bootstrap();
+                const printer = result.printers.find(p => p.default && !p.offline) || result.printers.find(p => !p.offline);
+                if (!printer) throw new LocalPrintError('No se encontró una impresora disponible en este equipo.');
+                this.config = { token: result.token, printer: printer.name }; this.save();
+                this.update({ printers: result.printers, printer: printer.name, status: 'connected', error: null });
+                return true;
+            } catch (error) {
+                this.update({ status: 'error', error: error instanceof Error ? error.message : 'No se pudo detectar una impresora local.' });
+                return false;
+            }
+        })().finally(() => { this.discoveryPromise = null; });
+        return this.discoveryPromise;
+    };
+    initialize = () => {
+        if (this.startupPromise) return this.startupPromise;
+        if (this.startupAttempted) return Promise.resolve(false);
+        this.startupAttempted = true;
+        this.startupPromise = (async () => {
+            if (!this.config?.token) return this.discover();
+            await this.connect();
+            return false;
+        })().finally(() => { this.startupPromise = null; });
+        return this.startupPromise;
+    };
     private async request(path: string, body?: unknown) {
         if (!this.config?.token) throw new LocalPrintError('Abre el conector local para vincular este navegador con la impresora.');
         const controller = new AbortController(); const timer = setTimeout(() => controller.abort(), 35000);
@@ -37,10 +84,11 @@ export class LocalPrinter {
     };
     connect = async () => {
         if (this.state.isPrinting || this.state.status === 'connecting') return;
+        if (!this.config?.token) { await this.discover(); return; }
         this.update({ status: 'connecting', error: null });
         try {
             const result = await this.request('/printers');
-            if (!Array.isArray(result.printers) || !result.printers.every((p: InstalledPrinter) => typeof p.name === 'string' && typeof p.offline === 'boolean')) throw new LocalPrintError('El conector no informó las impresoras.');
+            if (!Array.isArray(result.printers) || !result.printers.every((p: InstalledPrinter) => typeof p.name === 'string' && typeof p.offline === 'boolean' && (p.default === undefined || typeof p.default === 'boolean'))) throw new LocalPrintError('El conector no informó las impresoras.');
             const printer = result.printers.find((p: InstalledPrinter) => p.name === this.config?.printer);
             this.update({ printers: result.printers, printer: printer?.name || '', status: printer && !printer.offline ? 'connected' : 'error', error: !printer ? 'Selecciona una impresora instalada en este equipo.' : printer.offline ? 'La impresora está sin conexión en Windows.' : null });
         } catch (error) { this.update({ status: 'error', error: error instanceof Error ? error.message : 'No se pudo conectar con la impresora local.' }); }

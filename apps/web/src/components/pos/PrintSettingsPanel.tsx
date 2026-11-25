@@ -10,7 +10,7 @@ import { generatePrinterTest } from './receipts/ReceiptToEscPos';
 
 interface PrintSettingsPanelProps { compact?: boolean; onClose?: () => void }
 export function PrintSettingsPanel({ compact = false, onClose }: PrintSettingsPanelProps) {
-    const { status, error, isConnected, isPrinting, connect, cancelConnect, disconnect, printBytes, printers, printer } = useDirectPrinter();
+    const { status, error, localError, isConnected, isPrinting, connect, cancelConnect, disconnect, printBytes, printers, printer } = useDirectPrinter();
     const { autoPrint, setAutoPrint, defaultFormat, setDefaultFormat, useWebSerial, setUseWebSerial,
         serialBaudRate, setSerialBaudRate, columns80, setColumns80, cutPaper, setCutPaper, directConnection, setDirectConnection } = usePrintSettings();
     const [testResult, setTestResult] = useState<string | null>(null);
@@ -75,7 +75,7 @@ export function PrintSettingsPanel({ compact = false, onClose }: PrintSettingsPa
                 {directConnection === 'local' ? <div className="space-y-2">
                     <p className="text-[11px] leading-4 text-muted-foreground">Usa una impresora térmica ESC/POS instalada en Windows, sin filtro de marca ni puerto COM.</p>
                     <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs"><a href={localPrinterSetupUrl} target="_blank" rel="noopener noreferrer" className="text-primary underline">Abrir conector local</a><a href="/downloads/nexopos-print-windows.zip" download className="text-primary underline">Descargar conector Windows</a></div>
-                    {printers.length > 0 && <label className="block space-y-1 text-[11px]"><span>Impresora instalada</span><select aria-label="Impresora instalada" value={printer} disabled={busy} onChange={e => void localPrinter.select(e.target.value)} className="h-9 w-full rounded-md border border-border bg-background px-2 text-xs"><option value="">Selecciona una impresora</option>{printers.map(p => <option key={p.name} value={p.name} disabled={p.offline}>{p.name}{p.offline ? ' · sin conexión' : ''}</option>)}</select></label>}
+                    {printers.length > 0 && <label className="block space-y-1 text-[11px]"><span>Impresora instalada</span><select aria-label="Impresora instalada" value={printer} disabled={busy} onChange={e => void localPrinter.select(e.target.value)} className="h-9 w-full rounded-md border border-border bg-background px-2 text-xs"><option value="">Selecciona una impresora</option>{printers.map(p => <option key={p.name} value={p.name} disabled={p.offline}>{p.name}{p.default ? ' · predeterminada' : ''}{p.offline ? ' · sin conexión' : ''}</option>)}</select></label>}
                 </div> : <p className="text-[11px] leading-4 text-muted-foreground">Requiere una impresora ESC/POS con puerto COM. Una impresora instalada en USB001 o similar usa la opción Impresoras de Windows.</p>}
                 {status === 'unavailable' && <p role="status" className="text-xs text-amber-500">Este navegador no permite abrir puertos COM. Elige Impresoras de Windows para usar el conector local.</p>}
                 {error && status !== 'unavailable' && <p role="alert" className="text-xs text-red-500">{error}</p>}
@@ -89,7 +89,10 @@ export function PrintSettingsPanel({ compact = false, onClose }: PrintSettingsPa
                         <ToggleRow label="Corte automático de papel" description="Para impresoras con cortador" value={cutPaper} onChange={setCutPaper} />
                     </div>
                 </details>
-            </div> : <p className="rounded-lg bg-muted/40 p-3 text-xs leading-5 text-muted-foreground">{defaultFormat === 'A4' ? 'A4 utiliza el diálogo de impresión del sistema.' : 'Elige una impresora instalada en el diálogo del sistema.'}</p>}
+            </div> : <div className="space-y-2 rounded-lg bg-muted/40 p-3">
+                <p className="text-xs leading-5 text-muted-foreground">{defaultFormat === 'A4' ? 'A4 utiliza el diálogo de impresión del sistema.' : 'Elige una impresora instalada en el diálogo del sistema.'}</p>
+                {localError && <p role="status" className="text-xs leading-5 text-amber-500">La impresora local no quedó lista: {localError}</p>}
+            </div>}
             <p className="text-[11px] leading-4 text-muted-foreground">{direct ? 'Al confirmar el pago se imprime el comprobante o la boleta con su timbre, sin diálogos.' : 'Las boletas con timbre se abren desde su PDF.'}</p>
         </div>
         <div data-testid="print-settings-actions" className="shrink-0 space-y-2 border-t border-border bg-muted/20 px-4 py-3">

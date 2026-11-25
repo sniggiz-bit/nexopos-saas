@@ -50,7 +50,7 @@ public static class NexoPosSpool {
 function Invoke-NexoPrint($kind, $job) {
     if ($kind -eq 'list') {
         $printers = @(Get-CimInstance Win32_Printer -OperationTimeoutSec 10 | Where-Object { $_.PortName -notmatch '^(PORTPROMPT:|SHRFAX:|Microsoft\.Office)' })
-        return ,@($printers | ForEach-Object { @{ name = $_.Name; port = $_.PortName; offline = [bool]$_.WorkOffline } })
+        return ,@($printers | ForEach-Object { @{ name = $_.Name; port = $_.PortName; offline = [bool]$_.WorkOffline; default = [bool]$_.Default } })
     }
     if (-not $job -or $job.printer -isnot [string] -or $job.printer.Length -lt 1 -or $job.printer.Length -gt 256) { throw 'Impresora no valida.' }
     if ($kind -eq 'probe') { return @{ ok = [NexoPosSpool]::Probe($job.printer) } }
