@@ -1086,9 +1086,10 @@ export class ProductsService {
             ['traspasos', product._count.transferItems],
             ['compras', product._count.purchaseItems],
             ['integraciones', product._count.ecommerceMappings],
-          ].filter(([, count]) => count > 0);
-          if (history.length > 0) {
-            reasons.push(`Historial asociado: ${history.map(([label, count]) => `${count} ${label}`).join(', ')}`);
+          ];
+          const historyWithRecords = history.filter(([, count]) => count > 0);
+          if (historyWithRecords.length > 0) {
+            reasons.push(`Historial asociado: ${historyWithRecords.map(([label, count]) => `${count} ${label}`).join(', ')}`);
           }
 
           return { product, reasons };
