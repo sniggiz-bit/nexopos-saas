@@ -152,8 +152,8 @@ export function ProductsPage() {
                                             onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = isEven ? 'transparent' : 'hsl(var(--muted) / 0.4)'}>
 
                                                 {/* Producto */}
-                                                <td className="px-5 py-3.5 whitespace-nowrap">
-                                                    <div className="flex items-center gap-3">
+                                                <td className="w-[320px] max-w-[320px] px-5 py-3.5">
+                                                    <div className="flex min-w-0 items-center gap-3">
                                                         {product.image ? (
                                                             <img src={product.image} alt={product.name}
                                                                 className="w-9 h-9 rounded-lg object-cover shrink-0"
@@ -164,9 +164,9 @@ export function ProductsPage() {
                                                                 <Package className="w-4 h-4" style={{ color: C.cyanA(0.4) }} />
                                                             </div>
                                                         )}
-                                                        <div>
-                                                            <p className="font-semibold" style={{ color: C.text }}>{product.name}</p>
-                                                            {product.sku && <p className="text-[10px]" style={{ color: C.muted }}>SKU: {product.sku}</p>}
+                                                        <div className="min-w-0 flex-1">
+                                                            <p className="line-clamp-2 break-words font-semibold leading-snug" title={product.name} style={{ color: C.text }}>{product.name}</p>
+                                                            {product.sku && <p className="truncate text-[10px]" style={{ color: C.muted }}>SKU: {product.sku}</p>}
                                                         </div>
                                                     </div>
                                                 </td>
