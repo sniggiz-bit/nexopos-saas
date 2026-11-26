@@ -33,6 +33,11 @@ export class ProductsController {
     return this.productsService.findCritical(user.tenantId);
   }
 
+  @Get('duplicates')
+  async findDuplicates(@CurrentUser() user: any) {
+    return this.productsService.findDuplicateProducts(user.tenantId);
+  }
+
   /**
    * GET /products
    * Returns paginated products for the authenticated tenant.
@@ -122,6 +127,30 @@ export class ProductsController {
       req.user.tenantId,
       body.ids,
       body.isPublic,
+    );
+  }
+
+  @Patch('deactivate-duplicates')
+  async deactivateDuplicates(
+    @Body() body: { ids?: unknown[] },
+    @CurrentUser() user: any,
+  ) {
+    const ids = body?.ids;
+    if (
+      !Array.isArray(ids)
+      || ids.length === 0
+      || ids.length > 5000
+      || ids.some(id => typeof id !== 'string' || !id.trim())
+    ) {
+      throw new BadRequestException('Selecciona entre 1 y 5000 productos válidos para desactivar.');
+    }
+    const productIds = ids.filter(
+      (id): id is string => typeof id === 'string' && Boolean(id.trim()),
+    );
+
+    return this.productsService.deactivateDuplicateProducts(
+      user.tenantId,
+      productIds,
     );
   }
 

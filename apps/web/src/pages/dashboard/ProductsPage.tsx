@@ -4,9 +4,10 @@ import { useProducts } from '../../hooks/useProducts';
 import { useDeleteProduct } from '../../hooks/useDeleteProduct';
 import { ProductFormModal } from '../../components/dashboard/ProductFormModal';
 import { InventoryKardexModal } from '../../components/dashboard/InventoryKardexModal';
-import { Plus, Search, Edit, Trash2, History, Package, AlertTriangle } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, History, Package, AlertTriangle, Copy } from 'lucide-react';
 import type { Product } from '../../api/types';
 import { useAuth } from '../../context/AuthContext';
+import { DuplicateProductsModal } from '../../components/dashboard/DuplicateProductsModal';
 
 // ── Palette ────────────────────────────────────────────────────────────────────
 const C = {
@@ -44,6 +45,7 @@ export function ProductsPage() {
     const [productToEdit, setProductToEdit] = useState<Product | null>(null);
     const [isKardexOpen,  setIsKardexOpen]  = useState(false);
     const [productForKardex, setProductForKardex] = useState<Product | null>(null);
+    const [isDuplicatesOpen, setIsDuplicatesOpen] = useState(false);
     const { user } = useAuth();
 
     const { data: products, isLoading } = useProducts(user?.tenantId);
@@ -65,9 +67,9 @@ export function ProductsPage() {
             <div className="space-y-5">
 
                 {/* ── Header ── */}
-                <div className="flex items-center justify-between gap-4">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                     {/* Buscador */}
-                    <div className="relative flex-1 max-w-md">
+                    <div className="relative w-full max-w-md flex-1">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none"
                             style={{ color: C.cyanA(0.4) }} />
                         <input
@@ -81,16 +83,24 @@ export function ProductsPage() {
                         />
                     </div>
 
-                    {/* Nuevo Producto */}
-                    <button
-                        onClick={() => { setProductToEdit(null); setIsModalOpen(true); }}
-                        className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-[13px] font-bold transition-all duration-150 shrink-0"
-                        style={{ background: 'linear-gradient(135deg,rgba(0,153,204,0.2) 0%,rgba(0,153,204,0.08) 100%)', border: `1px solid ${C.cyanA(0.3)}`, color: C.cyan }}
-                        onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'linear-gradient(135deg,rgba(0,153,204,0.28) 0%,rgba(0,153,204,0.14) 100%)'}
-                        onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'linear-gradient(135deg,rgba(0,153,204,0.2) 0%,rgba(0,153,204,0.08) 100%)'}>
-                        <Plus className="w-4 h-4" style={{ filter: `drop-shadow(0 0 4px ${C.cyan})` }} />
-                        Nuevo Producto
-                    </button>
+                    <div className="flex w-full shrink-0 flex-wrap items-center justify-end gap-2 sm:w-auto">
+                        <button
+                            onClick={() => setIsDuplicatesOpen(true)}
+                            className="inline-flex items-center gap-2 rounded-xl border border-amber-500/30 bg-amber-500/5 px-4 py-2 text-[13px] font-bold text-amber-500 transition-colors hover:bg-amber-500/10"
+                        >
+                            <Copy className="h-4 w-4" />
+                            Revisar duplicados
+                        </button>
+                        <button
+                            onClick={() => { setProductToEdit(null); setIsModalOpen(true); }}
+                            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-[13px] font-bold transition-all duration-150 shrink-0"
+                            style={{ background: 'linear-gradient(135deg,rgba(0,153,204,0.2) 0%,rgba(0,153,204,0.08) 100%)', border: `1px solid ${C.cyanA(0.3)}`, color: C.cyan }}
+                            onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'linear-gradient(135deg,rgba(0,153,204,0.28) 0%,rgba(0,153,204,0.14) 100%)'}
+                            onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'linear-gradient(135deg,rgba(0,153,204,0.2) 0%,rgba(0,153,204,0.08) 100%)'}>
+                            <Plus className="w-4 h-4" style={{ filter: `drop-shadow(0 0 4px ${C.cyan})` }} />
+                            Nuevo Producto
+                        </button>
+                    </div>
                 </div>
 
                 {/* ── Table ── */}
@@ -231,6 +241,10 @@ export function ProductsPage() {
                 {/* Modals */}
                 <ProductFormModal isOpen={isModalOpen} onClose={() => { setIsModalOpen(false); setProductToEdit(null); }} initialData={productToEdit} />
                 <InventoryKardexModal isOpen={isKardexOpen} onClose={() => { setIsKardexOpen(false); setProductForKardex(null); }} product={productForKardex} />
+                <DuplicateProductsModal
+                    isOpen={isDuplicatesOpen}
+                    onClose={() => setIsDuplicatesOpen(false)}
+                />
             </div>
         </DashboardLayout>
     );

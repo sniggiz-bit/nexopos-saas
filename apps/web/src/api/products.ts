@@ -16,6 +16,38 @@ export interface ProductsQueryParams {
     limit?: number;
 }
 
+export interface DuplicateProductInventory {
+    branchId: string;
+    branchName: string;
+    quantity: number;
+}
+
+export interface DuplicateProductCandidate {
+    id: string;
+    name: string;
+    sku?: string;
+    barcode?: string;
+    price: number;
+    costPrice: number;
+    categoryName?: string;
+    brandName?: string;
+    createdAt: string;
+    updatedAt: string;
+    stock: number;
+    inventory: DuplicateProductInventory[];
+}
+
+export interface DuplicateProductGroup {
+    groupId: string;
+    identifierType: 'SKU' | 'BARCODE';
+    identifierValue: string;
+    products: DuplicateProductCandidate[];
+}
+
+export interface DeactivateDuplicateProductsResult {
+    deactivated: number;
+}
+
 /**
  * Fetch paginated products from the API with optional server-side
  * filtering by search term, category and pagination params.
@@ -39,6 +71,21 @@ export async function getProductsPaginated(
  */
 export async function getProduct(id: string): Promise<Product> {
     const response = await apiClient.get<Product>(`/products/${id}`);
+    return response.data;
+}
+
+export async function getDuplicateProducts(): Promise<DuplicateProductGroup[]> {
+    const response = await apiClient.get<DuplicateProductGroup[]>('/products/duplicates');
+    return response.data;
+}
+
+export async function deactivateDuplicateProducts(
+    ids: string[],
+): Promise<DeactivateDuplicateProductsResult> {
+    const response = await apiClient.patch<DeactivateDuplicateProductsResult>(
+        '/products/deactivate-duplicates',
+        { ids },
+    );
     return response.data;
 }
 

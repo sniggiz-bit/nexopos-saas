@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ProductsService } from './products.service';
 import { PrismaService } from '../prisma/prisma.service';
-import { NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, NotFoundException } from '@nestjs/common';
 
 describe('ProductsService (Referential Integrity)', () => {
   let service: ProductsService;
@@ -12,6 +12,7 @@ describe('ProductsService (Referential Integrity)', () => {
       findMany: jest.fn(),
       create: jest.fn(),
       update: jest.fn(),
+      updateMany: jest.fn(),
     },
     category: {
       findFirst: jest.fn(),
@@ -66,6 +67,25 @@ describe('ProductsService (Referential Integrity)', () => {
         where: { id: 'brand-foreign', tenantId: 'tenant-1' },
       });
     });
+
+    it('rejects creating an active product with an SKU already in use', async () => {
+      mockPrismaService.product.findFirst.mockResolvedValue({ id: 'existing-product' });
+
+      await expect(service.create({
+        name: 'Producto nuevo',
+        price: 1000,
+        tenantId: 'tenant-1',
+        sku: 'SKU-1',
+      })).rejects.toThrow(ConflictException);
+      expect(mockPrismaService.product.findFirst).toHaveBeenCalledWith({
+        where: {
+          tenantId: 'tenant-1',
+          isActive: true,
+          sku: { equals: 'SKU-1', mode: 'insensitive' },
+        },
+        select: { id: true },
+      });
+    });
   });
 
   describe('update', () => {
@@ -87,6 +107,24 @@ describe('ProductsService (Referential Integrity)', () => {
       mockPrismaService.brand.findFirst.mockResolvedValue(null);
 
       await expect(service.update('p1', 'tenant-1', updateDto)).rejects.toThrow(NotFoundException);
+    });
+
+    it('rejects changing an SKU to one already used by another active product', async () => {
+      mockPrismaService.product.findFirst
+        .mockResolvedValueOnce({ id: 'p1', tenantId: 'tenant-1', sku: 'SKU-1' })
+        .mockResolvedValueOnce({ id: 'p2' });
+
+      await expect(service.update('p1', 'tenant-1', { sku: 'SKU-2' }))
+        .rejects.toThrow(ConflictException);
+      expect(mockPrismaService.product.findFirst).toHaveBeenNthCalledWith(2, {
+        where: {
+          tenantId: 'tenant-1',
+          isActive: true,
+          sku: { equals: 'SKU-2', mode: 'insensitive' },
+          NOT: { id: 'p1' },
+        },
+        select: { id: true },
+      });
     });
   });
 
@@ -154,6 +192,9 @@ describe('ProductsService (Referential Integrity)', () => {
         'Se creó la categoría "Nueva categoría".',
         'Se creó la marca "Marca nueva".',
       ]));
+      expect(mockPrismaService.product.findMany).toHaveBeenCalledWith(expect.objectContaining({
+        where: { tenantId: 'tenant-1', isActive: true },
+      }));
     });
 
     it('imports a product without a barcode already owned by another product', async () => {
@@ -208,6 +249,112 @@ describe('ProductsService (Referential Integrity)', () => {
         'user-1',
         'branch-1',
       );
+    });
+  });
+
+  describe('duplicate product cleanup', () => {
+    const productRow = (
+      id: string,
+      sku: string | null,
+      barcode: string | null = null,
+      stock = 0,
+    ) => ({
+      id,
+      name: `Producto ${id}`,
+      sku,
+      barcode,
+      price: 1000,
+      costPrice: 500,
+      category: null,
+      brand: null,
+      createdAt: new Date('2026-01-01T00:00:00.000Z'),
+      updatedAt: new Date('2026-01-02T00:00:00.000Z'),
+      inventory: stock === 0
+        ? []
+        : [{
+          branchId: 'branch-1',
+          quantity: stock,
+          branch: { name: 'Sucursal principal' },
+        }],
+    });
+
+    it('groups products by normalized SKU and falls back to barcode without SKU', async () => {
+      mockPrismaService.product.findMany.mockResolvedValue([
+        productRow('sku-1', ' SKU-1 '),
+        productRow('sku-2', 'sku-1'),
+        productRow('barcode-1', null, 'EAN-1'),
+        productRow('barcode-2', '', ' ean-1 '),
+        productRow('unique', 'SKU-UNIQUE'),
+      ]);
+
+      const groups = await service.findDuplicateProducts('tenant-1');
+
+      expect(groups).toHaveLength(2);
+      expect(groups).toEqual(expect.arrayContaining([
+        expect.objectContaining({
+          identifierType: 'SKU',
+          identifierValue: ' SKU-1 ',
+          products: expect.arrayContaining([
+            expect.objectContaining({ id: 'sku-1' }),
+            expect.objectContaining({ id: 'sku-2' }),
+          ]),
+        }),
+        expect.objectContaining({
+          identifierType: 'BARCODE',
+          identifierValue: 'EAN-1',
+          products: expect.arrayContaining([
+            expect.objectContaining({ id: 'barcode-1' }),
+            expect.objectContaining({ id: 'barcode-2' }),
+          ]),
+        }),
+      ]));
+    });
+
+    it('soft-deactivates selected duplicate products within the tenant', async () => {
+      mockPrismaService.product.findMany.mockResolvedValue([
+        productRow('keep', 'SKU-1'),
+        productRow('duplicate', 'SKU-1'),
+      ]);
+      mockPrismaService.product.updateMany.mockResolvedValue({ count: 1 });
+
+      const result = await service.deactivateDuplicateProducts('tenant-1', ['duplicate']);
+
+      expect(result).toEqual({ deactivated: 1 });
+      expect(mockPrismaService.product.updateMany).toHaveBeenCalledWith({
+        where: {
+          tenantId: 'tenant-1',
+          isActive: true,
+          id: { in: ['duplicate'] },
+        },
+        data: { isActive: false },
+      });
+    });
+
+    it('refuses to deactivate every product in a duplicate group', async () => {
+      mockPrismaService.product.findMany.mockResolvedValue([
+        productRow('duplicate-1', 'SKU-1'),
+        productRow('duplicate-2', 'SKU-1'),
+      ]);
+
+      await expect(
+        service.deactivateDuplicateProducts('tenant-1', ['duplicate-1', 'duplicate-2']),
+      ).rejects.toThrow(ConflictException);
+      expect(mockPrismaService.product.updateMany).not.toHaveBeenCalled();
+    });
+
+    it('refuses products with stock and IDs outside duplicate groups', async () => {
+      mockPrismaService.product.findMany.mockResolvedValue([
+        productRow('keep', 'SKU-1'),
+        productRow('with-stock', 'SKU-1', null, 3),
+      ]);
+
+      await expect(
+        service.deactivateDuplicateProducts('tenant-1', ['with-stock']),
+      ).rejects.toThrow(ConflictException);
+      await expect(
+        service.deactivateDuplicateProducts('tenant-1', ['unrelated']),
+      ).rejects.toThrow(BadRequestException);
+      expect(mockPrismaService.product.updateMany).not.toHaveBeenCalled();
     });
   });
 });

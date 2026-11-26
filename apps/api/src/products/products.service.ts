@@ -1,5 +1,6 @@
 import {
   Injectable,
+  BadRequestException,
   ConflictException,
   NotFoundException,
 } from '@nestjs/common';
@@ -13,12 +14,35 @@ import {
   ImportProductRowResultDto,
   ImportProductsResultDto,
 } from './dto/import-product.dto';
+import {
+  DeactivateDuplicateProductsResultDto,
+  DuplicateProductCandidateDto,
+  DuplicateProductGroupDto,
+} from './dto/duplicate-products.dto';
 import { Prisma } from '@prisma/client';
 
 interface ProductImportIdentity {
   id: string;
   sku: string | null;
   barcode: string | null;
+}
+
+interface ProductDuplicateCandidate {
+  id: string;
+  name: string;
+  sku: string | null;
+  barcode: string | null;
+  price: number;
+  costPrice: number;
+  category: { name: string } | null;
+  brand: { name: string } | null;
+  createdAt: Date;
+  updatedAt: Date;
+  inventory: Array<{
+    branchId: string;
+    quantity: Prisma.Decimal;
+    branch: { name: string };
+  }>;
 }
 
 @Injectable()
@@ -269,6 +293,22 @@ export class ProductsService {
       }
     }
 
+    const sku = this.cleanImportText(productData.sku);
+    if (sku) {
+      productData.sku = sku;
+      const existingProduct = await this.prisma.product.findFirst({
+        where: {
+          tenantId,
+          isActive: true,
+          sku: { equals: sku, mode: 'insensitive' },
+        },
+        select: { id: true },
+      });
+      if (existingProduct) {
+        throw new ConflictException(`El SKU ${sku} ya existe para este tenant.`);
+      }
+    }
+
     // Validate barcode uniqueness per tenant if provided
     if (barcode) {
       const existingProduct = await this.prisma.product.findFirst({
@@ -397,6 +437,26 @@ export class ProductsService {
       throw new NotFoundException(`Product with ID ${id} not found`);
     }
 
+    const nextSku = this.cleanImportText(updateProductDto.sku);
+    const currentSku = this.cleanImportText(existingProductForValidation.sku);
+    if (
+      nextSku
+      && this.normalizeImportName(nextSku) !== this.normalizeImportName(currentSku ?? '')
+    ) {
+      const existingSku = await this.prisma.product.findFirst({
+        where: {
+          tenantId,
+          isActive: true,
+          sku: { equals: nextSku, mode: 'insensitive' },
+          NOT: { id },
+        },
+        select: { id: true },
+      });
+      if (existingSku) {
+        throw new ConflictException(`El SKU ${nextSku} ya existe para este tenant.`);
+      }
+    }
+
     if (updateProductDto.categoryId) {
       const category = await this.prisma.category.findFirst({
         where: { id: updateProductDto.categoryId, tenantId },
@@ -465,7 +525,7 @@ export class ProductsService {
       where: { id },
       data: {
         name: updateProductDto.name,
-        sku: updateProductDto.sku,
+        sku: updateProductDto.sku?.trim(),
         barcode: updateProductDto.barcode,
         price: updateProductDto.price,
         costPrice: updateProductDto.costPrice,
@@ -561,9 +621,9 @@ export class ProductsService {
       select: { id: true, name: true },
     });
     const products = await this.prisma.product.findMany({
-      where: { tenantId },
+      where: { tenantId, isActive: true },
       select: { id: true, sku: true, barcode: true },
-      orderBy: { createdAt: 'asc' },
+      orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
     });
     const selectedBranch = requestedBranchId
       ? await this.prisma.branch.findFirst({
@@ -898,6 +958,149 @@ export class ProductsService {
       where: { id, ...(tenantId ? { tenantId } : {}) },
       data: { isActive: false },
     });
+  }
+
+  async findDuplicateProducts(tenantId: string): Promise<DuplicateProductGroupDto[]> {
+    const products = await this.findActiveDuplicateCandidates(tenantId);
+    return this.buildDuplicateProductGroups(products);
+  }
+
+  async deactivateDuplicateProducts(
+    tenantId: string,
+    ids: string[],
+  ): Promise<DeactivateDuplicateProductsResultDto> {
+    const uniqueIds = [...new Set(ids)];
+    if (uniqueIds.length === 0) {
+      throw new BadRequestException('Selecciona al menos un producto para desactivar.');
+    }
+
+    const products = await this.findActiveDuplicateCandidates(tenantId);
+    const groups = this.buildDuplicateProductGroups(products);
+    const groupProductIds = new Set(groups.flatMap(group => group.products.map(product => product.id)));
+    const selectedIds = new Set(uniqueIds);
+
+    if (uniqueIds.some(id => !groupProductIds.has(id))) {
+      throw new BadRequestException('Solo se pueden desactivar productos pertenecientes a grupos duplicados.');
+    }
+
+    const groupWithoutSurvivor = groups.find(group =>
+      group.products.every(product => selectedIds.has(product.id)),
+    );
+    if (groupWithoutSurvivor) {
+      throw new ConflictException(
+        `Debes conservar al menos un producto del grupo ${groupWithoutSurvivor.identifierType} "${groupWithoutSurvivor.identifierValue}".`,
+      );
+    }
+
+    const productsById = new Map(products.map(product => [product.id, product]));
+    const selectedWithStock = uniqueIds
+      .map(id => productsById.get(id))
+      .filter((product): product is ProductDuplicateCandidate =>
+        Boolean(product?.inventory.some(inventory => Number(inventory.quantity) !== 0)),
+      );
+    if (selectedWithStock.length > 0) {
+      throw new ConflictException(
+        `No se pueden desactivar productos con stock distinto de 0. Ajusta o traspasa primero: ${selectedWithStock.map(product => product.name).join(', ')}.`,
+      );
+    }
+
+    const result = await this.prisma.product.updateMany({
+      where: {
+        tenantId,
+        isActive: true,
+        id: { in: uniqueIds },
+      },
+      data: { isActive: false },
+    });
+
+    return { deactivated: result.count };
+  }
+
+  private async findActiveDuplicateCandidates(tenantId: string): Promise<ProductDuplicateCandidate[]> {
+    return this.prisma.product.findMany({
+      where: { tenantId, isActive: true },
+      select: {
+        id: true,
+        name: true,
+        sku: true,
+        barcode: true,
+        price: true,
+        costPrice: true,
+        category: { select: { name: true } },
+        brand: { select: { name: true } },
+        createdAt: true,
+        updatedAt: true,
+        inventory: {
+          select: {
+            branchId: true,
+            quantity: true,
+            branch: { select: { name: true } },
+          },
+        },
+      },
+      orderBy: { createdAt: 'asc' },
+    });
+  }
+
+  private buildDuplicateProductGroups(
+    products: ProductDuplicateCandidate[],
+  ): DuplicateProductGroupDto[] {
+    const groups = new Map<string, {
+      identifierType: 'SKU' | 'BARCODE';
+      identifierValue: string;
+      products: ProductDuplicateCandidate[];
+    }>();
+
+    for (const product of products) {
+      const sku = this.cleanImportText(product.sku);
+      const barcode = this.cleanImportText(product.barcode);
+      const identifierType = sku ? 'SKU' : barcode ? 'BARCODE' : undefined;
+      const identifierValue = sku ?? barcode;
+      if (!identifierType || !identifierValue) continue;
+
+      const normalizedIdentifier = this.normalizeImportName(identifierValue);
+      const groupId = `${identifierType}:${normalizedIdentifier}`;
+      const group = groups.get(groupId) ?? {
+        identifierType,
+        identifierValue,
+        products: [],
+      };
+      group.products.push(product);
+      groups.set(groupId, group);
+    }
+
+    return [...groups.entries()]
+      .filter(([, group]) => group.products.length > 1)
+      .map(([groupId, group]) => ({
+        groupId,
+        identifierType: group.identifierType,
+        identifierValue: group.identifierValue,
+        products: group.products.map(product => {
+          const inventory = product.inventory.map(level => ({
+            branchId: level.branchId,
+            branchName: level.branch.name,
+            quantity: Number(level.quantity),
+          }));
+          return {
+            id: product.id,
+            name: product.name,
+            sku: product.sku || undefined,
+            barcode: product.barcode || undefined,
+            price: product.price,
+            costPrice: product.costPrice,
+            categoryName: product.category?.name,
+            brandName: product.brand?.name,
+            createdAt: product.createdAt.toISOString(),
+            updatedAt: product.updatedAt.toISOString(),
+            stock: inventory.reduce((total, level) => total + level.quantity, 0),
+            inventory,
+          } satisfies DuplicateProductCandidateDto;
+        }),
+      }))
+      .sort((a, b) =>
+        a.identifierType.localeCompare(b.identifierType)
+        || a.identifierValue.localeCompare(b.identifierValue, 'es'),
+      );
   }
   /**
    * Find products with critical stock (<= minStock)
