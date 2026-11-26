@@ -5,7 +5,6 @@ import { NotFoundException } from '@nestjs/common';
 
 describe('ProductsService (Referential Integrity)', () => {
   let service: ProductsService;
-  let prisma: PrismaService;
 
   const mockPrismaService = {
     product: {
@@ -36,7 +35,6 @@ describe('ProductsService (Referential Integrity)', () => {
     }).compile();
 
     service = module.get<ProductsService>(ProductsService);
-    prisma = module.get<PrismaService>(PrismaService);
     jest.restoreAllMocks();
     jest.clearAllMocks();
   });
