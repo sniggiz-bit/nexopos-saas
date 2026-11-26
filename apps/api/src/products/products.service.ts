@@ -15,6 +15,7 @@ import {
   ImportProductsResultDto,
 } from './dto/import-product.dto';
 import {
+  CleanupDuplicateProductsResultDto,
   DeactivateDuplicateProductsResultDto,
   DuplicateProductCandidateDto,
   DuplicateProductGroupDto,
@@ -32,12 +33,21 @@ interface ProductDuplicateCandidate {
   name: string;
   sku: string | null;
   barcode: string | null;
+  stock: number | null;
   price: number;
   costPrice: number;
   category: { name: string } | null;
   brand: { name: string } | null;
   createdAt: Date;
   updatedAt: Date;
+  _count: {
+    saleItems: number;
+    quoteItems: number;
+    stockMovements: number;
+    transferItems: number;
+    purchaseItems: number;
+    ecommerceMappings: number;
+  };
   inventory: Array<{
     branchId: string;
     quantity: Prisma.Decimal;
@@ -1016,20 +1026,136 @@ export class ProductsService {
     return { deactivated: result.count };
   }
 
-  private async findActiveDuplicateCandidates(tenantId: string): Promise<ProductDuplicateCandidate[]> {
-    return this.prisma.product.findMany({
+  async cleanupDuplicateProducts(
+    tenantId: string,
+    ids: string[],
+  ): Promise<CleanupDuplicateProductsResultDto> {
+    const uniqueIds = [...new Set(ids)];
+    if (uniqueIds.length === 0) {
+      throw new BadRequestException('Selecciona al menos un producto para limpiar.');
+    }
+
+    return this.prisma.$transaction(async tx => {
+      await tx.$queryRawUnsafe(
+        'SELECT "id" FROM "Tenant" WHERE "id"=$1 FOR UPDATE',
+        tenantId,
+      );
+      await tx.$queryRawUnsafe(
+        'SELECT "id" FROM "Product" WHERE "tenantId"=$1 AND "id" = ANY($2::text[]) FOR UPDATE',
+        tenantId,
+        uniqueIds,
+      );
+
+      const products = await this.findActiveDuplicateCandidates(tenantId, tx);
+      const groups = this.buildDuplicateProductGroups(products);
+      const groupProductIds = new Set(groups.flatMap(group => group.products.map(product => product.id)));
+      const selectedIds = new Set(uniqueIds);
+
+      if (uniqueIds.some(id => !groupProductIds.has(id))) {
+        throw new BadRequestException('Solo se pueden limpiar productos pertenecientes a grupos duplicados.');
+      }
+
+      const groupWithoutSurvivor = groups.find(group =>
+        group.products.every(product => selectedIds.has(product.id)),
+      );
+      if (groupWithoutSurvivor) {
+        throw new ConflictException(
+          `Debes conservar al menos un producto del grupo ${groupWithoutSurvivor.identifierType} "${groupWithoutSurvivor.identifierValue}".`,
+        );
+      }
+
+      const productsById = new Map(products.map(product => [product.id, product]));
+      const selectedProducts = uniqueIds.map(id => productsById.get(id)!);
+      const protectedProducts = selectedProducts
+        .map(product => {
+          const reasons: string[] = [];
+          const stockLevels = product.inventory.filter(level => Number(level.quantity) !== 0);
+          if (stockLevels.length > 0) {
+            reasons.push(
+              `Stock: ${stockLevels.map(level => `${level.branch.name} (${Number(level.quantity)})`).join(', ')}`,
+            );
+          }
+          if (product.stock !== null && product.stock !== 0) {
+            reasons.push(`Stock legado: ${product.stock}`);
+          }
+
+          const history = [
+            ['ventas', product._count.saleItems],
+            ['cotizaciones', product._count.quoteItems],
+            ['movimientos de stock', product._count.stockMovements],
+            ['traspasos', product._count.transferItems],
+            ['compras', product._count.purchaseItems],
+            ['integraciones', product._count.ecommerceMappings],
+          ].filter(([, count]) => count > 0);
+          if (history.length > 0) {
+            reasons.push(`Historial asociado: ${history.map(([label, count]) => `${count} ${label}`).join(', ')}`);
+          }
+
+          return { product, reasons };
+        })
+        .filter(item => item.reasons.length > 0);
+      const protectedIds = new Set(protectedProducts.map(item => item.product.id));
+      const deleteIds = uniqueIds.filter(id => !protectedIds.has(id));
+      const deactivateIds = protectedProducts.map(item => item.product.id);
+
+      await tx.inventory.deleteMany({
+        where: { productId: { in: deleteIds }, quantity: 0 },
+      });
+      const remainingInventory = await tx.inventory.count({
+        where: { productId: { in: deleteIds } },
+      });
+      if (remainingInventory > 0) {
+        throw new ConflictException('El stock cambió durante la limpieza. Actualiza la lista e inténtalo nuevamente.');
+      }
+
+      const deleted = await tx.product.deleteMany({
+        where: { tenantId, isActive: true, id: { in: deleteIds } },
+      });
+      const deactivated = await tx.product.updateMany({
+        where: { tenantId, isActive: true, id: { in: deactivateIds } },
+        data: { isActive: false },
+      });
+
+      return {
+        deleted: deleted.count,
+        deactivated: deactivated.count,
+        protectedProducts: protectedProducts.map(({ product, reasons }) => ({
+          id: product.id,
+          name: product.name,
+          reasons,
+        })),
+      };
+    });
+  }
+
+  private async findActiveDuplicateCandidates(
+    tenantId: string,
+    prisma: Pick<Prisma.TransactionClient, 'product'> = this.prisma,
+  ): Promise<ProductDuplicateCandidate[]> {
+    return prisma.product.findMany({
       where: { tenantId, isActive: true },
       select: {
         id: true,
         name: true,
         sku: true,
         barcode: true,
+        stock: true,
         price: true,
         costPrice: true,
         category: { select: { name: true } },
         brand: { select: { name: true } },
         createdAt: true,
         updatedAt: true,
+        _count: {
+          select: {
+            saleItems: true,
+            quoteItems: true,
+            stockMovements: true,
+            transferItems: true,
+            purchaseItems: true,
+            ecommerceMappings: true,
+          },
+        },
         inventory: {
           select: {
             branchId: true,

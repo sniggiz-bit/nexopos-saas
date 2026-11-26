@@ -1,12 +1,14 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import { AlertTriangle, Loader2, RefreshCw, ShieldCheck } from 'lucide-react';
 import toast from 'react-hot-toast';
+import * as XLSX from 'xlsx';
 import {
-    deactivateDuplicateProducts,
+    cleanupDuplicateProducts,
     getDuplicateProducts,
     type DuplicateProductCandidate,
+    type CleanupDuplicateProductsResult,
 } from '../../api/products';
 import {
     Dialog,
@@ -42,6 +44,10 @@ function formatStock(product: DuplicateProductCandidate): string {
 export function DuplicateProductsModal({ isOpen, onClose }: DuplicateProductsModalProps) {
     const queryClient = useQueryClient();
     const [keepers, setKeepers] = useState<Record<string, string>>({});
+    const [isProcessing, setIsProcessing] = useState(false);
+    const [progress, setProgress] = useState('');
+    const [cleanupReport, setCleanupReport] = useState<CleanupDuplicateProductsResult | null>(null);
+    const [cleanupError, setCleanupError] = useState('');
     const duplicatesQuery = useQuery({
         queryKey: ['product-duplicates'],
         queryFn: getDuplicateProducts,
@@ -57,6 +63,13 @@ export function DuplicateProductsModal({ isOpen, onClose }: DuplicateProductsMod
         ));
     }, [isOpen, duplicatesQuery.data]);
 
+    useEffect(() => {
+        if (isOpen) {
+            setCleanupReport(null);
+            setCleanupError('');
+        }
+    }, [isOpen]);
+
     const productsToDeactivate = useMemo(() => {
         return (duplicatesQuery.data ?? [])
             .flatMap(group => {
@@ -65,41 +78,105 @@ export function DuplicateProductsModal({ isOpen, onClose }: DuplicateProductsMod
             });
     }, [duplicatesQuery.data, keepers]);
 
-    const blockedProducts = productsToDeactivate.filter(product =>
+    const productsWithStock = productsToDeactivate.filter(product =>
         product.inventory.some(level => level.quantity !== 0),
     );
-    const deactivateMutation = useMutation({
-        mutationFn: deactivateDuplicateProducts,
-        onSuccess: async result => {
-            toast.success(`${result.deactivated} producto(s) duplicado(s) desactivado(s).`);
+    const handleCleanup = async () => {
+        const ids = productsToDeactivate.map(product => product.id);
+        if (ids.length === 0 || isProcessing) return;
+        const confirmed = window.confirm(
+            `Se procesarán ${ids.length} productos duplicados en lotes. Se borrarán permanentemente los que no tengan stock ni historial; los que tengan referencias o stock se desactivarán y aparecerán en el reporte. ¿Continuar?`,
+        );
+        if (!confirmed) return;
+
+        const totals: CleanupDuplicateProductsResult = {
+            deleted: 0,
+            deactivated: 0,
+            protectedProducts: [],
+        };
+        let processed = 0;
+        setIsProcessing(true);
+        setCleanupReport(null);
+        setCleanupError('');
+        try {
+            for (let offset = 0; offset < ids.length; offset += 100) {
+                const batch = ids.slice(offset, offset + 100);
+                const result = await cleanupDuplicateProducts(batch);
+                totals.deleted += result.deleted;
+                totals.deactivated += result.deactivated;
+                totals.protectedProducts.push(...result.protectedProducts);
+                processed += batch.length;
+                setProgress(`${processed}/${ids.length}`);
+            }
+            setCleanupReport(totals);
+            if (totals.deactivated > 0) {
+                toast(
+                    `${totals.deleted} eliminados; ${totals.deactivated} desactivados por stock o historial.`,
+                    { icon: '⚠️', duration: 10000 },
+                );
+            } else {
+                toast.success(`${totals.deleted} productos duplicados eliminados.`);
+            }
+        } catch (error) {
+            setCleanupReport(totals);
+            const message = getErrorMessage(error);
+            setCleanupError(
+                `Se confirmaron ${processed} de ${ids.length} registros. Revisa la lista actualizada antes de reintentar. ${message}`,
+            );
+            toast.error(`La limpieza se detuvo después de ${processed} de ${ids.length} registros.`);
+        } finally {
+            setProgress('');
             await Promise.all([
                 queryClient.invalidateQueries({ queryKey: ['products-all'] }),
                 queryClient.invalidateQueries({ queryKey: ['products'] }),
                 queryClient.invalidateQueries({ queryKey: ['product-duplicates'] }),
             ]);
-        },
-        onError: error => toast.error(getErrorMessage(error)),
-    });
+            setIsProcessing(false);
+        }
+    };
 
-    const handleDeactivate = () => {
-        const ids = productsToDeactivate.map(product => product.id);
-        if (ids.length === 0 || blockedProducts.length > 0) return;
-        const confirmed = window.confirm(
-            `Se desactivarán ${ids.length} productos. No se borrarán permanentemente y se conservará su historial. ¿Continuar?`,
-        );
-        if (confirmed) deactivateMutation.mutate(ids);
+    const downloadCleanupReport = () => {
+        if (!cleanupReport?.protectedProducts.length) return;
+        const rows = cleanupReport.protectedProducts.map(product => ({
+            'Producto': product.name,
+            'ID': product.id,
+            'Motivo': product.reasons.join(' | '),
+        }));
+        const sheet = XLSX.utils.json_to_sheet(rows);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, sheet, 'No eliminados');
+        XLSX.writeFile(workbook, 'reporte_limpieza_duplicados.xlsx');
     };
 
     return (
-        <Dialog open={isOpen} onOpenChange={open => { if (!open) onClose(); }}>
+        <Dialog open={isOpen} onOpenChange={open => { if (!open && !isProcessing) onClose(); }}>
             <DialogContent className="max-w-4xl max-h-[88vh] overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle>Revisión de productos duplicados</DialogTitle>
                     <DialogDescription>
                         Se agrupan por SKU; si no tienen SKU, se usa el código de barras.
-                        Elige cuál conservar en cada grupo. Los demás se desactivarán sin borrar su historial.
+                        Elige cuál conservar en cada grupo. Los sobrantes sin historial ni stock se borran; los demás se desactivan y se informan.
                     </DialogDescription>
                 </DialogHeader>
+
+                {cleanupReport && (
+                    <div className="space-y-2 rounded-lg border border-border bg-muted/30 p-3 text-sm">
+                        <p>
+                            Resultado: <strong>{cleanupReport.deleted}</strong> eliminados permanentemente y{' '}
+                            <strong>{cleanupReport.deactivated}</strong> desactivados para proteger stock o historial.
+                        </p>
+                        {cleanupError && <p className="text-red-500">{cleanupError}</p>}
+                        {cleanupReport.protectedProducts.length > 0 && (
+                            <button
+                                type="button"
+                                onClick={downloadCleanupReport}
+                                className="rounded-md border border-border px-3 py-1.5 text-xs font-semibold hover:bg-muted"
+                            >
+                                Descargar reporte de protegidos ({cleanupReport.protectedProducts.length})
+                            </button>
+                        )}
+                    </div>
+                )}
 
                 {duplicatesQuery.isLoading ? (
                     <div className="flex items-center justify-center gap-2 py-12 text-muted-foreground">
@@ -126,7 +203,7 @@ export function DuplicateProductsModal({ isOpen, onClose }: DuplicateProductsMod
                 ) : (
                     <div className="space-y-4">
                         <p className="text-sm text-muted-foreground">
-                            {duplicatesQuery.data?.length} grupo(s); {productsToDeactivate.length} registro(s) propuesto(s) para desactivar.
+                            {duplicatesQuery.data?.length} grupo(s); {productsToDeactivate.length} registro(s) propuesto(s) para limpiar.
                             La selección inicial conserva el registro más antiguo; puedes cambiarla antes de continuar.
                         </p>
 
@@ -156,7 +233,7 @@ export function DuplicateProductsModal({ isOpen, onClose }: DuplicateProductsMod
                                                         name={`keep-${group.groupId}`}
                                                         value={product.id}
                                                         checked={isKept}
-                                                        disabled={deactivateMutation.isPending}
+                                                        disabled={isProcessing}
                                                         onChange={() => setKeepers(current => ({
                                                             ...current,
                                                             [group.groupId]: product.id,
@@ -167,7 +244,7 @@ export function DuplicateProductsModal({ isOpen, onClose }: DuplicateProductsMod
                                                         <div className="flex flex-wrap items-center justify-between gap-2">
                                                             <span className="font-semibold">{product.name}</span>
                                                             <span className={`text-xs font-semibold ${isKept ? 'text-emerald-500' : 'text-muted-foreground'}`}>
-                                                                {isKept ? 'Se conservará' : 'Se desactivará'}
+                                                                {isKept ? 'Se conservará' : 'Se borrará o desactivará según corresponda'}
                                                             </span>
                                                         </div>
                                                         <p className="mt-1 text-xs text-muted-foreground">
@@ -194,12 +271,12 @@ export function DuplicateProductsModal({ isOpen, onClose }: DuplicateProductsMod
                             ))}
                         </div>
 
-                        {blockedProducts.length > 0 && (
+                        {productsWithStock.length > 0 && (
                             <div className="flex gap-2 rounded-lg border border-amber-500/30 bg-amber-500/5 p-3 text-sm text-amber-600">
                                 <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
                                 <p>
-                                    No se pueden desactivar los registros seleccionados que tienen stock distinto de 0.
-                                    Traspasa o ajusta ese stock, o elige conservar esos productos.
+                                    Los {productsWithStock.length} registros seleccionados con stock no se borrarán permanentemente;
+                                    se desactivarán y aparecerán en el reporte.
                                 </p>
                             </div>
                         )}
@@ -210,6 +287,7 @@ export function DuplicateProductsModal({ isOpen, onClose }: DuplicateProductsMod
                     <button
                         type="button"
                         onClick={onClose}
+                        disabled={isProcessing}
                         className="rounded-lg border border-border px-4 py-2 text-sm font-medium hover:bg-muted"
                     >
                         Cerrar
@@ -217,16 +295,15 @@ export function DuplicateProductsModal({ isOpen, onClose }: DuplicateProductsMod
                     {(duplicatesQuery.data?.length ?? 0) > 0 && (
                         <button
                             type="button"
-                            onClick={handleDeactivate}
+                            onClick={() => void handleCleanup()}
                             disabled={
-                                deactivateMutation.isPending
+                                isProcessing
                                 || productsToDeactivate.length === 0
-                                || blockedProducts.length > 0
                             }
                             className="inline-flex items-center justify-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
                         >
-                            {deactivateMutation.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
-                            Desactivar {productsToDeactivate.length} sobrante(s)
+                            {isProcessing && <Loader2 className="h-4 w-4 animate-spin" />}
+                            {isProcessing ? `Procesando ${progress}` : `Limpiar ${productsToDeactivate.length} sobrante(s)`}
                         </button>
                     )}
                 </DialogFooter>

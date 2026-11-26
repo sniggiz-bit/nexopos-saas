@@ -31,3 +31,15 @@ export interface DuplicateProductGroupDto {
 export interface DeactivateDuplicateProductsResultDto {
   deactivated: number;
 }
+
+export interface ProtectedDuplicateProductDto {
+  id: string;
+  name: string;
+  reasons: string[];
+}
+
+export interface CleanupDuplicateProductsResultDto {
+  deleted: number;
+  deactivated: number;
+  protectedProducts: ProtectedDuplicateProductDto[];
+}

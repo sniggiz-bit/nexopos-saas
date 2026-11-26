@@ -13,7 +13,14 @@ describe('ProductsService (Referential Integrity)', () => {
       create: jest.fn(),
       update: jest.fn(),
       updateMany: jest.fn(),
+      deleteMany: jest.fn(),
     },
+    inventory: { deleteMany: jest.fn(), count: jest.fn() },
+    $queryRawUnsafe: jest.fn().mockResolvedValue([]),
+    $transaction: jest.fn(async (operation: unknown) => {
+      if (typeof operation === 'function') return operation(mockPrismaService);
+      return Promise.all(operation as Promise<unknown>[]);
+    }),
     category: {
       findFirst: jest.fn(),
       findMany: jest.fn(),
@@ -265,8 +272,17 @@ describe('ProductsService (Referential Integrity)', () => {
       barcode,
       price: 1000,
       costPrice: 500,
+      stock: null,
       category: null,
       brand: null,
+      _count: {
+        saleItems: 0,
+        quoteItems: 0,
+        stockMovements: 0,
+        transferItems: 0,
+        purchaseItems: 0,
+        ecommerceMappings: 0,
+      },
       createdAt: new Date('2026-01-01T00:00:00.000Z'),
       updatedAt: new Date('2026-01-02T00:00:00.000Z'),
       inventory: stock === 0
@@ -355,6 +371,83 @@ describe('ProductsService (Referential Integrity)', () => {
         service.deactivateDuplicateProducts('tenant-1', ['unrelated']),
       ).rejects.toThrow(BadRequestException);
       expect(mockPrismaService.product.updateMany).not.toHaveBeenCalled();
+    });
+
+    it('permanently deletes selected duplicates without stock or history', async () => {
+      mockPrismaService.product.findMany.mockResolvedValue([
+        productRow('keep', 'SKU-1'),
+        productRow('duplicate', 'SKU-1'),
+      ]);
+      mockPrismaService.inventory.deleteMany.mockResolvedValue({ count: 0 });
+      mockPrismaService.inventory.count.mockResolvedValue(0);
+      mockPrismaService.product.deleteMany.mockResolvedValue({ count: 1 });
+      mockPrismaService.product.updateMany.mockResolvedValue({ count: 0 });
+
+      const result = await service.cleanupDuplicateProducts('tenant-1', ['duplicate']);
+
+      expect(result).toEqual({ deleted: 1, deactivated: 0, protectedProducts: [] });
+      expect(mockPrismaService.product.deleteMany).toHaveBeenCalledWith({
+        where: { tenantId: 'tenant-1', isActive: true, id: { in: ['duplicate'] } },
+      });
+      expect(mockPrismaService.inventory.deleteMany).toHaveBeenCalledWith({
+        where: { productId: { in: ['duplicate'] }, quantity: 0 },
+      });
+      expect(mockPrismaService.$transaction).toHaveBeenCalledTimes(1);
+    });
+
+    it('deactivates and reports duplicates with stock or sales history', async () => {
+      mockPrismaService.product.findMany.mockResolvedValue([
+        productRow('keep', 'SKU-1'),
+        productRow('with-stock', 'SKU-1', null, 3),
+        {
+          ...productRow('with-sales', 'SKU-1'),
+          _count: {
+            saleItems: 2,
+            quoteItems: 0,
+            stockMovements: 0,
+            transferItems: 0,
+            purchaseItems: 0,
+            ecommerceMappings: 0,
+          },
+        },
+      ]);
+      mockPrismaService.inventory.deleteMany.mockResolvedValue({ count: 0 });
+      mockPrismaService.inventory.count.mockResolvedValue(0);
+      mockPrismaService.product.deleteMany.mockResolvedValue({ count: 0 });
+      mockPrismaService.product.updateMany.mockResolvedValue({ count: 2 });
+
+      const result = await service.cleanupDuplicateProducts('tenant-1', ['with-stock', 'with-sales']);
+
+      expect(result).toEqual({
+        deleted: 0,
+        deactivated: 2,
+        protectedProducts: [
+          expect.objectContaining({
+            id: 'with-stock',
+            reasons: ['Stock: Sucursal principal (3)'],
+          }),
+          expect.objectContaining({
+            id: 'with-sales',
+            reasons: ['Historial asociado: 2 ventas'],
+          }),
+        ],
+      });
+      expect(mockPrismaService.product.updateMany).toHaveBeenCalledWith({
+        where: { tenantId: 'tenant-1', isActive: true, id: { in: ['with-stock', 'with-sales'] } },
+        data: { isActive: false },
+      });
+    });
+
+    it('does not allow cleanup to remove every product in a duplicate group', async () => {
+      mockPrismaService.product.findMany.mockResolvedValue([
+        productRow('duplicate-1', 'SKU-1'),
+        productRow('duplicate-2', 'SKU-1'),
+      ]);
+
+      await expect(
+        service.cleanupDuplicateProducts('tenant-1', ['duplicate-1', 'duplicate-2']),
+      ).rejects.toThrow(ConflictException);
+      expect(mockPrismaService.$transaction).not.toHaveBeenCalled();
     });
   });
 });

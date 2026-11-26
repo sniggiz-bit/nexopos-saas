@@ -154,6 +154,27 @@ export class ProductsController {
     );
   }
 
+  @Post('duplicates/cleanup')
+  async cleanupDuplicates(
+    @Body() body: { ids?: unknown[] },
+    @CurrentUser() user: any,
+  ) {
+    const ids = body?.ids;
+    if (
+      !Array.isArray(ids)
+      || ids.length === 0
+      || ids.length > 100
+      || ids.some(id => typeof id !== 'string' || !id.trim())
+    ) {
+      throw new BadRequestException('Selecciona entre 1 y 100 productos válidos por lote.');
+    }
+
+    return this.productsService.cleanupDuplicateProducts(
+      user.tenantId,
+      ids.filter((id): id is string => typeof id === 'string' && Boolean(id.trim())),
+    );
+  }
+
   /**
    * PATCH /products/:id
    * Updates an existing product

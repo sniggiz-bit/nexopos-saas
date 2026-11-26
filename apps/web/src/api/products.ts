@@ -44,8 +44,16 @@ export interface DuplicateProductGroup {
     products: DuplicateProductCandidate[];
 }
 
-export interface DeactivateDuplicateProductsResult {
+export interface ProtectedDuplicateProduct {
+    id: string;
+    name: string;
+    reasons: string[];
+}
+
+export interface CleanupDuplicateProductsResult {
+    deleted: number;
     deactivated: number;
+    protectedProducts: ProtectedDuplicateProduct[];
 }
 
 /**
@@ -79,11 +87,11 @@ export async function getDuplicateProducts(): Promise<DuplicateProductGroup[]> {
     return response.data;
 }
 
-export async function deactivateDuplicateProducts(
+export async function cleanupDuplicateProducts(
     ids: string[],
-): Promise<DeactivateDuplicateProductsResult> {
-    const response = await apiClient.patch<DeactivateDuplicateProductsResult>(
-        '/products/deactivate-duplicates',
+): Promise<CleanupDuplicateProductsResult> {
+    const response = await apiClient.post<CleanupDuplicateProductsResult>(
+        '/products/duplicates/cleanup',
         { ids },
     );
     return response.data;
