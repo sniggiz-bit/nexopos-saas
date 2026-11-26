@@ -8,15 +8,16 @@ if ($CheckOnly) {
     exit $LASTEXITCODE
 }
 New-Item -ItemType Directory -Path $destination -Force | Out-Null
-$acl = New-Object System.Security.AccessControl.DirectorySecurity
+$acl = Get-Acl -LiteralPath $destination
 $acl.SetAccessRuleProtection($true, $false)
 $sid = [System.Security.Principal.WindowsIdentity]::GetCurrent().User
-$acl.SetOwner($sid)
+# Modify only the access rules; preserve ownership and audit settings on updates.
+foreach ($existingRule in @($acl.GetAccessRules($true, $false, [System.Security.Principal.SecurityIdentifier]))) { $acl.RemoveAccessRuleSpecific($existingRule) }
 foreach ($identity in @($sid, (New-Object System.Security.Principal.SecurityIdentifier('S-1-5-18')))) {
     $rule = New-Object System.Security.AccessControl.FileSystemAccessRule($identity, 'FullControl', 'ContainerInherit,ObjectInherit', 'None', 'Allow')
     $acl.AddAccessRule($rule)
 }
-Set-Acl -LiteralPath $destination -AclObject $acl
+([System.IO.DirectoryInfo]$destination).SetAccessControl($acl)
 $configPath = Join-Path $destination 'config.json'
 if (Test-Path -LiteralPath $configPath) {
     $config = Get-Content -LiteralPath $configPath -Raw | ConvertFrom-Json

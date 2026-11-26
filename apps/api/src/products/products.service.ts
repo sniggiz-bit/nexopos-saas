@@ -1079,7 +1079,7 @@ export class ProductsService {
             reasons.push(`Stock legado: ${product.stock}`);
           }
 
-          const history = [
+          const history: Array<[string, number]> = [
             ['ventas', product._count.saleItems],
             ['cotizaciones', product._count.quoteItems],
             ['movimientos de stock', product._count.stockMovements],
