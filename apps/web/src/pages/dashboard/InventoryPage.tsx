@@ -12,6 +12,12 @@ import * as XLSX from 'xlsx';
 import { toast } from 'react-hot-toast';
 import { useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../../api/client';
+import {
+    parseProductImportSheet,
+    type ProductImportBatchResult,
+    type ProductImportInput,
+    type ProductImportRowResult,
+} from '../../utils/productExcelImport';
 
 export function InventoryPage() {
     const [searchTerm, setSearchTerm] = useState('');
@@ -22,6 +28,7 @@ export function InventoryPage() {
     const [isAdjustOpen, setIsAdjustOpen] = useState(false);
     const [productForAdjust, setProductForAdjust] = useState<Product | null>(null);
     const [isImporting, setIsImporting] = useState(false);
+    const [importProgress, setImportProgress] = useState('');
     const fileInputRef = useRef<HTMLInputElement>(null);
     const { user } = useAuth();
     const queryClient = useQueryClient();
@@ -109,65 +116,70 @@ export function InventoryPage() {
             const buffer = await file.arrayBuffer();
             const wb = XLSX.read(buffer);
             const ws = wb.Sheets[wb.SheetNames[0]];
-            const rows: any[] = XLSX.utils.sheet_to_json(ws);
+            const rows = parseProductImportSheet(ws);
 
             if (rows.length === 0) {
                 toast.error('El archivo está vacío');
                 return;
             }
 
-            let created = 0;
-            let errors = 0;
-
-            for (const row of rows) {
-                const nombre = row['Nombre']?.toString().trim();
-                if (!nombre) continue;
-
-                const categoryName = row['Categoría']?.toString().trim();
-                const brandName = row['Marca']?.toString().trim();
-
-                // Resolve category ID
-                const cat = categoryName
-                    ? (categories || []).find(c => c.name.toLowerCase() === categoryName.toLowerCase())
-                    : null;
-
-                // Resolve brand ID
-                const brand = brandName
-                    ? (brands || []).find(b => b.name.toLowerCase() === brandName.toLowerCase())
-                    : null;
-
+            const results: ProductImportRowResult[] = [];
+            for (let offset = 0; offset < rows.length; offset += 100) {
+                const batch = rows.slice(offset, offset + 100);
                 try {
-                    await apiClient.post('/products', {
-                        name: nombre,
-                        sku: row['SKU']?.toString().trim() || undefined,
-                        barcode: row['Código de Barras']?.toString().trim() || undefined,
-                        price: Number(row['Precio']) || 0,
-                        costPrice: Number(row['Costo']) || 0,
-                        initialStock: Number(row['Stock Inicial']) || 0,
-                        minStock: Number(row['Stock Mínimo']) || 0,
-                        unitType: row['Tipo']?.toString().trim() === 'Granel' ? 'WEIGHT' : 'UNIT',
-                        categoryId: cat?.id || undefined,
-                        brandId: brand?.id || undefined,
-                        tenantId: user.tenantId,
-                        isActive: true,
-                    });
-                    created++;
-                } catch {
-                    errors++;
+                    const response = await apiClient.post<ProductImportBatchResult>('/products/import', { rows: batch });
+                    results.push(...response.data.results);
+                } catch (error) {
+                    const message = error instanceof Error ? error.message : 'No se pudo enviar este grupo de filas.';
+                    results.push(...batch.map((row: ProductImportInput) => ({
+                        rowNumber: row.rowNumber,
+                        name: row.name,
+                        sku: row.sku,
+                        outcome: 'error' as const,
+                        message,
+                        warnings: row.warnings,
+                    })));
                 }
+                setImportProgress(`${Math.min(offset + batch.length, rows.length)}/${rows.length}`);
             }
 
-            await queryClient.invalidateQueries({ queryKey: ['products'] });
+            await Promise.all([
+                queryClient.invalidateQueries({ queryKey: ['products'] }),
+                queryClient.invalidateQueries({ queryKey: ['products-all'] }),
+                queryClient.invalidateQueries({ queryKey: ['categories'] }),
+                queryClient.invalidateQueries({ queryKey: ['brands'] }),
+            ]);
 
-            if (errors === 0) {
-                toast.success(`${created} producto${created !== 1 ? 's' : ''} importado${created !== 1 ? 's' : ''} correctamente`);
+            const created = results.filter(result => result.outcome === 'created').length;
+            const updated = results.filter(result => result.outcome === 'updated').length;
+            const skipped = results.filter(result => result.outcome === 'skipped').length;
+            const errors = results.filter(result => result.outcome === 'error').length;
+            const rowsWithNotes = results.filter(result =>
+                result.outcome === 'error' || result.outcome === 'skipped' || result.warnings.length > 0,
+            );
+            const summary = `${created} nuevos, ${updated} actualizados, ${skipped} omitidos, ${errors} errores`;
+
+            if (rowsWithNotes.length > 0) {
+                const reportRows = results.map(result => ({
+                    'Fila Excel': result.rowNumber,
+                    'Resultado': result.outcome,
+                    'Nombre': result.name || '',
+                    'SKU': result.sku || '',
+                    'Detalle': [result.message, ...result.warnings].filter(Boolean).join(' | '),
+                }));
+                const reportSheet = XLSX.utils.json_to_sheet(reportRows);
+                const reportBook = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(reportBook, reportSheet, 'Resultado');
+                XLSX.writeFile(reportBook, 'resultado_importacion_productos.xlsx');
+                toast(`${summary}. Se descargó el detalle por fila.`, { icon: '⚠️', duration: 10000 });
             } else {
-                toast(`${created} importados, ${errors} con error`, { icon: '⚠️' });
+                toast.success(`${summary} correctamente`);
             }
-        } catch {
-            toast.error('Error al procesar el archivo Excel');
+        } catch (error) {
+            toast.error(error instanceof Error ? error.message : 'Error al procesar el archivo Excel');
         } finally {
             setIsImporting(false);
+            setImportProgress('');
             if (fileInputRef.current) fileInputRef.current.value = '';
         }
     };
@@ -205,7 +217,7 @@ export function InventoryPage() {
                             ) : (
                                 <Upload className="w-4 h-4 mr-1.5" />
                             )}
-                            {isImporting ? 'Importando...' : 'Importar Excel'}
+                            {isImporting ? (importProgress ? `Importando ${importProgress}` : 'Importando...') : 'Importar Excel'}
                         </button>
                         <button
                             onClick={handleExportExcel}

@@ -9,6 +9,7 @@ import {
   Query,
   UseGuards,
   Request,
+  BadRequestException,
 } from '@nestjs/common';
 import { ProductsService } from './products.service';
 import { ProductResponseDto } from './dto/product-response.dto';
@@ -16,6 +17,7 @@ import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CurrentUser } from '../auth/user.decorator';
+import { ImportProductRowDto } from './dto/import-product.dto';
 
 @Controller('products')
 @UseGuards(JwtAuthGuard)
@@ -82,6 +84,29 @@ export class ProductsController {
   ): Promise<ProductResponseDto> {
     createProductDto.tenantId = user.tenantId;
     return this.productsService.create(createProductDto);
+  }
+
+  /**
+   * Import product rows in bounded batches.
+   */
+  @Post('import')
+  async importProducts(
+    @Body() body: { rows?: ImportProductRowDto[] },
+    @CurrentUser() user: any,
+  ) {
+    if (!Array.isArray(body?.rows) || body.rows.length === 0) {
+      throw new BadRequestException('Se requiere una lista de productos para importar.');
+    }
+    if (body.rows.length > 100) {
+      throw new BadRequestException('La importación acepta hasta 100 filas por solicitud.');
+    }
+
+    return this.productsService.importProducts(
+      user.tenantId,
+      user.branchId,
+      user.sub,
+      body.rows,
+    );
   }
 
   /**
