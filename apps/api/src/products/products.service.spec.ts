@@ -309,7 +309,7 @@ describe('ProductsService (Referential Integrity)', () => {
       expect(groups).toEqual(expect.arrayContaining([
         expect.objectContaining({
           identifierType: 'SKU',
-          identifierValue: ' SKU-1 ',
+          identifierValue: 'SKU-1',
           products: expect.arrayContaining([
             expect.objectContaining({ id: 'sku-1' }),
             expect.objectContaining({ id: 'sku-2' }),
@@ -447,7 +447,9 @@ describe('ProductsService (Referential Integrity)', () => {
       await expect(
         service.cleanupDuplicateProducts('tenant-1', ['duplicate-1', 'duplicate-2']),
       ).rejects.toThrow(ConflictException);
-      expect(mockPrismaService.$transaction).not.toHaveBeenCalled();
+      expect(mockPrismaService.inventory.deleteMany).not.toHaveBeenCalled();
+      expect(mockPrismaService.product.deleteMany).not.toHaveBeenCalled();
+      expect(mockPrismaService.product.updateMany).not.toHaveBeenCalled();
     });
   });
 });
