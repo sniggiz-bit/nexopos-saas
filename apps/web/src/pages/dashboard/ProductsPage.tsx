@@ -1,12 +1,13 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { DashboardLayout } from '../../components/dashboard/DashboardLayout';
-import { useProducts } from '../../hooks/useProducts';
+import { useProductPage } from '../../hooks/useProducts';
+import { useDebounce } from '../../hooks/useDebounce';
+import { CatalogPagination, CATALOG_PAGE_SIZE } from '../../components/dashboard/CatalogPagination';
 import { useDeleteProduct } from '../../hooks/useDeleteProduct';
 import { ProductFormModal } from '../../components/dashboard/ProductFormModal';
 import { InventoryKardexModal } from '../../components/dashboard/InventoryKardexModal';
 import { Plus, Search, Edit, Trash2, History, Package, AlertTriangle, Copy } from 'lucide-react';
 import type { Product } from '../../api/types';
-import { useAuth } from '../../context/AuthContext';
 import { DuplicateProductsModal } from '../../components/dashboard/DuplicateProductsModal';
 
 // ── Palette ────────────────────────────────────────────────────────────────────
@@ -39,20 +40,30 @@ const COLS = ['Producto', 'Cód. Barras', 'Categoría', 'Precio', 'Stock', 'Tipo
 
 export function ProductsPage() {
     const [searchTerm,    setSearchTerm]    = useState('');
+    const [requestedPage, setPage]          = useState(1);
     const [isModalOpen,   setIsModalOpen]   = useState(false);
     const [productToEdit, setProductToEdit] = useState<Product | null>(null);
     const [isKardexOpen,  setIsKardexOpen]  = useState(false);
     const [productForKardex, setProductForKardex] = useState<Product | null>(null);
     const [isDuplicatesOpen, setIsDuplicatesOpen] = useState(false);
-    const { user } = useAuth();
-
-    const { data: products, isLoading } = useProducts(user?.tenantId);
+    const search = useDebounce(searchTerm.trim(), 300);
+    const { data, isLoading, isError, isPlaceholderData, refetch } = useProductPage({
+        search,
+        page: requestedPage,
+        limit: CATALOG_PAGE_SIZE,
+    });
     const deleteProduct = useDeleteProduct();
 
-    const filtered = products?.filter(p =>
-        p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        p.barcode?.toLowerCase().includes(searchTerm.toLowerCase())
-    ) || [];
+    const total = data?.total ?? 0;
+    const lastPage = Math.max(1, data?.totalPages ?? 1);
+    const visibleProducts = data?.data ?? [];
+    const outOfRange = !!data && !isPlaceholderData && requestedPage > lastPage;
+    const loadingProducts = isLoading || isPlaceholderData || search !== searchTerm.trim() || outOfRange;
+    const catalogUnavailable = isError && !data;
+
+    useEffect(() => {
+        if (outOfRange) setPage(lastPage);
+    }, [outOfRange, lastPage]);
 
     const handleEdit   = (p: Product) => { setProductToEdit(p);    setIsModalOpen(true); };
     const handleKardex = (p: Product) => { setProductForKardex(p); setIsKardexOpen(true); };
@@ -74,7 +85,7 @@ export function ProductsPage() {
                             type="text"
                             placeholder="Buscar por nombre o código..."
                             value={searchTerm}
-                            onChange={e => setSearchTerm(e.target.value)}
+                            onChange={e => { setSearchTerm(e.target.value); setPage(1); }}
                             style={inputStyle}
                             onFocus={e  => (e.currentTarget.style.borderColor = C.cyanA(0.4))}
                             onBlur={e   => (e.currentTarget.style.borderColor = 'rgba(0,153,204,0.12)')}
@@ -101,6 +112,15 @@ export function ProductsPage() {
                     </div>
                 </div>
 
+                {!loadingProducts && !catalogUnavailable && (
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                        <p className="text-xs text-muted-foreground">
+                            {total} producto{total !== 1 ? 's' : ''}
+                        </p>
+                        <CatalogPagination page={requestedPage} total={total} onPageChange={setPage} />
+                    </div>
+                )}
+
                 {/* ── Table ── */}
                 <div className="rounded-2xl overflow-hidden"
                     style={{ background: 'hsl(var(--card))', border: `1px solid hsl(var(--border))` }}>
@@ -118,7 +138,7 @@ export function ProductsPage() {
                                 </tr>
                             </thead>
                             <tbody>
-                                {isLoading ? (
+                                {loadingProducts ? (
                                     Array.from({ length: 5 }).map((_, i) => (
                                         <tr key={i} className="animate-pulse" style={{ borderBottom: '1px solid rgba(0,153,204,0.05)' }}>
                                             {COLS.map(c => (
@@ -128,7 +148,16 @@ export function ProductsPage() {
                                             ))}
                                         </tr>
                                     ))
-                                ) : filtered.length === 0 ? (
+                                ) : catalogUnavailable ? (
+                                    <tr>
+                                        <td colSpan={COLS.length} className="px-5 py-12 text-center text-muted-foreground">
+                                            <p role="alert">No se pudo cargar el catálogo completo.</p>
+                                            <button type="button" className="mt-2 font-semibold text-foreground underline" onClick={() => void refetch()}>
+                                                Reintentar
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ) : visibleProducts.length === 0 ? (
                                     <tr>
                                         <td colSpan={COLS.length}>
                                             <div className="py-16 flex flex-col items-center gap-3">
@@ -140,7 +169,7 @@ export function ProductsPage() {
                                         </td>
                                     </tr>
                                 ) : (
-                                    filtered.map((product, idx) => {
+                                    visibleProducts.map((product, idx) => {
                                         const isOutOfStock = product.stock <= 0;
                                         const isLowStock = product.stock <= product.minStock;
                                         const stockColor = isOutOfStock ? 'text-red-700 dark:text-red-400'
@@ -234,13 +263,6 @@ export function ProductsPage() {
                         </table>
                     </div>
 
-                    {/* Footer */}
-                    {filtered.length > 0 && !isLoading && (
-                        <div className="px-5 py-2.5 text-[11px] text-right"
-                            style={{ borderTop: '1px solid hsl(var(--border))', color: C.muted }}>
-                            {filtered.length} producto{filtered.length !== 1 ? 's' : ''}
-                        </div>
-                    )}
                 </div>
 
                 {/* Modals */}

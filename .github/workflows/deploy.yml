@@ -94,6 +94,8 @@ jobs:
         run: docker run --rm --network release-check -v "$PWD/apps/api/scripts:/app/apps/api/scripts:ro" -v "$RUNNER_TEMP/client-check-results:/checks-results" -e NEXOPOS_LIOREN_CHECK=1 -e DATABASE_URL=postgresql://postgres:isolated-check@release-db:5432/release_check nexopos-api-tests node scripts/check-lioren-integrity.cjs
       - name: Check durable offline sales, stock and original shifts
         run: docker run --rm --network release-check -v "$PWD/apps/api/scripts:/app/apps/api/scripts:ro" -e NEXOPOS_OFFLINE_CHECK=1 -e DATABASE_URL=postgresql://postgres:isolated-check@release-db:5432/release_check nexopos-api-tests node scripts/check-offline-pos.cjs
+      - name: Check full catalogue lookup and repeatable Excel imports
+        run: docker run --rm --network release-check -v "$PWD/apps/api/scripts:/app/apps/api/scripts:ro" -e NEXOPOS_CATALOG_CHECK=1 -e DATABASE_URL=postgresql://postgres:isolated-check@release-db:5432/release_check nexopos-api-tests node scripts/check-product-catalog.cjs
       - name: Check support knowledge, handoff isolation and mail retries
         run: docker run --rm --network release-check -v "$PWD/apps/api/scripts:/app/apps/api/scripts:ro" -v "$RUNNER_TEMP/client-check-results:/checks-results" -e NEXOPOS_SUPPORT_CHECK=1 -e DATABASE_URL=postgresql://postgres:isolated-check@release-db:5432/release_check nexopos-api-tests node scripts/check-support-assistant.cjs
       - name: Check real client forms and mobile presentation

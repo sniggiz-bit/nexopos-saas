@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react';
 import { DashboardLayout } from '../../components/dashboard/DashboardLayout';
+import { CatalogPagination, CATALOG_PAGE_SIZE } from '../../components/dashboard/CatalogPagination';
 import { useProducts } from '../../hooks/useProducts';
 import { useCategories } from '../../hooks/useCategories';
 import { useBrands } from '../../hooks/useBrands';
@@ -23,6 +24,7 @@ export function InventoryPage() {
     const [searchTerm, setSearchTerm] = useState('');
     const [categoryFilter, setCategoryFilter] = useState('');
     const [brandFilter, setBrandFilter] = useState('');
+    const [requestedPage, setPage] = useState(1);
     const [isKardexOpen, setIsKardexOpen] = useState(false);
     const [productForKardex, setProductForKardex] = useState<Product | null>(null);
     const [isAdjustOpen, setIsAdjustOpen] = useState(false);
@@ -33,7 +35,7 @@ export function InventoryPage() {
     const { user } = useAuth();
     const queryClient = useQueryClient();
 
-    const { data: products, isLoading } = useProducts(user?.tenantId);
+    const { data: products, isLoading, isError, refetch } = useProducts(user?.tenantId);
     const { data: categories } = useCategories(user?.tenantId || '');
     const { data: brands } = useBrands(user?.tenantId || '');
 
@@ -46,6 +48,9 @@ export function InventoryPage() {
         const matchesBrand = !brandFilter || product.brand?.id === brandFilter;
         return matchesSearch && matchesCategory && matchesBrand;
     });
+    const page = Math.min(requestedPage, Math.max(1, Math.ceil(filteredProducts.length / CATALOG_PAGE_SIZE)));
+    const visibleProducts = filteredProducts.slice((page - 1) * CATALOG_PAGE_SIZE, page * CATALOG_PAGE_SIZE);
+    const catalogUnavailable = isError && !products;
 
     const handleKardex = (product: Product) => {
         setProductForKardex(product);
@@ -109,7 +114,7 @@ export function InventoryPage() {
 
     const handleImportExcel = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
-        if (!file || !user?.tenantId) return;
+        if (!file || !user?.tenantId || isImporting) return;
 
         setIsImporting(true);
         try {
@@ -127,7 +132,7 @@ export function InventoryPage() {
             for (let offset = 0; offset < rows.length; offset += 100) {
                 const batch = rows.slice(offset, offset + 100);
                 try {
-                    const response = await apiClient.post<ProductImportBatchResult>('/products/import', { rows: batch });
+                    const response = await apiClient.post<ProductImportBatchResult>('/products/import', { rows: batch, onlyNew: true });
                     results.push(...response.data.results);
                 } catch (error) {
                     const message = error instanceof Error ? error.message : 'No se pudo enviar este grupo de filas.';
@@ -157,7 +162,7 @@ export function InventoryPage() {
             const rowsWithNotes = results.filter(result =>
                 result.outcome === 'error' || result.outcome === 'skipped' || result.warnings.length > 0,
             );
-            const summary = `${created} nuevos, ${updated} actualizados, ${skipped} omitidos, ${errors} errores`;
+            const summary = `${created} nuevos${updated ? `, ${updated} actualizados` : ''}, ${skipped} omitidos, ${errors} errores`;
 
             if (rowsWithNotes.length > 0) {
                 const reportRows = results.map(result => ({
@@ -210,7 +215,7 @@ export function InventoryPage() {
                             onClick={() => fileInputRef.current?.click()}
                             disabled={isImporting}
                             className="inline-flex items-center px-3 py-2 border border-[#0099CC]/30 rounded-lg text-sm text-cyan-800 dark:text-cyan-300 bg-[#0099CC]/5 hover:bg-[#0099CC]/10 transition-colors shadow-sm disabled:opacity-50"
-                            title="Importar productos desde Excel"
+                            title="Agregar productos nuevos desde Excel"
                         >
                             {isImporting ? (
                                 <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />
@@ -221,7 +226,8 @@ export function InventoryPage() {
                         </button>
                         <button
                             onClick={handleExportExcel}
-                            className="inline-flex items-center px-3 py-2 border border-emerald-500/30 rounded-lg text-sm text-emerald-800 dark:text-emerald-400 bg-emerald-500/5 hover:bg-emerald-500/10 transition-colors shadow-sm"
+                            disabled={isLoading || catalogUnavailable}
+                            className="inline-flex items-center px-3 py-2 border border-emerald-500/30 rounded-lg text-sm text-emerald-800 dark:text-emerald-400 bg-emerald-500/5 hover:bg-emerald-500/10 transition-colors shadow-sm disabled:opacity-50"
                             title="Exportar inventario a Excel"
                         >
                             <Download className="w-4 h-4 mr-1.5" />
@@ -245,13 +251,13 @@ export function InventoryPage() {
                             type="text"
                             placeholder="Buscar por nombre, SKU o código..."
                             value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
+                            onChange={(e) => { setSearchTerm(e.target.value); setPage(1); }}
                             className="w-full pl-9 pr-4 py-2 bg-card border border-border text-foreground rounded-lg focus:ring-2 focus:ring-[#0099CC] focus:border-transparent outline-none transition-all shadow-sm text-sm placeholder:!text-muted-foreground"
                         />
                     </div>
                     <select
                         value={categoryFilter}
-                        onChange={(e) => setCategoryFilter(e.target.value)}
+                        onChange={(e) => { setCategoryFilter(e.target.value); setPage(1); }}
                         className="px-3 py-2 border border-border rounded-lg text-sm text-foreground/[0.85] bg-[hsl(var(--card))] shadow-sm focus:ring-2 focus:ring-[#0099CC] outline-none min-w-[160px]"
                     >
                         <option value="" className="bg-[hsl(var(--card))]">Todas las familias</option>
@@ -261,7 +267,7 @@ export function InventoryPage() {
                     </select>
                     <select
                         value={brandFilter}
-                        onChange={(e) => setBrandFilter(e.target.value)}
+                        onChange={(e) => { setBrandFilter(e.target.value); setPage(1); }}
                         className="px-3 py-2 border border-border rounded-lg text-sm text-foreground/[0.85] bg-[hsl(var(--card))] shadow-sm focus:ring-2 focus:ring-[#0099CC] outline-none min-w-[140px]"
                     >
                         <option value="" className="bg-[hsl(var(--card))]">Todas las marcas</option>
@@ -271,7 +277,7 @@ export function InventoryPage() {
                     </select>
                     {hasFilters && (
                         <button
-                            onClick={() => { setSearchTerm(''); setCategoryFilter(''); setBrandFilter(''); }}
+                            onClick={() => { setSearchTerm(''); setCategoryFilter(''); setBrandFilter(''); setPage(1); }}
                             className="inline-flex items-center px-3 py-2 text-sm text-muted-foreground hover:text-foreground border border-border rounded-lg hover:bg-card transition-colors"
                         >
                             <X className="w-4 h-4 mr-1" /> Limpiar
@@ -280,10 +286,13 @@ export function InventoryPage() {
                 </div>
 
                 {/* Results count */}
-                {!isLoading && (
-                    <p className="text-xs text-muted-foreground">
-                        {filteredProducts.length} producto{filteredProducts.length !== 1 ? 's' : ''} {hasFilters ? 'encontrados' : 'en total'}
-                    </p>
+                {!isLoading && !catalogUnavailable && (
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                        <p className="text-xs text-muted-foreground">
+                            {filteredProducts.length} producto{filteredProducts.length !== 1 ? 's' : ''} {hasFilters ? 'encontrados' : 'en total'}
+                        </p>
+                        <CatalogPagination page={page} total={filteredProducts.length} onPageChange={setPage} />
+                    </div>
                 )}
 
                 {/* Table */}
@@ -307,6 +316,15 @@ export function InventoryPage() {
                                         <p className="mt-2 text-sm text-muted-foreground">Cargando inventario...</p>
                                     </td>
                                 </tr>
+                            ) : catalogUnavailable ? (
+                                <tr>
+                                    <td colSpan={6} className="px-6 py-12 text-center text-muted-foreground">
+                                        <p role="alert">No se pudo cargar el catálogo completo.</p>
+                                        <button type="button" className="mt-2 font-semibold text-foreground underline" onClick={() => void refetch()}>
+                                            Reintentar
+                                        </button>
+                                    </td>
+                                </tr>
                             ) : filteredProducts.length === 0 ? (
                                 <tr>
                                     <td colSpan={6} className="px-6 py-12 text-center text-muted-foreground">
@@ -315,7 +333,7 @@ export function InventoryPage() {
                                     </td>
                                 </tr>
                             ) : (
-                                filteredProducts.map((product) => (
+                                visibleProducts.map((product) => (
                                     <tr key={product.id} className="hover:bg-muted/30 transition-colors">
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <div className="flex items-center">

@@ -100,7 +100,7 @@ export class ProductsController {
    */
   @Post('import')
   async importProducts(
-    @Body() body: { rows?: ImportProductRowDto[] },
+    @Body() body: { rows?: ImportProductRowDto[]; onlyNew?: boolean },
     @CurrentUser() user: any,
   ) {
     if (!Array.isArray(body?.rows) || body.rows.length === 0) {
@@ -115,6 +115,7 @@ export class ProductsController {
       user.branchId,
       user.sub,
       body.rows,
+      body.onlyNew !== false,
     );
   }
 

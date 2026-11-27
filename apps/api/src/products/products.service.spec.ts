@@ -16,6 +16,7 @@ describe('ProductsService (Referential Integrity)', () => {
       deleteMany: jest.fn(),
     },
     inventory: { deleteMany: jest.fn(), count: jest.fn() },
+    $queryRaw: jest.fn().mockResolvedValue([{}]),
     $queryRawUnsafe: jest.fn().mockResolvedValue([]),
     $transaction: jest.fn(async (operation: unknown) => {
       if (typeof operation === 'function') return operation(mockPrismaService);
@@ -156,7 +157,60 @@ describe('ProductsService (Referential Integrity)', () => {
       mockPrismaService.category.findFirst.mockResolvedValue(null);
       mockPrismaService.brand.findFirst.mockResolvedValue(null);
       mockPrismaService.product.findMany.mockResolvedValue([]);
+      mockPrismaService.product.findFirst.mockResolvedValue(null);
       mockPrismaService.branch.findFirst.mockResolvedValue({ id: 'branch-1' });
+    });
+
+    it('skips existing active and inactive products without changing their price, stock or references', async () => {
+      mockPrismaService.product.findMany.mockResolvedValue([
+        { id: 'sku-owner', sku: 'SKU-1', barcode: null, name: 'Producto 1', isActive: true },
+        { id: 'barcode-owner', sku: null, barcode: '000123', name: 'Producto 2', isActive: false },
+        { id: 'name-owner', sku: null, barcode: null, name: 'Café molido', isActive: true },
+      ]);
+      const create = jest.spyOn(service, 'create');
+      const update = jest.spyOn(service, 'update');
+
+      const result = await service.importProducts('tenant-1', 'branch-1', 'user-1', [
+        { rowNumber: 2, sku: 'sku-1', name: 'Otro nombre', price: 1, stock: 9, category: 'No crear' },
+        { rowNumber: 3, sku: 'SKU-2', barcode: '000123' },
+        { rowNumber: 4, name: 'CAFE MOLIDO' },
+      ], true);
+
+      expect(result).toMatchObject({ skipped: 3, created: 0, updated: 0, errors: 0 });
+      expect(result.results[1].message).toContain('inactivo');
+      expect(create).not.toHaveBeenCalled();
+      expect(update).not.toHaveBeenCalled();
+      expect(mockPrismaService.category.create).not.toHaveBeenCalled();
+    });
+
+    it('keeps distinct SKUs when an EAN is shared and skips a repeated SKU within the same upload', async () => {
+      mockPrismaService.product.findMany.mockResolvedValue([
+        { id: 'owner', sku: 'SKU-1', barcode: '123456', name: 'Producto 1', isActive: true },
+      ]);
+      const create = jest.spyOn(service, 'create').mockResolvedValue(productResponse('new', 'Producto 2', 'SKU-2'));
+      const result = await service.importProducts('tenant-1', 'branch-1', 'user-1', [
+        { rowNumber: 2, sku: 'SKU-2', barcode: '123456', name: 'Producto 2', price: 1200, stock: 7 },
+        { rowNumber: 3, sku: 'sku-2', barcode: '123456', name: 'Otro nombre', price: 2000 },
+      ], true);
+
+      expect(result).toMatchObject({ skipped: 1, created: 1, updated: 0, errors: 0 });
+      expect(create).toHaveBeenCalledTimes(1);
+      expect(create).toHaveBeenCalledWith(expect.objectContaining({ sku: 'SKU-2', barcode: undefined, initialStock: 7 }), mockPrismaService);
+      expect(result.results[0].warnings).toContain('El código de barras ya pertenece a otro producto; se importó sin ese código.');
+    });
+
+    it('rechecks the SKU inside the transaction before creating a product', async () => {
+      mockPrismaService.product.findFirst.mockResolvedValue({ id: 'created-by-overlapping-upload' });
+      const create = jest.spyOn(service, 'create');
+
+      const result = await service.importProducts('tenant-1', 'branch-1', 'user-1', [
+        { rowNumber: 2, sku: 'SKU-1', name: 'Producto 1' },
+      ], true);
+
+      expect(result).toMatchObject({ skipped: 1, created: 0, updated: 0, errors: 0 });
+      expect(mockPrismaService.$queryRaw.mock.invocationCallOrder[0])
+        .toBeLessThan(mockPrismaService.product.findFirst.mock.invocationCallOrder[0]);
+      expect(create).not.toHaveBeenCalled();
     });
 
     it('updates a product matched by SKU and creates missing category and brand references', async () => {
