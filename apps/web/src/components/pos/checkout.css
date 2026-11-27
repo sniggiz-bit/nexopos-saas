@@ -1,0 +1,134 @@
+.pos-checkout {
+    --checkout-bg: #ffffff;
+    --checkout-panel: #f1f5f9;
+    --checkout-hover: #e3ebf2;
+    --checkout-text: #162335;
+    --checkout-muted: #465870;
+    --checkout-border: #c4cedb;
+    --checkout-control: #78899f;
+    --checkout-accent: #00576c;
+    --checkout-accent-bg: #def4fa;
+    --checkout-accent-border: #087f9c;
+    --checkout-positive: #096046;
+    --checkout-danger: #a52140;
+    --checkout-warning: #814a0c;
+    --checkout-action: #096648;
+    --checkout-action-hover: #07553c;
+    --checkout-action-text: #ffffff;
+    --checkout-action-key: #044735;
+    --checkout-disabled: #d9e2eb;
+    --checkout-disabled-text: #405169;
+    color: var(--checkout-text);
+    background: var(--checkout-bg);
+}
+
+.dark .pos-checkout {
+    --checkout-bg: #141d2a;
+    --checkout-panel: #1d2939;
+    --checkout-hover: #26364b;
+    --checkout-text: #f3f7fc;
+    --checkout-muted: #bac9db;
+    --checkout-border: #39495e;
+    --checkout-control: #71849d;
+    --checkout-accent: #a1ecfc;
+    --checkout-accent-bg: #153847;
+    --checkout-accent-border: #59c8e4;
+    --checkout-positive: #75ebba;
+    --checkout-danger: #ffacbb;
+    --checkout-warning: #ffd18e;
+    --checkout-action: #41d69d;
+    --checkout-action-hover: #61e0ae;
+    --checkout-action-text: #092d24;
+    --checkout-action-key: #a9f3d5;
+    --checkout-disabled: #2b394b;
+    --checkout-disabled-text: #bac9db;
+    color-scheme: dark;
+}
+
+.pos-checkout .checkout-surface { background: var(--checkout-bg); }
+.pos-checkout .checkout-raised { background: var(--checkout-panel); }
+.pos-checkout .checkout-divider { border-color: var(--checkout-border); }
+.pos-checkout .checkout-muted { color: var(--checkout-muted); }
+.pos-checkout .checkout-highlight { color: var(--checkout-accent); }
+.pos-checkout .checkout-positive { color: var(--checkout-positive); }
+.pos-checkout .checkout-danger { color: var(--checkout-danger); }
+.pos-checkout .checkout-warning { color: var(--checkout-warning); }
+
+.pos-checkout .checkout-method {
+    background: var(--checkout-panel);
+    border-color: var(--checkout-control);
+}
+
+.pos-checkout .checkout-option:hover:not(:disabled),
+.pos-checkout .checkout-menu-item:hover {
+    background: var(--checkout-hover);
+}
+
+.pos-checkout .checkout-option[aria-pressed="true"] {
+    background: var(--checkout-accent-bg);
+    border-color: var(--checkout-accent-border);
+    color: var(--checkout-accent);
+    box-shadow: inset 0 0 0 1px var(--checkout-accent-border);
+}
+
+.pos-checkout .checkout-step { color: var(--checkout-muted); }
+
+.pos-checkout .checkout-step-number,
+.pos-checkout .checkout-key {
+    background: var(--checkout-hover);
+    color: var(--checkout-muted);
+}
+
+.pos-checkout .checkout-key {
+    border-radius: 0.25rem;
+    padding: 0 0.3125rem;
+    font-size: 0.625rem;
+    font-weight: 600;
+    line-height: 1rem;
+}
+
+.pos-checkout .checkout-step[aria-current="step"],
+.pos-checkout .checkout-step[aria-current="step"] .checkout-step-number {
+    color: var(--checkout-accent);
+}
+
+.pos-checkout .checkout-step[aria-current="step"] .checkout-step-number {
+    background: var(--checkout-accent-bg);
+    box-shadow: inset 0 0 0 1px var(--checkout-accent-border);
+}
+
+.pos-checkout .checkout-input {
+    background: var(--checkout-bg);
+    border-color: var(--checkout-control);
+    color: var(--checkout-text);
+}
+
+.pos-checkout .checkout-input::placeholder { color: var(--checkout-muted); }
+
+.pos-checkout :is(button, input, select):focus-visible {
+    outline: 2px solid var(--checkout-accent-border);
+    outline-offset: 2px;
+}
+
+.pos-checkout .checkout-confirm {
+    background: var(--checkout-action);
+    color: var(--checkout-action-text);
+}
+
+.pos-checkout .checkout-confirm:hover:not(:disabled) { background: var(--checkout-action-hover); }
+
+.pos-checkout .checkout-confirm .checkout-key {
+    background: var(--checkout-action-key);
+    color: var(--checkout-action-text);
+}
+
+.pos-checkout .checkout-confirm:disabled {
+    background: var(--checkout-disabled);
+    color: var(--checkout-disabled-text);
+    opacity: 1;
+}
+
+.pos-checkout .checkout-confirm:disabled .checkout-key {
+    background: var(--checkout-panel);
+    color: var(--checkout-muted);
+}

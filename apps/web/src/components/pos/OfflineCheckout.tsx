@@ -51,12 +51,15 @@ export function OfflineCheckout({ settings, includesPresale, onClose }: Props) {
     }
 
     return (
-        <form className="flex h-full flex-col overflow-y-auto p-4 gap-4" onSubmit={submit}>
+        <form className="pos-checkout flex h-full flex-col overflow-y-auto p-4 gap-4" onSubmit={submit}>
             <div>
                 <h2 className="text-lg font-bold">Cobro sin conexión</h2>
-                <p className="text-sm text-muted-foreground">La venta quedar? en este equipo hasta que se sincronice.</p>
+                <p className="checkout-muted text-sm">La venta quedar? en este equipo hasta que se sincronice.</p>
             </div>
-            <p className="text-2xl font-black">{formatPrice(total)}</p>
+            <div className="checkout-raised checkout-divider flex items-center justify-between gap-2 rounded-xl border p-3">
+                <span className="text-sm font-bold">Total a cobrar</span>
+                <strong className="checkout-positive text-2xl font-black tabular-nums">{formatPrice(total)}</strong>
+            </div>
             {!settings.ready || includesPresale ? (
                 <p className="text-sm" role="status">{includesPresale
                     ? 'Necesitas conexión para cobrar una preventa.'
@@ -65,7 +68,7 @@ export function OfflineCheckout({ settings, includesPresale, onClose }: Props) {
                 <>
                     <label className="grid gap-1 text-sm">
                         Pago recibido
-                        <select className="rounded-md border p-2 bg-background" value={method}
+                        <select className="checkout-input rounded-md border p-2" value={method}
                             onChange={event => setMethod(event.target.value as OfflinePayment)} disabled={saving}>
                             <option value={PaymentMethod.CASH}>Efectivo</option>
                             <option value={PaymentMethod.DEBIT}>Débito autorizado en otro terminal</option>
@@ -94,10 +97,10 @@ export function OfflineCheckout({ settings, includesPresale, onClose }: Props) {
                     )}
                 </>
             )}
-            {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
+            {error && <p role="alert" className="checkout-danger text-sm">{error}</p>}
             <div className="mt-auto flex flex-wrap gap-2">
                 <Button type="button" variant="outline" onClick={onClose} disabled={saving}>Volver</Button>
-                <Button type="submit" disabled={!canSave || saving}>{saving ? 'Guardando…' : 'Guardar venta'}</Button>
+                <Button type="submit" className="checkout-confirm grow" disabled={!canSave || saving}>{saving ? 'Guardando…' : 'Guardar venta'}</Button>
             </div>
         </form>
     );
