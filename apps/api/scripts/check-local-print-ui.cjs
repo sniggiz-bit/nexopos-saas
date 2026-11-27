@@ -69,7 +69,7 @@ const local = 'https://localhost:18443';
       assert.equal(await page.getByRole('combobox', { name: 'Velocidad serial', exact: true }).count(), 0);
       await page.screenshot({ path: '/checks-results/local-print-' + name + '.png' });
       await page.getByRole('button', { name: 'Cerrar configuración de impresión', exact: true }).click();
-      const checkout = async () => { await page.getByText(product.name, { exact: true }).first().click(); await page.getByRole('button', { name: /COBRAR/ }).click(); await page.getByRole('button', { name: /CONFIRMAR PAGO/ }).click(); };
+      const checkout = async () => { await page.getByText(product.name, { exact: true }).first().click(); await page.getByRole('button', { name: /COBRAR/ }).click(); await page.getByRole('button', { name: /Confirmar pago/i }).click(); };
       await checkout(); await page.getByText('Enviado a la impresora', { exact: true }).waitFor();
       assert.equal(sales.length, 1); assert.equal(jobs.length, 1); assert.equal(printData.length, 0); assert.equal(sales[0].dteType, 0);
       assert(Buffer.from(jobs[0].data, 'base64').toString('ascii').includes('NO ACREDITA EMISION DTE'));
