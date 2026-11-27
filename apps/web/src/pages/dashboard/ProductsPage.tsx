@@ -15,8 +15,6 @@ const C = {
     cyanA:  (a: number) => `rgba(0,153,204,${a})`,
     red:    '#F87171',
     redA:   (a: number) => `rgba(248,113,113,${a})`,
-    amber:  '#F59E0B',
-    amberA: (a: number) => `rgba(245,158,11,${a})`,
     violet: '#A78BFA',
     violetA:(a: number) => `rgba(167,139,250,${a})`,
     green:  '#34D399',
@@ -86,7 +84,7 @@ export function ProductsPage() {
                     <div className="flex w-full shrink-0 flex-wrap items-center justify-end gap-2 sm:w-auto">
                         <button
                             onClick={() => setIsDuplicatesOpen(true)}
-                            className="inline-flex items-center gap-2 rounded-xl border border-amber-500/30 bg-amber-500/5 px-4 py-2 text-[13px] font-bold text-amber-500 transition-colors hover:bg-amber-500/10"
+                            className="inline-flex items-center gap-2 rounded-xl border border-amber-500/30 bg-amber-500/5 px-4 py-2 text-[13px] font-bold text-amber-800 transition-colors hover:bg-amber-500/10 dark:text-amber-300"
                         >
                             <Copy className="h-4 w-4" />
                             Revisar duplicados
@@ -143,7 +141,10 @@ export function ProductsPage() {
                                     </tr>
                                 ) : (
                                     filtered.map((product, idx) => {
+                                        const isOutOfStock = product.stock <= 0;
                                         const isLowStock = product.stock <= product.minStock;
+                                        const stockColor = isOutOfStock ? 'text-red-700 dark:text-red-400'
+                                            : isLowStock ? 'text-amber-800 dark:text-amber-300' : 'text-foreground';
                                         const isEven     = idx % 2 === 0;
                                         return (
                                             <tr key={product.id}
@@ -189,9 +190,13 @@ export function ProductsPage() {
                                                 {/* Stock */}
                                                 <td className="px-5 py-3.5 whitespace-nowrap">
                                                     <div className="flex items-center gap-1.5">
-                                                        {isLowStock && <AlertTriangle className="w-3.5 h-3.5" style={{ color: C.amber }} />}
-                                                        <span className="font-bold tabular-nums"
-                                                            style={{ color: product.stock === 0 ? C.red : isLowStock ? C.amber : C.text }}>
+                                                        {(isOutOfStock || isLowStock) && (
+                                                            <>
+                                                                <AlertTriangle className={`w-3.5 h-3.5 ${stockColor}`} aria-hidden="true" />
+                                                                <span className="sr-only">{isOutOfStock ? 'Agotado' : 'Stock bajo'}</span>
+                                                            </>
+                                                        )}
+                                                        <span className={`font-bold tabular-nums ${stockColor}`}>
                                                             {product.stock}
                                                         </span>
                                                     </div>
