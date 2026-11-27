@@ -62,6 +62,7 @@ export interface CleanupDuplicateProductsResult {
  */
 export async function getProductsPaginated(
     params: ProductsQueryParams = {},
+    options?: { signal?: AbortSignal; timeout?: number },
 ): Promise<PaginatedProductsResponse> {
     const query = new URLSearchParams();
     if (params.search)     query.set('search',     params.search);
@@ -70,7 +71,7 @@ export async function getProductsPaginated(
     if (params.limit)      query.set('limit',      String(params.limit));
 
     const url = `/products${query.toString() ? `?${query.toString()}` : ''}`;
-    const response = await apiClient.get<PaginatedProductsResponse>(url);
+    const response = await apiClient.get<PaginatedProductsResponse>(url, options);
     return response.data;
 }
 

@@ -92,6 +92,8 @@ jobs:
           docker run --rm --network release-check -v "$PWD/apps/api/scripts:/app/apps/api/scripts:ro" -v "$RUNNER_TEMP/client-check-uploads:/app/uploads" -v "$RUNNER_TEMP/client-check-results:/checks-results" -e NEXOPOS_CLIENT_CHECK=1 -e JWT_SECRET=isolated-ci-check-secret -e DATABASE_URL=postgresql://postgres:isolated-check@release-db:5432/release_check nexopos-api-tests node scripts/check-client-management.cjs
       - name: Check Lioren emission isolation and confirmed credit notes
         run: docker run --rm --network release-check -v "$PWD/apps/api/scripts:/app/apps/api/scripts:ro" -v "$RUNNER_TEMP/client-check-results:/checks-results" -e NEXOPOS_LIOREN_CHECK=1 -e DATABASE_URL=postgresql://postgres:isolated-check@release-db:5432/release_check nexopos-api-tests node scripts/check-lioren-integrity.cjs
+      - name: Check durable offline sales, stock and original shifts
+        run: docker run --rm --network release-check -v "$PWD/apps/api/scripts:/app/apps/api/scripts:ro" -e NEXOPOS_OFFLINE_CHECK=1 -e DATABASE_URL=postgresql://postgres:isolated-check@release-db:5432/release_check nexopos-api-tests node scripts/check-offline-pos.cjs
       - name: Check support knowledge, handoff isolation and mail retries
         run: docker run --rm --network release-check -v "$PWD/apps/api/scripts:/app/apps/api/scripts:ro" -v "$RUNNER_TEMP/client-check-results:/checks-results" -e NEXOPOS_SUPPORT_CHECK=1 -e DATABASE_URL=postgresql://postgres:isolated-check@release-db:5432/release_check nexopos-api-tests node scripts/check-support-assistant.cjs
       - name: Check real client forms and mobile presentation
@@ -100,6 +102,11 @@ jobs:
       - name: Check Lioren validation and metrics interface with provider fixtures
         run: |
           docker run --rm --network release-check -e PLAYWRIGHT_BROWSERS_PATH=/ms-playwright -v "$PWD/apps/api/scripts:/checks:ro" -v "$RUNNER_TEMP/client-check-results:/checks-results" mcr.microsoft.com/playwright:v1.56.1-noble sh -c 'npm install --prefix /tmp/ui-check playwright@1.56.1 --no-audit --no-fund && node /checks/check-lioren-ui.cjs && node /checks/check-internal-checkout-ui.cjs && node /checks/check-local-print-ui.cjs && node /checks/check-credit-note-ui.cjs && node /checks/check-support-ui.cjs'
+      - name: Check PWA offline reload and sales replay in Chrome
+        run: |
+          mkdir -p "$RUNNER_TEMP/offline-pos-web"
+          docker cp release-web:/usr/share/nginx/html/. "$RUNNER_TEMP/offline-pos-web"
+          docker run --rm -e PLAYWRIGHT_BROWSERS_PATH=/ms-playwright -v "$PWD/apps/web/check-offline-pos.cjs:/tmp/offline-pos-ui.cjs:ro" -v "$RUNNER_TEMP/offline-pos-web:/offline-pos-web:ro" mcr.microsoft.com/playwright:v1.56.1-noble sh -c 'npm install --prefix /tmp/ui-check playwright@1.56.1 --no-audit --no-fund && NODE_PATH=/tmp/ui-check/node_modules node /tmp/offline-pos-ui.cjs /offline-pos-web'
       - name: Release startup diagnostics
         if: failure()
         run: docker logs release-api 2>&1 || true

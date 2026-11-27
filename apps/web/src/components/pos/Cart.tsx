@@ -17,6 +17,7 @@ import { useAuth } from '@/context/AuthContext';
 import { CheckoutPanel } from './CheckoutPanel';
 import { type PaymentRequestData } from '@/api/sales';
 import { cn } from '@/lib/utils';
+import { OfflineCheckout, type OfflineCheckoutSettings } from './OfflineCheckout';
 
 interface CartProps {
     onConfirm: (payments: PaymentRequestData[], dteType: number, customerId?: string) => Promise<any>;
@@ -25,15 +26,16 @@ interface CartProps {
     isSuccess?: boolean;
     isError?: boolean;
     saleResult?: any;
+    offline?: OfflineCheckoutSettings;
 }
 
 type Tab = 'cart' | 'presales';
 
-export function Cart({ onConfirm, onCheckoutClose, isProcessing, isSuccess, isError, saleResult }: CartProps) {
+export function Cart({ onConfirm, onCheckoutClose, isProcessing, isSuccess, isError, saleResult, offline }: CartProps) {
     const { items, totals, clearCart, addItem } = useCart();
     const { total, subtotal, totalDiscount, tax } = totals;
     const [activeTab, setActiveTab]     = useState<Tab>('cart');
-    const [checkoutMode, setCheckoutMode] = useState(false);
+    const [checkoutMode, setCheckoutMode] = useState<'online' | 'offline' | null>(null);
     const { toast }        = useToast();
     const { user }         = useAuth();
     const queryClient      = useQueryClient();
@@ -63,12 +65,12 @@ export function Cart({ onConfirm, onCheckoutClose, isProcessing, isSuccess, isEr
             if (checkoutMode) return;
             if (e.key === 'F12') {
                 e.preventDefault();
-                if (!isEmpty) setCheckoutMode(true);
+                if (!isEmpty) setCheckoutMode(offline?.active ? 'offline' : 'online');
             }
         };
         window.addEventListener('keydown', onKey);
         return () => window.removeEventListener('keydown', onKey);
-    }, [checkoutMode, isEmpty]);
+    }, [checkoutMode, isEmpty, offline?.active]);
 
     const { mutate: savePresale, isPending: isSavingPresale } = useMutation({
         mutationFn: () => createQuote({
@@ -116,6 +118,11 @@ export function Cart({ onConfirm, onCheckoutClose, isProcessing, isSuccess, isEr
     const outerClass = 'relative flex flex-col h-full bg-card border-l border-border shadow-xl overflow-hidden';
 
     if (checkoutMode) {
+        const back = () => { if (!isSuccess) restoredQuoteIdRef.current = null; setCheckoutMode(null); onCheckoutClose?.(); };
+        if (offline && (checkoutMode === 'offline' || (offline.active && !isProcessing && !isSuccess && !isError))) {
+            return <div className={outerClass}><OfflineCheckout settings={offline}
+                includesPresale={!!restoredQuoteIdRef.current} onClose={back} /></div>;
+        }
         return (
             <div className={outerClass}>
                 <CheckoutPanel
@@ -124,7 +131,7 @@ export function Cart({ onConfirm, onCheckoutClose, isProcessing, isSuccess, isEr
                     tax={tax}
                     total={total}
                     onConfirm={onConfirm}
-                    onBack={() => { if (!isSuccess) restoredQuoteIdRef.current = null; setCheckoutMode(false); onCheckoutClose?.(); }}
+                    onBack={back}
                     isProcessing={isProcessing ?? false}
                     isSuccess={isSuccess ?? false}
                     isError={isError ?? false}
@@ -248,7 +255,7 @@ export function Cart({ onConfirm, onCheckoutClose, isProcessing, isSuccess, isEr
                             size="icon"
                             className="h-12 w-12 shrink-0 rounded-xl hover:bg-primary/10 hover:text-primary hover:border-primary/30 transition-all"
                             onClick={() => savePresale()}
-                            disabled={isEmpty || isSavingPresale || !user?.tenantId}
+                            disabled={isEmpty || isSavingPresale || !user?.tenantId || offline?.active}
                             title="Guardar como Preventa"
                         >
                             {isSavingPresale
@@ -259,7 +266,7 @@ export function Cart({ onConfirm, onCheckoutClose, isProcessing, isSuccess, isEr
 
                         <Button
                             className="flex-1 h-12 bg-emerald-600 hover:bg-emerald-500 active:scale-[0.98] text-white shadow-lg shadow-emerald-500/25 rounded-xl transition-all duration-150 font-black tracking-widest text-base uppercase"
-                            onClick={() => setCheckoutMode(true)}
+                            onClick={() => setCheckoutMode(offline?.active ? 'offline' : 'online')}
                             disabled={isEmpty || isProcessing}
                         >
                             COBRAR

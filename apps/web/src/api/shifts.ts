@@ -26,8 +26,8 @@ export interface CloseShiftRequest {
     finalAmount: number;
 }
 
-export const getShift = async (branchId: string): Promise<Shift | null> => {
-    const response = await api.get(`/shifts/current/${branchId}`);
+export const getShift = async (branchId: string, timeout?: number): Promise<Shift | null> => {
+    const response = await api.get(`/shifts/current/${branchId}`, { timeout });
     return response.data;
 };
 

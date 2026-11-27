@@ -2,6 +2,7 @@ import {
   Injectable,
   Logger,
   BadRequestException,
+  ConflictException,
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
@@ -67,9 +68,6 @@ export class SalesService {
   }
 
   async createSale(createSaleDto: CreateSaleDto) {
-    this.logger.log(
-      `Starting createSale with DTO: ${JSON.stringify(createSaleDto, null, 2)}`,
-    );
     const {
       tenantId,
       branchId,
@@ -80,6 +78,7 @@ export class SalesService {
       customerId,
       quoteId,
       dteType,
+      offline,
     } = createSaleDto;
 
     if (!tenantId) {
@@ -114,10 +113,43 @@ export class SalesService {
       throw new BadRequestException('Customer is required for CREDIT payments');
     }
 
-    const sale = await this.prisma.$transaction(async (prisma) => {
+    const offlineRecordedAt = offline ? new Date(offline.recordedAt) : undefined;
+    const offlineReceipt = offline?.receiptReference?.trim();
+    const offlinePayment = offline?.paymentReference?.trim();
+    if (offline) {
+      const method = payments[0]?.paymentMethod;
+      if (!userId || offline.operatorId !== userId || status !== "COMPLETED" || dteType !== 0 || customerId || quoteId ||
+          payments.length !== 1 || !method || !["EFECTIVO", "DEBITO", "TRANSFERENCIA"].includes(method) ||
+          (method !== "EFECTIVO" && !offlinePayment)) {
+        throw new BadRequestException("La venta sin conexión requiere un pago en efectivo o un pago externo confirmado.");
+      }
+      if (!offlineRecordedAt || !Number.isFinite(offlineRecordedAt.getTime()) ||
+          offlineRecordedAt.getTime() > Date.now() + 5 * 60_000) {
+        throw new BadRequestException("La hora registrada en este equipo no es válida.");
+      }
+    }
+
+    const { sale, replayed } = await this.prisma.$transaction(async (prisma) => {
       // A missing credential means internal sales, including older POS clients.
       await prisma.$queryRawUnsafe('SELECT "id" FROM "Tenant" WHERE "id"=$1 FOR UPDATE', tenantId);
       const fiscal = await prisma.dteConfig.findUnique({ where: { tenantId }, select: { liorenToken: true } });
+      if (offline) {
+        const existing = await prisma.sale.findUnique({
+          where: { tenantId_offlineId: { tenantId, offlineId: offline.id } },
+          include: { items: { include: { product: true } }, payments: true, customer: true },
+        });
+        if (existing) {
+          if (existing.userId !== userId || existing.branchId !== branchId || existing.cashShiftId !== offline.shiftId) {
+            throw new ConflictException("La venta pendiente corresponde a otro operador, sucursal o turno.");
+          }
+          return { sale: existing, replayed: true };
+        }
+        if (fiscal?.liorenToken?.trim() && !offlineReceipt) {
+          throw new BadRequestException("Ingresa la referencia del documento tributario emitido por contingencia.");
+        }
+        // Closing a shift locks the same row before counting its payments.
+        await prisma.$queryRawUnsafe('SELECT "id" FROM "CashShift" WHERE "id"=$1 AND "branchId"=$2 FOR UPDATE', offline.shiftId, branchId);
+      }
       const requestedType = dteType ?? 39;
       if (![0, 39, 33, 52].includes(requestedType)) throw new BadRequestException('Tipo de documento no válido para una venta.');
       if (!fiscal?.liorenToken?.trim() && [33, 52].includes(requestedType)) throw new BadRequestException('La facturación está desconectada. Usa un comprobante interno.');
@@ -144,16 +176,13 @@ export class SalesService {
 
       // 1.3. Validate products
       const productIds = items.map((item) => item.productId);
-      console.log(`[SalesService] Creating sale for tenant: ${tenantId}, branch: ${branchId}`);
-      console.log(`[SalesService] Requested product IDs:`, productIds);
 
       const products = await prisma.product.findMany({
-        where: { id: { in: productIds }, tenantId },
+        where: { id: { in: productIds }, tenantId, ...(offline ? { isActive: true } : {}) },
       });
 
-      console.log(`[SalesService] Found products in DB:`, products.map(p => ({ id: p.id, tenantId: p.tenantId })));
-
       if (products.length !== productIds.length) {
+        if (offline) throw new ConflictException('Hay productos de la venta que ya no están disponibles.');
         const foundIds = products.map(p => p.id);
         const missingIds = productIds.filter(id => !foundIds.includes(id));
         console.error(`[SalesService] Products mismatch! Missing:`, missingIds);
@@ -162,13 +191,18 @@ export class SalesService {
 
       // 1.5. Validate Open Shift
       const currentShift = await prisma.cashShift.findFirst({
-        where: { branchId, status: 'OPEN' },
+        where: { branchId, status: 'OPEN', ...(offline ? { id: offline.shiftId } : {}) },
       });
 
       if (!currentShift) {
+        if (offline) throw new ConflictException("El turno original ya no está abierto. Revisa esta venta con administración.");
         throw new BadRequestException(
           'No open shift found. Please open a shift first.',
         );
+      }
+
+      if (offlineRecordedAt && offlineRecordedAt.getTime() < currentShift.startTime.getTime() - 5 * 60_000) {
+        throw new ConflictException("La hora de la venta es anterior al inicio del turno.");
       }
 
       const productMap = new Map<string, any>(products.map((p) => [p.id, p]));
@@ -183,7 +217,7 @@ export class SalesService {
 
         if (!inventory || inventory.quantity.lessThan(item.quantity)) {
           throw new BadRequestException(
-            `Insufficient stock for product ${item.productId}`,
+            offline ? `Stock insuficiente para ${productMap.get(item.productId)?.name ?? item.productId}.` : `Insufficient stock for product ${item.productId}`,
           );
         }
 
@@ -235,7 +269,8 @@ export class SalesService {
           customerId,
           quoteId,
           dteType: documentType,
-          ...(documentType === 0 ? { dteStatus: 'INTERNO' } : {}),
+          ...(documentType === 0 ? { dteStatus: offlineReceipt ? 'CONTINGENCIA' : 'INTERNO' } : {}),
+          ...(offline ? { offlineId: offline.id, offlineReceipt, offlinePayment, createdAt: offlineRecordedAt } : {}),
           items: {
             create: items.map((item) => {
               const product = productMap.get(item.productId);
@@ -252,6 +287,7 @@ export class SalesService {
             create: payments?.map((p) => ({
               paymentMethod: p.paymentMethod,
               amount: p.amount,
+              ...(offlineRecordedAt ? { createdAt: offlineRecordedAt } : {}),
             })),
           },
         },
@@ -303,8 +339,10 @@ export class SalesService {
         data: { reference: `SALE-${createdSale.id}` },
       });
 
-      return createdSale;
+      return { sale: createdSale, replayed: false };
     });
+
+    if (replayed) return sale;
 
     // Notify all connected clients for this tenant so their UI refetches stock
     this.eventsService.emit({
@@ -316,7 +354,7 @@ export class SalesService {
 
     // Post-Sale Actions (DTE, etc)
     if (sale.status === 'COMPLETED') {
-      await this.emitDteAndReceipt(sale.id);
+      if (!offlineReceipt) await this.emitDteAndReceipt(sale.id);
       return this.prisma.sale.findUnique({
         where: { id: sale.id },
         include: {
@@ -530,6 +568,7 @@ export class SalesService {
       throw new BadRequestException('La venta no pertenece a este inquilino');
     }
 
+    if (sale.offlineReceipt) throw new BadRequestException('Esta venta tiene un documento externo de contingencia. Debe conciliarse antes de anularla.');
     if (sale.dteSubmission || ['ERROR', 'ENVIANDO', 'PENDIENTE_CONFIRMACION', 'REQUIERE_REVISION'].includes(sale.dteStatus)) throw new BadRequestException('El envío tributario requiere conciliación antes de anular la venta. No se devolverá inventario.');
     if (sale.dteFolio) {
       throw new BadRequestException(

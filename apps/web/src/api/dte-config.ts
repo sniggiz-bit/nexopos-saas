@@ -15,7 +15,7 @@ export interface DteStats {
 }
 export async function getDteConfig(_tenantId: string): Promise<DteConfig | null> { return (await apiClient.get('/dte-config')).data || null; }
 export async function disconnectLioren(): Promise<DteConfig | null> { return (await apiClient.delete('/dte-config/token')).data || null; }
-export async function getSalesMode(): Promise<{ mode: 'internal' | 'fiscal' }> { return (await apiClient.get('/dte-config/sales-mode')).data; }
+export async function getSalesMode(options?: { signal?: AbortSignal; timeout?: number }): Promise<{ mode: 'internal' | 'fiscal' }> { return (await apiClient.get('/dte-config/sales-mode', options)).data; }
 export async function upsertDteConfig(data: UpsertDteConfigData): Promise<DteConfig> { return (await apiClient.post('/dte-config', data)).data; }
 export async function getDteStats(fresh = false): Promise<DteStats> { return (await apiClient.get('/dte-config/stats', { params: fresh ? { refresh: '1' } : {}, timeout: 60000 })).data; }
 export async function openDtePdf(path: string, format?: '58mm' | '80mm' | 'A4') {

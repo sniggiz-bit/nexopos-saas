@@ -13,7 +13,8 @@ export function useSale(options?: UseSaleOptions) {
     const queryClient = useQueryClient();
 
     return useMutation<Sale, Error, CreateSaleRequest>({
-        mutationFn: createSale,
+        mutationFn: (sale) => createSale(sale),
+        networkMode: 'always',
         onSuccess: (data) => {
             // Invalidate sales queries to refetch
             queryClient.invalidateQueries({ queryKey: ['sales'] });

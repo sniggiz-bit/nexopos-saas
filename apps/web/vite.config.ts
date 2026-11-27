@@ -8,7 +8,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['isotipo.png', 'logo.png'],
+      includeAssets: ['pwa/icon-192.png', 'pwa/icon-512.png', 'isotipo.png', 'logo.png'],
       manifest: {
         name: 'NexoPOS',
         short_name: 'NexoPOS',
@@ -20,8 +20,8 @@ export default defineConfig({
         start_url: '/pos',
         scope: '/',
         icons: [
-          { src: '/isotipo.png', sizes: '192x192', type: 'image/png', purpose: 'any maskable' },
-          { src: '/isotipo.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' },
+          { src: '/pwa/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any maskable' },
+          { src: '/pwa/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' },
         ],
         categories: ['business', 'productivity'],
       },
@@ -29,11 +29,12 @@ export default defineConfig({
         skipWaiting: true,
         clientsClaim: true,
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
-        navigateFallbackDenylist: [/^\/api\//],
+        cleanupOutdatedCaches: true,
+        globPatterns: ['index.html', 'assets/**/*.{js,css,woff,woff2}'],
+        navigateFallbackDenylist: [/^\/api(?:\/|$)/, /^\/socket\.io(?:\/|$)/],
         runtimeCaching: [
           {
-            urlPattern: /\/api\/.*/,
+            urlPattern: ({ url, sameOrigin }) => sameOrigin && /^\/api(?:\/|$)/.test(url.pathname),
             handler: 'NetworkOnly',
           },
         ],

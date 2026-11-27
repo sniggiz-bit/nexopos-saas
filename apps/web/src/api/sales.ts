@@ -25,7 +25,17 @@ export interface PaymentRequestData {
     amount: number;
 }
 
+export interface OfflineSaleDetails {
+    id: string;
+    shiftId: string;
+    operatorId: string;
+    recordedAt: string;
+    receiptReference?: string;
+    paymentReference?: string;
+}
+
 export interface CreateSaleRequest {
+    offline?: OfflineSaleDetails;
     tenantId: string;
     branchId: string;
     userId?: string;
@@ -51,6 +61,9 @@ export interface Sale {
     dteProviderId?: string | null;
     dteFolio?: number;
     dteStatus?: string;
+    offlineId?: string | null;
+    offlineReceipt?: string | null;
+    offlinePayment?: string | null;
     dteType?: number;        // 39=Boleta, 33=Factura, 61=NotaCredito, 52=GuiaDespacho
     dtePdfUrl?: string;
     internalReceiptUrl?: string;
@@ -99,8 +112,8 @@ export interface GetSalesParams {
 /**
  * Create a new sale
  */
-export async function createSale(saleData: CreateSaleRequest): Promise<Sale> {
-    const response = await apiClient.post<Sale>('/sales', saleData);
+export async function createSale(saleData: CreateSaleRequest, options?: { timeout?: number; signal?: AbortSignal }): Promise<Sale> {
+    const response = await apiClient.post<Sale>('/sales', saleData, options);
     return response.data;
 }
 
