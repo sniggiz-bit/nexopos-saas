@@ -270,7 +270,7 @@ export class ProductsService {
    */
   async create(
     createProductDto: CreateProductDto,
-    db: Prisma.TransactionClient = this.prisma,
+    db: Pick<Prisma.TransactionClient, 'product' | 'category' | 'brand' | 'supplier'> = this.prisma,
   ): Promise<ProductResponseDto> {
     const { tenantId, barcode, initialStock, priceTiers, branchId, ...productData } =
       createProductDto;
