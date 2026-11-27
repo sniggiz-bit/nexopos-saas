@@ -68,7 +68,15 @@ async function handle(req, res) {
             throw new Error('Offline preparation did not finish: ' + (await page.locator('body').innerText()).slice(0, 500), { cause: error });
         });
         await page.waitForFunction(() => !!navigator.serviceWorker.controller);
-        const manifest = await page.evaluate(async () => (await fetch('/manifest.webmanifest')).json());
+        const pwa = await page.evaluate(async () => {
+            const manifestUrl = document.querySelector('link[rel="manifest"]').href;
+            return { manifestUrl, workerUrl: navigator.serviceWorker.controller.scriptURL,
+                manifest: await (await fetch(manifestUrl)).json() };
+        });
+        const version = new URL(pwa.workerUrl).searchParams.get('v');
+        assert.ok(version, 'Service worker registration must have a version');
+        assert.equal(new URL(pwa.manifestUrl).searchParams.get('v'), version);
+        const manifest = pwa.manifest;
         assert.deepEqual(manifest.icons.map(icon => icon.sizes), ['192x192', '512x512']);
         for (const icon of manifest.icons) {
             const png = await fs.readFile(path.join(dist, icon.src));

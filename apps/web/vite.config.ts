@@ -1,13 +1,33 @@
-import { defineConfig } from 'vite'
+import { defineConfig, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'path'
 import { VitePWA } from 'vite-plugin-pwa'
+
+function versionPwaUrls(): Plugin {
+  return {
+    name: 'nexopos-version-pwa-urls',
+    apply: 'build',
+    enforce: 'post',
+    transformIndexHtml: {
+      order: 'post',
+      handler(html) {
+        const version = html.match(/\/assets\/index-([A-Za-z0-9_-]+)\.js/)?.[1]
+        if (!version) throw new Error('Cannot identify the POS application bundle')
+        const withManifest = html.replace(/(["'])\/manifest\.webmanifest\1/g, (_, quote) => quote + '/manifest.webmanifest?v=' + version + quote)
+        const withWorker = withManifest.replace(/(["'])\/sw\.js\1/g, (_, quote) => quote + '/sw.js?v=' + version + quote)
+        if (withManifest === html || withWorker === withManifest) throw new Error('Cannot version the PWA resource URLs')
+        return withWorker
+      },
+    },
+  }
+}
 
 export default defineConfig({
   plugins: [
     react(),
     VitePWA({
       registerType: 'autoUpdate',
+      injectRegister: 'inline',
       includeAssets: ['pwa/icon-192.png', 'pwa/icon-512.png', 'isotipo.png', 'logo.png'],
       manifest: {
         name: 'NexoPOS',
@@ -41,6 +61,7 @@ export default defineConfig({
       },
       devOptions: { enabled: false },
     }),
+    versionPwaUrls(),
   ],
   resolve: {
     alias: {
