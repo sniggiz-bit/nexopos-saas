@@ -3,6 +3,7 @@ import { DashboardLayout } from '../../components/dashboard/DashboardLayout';
 import { useProductPage } from '../../hooks/useProducts';
 import { useDebounce } from '../../hooks/useDebounce';
 import { CatalogPagination, CATALOG_PAGE_SIZE } from '../../components/dashboard/CatalogPagination';
+import { CATALOG_HEADER_CLASS, CATALOG_ROW_CLASS, CatalogProductIdentity, CatalogRowAction, CatalogUnitBadge } from '../../components/dashboard/CatalogTableParts';
 import { useDeleteProduct } from '../../hooks/useDeleteProduct';
 import { ProductFormModal } from '../../components/dashboard/ProductFormModal';
 import { InventoryKardexModal } from '../../components/dashboard/InventoryKardexModal';
@@ -14,12 +15,6 @@ import { DuplicateProductsModal } from '../../components/dashboard/DuplicateProd
 const C = {
     cyan:   '#0099CC',
     cyanA:  (a: number) => `rgba(0,153,204,${a})`,
-    red:    '#F87171',
-    redA:   (a: number) => `rgba(248,113,113,${a})`,
-    violet: '#A78BFA',
-    violetA:(a: number) => `rgba(167,139,250,${a})`,
-    green:  '#34D399',
-    greenA: (a: number) => `rgba(52,211,153,${a})`,
     text: 'hsl(var(--foreground))',
     muted: 'hsl(var(--muted-foreground))',
     subtle: 'hsl(var(--muted-foreground))',
@@ -122,16 +117,14 @@ export function ProductsPage() {
                 )}
 
                 {/* ── Table ── */}
-                <div className="rounded-2xl overflow-hidden"
-                    style={{ background: 'hsl(var(--card))', border: `1px solid hsl(var(--border))` }}>
+                <div className="overflow-hidden rounded-2xl border border-border bg-card">
                     <div className="overflow-x-auto">
                         <table className="min-w-full text-[13px]">
                             <thead>
-                                <tr style={{ borderBottom: '1px solid hsl(var(--border))' }}>
+                                <tr className="border-b border-border">
                                     {COLS.map(col => (
-                                        <th key={col}
-                                            className={`px-5 py-3.5 text-[10px] font-bold uppercase tracking-widest whitespace-nowrap ${col === 'Acciones' ? 'text-right' : 'text-left'}`}
-                                            style={{ color: 'hsl(var(--muted-foreground))', background: 'hsl(var(--muted))' }}>
+                                        <th key={col} scope="col"
+                                            className={`${CATALOG_HEADER_CLASS} whitespace-nowrap ${col === 'Acciones' ? 'text-right' : 'text-left'}`}>
                                             {col}
                                         </th>
                                     ))}
@@ -169,36 +162,17 @@ export function ProductsPage() {
                                         </td>
                                     </tr>
                                 ) : (
-                                    visibleProducts.map((product, idx) => {
+                                    visibleProducts.map(product => {
                                         const isOutOfStock = product.stock <= 0;
                                         const isLowStock = product.stock <= product.minStock;
                                         const stockColor = isOutOfStock ? 'text-red-700 dark:text-red-400'
                                             : isLowStock ? 'text-amber-800 dark:text-amber-300' : 'text-foreground';
-                                        const isEven     = idx % 2 === 0;
                                         return (
-                                            <tr key={product.id}
-                                            style={{ borderBottom: '1px solid hsl(var(--border))', background: isEven ? 'transparent' : 'hsl(var(--muted) / 0.4)' }}
-                                            onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = C.cyanA(0.04)}
-                                            onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = isEven ? 'transparent' : 'hsl(var(--muted) / 0.4)'}>
+                                            <tr key={product.id} className={CATALOG_ROW_CLASS}>
 
                                                 {/* Producto */}
                                                 <td className="w-[320px] max-w-[320px] px-5 py-3.5">
-                                                    <div className="flex min-w-0 items-center gap-3">
-                                                        {product.image ? (
-                                                            <img src={product.image} alt={product.name}
-                                                                className="w-9 h-9 rounded-lg object-cover shrink-0"
-                                                                style={{ border: `1px solid ${C.cyanA(0.15)}` }} />
-                                                        ) : (
-                                                            <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
-                                                                style={{ background: C.cyanA(0.06), border: `1px solid ${C.cyanA(0.12)}` }}>
-                                                                <Package className="w-4 h-4" style={{ color: C.cyanA(0.4) }} />
-                                                            </div>
-                                                        )}
-                                                        <div className="min-w-0 flex-1">
-                                                            <p className="line-clamp-2 break-words font-semibold leading-snug" title={product.name} style={{ color: C.text }}>{product.name}</p>
-                                                            {product.sku && <p className="truncate text-[10px]" style={{ color: C.muted }}>SKU: {product.sku}</p>}
-                                                        </div>
-                                                    </div>
+                                                    <CatalogProductIdentity product={product} />
                                                 </td>
 
                                                 {/* Barcode */}
@@ -233,26 +207,21 @@ export function ProductsPage() {
 
                                                 {/* Tipo */}
                                                 <td className="px-5 py-3.5 whitespace-nowrap">
-                                                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full"
-                                                        style={product.unitType === 'WEIGHT'
-                                                            ? { background: C.violetA(0.12), color: C.violet, border: `1px solid ${C.violetA(0.25)}` }
-                                                            : { background: C.cyanA(0.08),  color: C.cyan,   border: `1px solid ${C.cyanA(0.2)}`   }}>
-                                                        {product.unitType === 'WEIGHT' ? 'Granel' : 'Unidad'}
-                                                    </span>
+                                                    <CatalogUnitBadge unitType={product.unitType} />
                                                 </td>
 
                                                 {/* Acciones */}
                                                 <td className="px-5 py-3.5 whitespace-nowrap">
                                                     <div className="flex items-center gap-1.5 justify-end">
-                                                        <ActionBtn onClick={() => handleEdit(product)} color={C.cyan} alphaFn={C.cyanA} title="Editar">
-                                                            <Edit className="w-3.5 h-3.5" />
-                                                        </ActionBtn>
-                                                        <ActionBtn onClick={() => handleKardex(product)} color={C.violet} alphaFn={C.violetA} title="Ver Kardex">
-                                                            <History className="w-3.5 h-3.5" />
-                                                        </ActionBtn>
-                                                        <ActionBtn onClick={() => handleDelete(product)} color={C.red} alphaFn={C.redA} title="Eliminar" disabled={deleteProduct.isPending}>
-                                                            <Trash2 className="w-3.5 h-3.5" />
-                                                        </ActionBtn>
+                                                        <CatalogRowAction onClick={() => handleEdit(product)} tone="cyan" label="Editar">
+                                                            <Edit className="h-3.5 w-3.5" aria-hidden="true" />
+                                                        </CatalogRowAction>
+                                                        <CatalogRowAction onClick={() => handleKardex(product)} tone="violet" label="Ver Kardex">
+                                                            <History className="h-3.5 w-3.5" aria-hidden="true" />
+                                                        </CatalogRowAction>
+                                                        <CatalogRowAction onClick={() => handleDelete(product)} tone="red" label="Eliminar" disabled={deleteProduct.isPending}>
+                                                            <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
+                                                        </CatalogRowAction>
                                                     </div>
                                                 </td>
                                             </tr>
@@ -274,21 +243,5 @@ export function ProductsPage() {
                 />
             </div>
         </DashboardLayout>
-    );
-}
-
-// ── Reusable icon action button ────────────────────────────────────────────────
-function ActionBtn({ onClick, color, alphaFn, title, disabled, children }: {
-    onClick: () => void; color: string; alphaFn: (a: number) => string;
-    title: string; disabled?: boolean; children: React.ReactNode;
-}) {
-    return (
-        <button onClick={onClick} title={title} disabled={disabled}
-            className="p-2 rounded-lg transition-all duration-150 disabled:opacity-40"
-            style={{ background: alphaFn(0.08), border: `1px solid ${alphaFn(0.2)}`, color }}
-            onMouseEnter={e => !disabled && ((e.currentTarget as HTMLElement).style.background = alphaFn(0.18))}
-            onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = alphaFn(0.08)}>
-            {children}
-        </button>
     );
 }
