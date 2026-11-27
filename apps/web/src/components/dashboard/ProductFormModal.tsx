@@ -367,6 +367,7 @@ export function ProductFormModal({ isOpen, onClose, initialData }: ProductFormMo
 
         // Collect non-null gallery images
         const gallery = galleryImages.filter(Boolean) as string[];
+        const stock = Number(formData.stock);
 
         try {
             if (initialData) {
@@ -378,7 +379,7 @@ export function ProductFormModal({ isOpen, onClose, initialData }: ProductFormMo
                     price:        parseInt(formData.price),
                     costPrice:    parseInt(formData.costPrice) || 0,
                     minStock:     parseInt(formData.minStock) || 0,
-                    stock:        parseInt(formData.stock) || 0,
+                    ...(stock !== initialData.stock ? { stock } : {}),
                     unitType:     formData.unitType,
                     categoryId:   formData.categoryId || undefined,
                     brandId:      formData.brandId || undefined,
@@ -387,7 +388,6 @@ export function ProductFormModal({ isOpen, onClose, initialData }: ProductFormMo
                     isActive:     formData.isActive,
                     priceTiers:   parsedTiers.length > 0 ? parsedTiers : undefined,
                 });
-                queryClient.invalidateQueries({ queryKey: ['products-all'] });
                 onClose();
             } else {
                 await createProduct.mutateAsync({
@@ -397,7 +397,7 @@ export function ProductFormModal({ isOpen, onClose, initialData }: ProductFormMo
                     price:         parseInt(formData.price),
                     costPrice:     parseInt(formData.costPrice) || 0,
                     minStock:      parseInt(formData.minStock) || 0,
-                    initialStock:  parseInt(formData.stock) || 0,
+                    initialStock:  stock,
                     unitType:      formData.unitType,
                     categoryId:    formData.categoryId || undefined,
                     brandId:       formData.brandId || undefined,
@@ -758,7 +758,8 @@ export function ProductFormModal({ isOpen, onClose, initialData }: ProductFormMo
                         <div>
                             <label style={labelStyle}>Stock Actual (Inventario)</label>
                             <FocusInput
-                                type="number" value={formData.stock} min="0" placeholder="0"
+                                type="number" value={formData.stock} min="0"
+                                step={formData.unitType === 'WEIGHT' ? '0.001' : '1'} placeholder="0"
                                 onChange={e => setFormData({ ...formData, stock: e.target.value })}
                             />
                             {initialData && (

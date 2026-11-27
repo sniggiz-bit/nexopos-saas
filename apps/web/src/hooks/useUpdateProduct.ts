@@ -32,10 +32,14 @@ export function useUpdateProduct() {
 
     return useMutation({
         mutationFn: updateProduct,
-        onSuccess: (updatedProduct) => {
-            queryClient.setQueryData<Product[]>(['products'], (old = []) =>
-                old.map(p => p.id === updatedProduct.id ? updatedProduct : p)
-            );
+        onSuccess: async (_product, { id, stock }) => {
+            await Promise.all([
+                queryClient.invalidateQueries({ queryKey: ['products-all'] }),
+                queryClient.invalidateQueries({ queryKey: ['products'] }),
+                ...(stock === undefined ? [] : [
+                    queryClient.invalidateQueries({ queryKey: ['kardex', id] }),
+                ]),
+            ]);
             toast.success('Producto actualizado exitosamente');
         },
         onError: (error: any) => {

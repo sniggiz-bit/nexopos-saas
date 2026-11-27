@@ -569,8 +569,7 @@ export class ProductsService {
     if (updateProductDto.stock !== undefined) {
       const newStock = new Prisma.Decimal(updateProductDto.stock);
 
-      // Use existing inventory branch, or the first branch of the tenant
-      const existingInv = await this.prisma.inventory.findFirst({
+      const existingInv = stockBranchId ? null : await this.prisma.inventory.findFirst({
         where: { productId: id },
       });
       const fallbackBranch = stockBranchId || existingInv ? null : await this.prisma.branch.findFirst({
@@ -613,7 +612,7 @@ export class ProductsService {
       }
     }
 
-    return this.findOne(id, product.tenantId);
+    return this.findOne(id, product.tenantId, stockBranchId);
   }
 
   async importProducts(

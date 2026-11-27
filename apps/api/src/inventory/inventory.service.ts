@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateMovementDto } from './dto/create-movement.dto';
 import { Prisma, MovementType } from '@prisma/client';
@@ -6,6 +6,18 @@ import { Prisma, MovementType } from '@prisma/client';
 @Injectable()
 export class InventoryService {
   constructor(private readonly prisma: PrismaService) {}
+
+  async adjustStock(tenantId: string, data: CreateMovementDto) {
+    return this.prisma.$transaction(async (tx) => {
+      const product = await tx.product.findFirst({
+        where: { id: data.productId, tenantId },
+        select: { id: true },
+      });
+      if (!product) throw new NotFoundException('Producto no encontrado.');
+
+      return this.logMovement(data, tx);
+    });
+  }
 
   /**
    * Records a stock movement and updates the inventory level atomically.

@@ -35,16 +35,21 @@ export function StockAdjustModal({ product, onClose, onSuccess }: StockAdjustMod
 
         setIsLoading(true);
         try {
-            await apiClient.patch<Product>(`/products/${product.id}`, {
-                stock: newStock,
-                stockNote: note || undefined,
+            await apiClient.post('/inventory/adjust', {
+                productId: product.id,
+                quantity: finalQty,
+                note: note || undefined,
             });
             toast.success(
                 mode === 'add'
                     ? `+${qty} ${product.unitType === 'WEIGHT' ? 'kg' : 'uds'} agregados a ${product.name}`
                     : `-${qty} ${product.unitType === 'WEIGHT' ? 'kg' : 'uds'} descontados de ${product.name}`
             );
-            await queryClient.invalidateQueries({ queryKey: ['products-all'] });
+            await Promise.all([
+                queryClient.invalidateQueries({ queryKey: ['products-all'] }),
+                queryClient.invalidateQueries({ queryKey: ['products'] }),
+                queryClient.invalidateQueries({ queryKey: ['kardex', product.id] }),
+            ]);
             onSuccess();
             onClose();
         } catch (error: any) {

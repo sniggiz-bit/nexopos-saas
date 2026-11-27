@@ -4,12 +4,13 @@ import { useAuth } from '@/context/AuthContext';
 
 const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
+const PRODUCT_QUERIES = [['products'], ['products-all']];
 const QUERY_KEYS_BY_EVENT: Record<string, string[][]> = {
-  'sale.created': [['products'], ['sales'], ['dashboard'], ['shifts']],
-  'purchase.created': [['products'], ['purchases'], ['dashboard']],
-  'transfer.created': [['products'], ['transfers'], ['dashboard']],
-  'inventory.adjusted': [['products'], ['dashboard']],
-  'stock.updated': [['products'], ['dashboard']],
+  'sale.created': [...PRODUCT_QUERIES, ['sales'], ['dashboard'], ['shifts']],
+  'purchase.created': [...PRODUCT_QUERIES, ['purchases'], ['dashboard']],
+  'transfer.created': [...PRODUCT_QUERIES, ['transfers'], ['dashboard']],
+  'inventory.adjusted': [...PRODUCT_QUERIES, ['dashboard']],
+  'stock.updated': [...PRODUCT_QUERIES, ['dashboard']],
 };
 
 /**
