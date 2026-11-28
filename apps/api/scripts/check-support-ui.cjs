@@ -228,10 +228,10 @@ async function noOverflow(page) {
     const publicPage = await publicContext.newPage();
     await publicPage.goto(origin);
     await publicPage
-      .getByRole('button', { name: 'Abrir chat de soporte' })
+      .getByRole('button', { name: 'Abrir chat de ventas y soporte' })
       .click();
     const publicChat = publicPage.getByRole('dialog', {
-      name: 'Chat de soporte NexoPOS',
+      name: 'Chat de ventas y soporte NexoPOS',
     });
     await publicChat
       .getByRole('button', { name: question, exact: true })
@@ -239,7 +239,7 @@ async function noOverflow(page) {
     await publicChat.getByText(answer, { exact: false }).waitFor();
     await publicPage.reload();
     await publicPage
-      .getByRole('button', { name: 'Abrir chat de soporte' })
+      .getByRole('button', { name: 'Abrir chat de ventas y soporte' })
       .click();
     await publicChat.getByText(answer, { exact: false }).waitFor();
     await noOverflow(publicPage);
