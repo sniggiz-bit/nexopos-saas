@@ -87,6 +87,13 @@ until docker exec nexopos_web wget -q -O /dev/null http://127.0.0.1/api; do
   [ "$attempt" -lt 30 ] || fail "El proxy web no pudo acceder a la API."
   sleep 2
 done
+printf '%s\n' "Verificando portada pública a través del proxy de cPanel."
+attempt=0
+until [ "$(curl -4 --max-time 10 -sS -o /dev/null -w '%{http_code}' https://nexopos.cl/ || true)" = 200 ]; do
+  attempt=$((attempt + 1))
+  [ "$attempt" -lt 12 ] || fail "La portada pública no respondió 200 después de actualizar el frontend."
+  sleep 2
+done
 rollback_needed=0
 printf 'DEPLOYED_SHA=%s\nBACKUP_DIR=%s\n' "$release" "$backup"
 docker inspect --format '{{.Name}} {{.Image}} {{.State.Status}}' nexopos_api nexopos_web

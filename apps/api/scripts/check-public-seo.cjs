@@ -48,6 +48,12 @@ function meta(html, attribute, name) {
     const target = new URL(response.headers.get('location'), origin);
     assert.equal(target.pathname, path.startsWith('/contacto') ? '/contacto' : '/');
   }
+  // The production cPanel proxy requests this path when the visitor opens '/'.
+  const { response: cpanelResponse, html: cpanelHome } = await request('/index.php?seo-routing-probe=release-check');
+  assert.equal(cpanelResponse.status, 200, 'cPanel DirectoryIndex compatibility');
+  assert.equal((cpanelHome.match(/<h1\b/g) || []).length, 1);
+  assert.match(cpanelHome, /rel="canonical" href="https:\/\/nexopos.cl\/"/);
+  assert.match(meta(cpanelHome, 'name', 'robots'), /^index,/);
   for (const path of ['/login', '/register', '/dashboard', '/dashboard/products', '/admin', '/admin/branches', '/pos', '/auth/sso']) {
     const { response, html } = await request(path);
     assert.equal(response.status, 200, path); assert.match(response.headers.get('x-robots-tag') || '', /noindex/, path);
@@ -69,7 +75,7 @@ function meta(html, attribute, name) {
   if (new URL(origin).hostname === 'release-web') {
     const response = await wwwRequest('/'); assert.equal(response.status, 301); assert.equal(response.headers.location, 'https://nexopos.cl/');
     const verification = await wwwRequest('/googledf3aaa8616c6306f.html'); assert.equal(verification.status, 200);
-    for (const path of ['/pos', '/login', '/register', '/sw.js', '/manifest.webmanifest', '/index.html', '/app-shell.html', '/store/seo-check-store']) {
+    for (const path of ['/pos', '/login', '/register', '/sw.js', '/manifest.webmanifest', '/index.html', '/index.php', '/app-shell.html', '/store/seo-check-store']) {
       const response = await wwwRequest(path); assert.equal(response.status, 200, 'Preserve existing client origin: ' + path);
     }
     const wwwApi = await wwwRequest('/api/support/chat'); assert.equal(wwwApi.status, 401);

@@ -121,6 +121,7 @@ function App() {
                     {/* Public Routes */}
                     <Route path="/landing" element={<HomeAlias />} />
                     <Route path="/index.html" element={<HomeAlias />} />
+                    <Route path="/index.php" element={<HomeAlias />} />
                     <Route path="/register" element={<RegisterPage />} />
                     <Route path="/auth/sso" element={<SsoLoginPage />} />
                     <Route path="/login" element={<LoginPage />} />

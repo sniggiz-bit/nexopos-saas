@@ -23,7 +23,7 @@ export const PUBLIC_PAGES: Record<string, { title: string; description: string; 
 
 export function canonicalUrl(pathname: string): string {
     const path = '/' + pathname.split(/[?#]/)[0].replace(/^\/+|\/+$/g, '');
-    return SITE_URL + (path === '/landing' || path === '/index.html' ? '/' : path);
+    return SITE_URL + (path === '/landing' || path === '/index.html' || path === '/index.php' ? '/' : path);
 }
 
 export function structuredData(pathname: string, title: string, description: string): Record<string, unknown>[] {
@@ -44,7 +44,7 @@ export function structuredData(pathname: string, title: string, description: str
 }
 
 export function routeSeo(pathname: string): PageSeo {
-    const path = pathname === '/landing' || pathname === '/index.html' ? '/' : (pathname.replace(/\/+$/, '') || '/');
+    const path = pathname === '/landing' || pathname === '/index.html' || pathname === '/index.php' ? '/' : (pathname.replace(/\/+$/, '') || '/');
     const page = PUBLIC_PAGES[path];
     if (page) return { ...page, index: true, canonical: canonicalUrl(path), image: SITE_IMAGE, structuredData: structuredData(path, page.title, page.description) };
     if (path === '/login') return { title: 'Iniciar sesión | NexoPOS', description: 'Accede a tu cuenta de NexoPOS.', canonical: canonicalUrl(path), index: false };

@@ -20,10 +20,15 @@ if(a[0]==='exec'){
 }
 console.error('Unexpected mock Docker command');process.exit(2);
 `;
-for(const scenario of ['success','build-failure','web-failure']){
+const fakeCurl=`#!/usr/bin/env node
+const fs=require('node:fs');fs.appendFileSync(process.env.NEXOPOS_MOCK_LOG,JSON.stringify(['curl',...process.argv.slice(2)])+'\\n');
+process.stdout.write(process.env.NEXOPOS_CASE==='public-failure'?'404':'200');
+`;
+for(const scenario of ['success','build-failure','web-failure','public-failure']){
  const dir=fs.mkdtempSync(path.join(os.tmpdir(),'nexopos-deploy-check-'));const app=path.join(dir,'app');const bin=path.join(dir,'bin');fs.mkdirSync(path.join(app,'scripts'),{recursive:true});fs.mkdirSync(bin);
  fs.writeFileSync(path.join(app,'scripts/deploy-production.sh'),source);const log=path.join(dir,'commands.jsonl');
  fs.writeFileSync(path.join(bin,'docker'),fakeDocker,{mode:0o755});fs.writeFileSync(path.join(bin,'git'),'#!/bin/sh\nif [ "$1" = rev-parse ]; then printf "%s\\n" "$NEXOPOS_MOCK_SHA"; fi\n',{mode:0o755});fs.writeFileSync(path.join(bin,'sleep'),'#!/bin/sh\nexit 0\n',{mode:0o755});
+ fs.writeFileSync(path.join(bin,'curl'),fakeCurl,{mode:0o755});
  const run=cp.spawnSync('sh',[path.join(app,'scripts/deploy-production.sh'),sha,'b'.repeat(40)],{env:{...process.env,PATH:bin+path.delimiter+process.env.PATH,NEXOPOS_MOCK_LOG:log,NEXOPOS_MOCK_SHA:sha,NEXOPOS_CASE:scenario},encoding:'utf8',timeout:30000});
  const calls=fs.readFileSync(log,'utf8').trim().split('\n').map(JSON.parse);const up=calls.filter(a=>a[0]==='compose'&&a.includes('up'));const rollback=up.filter(a=>a.some(x=>x.endsWith('/rollback.yml')));
  if(scenario==='success'){
