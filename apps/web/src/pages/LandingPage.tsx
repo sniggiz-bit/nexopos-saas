@@ -36,143 +36,272 @@ interface LandingConfig {
     chatbot?: { enabled: boolean; welcomeMessage: string; options: string[] };
 }
 
-const legacyCopy: Record<string, string> = {"Tu comercio no puede funcionar a ciegas.":"Ventas e inventario","NexoPOS te devuelve el control total, en tiempo real.":"bajo una misma gestión.","El sistema POS más rápido de Chile. Stock sincronizado al instante, caja sin filas y tu operación completa en un solo panel — desde cualquier dispositivo.":"Centraliza el punto de venta, el inventario y tus sucursales. Consulta la operación de tu empresa y toma decisiones con información actualizada.","Solicitar Demo Gratuita":"Comenzar prueba gratuita","Ver el sistema en acción":"Conocer la plataforma","Si ya viviste esto, sabes exactamente de lo que hablamos.":"Visibilidad para la operación diaria.","La caja que no cuadra nunca":"Seguimiento de caja","Vendes lo que no tienes. Pierdes lo que no ves.":"Disponibilidad de productos","Filas que matan ventas y sucursales que operan como islas":"Coordinación entre sucursales","Un sistema tan rápido como tu comercio. Tan preciso como necesitas.":"Las herramientas de tu comercio, conectadas.","NexoPOS fue construido sobre una premisa simple: cada décima de segundo que ahorras en la caja y cada unidad que tu inventario registra correctamente, es dinero que vuelve a tu bolsillo. Una sola plataforma. Un solo dashboard. Cero doble digitación.":"Registra ventas, revisa existencias y consulta los movimientos de cada sucursal desde un entorno de trabajo compartido.","⚡ Caja Hiper-Rápida. Menos de 2 segundos por transacción.":"Punto de venta","📦 Stock Sincronizado al Instante. En Todos Tus Locales.":"Inventario y trazabilidad","🏪 Control Multisucursal. Todo desde un Solo Panel.":"Administración de sucursales","🌐 Tu Tienda Online Sincronizada con tu Local.":"Catálogo y tienda online","Planes escalables. Sin contratos. Sin sorpresas.":"Un plan para cada operación.","NexoPOS vs. Excel y sistemas del pasado":"Funciones de la plataforma"};
+const legacyCopy: Record<string, string> = {
+    "Software POS · +350 Comercios en Chile · Operando desde 2022": "15 días de prueba gratis",
+    "Ventas e inventario": "Vende con más tranquilidad.",
+    "bajo una misma gestión.": "Ten tu negocio bajo control.",
+    "Centraliza el punto de venta, el inventario y tus sucursales. Consulta la operación de tu empresa y toma decisiones con información actualizada.": "Un sistema POS para tu almacén, botillería, minimarket o tienda. Cobra, controla tu stock y revisa cómo va tu negocio desde un mismo lugar.",
+    "Comenzar prueba gratuita": "Comenzar mis 15 días gratis",
+    "Conocer la plataforma": "",
+    "Incluye Facturación Electrónica DTE certificada ante el SII, sin costo extra.": "",
+    "Visibilidad para la operación diaria.": "Menos dudas al cerrar. Más claridad para mañana.",
+    "EL CAOS QUE QUEMA TU NEGOCIO POR DENTRO": "Tu día a día, más simple",
+    "Seguimiento de caja": "¿Cuánto vendiste hoy?",
+    "Tu cajero anota las ventas a mano o en una planilla que nadie actualiza al mismo tiempo. Al final del día, los números no cierran — y nunca sabrás si fue un error humano, una venta mal registrada o robo hormiga. Revisas todo de nuevo. Son las 10 de la noche. Sigues en el local.": "Consulta tus ventas y métodos de pago sin reunir anotaciones al final de la jornada. Revisa lo que pasó en caja con los movimientos a la vista.",
+    "Disponibilidad de productos": "¿Qué necesitas reponer?",
+    "Un cliente pide el producto que más te rota. Tú dices que hay stock. Vas a buscarlo a la bodega y no está. ¿Fue vendido sin registrarse? ¿Quedó mal ingresado? No tienes cómo saberlo. El cliente se va. La reputación se daña. El margen se evapora.": "Revisa las existencias y las alertas de stock mínimo para preparar tus compras. Así puedes anticiparte cuando un producto comienza a escasear.",
+    "Coordinación entre sucursales": "¿Cómo va tu otro local?",
+    "Cada segundo de espera en la caja es un cliente que recalcula si vale la pena. Un sistema lento no solo molesta — te cuesta ventas reales. Y lo que pasa en una sucursal no llega a la otra ni al dueño. Descubres los problemas días después, cuando ya no hay solución.": "Consulta el stock por sucursal y revisa los movimientos desde tu panel. Mantén una visión de tu negocio a medida que crece.",
+    "Las herramientas de tu comercio, conectadas.": "Atiende a tus clientes. NexoPOS te ayuda con el control.",
+    "NEXOPOS — CONTROL TOTAL. SIN CONCESIONES.": "Las funciones que usas todos los días",
+    "Registra ventas, revisa existencias y consulta los movimientos de cada sucursal desde un entorno de trabajo compartido.": "Desde la primera venta de la mañana hasta el cierre de caja. Conecta las tareas de tu local para dedicar menos tiempo a buscar información y más a tu negocio.",
+    "Tres módulos que transforman la forma en que operas.": "Lo que necesitas para vender y ordenar tu negocio.",
+    "Cada funcionalidad fue diseñada para eliminar una fricción específica en el comercio chileno moderno.": "Herramientas prácticas, con beneficios que se notan en el día a día.",
+    "Punto de venta": "Punto de venta · Cobra con todo a mano",
+    "Busca productos por código, nombre o categoría. Con el catálogo guardado y un turno abierto, la caja puede seguir registrando ventas y pagos recibidos durante un corte. Compatible con impresoras térmicas, lectores de barra y gavetas electrónicas.": "Encuentra productos por nombre o código de barras y registra distintos medios de pago. Atiende desde un catálogo ordenado y consulta el total antes de cobrar.",
+    "Inventario y trazabilidad": "Inventario · Sabe qué tienes para vender",
+    "Cada vez que un producto sale por la caja — ya sea en tu local físico, tu tienda online o una sucursal a 200 km — el inventario se actualiza en milisegundos en toda la red. Alertas automáticas de stock mínimo. Transferencias entre bodegas con trazabilidad completa. Dashboard en tiempo real desde el celular.": "Consulta existencias, alertas de stock mínimo e historial de movimientos. Prepara la reposición con información de lo que entra y sale de tu negocio.",
+    "Administración de sucursales": "Sucursales · Crece sin perder de vista tu stock",
+    "Administra múltiples locales sin moverte de tu casa. Visualiza el stock de cada bodega en tiempo real, inspecciona reportes consolidados por sede y detecta descuadres antes de que se conviertan en pérdidas. El control que antes requería presencia física, ahora está en tu pantalla.": "Revisa las existencias por local y registra traspasos entre sucursales. Ubica la mercadería disponible cuando necesitas abastecer otro punto de venta.",
+    "Catálogo y tienda online": "Excel · Comienza con tus propios productos",
+    "Tu catálogo físico y online comparten el mismo inventario en tiempo real. Si vendes en el local, el stock web baja al instante. Si vendes online, el POS ya sabe que ese producto no está disponible. Sin quiebres de stock. Sin ventas de productos inexistentes. Sin clientes enojados.": "Importa tu catálogo con una plantilla Excel y organiza productos por categoría, marca y código. Ahorra la carga manual de cada artículo para comenzar a trabajar.",
+    "Diseñado para el comercio real en Chile.": "Un POS para tu forma de vender.",
+    "SECTORES COMPATIBLES": "Comercios de Chile",
+    "Minimarkets y Almacenes": "Almacenes y minimarkets",
+    "Lectura ultra rápida de código de barras, control de vencimientos y cierre de caja automatizado. Para el negocio que no puede perder ni un segundo.": "Encuentra productos por código de barras, registra las ventas del día y revisa lo que queda en bodega. Ten más información para tu próxima reposición.",
+    "Ferreterías y Repuestos": "Botillerías",
+    "Gestión de miles de SKUs, equivalencias de productos y ventas mayoristas. Tus vendedores encuentran el repuesto correcto en segundos, no en minutos.": "Organiza bebidas y otros productos por categoría y marca. Consulta precios y existencias al atender, y revisa los pagos cuando termina el turno.",
+    "Tiendas de Retail y Mascotas": "Tiendas de ropa y accesorios",
+    "Variantes de productos (talla, color, sabor), control de servicios y promociones dinámicas. Cada producto en su lugar, cada precio correcto.": "Identifica cada artículo con su propio código y organiza tu catálogo por categorías. Consulta lo disponible para atender a cada cliente con información a mano.",
+    "Distribuidoras y Mayoristas": "Ferreterías, bazares y otros locales",
+    "Módulo de compras robusto, márgenes de ganancia por volumen y control de rutas. Tu bodega siempre abastecida y tus márgenes siempre visibles.": "Ordena un catálogo amplio por nombre, SKU o código de barras. Ubica los productos, controla movimientos y revisa las ventas desde el mismo sistema.",
+    "Funciones de la plataforma": "",
+    "COMPARATIVA OBJETIVA": "",
+    "Un plan para cada operación.": "Primero conócelo. Después elige tu plan.",
+    "Elige el plan que soporta tu operación hoy. Escala cuando crezcas. Cancela cuando quieras — sin multas ni costos extras.": "Comienza con 15 días de prueba gratis. Revisa las funciones de cada plan y elige el que se ajuste al tamaño y las necesidades de tu negocio.",
+    "Preguntas frecuentes": "Antes de empezar, resolvamos tus dudas.",
+    "Respuestas claras antes de que las necesites.": "Preguntas frecuentes",
+    "¿Puedo ver el inventario de todas mis sucursales en tiempo real?": "¿Me sirve si tengo un solo local?",
+    "Sí. Desde el dashboard administrativo puedes ver el stock de cada bodega y sucursal en tiempo real, desde cualquier dispositivo. No necesitas estar físicamente en el local.": "Sí. Puedes comenzar con tu local y organizar ventas, productos y caja desde el mismo sistema. Si después abres otra sucursal, revisa el plan que se adapte a esa etapa.",
+    "¿Tengo que firmar un contrato de permanencia mínima?": "¿Cómo comienzo los 15 días de prueba gratis?",
+    "No. El servicio se cobra mensualmente y puedes cancelarlo o cambiar de plan en cualquier momento sin multas ni costos de salida.": "Crea tu cuenta desde el botón de prueba gratuita, registra los datos de tu negocio y comienza a explorar NexoPOS. Tendrás 15 días para conocer el punto de venta y las herramientas de gestión.",
+    "¡Por supuesto! NexoPOS tiene un importador masivo de productos en Excel. Si tienes dificultades, nuestro equipo de soporte te asiste para migrar toda tu base de datos en menos de 1 hora.": "Sí. Descarga la plantilla e importa tu catálogo desde Excel. Puedes revisar el resultado de la carga y corregir las filas que lo necesiten.",
+    "¿NexoPOS es compatible con lectores de código de barra y gavetas de dinero?": "¿Puedo usar lector de código de barras e impresora?",
+    "Sí, es compatible con el 99% de los hardwares POS USB y Bluetooth del mercado: lectores de código de barra, impresoras térmicas de 57mm y 80mm, y gavetas electrónicas.": "NexoPOS permite trabajar con lectores de códigos de barras e impresión de comprobantes. Consulta con soporte la configuración y compatibilidad de tu equipo antes de comenzar.",
+    "¿Cómo funciona la integración con Shopify y WooCommerce?": "¿Puedo consultar mi negocio desde otro dispositivo?",
+    "Conectas tu tienda en un paso con tus credenciales API. Cuando vendes online, el stock baja en el POS de tu local físico. Si vendes en el local, el inventario web se actualiza al instante. Sin doble digitación, sin desfases.": "Puedes acceder a tu cuenta desde el navegador y consultar las herramientas disponibles para tu usuario. Necesitas conexión para ver información actualizada de tu negocio.",
+    "¿El soporte técnico está incluido en el precio?": "¿Dónde puedo pedir ayuda?",
+    "Sí, todos los planes incluyen soporte técnico. Los planes intermedios y avanzados incluyen canal de WhatsApp prioritario con respuesta garantizada en menos de 15 minutos.": "En el chat puedes elegir hablar con ventas para resolver dudas sobre los planes, o con soporte para recibir ayuda con el sistema.",
+    "¿Puedo configurar precios por volumen o precios mayoristas?": "¿Qué medios de pago puedo registrar?",
+    "Sí. NexoPOS te permite configurar escalas de precios por cantidad (precios mayoristas, descuentos por volumen) por cada producto.": "El punto de venta permite registrar efectivo, débito, crédito, transferencias y pagos mixtos. El registro del pago en el sistema debe corresponder al pago que efectivamente recibiste.",
+    "¿Los datos de mi negocio están seguros?": "¿Puedo revisar el stock de más de una sucursal?",
+    "Sí. Toda la información viaja encriptada vía SSL y se almacena en servidores AWS de alta disponibilidad con respaldos automatizados cada 6 horas.": "Sí. Puedes consultar existencias por sucursal y registrar traspasos. Revisa en los planes la cantidad de sucursales y funciones que necesitas.",
+    "¿Necesito comprar un Certificado Digital para la facturación electrónica?": "¿Qué hago después de conocer el sistema?",
+    "No. NexoPOS incluye la gestión completa de firma digital y folios DTE en el plan. Nos encargamos de enrolar tu empresa ante el SII sin costo adicional.": "Compara los planes disponibles según tu operación. Si necesitas ayuda para elegir, usa la opción de hablar con ventas en el chat de esta página.",
+    "Tu comercio merece un sistema que trabaje tan duro como tú.": "Tu próximo día de ventas puede estar más ordenado.",
+    "Solicita una demo personalizada de 30 minutos. Te mostramos en vivo cómo NexoPOS opera en un comercio como el tuyo — sin términos técnicos, sin presión de venta.": "Prueba NexoPOS gratis durante 15 días. Carga tus productos, conoce la caja y descubre cómo llevar el control de tu negocio.",
+    "El sistema POS más rápido de Chile. Control total de tu inventario, caja y sucursales en tiempo real.": "Sistema POS para almacenes, botillerías, minimarkets, tiendas y negocios de Chile. Ventas, inventario y caja en un mismo lugar.",
+    "NexoPOS | Sistema POS Chile — Control Total de tu Comercio": "NexoPOS | Sistema POS en Chile · Prueba gratis 15 días",
+    "Software punto de venta líder para PYMES chilenas. Ideal para minimarkets, ferreterías y almacenes. Sincronización de stock en tiempo real y caja ultrarrápida.": "Sistema POS para almacenes, botillerías, minimarkets y tiendas de ropa en Chile. Controla ventas, inventario y caja. Conócelo con 15 días de prueba gratis.",
+    "sistema pos chile, software punto de venta, software para ferreterías, punto de venta minimarket, control inventario tiempo real, sistema ventas pyme chile, software inventario": "sistema pos chile, punto de venta almacén, pos botillería, software minimarket, pos tienda ropa, control inventario, prueba gratis 15 días",
+    "Tu comercio no puede funcionar a ciegas.": "Vende con más tranquilidad.",
+    "NexoPOS te devuelve el control total, en tiempo real.": "Ten tu negocio bajo control.",
+    "El sistema POS más rápido de Chile. Stock sincronizado al instante, caja sin filas y tu operación completa en un solo panel — desde cualquier dispositivo.": "Un sistema POS para tu almacén, botillería, minimarket o tienda. Cobra, controla tu stock y revisa cómo va tu negocio desde un mismo lugar.",
+    "Solicitar Demo Gratuita": "Comenzar mis 15 días gratis",
+    "Ver el sistema en acción": "",
+    "Si ya viviste esto, sabes exactamente de lo que hablamos.": "Menos dudas al cerrar. Más claridad para mañana.",
+    "La caja que no cuadra nunca": "¿Cuánto vendiste hoy?",
+    "Vendes lo que no tienes. Pierdes lo que no ves.": "¿Qué necesitas reponer?",
+    "Filas que matan ventas y sucursales que operan como islas": "¿Cómo va tu otro local?",
+    "Un sistema tan rápido como tu comercio. Tan preciso como necesitas.": "Atiende a tus clientes. NexoPOS te ayuda con el control.",
+    "NexoPOS fue construido sobre una premisa simple: cada décima de segundo que ahorras en la caja y cada unidad que tu inventario registra correctamente, es dinero que vuelve a tu bolsillo. Una sola plataforma. Un solo dashboard. Cero doble digitación.": "Desde la primera venta de la mañana hasta el cierre de caja. Conecta las tareas de tu local para dedicar menos tiempo a buscar información y más a tu negocio.",
+    "⚡ Caja Hiper-Rápida. Menos de 2 segundos por transacción.": "Punto de venta · Cobra con todo a mano",
+    "📦 Stock Sincronizado al Instante. En Todos Tus Locales.": "Inventario · Sabe qué tienes para vender",
+    "🏪 Control Multisucursal. Todo desde un Solo Panel.": "Sucursales · Crece sin perder de vista tu stock",
+    "🌐 Tu Tienda Online Sincronizada con tu Local.": "Excel · Comienza con tus propios productos",
+    "Planes escalables. Sin contratos. Sin sorpresas.": "Primero conócelo. Después elige tu plan.",
+    "NexoPOS vs. Excel y sistemas del pasado": "",
+    "Busca el producto por código de barra, nombre o categoría en milisegundos. El sistema calcula cambios, descuentos y propinas automáticamente. Múltiples métodos de pago en un clic. Funciona offline si cae el internet. Compatible con impresoras térmicas 57mm y 80mm, lectores de barra y gavetas electrónicas": "Encuentra productos por nombre o código de barras y registra distintos medios de pago. Atiende desde un catálogo ordenado y consulta el total antes de cobrar."
+};
 
 const DEFAULT_CFG: LandingConfig = {
-    hero: {
-        badge: 'Software POS · +350 Comercios en Chile · Operando desde 2022',
-        title: 'Ventas e inventario',
-        titleHighlight: 'bajo una misma gestión.',
-        description: 'Centraliza el punto de venta, el inventario y tus sucursales. Consulta la operación de tu empresa y toma decisiones con información actualizada.',
-        ctaPrimary: 'Comenzar prueba gratuita',
-        ctaSecondary: 'Conocer la plataforma',
-        dteBanner: 'Incluye Facturación Electrónica DTE certificada ante el SII, sin costo extra.',
+    "hero": {
+        "badge": "15 días de prueba gratis",
+        "title": "Vende con más tranquilidad.",
+        "titleHighlight": "Ten tu negocio bajo control.",
+        "description": "Un sistema POS para tu almacén, botillería, minimarket o tienda. Cobra, controla tu stock y revisa cómo va tu negocio desde un mismo lugar.",
+        "ctaPrimary": "Comenzar mis 15 días gratis",
+        "ctaSecondary": "",
+        "dteBanner": ""
     },
-    pain: {
-        title: 'Visibilidad para la operación diaria.',
-        subtitle: 'EL CAOS QUE QUEMA TU NEGOCIO POR DENTRO',
-        items: [
+    "pain": {
+        "title": "Menos dudas al cerrar. Más claridad para mañana.",
+        "subtitle": "Tu día a día, más simple",
+        "items": [
             {
-                title: 'Seguimiento de caja',
-                description: 'Tu cajero anota las ventas a mano o en una planilla que nadie actualiza al mismo tiempo. Al final del día, los números no cierran — y nunca sabrás si fue un error humano, una venta mal registrada o robo hormiga. Revisas todo de nuevo. Son las 10 de la noche. Sigues en el local.'
+                "title": "¿Cuánto vendiste hoy?",
+                "description": "Consulta tus ventas y métodos de pago sin reunir anotaciones al final de la jornada. Revisa lo que pasó en caja con los movimientos a la vista."
             },
             {
-                title: 'Disponibilidad de productos',
-                description: 'Un cliente pide el producto que más te rota. Tú dices que hay stock. Vas a buscarlo a la bodega y no está. ¿Fue vendido sin registrarse? ¿Quedó mal ingresado? No tienes cómo saberlo. El cliente se va. La reputación se daña. El margen se evapora.'
+                "title": "¿Qué necesitas reponer?",
+                "description": "Revisa las existencias y las alertas de stock mínimo para preparar tus compras. Así puedes anticiparte cuando un producto comienza a escasear."
             },
             {
-                title: 'Coordinación entre sucursales',
-                description: 'Cada segundo de espera en la caja es un cliente que recalcula si vale la pena. Un sistema lento no solo molesta — te cuesta ventas reales. Y lo que pasa en una sucursal no llega a la otra ni al dueño. Descubres los problemas días después, cuando ya no hay solución.'
+                "title": "¿Cómo va tu otro local?",
+                "description": "Consulta el stock por sucursal y revisa los movimientos desde tu panel. Mantén una visión de tu negocio a medida que crece."
             }
         ]
     },
-    solution: {
-        title: 'Las herramientas de tu comercio, conectadas.',
-        subtitle: 'NEXOPOS — CONTROL TOTAL. SIN CONCESIONES.',
-        description: 'Registra ventas, revisa existencias y consulta los movimientos de cada sucursal desde un entorno de trabajo compartido.'
+    "solution": {
+        "title": "Atiende a tus clientes. NexoPOS te ayuda con el control.",
+        "subtitle": "Las funciones que usas todos los días",
+        "description": "Desde la primera venta de la mañana hasta el cierre de caja. Conecta las tareas de tu local para dedicar menos tiempo a buscar información y más a tu negocio."
     },
-    features: {
-        sectionTitle: 'Tres módulos que transforman la forma en que operas.',
-        sectionSubtitle: 'Cada funcionalidad fue diseñada para eliminar una fricción específica en el comercio chileno moderno.',
-        items: [
+    "features": {
+        "sectionTitle": "Lo que necesitas para vender y ordenar tu negocio.",
+        "sectionSubtitle": "Herramientas prácticas, con beneficios que se notan en el día a día.",
+        "items": [
             {
-                title: 'Punto de venta',
-                description: 'Busca productos por código, nombre o categoría. Con el catálogo guardado y un turno abierto, la caja puede seguir registrando ventas y pagos recibidos durante un corte. Compatible con impresoras térmicas, lectores de barra y gavetas electrónicas.'
+                "title": "Punto de venta · Cobra con todo a mano",
+                "description": "Encuentra productos por nombre o código de barras y registra distintos medios de pago. Atiende desde un catálogo ordenado y consulta el total antes de cobrar."
             },
             {
-                title: 'Inventario y trazabilidad',
-                description: 'Cada vez que un producto sale por la caja — ya sea en tu local físico, tu tienda online o una sucursal a 200 km — el inventario se actualiza en milisegundos en toda la red. Alertas automáticas de stock mínimo. Transferencias entre bodegas con trazabilidad completa. Dashboard en tiempo real desde el celular.'
+                "title": "Inventario · Sabe qué tienes para vender",
+                "description": "Consulta existencias, alertas de stock mínimo e historial de movimientos. Prepara la reposición con información de lo que entra y sale de tu negocio."
             },
             {
-                title: 'Administración de sucursales',
-                description: 'Administra múltiples locales sin moverte de tu casa. Visualiza el stock de cada bodega en tiempo real, inspecciona reportes consolidados por sede y detecta descuadres antes de que se conviertan en pérdidas. El control que antes requería presencia física, ahora está en tu pantalla.'
+                "title": "Sucursales · Crece sin perder de vista tu stock",
+                "description": "Revisa las existencias por local y registra traspasos entre sucursales. Ubica la mercadería disponible cuando necesitas abastecer otro punto de venta."
             },
             {
-                title: 'Catálogo y tienda online',
-                description: 'Tu catálogo físico y online comparten el mismo inventario en tiempo real. Si vendes en el local, el stock web baja al instante. Si vendes online, el POS ya sabe que ese producto no está disponible. Sin quiebres de stock. Sin ventas de productos inexistentes. Sin clientes enojados.'
-            },
-        ],
-    },
-    useCases: {
-        title: 'Diseñado para el comercio real en Chile.',
-        subtitle: 'SECTORES COMPATIBLES',
-        items: [
-            { title: 'Minimarkets y Almacenes', description: 'Lectura ultra rápida de código de barras, control de vencimientos y cierre de caja automatizado. Para el negocio que no puede perder ni un segundo.' },
-            { title: 'Ferreterías y Repuestos', description: 'Gestión de miles de SKUs, equivalencias de productos y ventas mayoristas. Tus vendedores encuentran el repuesto correcto en segundos, no en minutos.' },
-            { title: 'Tiendas de Retail y Mascotas', description: 'Variantes de productos (talla, color, sabor), control de servicios y promociones dinámicas. Cada producto en su lugar, cada precio correcto.' },
-            { title: 'Distribuidoras y Mayoristas', description: 'Módulo de compras robusto, márgenes de ganancia por volumen y control de rutas. Tu bodega siempre abastecida y tus márgenes siempre visibles.' }
-        ]
-    },
-    stats: {
-        items: [
-            { label: 'Comercios Activos en Chile', value: '+350' },
-            { label: 'Transacciones Procesadas', value: '+15 Millones' },
-            { label: 'Uptime Garantizado (AWS)', value: '99.98%' }
-        ]
-    },
-    testimonials: {
-        items: [
-            {
-                name: 'Francisco Pérez',
-                role: 'Fundador · Almacén Providencia',
-                content: 'Antes del fin de semana lo pasábamos cuadrando inventarios a mano entre todos los locales. Era insostenible. Con NexoPOS eso desapareció — el sistema actualiza el stock solo, en tiempo real, y yo lo veo desde el celular mientras estoy en casa. Abrimos 3 sucursales en 12 meses.'
+                "title": "Excel · Comienza con tus propios productos",
+                "description": "Importa tu catálogo con una plantilla Excel y organiza productos por categoría, marca y código. Ahorra la carga manual de cada artículo para comenzar a trabajar."
             },
             {
-                name: 'Alejandra Fravéga',
-                role: 'Gerente de Operaciones · Distribuidora Ponchos del Cachapoal',
-                content: 'La velocidad de caja es brutal. Antes hacíamos fila en los momentos peak. Ahora cobramos el doble de rápido y los clientes lo notan. NexoPOS cambió la experiencia de compra de nuestra tienda completamente.'
+                "title": "Caja · Cierra el día con más claridad",
+                "description": "Abre y cierra turnos, registra movimientos y revisa los pagos de la jornada. Compara los montos registrados para identificar diferencias en tu caja."
+            },
+            {
+                "title": "Reportes · Descubre qué se está vendiendo",
+                "description": "Consulta tus ventas y los productos con mayor movimiento. Usa esa información para planificar compras y entender cómo marcha tu negocio."
             }
         ]
     },
-    comparison: {
-        title: 'Funciones de la plataforma',
-        subtitle: 'COMPARATIVA OBJETIVA',
-        rows: [
-            { feature: 'Sincronización de stock en tiempo real', nexopos: 'Sí, 100% instantáneo', excel: 'No (archivos locales aislados)', traditional: 'A veces (servidores lentos)' },
-            { feature: 'Velocidad de caja por transacción', nexopos: 'Menos de 2 segundos', excel: 'Lento e ineficiente', traditional: 'Lento, requiere terminales caras' },
-            { feature: 'Alertas de stock mínimo automáticas', nexopos: 'Sí, configurables por producto', excel: 'No (revisión manual)', traditional: 'Requiere módulo extra de pago' },
-            { feature: 'Soporte técnico en vivo', nexopos: 'WhatsApp directo — respuesta en 15 min', excel: 'Tú lo resuelves solo', traditional: 'Soporte telefónico costoso o ausente' },
-            { feature: 'Control multisucursal unificado', nexopos: 'Sí, desde un solo panel', excel: 'No', traditional: 'Requiere instalación en cada local' }
+    "useCases": {
+        "title": "Un POS para tu forma de vender.",
+        "subtitle": "Comercios de Chile",
+        "items": [
+            {
+                "title": "Almacenes y minimarkets",
+                "description": "Encuentra productos por código de barras, registra las ventas del día y revisa lo que queda en bodega. Ten más información para tu próxima reposición."
+            },
+            {
+                "title": "Botillerías",
+                "description": "Organiza bebidas y otros productos por categoría y marca. Consulta precios y existencias al atender, y revisa los pagos cuando termina el turno."
+            },
+            {
+                "title": "Tiendas de ropa y accesorios",
+                "description": "Identifica cada artículo con su propio código y organiza tu catálogo por categorías. Consulta lo disponible para atender a cada cliente con información a mano."
+            },
+            {
+                "title": "Ferreterías, bazares y otros locales",
+                "description": "Ordena un catálogo amplio por nombre, SKU o código de barras. Ubica los productos, controla movimientos y revisa las ventas desde el mismo sistema."
+            }
         ]
     },
-    pricing: {
-        title: 'Un plan para cada operación.',
-        subtitle: 'Elige el plan que soporta tu operación hoy. Escala cuando crezcas. Cancela cuando quieras — sin multas ni costos extras.',
+    "stats": {
+        "items": []
     },
-    faqs: {
-        title: 'Preguntas frecuentes',
-        subtitle: 'Respuestas claras antes de que las necesites.',
-        items: [
-            { question: '¿El POS funciona si se cae el internet?', answer: 'Sí. Con un turno abierto y el catálogo guardado, el POS registra efectivo o pagos ya confirmados por otro medio. Las ventas se conservan en este equipo y se sincronizan automáticamente al volver la conexión o al reabrir la caja. Si la facturación está habilitada, ingresa la referencia del documento ya emitido por contingencia.' },
-            { question: '¿Puedo ver el inventario de todas mis sucursales en tiempo real?', answer: 'Sí. Desde el dashboard administrativo puedes ver el stock de cada bodega y sucursal en tiempo real, desde cualquier dispositivo. No necesitas estar físicamente en el local.' },
-            { question: '¿Tengo que firmar un contrato de permanencia mínima?', answer: 'No. El servicio se cobra mensualmente y puedes cancelarlo o cambiar de plan en cualquier momento sin multas ni costos de salida.' },
-            { question: '¿Puedo importar mis productos desde Excel?', answer: '¡Por supuesto! NexoPOS tiene un importador masivo de productos en Excel. Si tienes dificultades, nuestro equipo de soporte te asiste para migrar toda tu base de datos en menos de 1 hora.' },
-            { question: '¿NexoPOS es compatible con lectores de código de barra y gavetas de dinero?', answer: 'Sí, es compatible con el 99% de los hardwares POS USB y Bluetooth del mercado: lectores de código de barra, impresoras térmicas de 57mm y 80mm, y gavetas electrónicas.' },
-            { question: '¿Cómo funciona la integración con Shopify y WooCommerce?', answer: 'Conectas tu tienda en un paso con tus credenciales API. Cuando vendes online, el stock baja en el POS de tu local físico. Si vendes en el local, el inventario web se actualiza al instante. Sin doble digitación, sin desfases.' },
-            { question: '¿El soporte técnico está incluido en el precio?', answer: 'Sí, todos los planes incluyen soporte técnico. Los planes intermedios y avanzados incluyen canal de WhatsApp prioritario con respuesta garantizada en menos de 15 minutos.' },
-            { question: '¿Puedo configurar precios por volumen o precios mayoristas?', answer: 'Sí. NexoPOS te permite configurar escalas de precios por cantidad (precios mayoristas, descuentos por volumen) por cada producto.' },
-            { question: '¿Los datos de mi negocio están seguros?', answer: 'Sí. Toda la información viaja encriptada vía SSL y se almacena en servidores AWS de alta disponibilidad con respaldos automatizados cada 6 horas.' },
-            { question: '¿Necesito comprar un Certificado Digital para la facturación electrónica?', answer: 'No. NexoPOS incluye la gestión completa de firma digital y folios DTE en el plan. Nos encargamos de enrolar tu empresa ante el SII sin costo adicional.' }
+    "testimonials": {
+        "items": []
+    },
+    "comparison": {
+        "title": "",
+        "subtitle": "",
+        "rows": []
+    },
+    "pricing": {
+        "title": "Primero conócelo. Después elige tu plan.",
+        "subtitle": "Comienza con 15 días de prueba gratis. Revisa las funciones de cada plan y elige el que se ajuste al tamaño y las necesidades de tu negocio."
+    },
+    "faqs": {
+        "title": "Antes de empezar, resolvamos tus dudas.",
+        "subtitle": "Preguntas frecuentes",
+        "items": [
+            {
+                "question": "¿El POS funciona si se cae el internet?",
+                "answer": "Sí. Con un turno abierto y el catálogo guardado, el POS registra efectivo o pagos ya confirmados por otro medio. Las ventas se conservan en este equipo y se sincronizan automáticamente al volver la conexión o al reabrir la caja. Si la facturación está habilitada, ingresa la referencia del documento ya emitido por contingencia."
+            },
+            {
+                "question": "¿Me sirve si tengo un solo local?",
+                "answer": "Sí. Puedes comenzar con tu local y organizar ventas, productos y caja desde el mismo sistema. Si después abres otra sucursal, revisa el plan que se adapte a esa etapa."
+            },
+            {
+                "question": "¿Cómo comienzo los 15 días de prueba gratis?",
+                "answer": "Crea tu cuenta desde el botón de prueba gratuita, registra los datos de tu negocio y comienza a explorar NexoPOS. Tendrás 15 días para conocer el punto de venta y las herramientas de gestión."
+            },
+            {
+                "question": "¿Puedo importar mis productos desde Excel?",
+                "answer": "Sí. Descarga la plantilla e importa tu catálogo desde Excel. Puedes revisar el resultado de la carga y corregir las filas que lo necesiten."
+            },
+            {
+                "question": "¿Puedo usar lector de código de barras e impresora?",
+                "answer": "NexoPOS permite trabajar con lectores de códigos de barras e impresión de comprobantes. Consulta con soporte la configuración y compatibilidad de tu equipo antes de comenzar."
+            },
+            {
+                "question": "¿Puedo consultar mi negocio desde otro dispositivo?",
+                "answer": "Puedes acceder a tu cuenta desde el navegador y consultar las herramientas disponibles para tu usuario. Necesitas conexión para ver información actualizada de tu negocio."
+            },
+            {
+                "question": "¿Dónde puedo pedir ayuda?",
+                "answer": "En el chat puedes elegir hablar con ventas para resolver dudas sobre los planes, o con soporte para recibir ayuda con el sistema."
+            },
+            {
+                "question": "¿Qué medios de pago puedo registrar?",
+                "answer": "El punto de venta permite registrar efectivo, débito, crédito, transferencias y pagos mixtos. El registro del pago en el sistema debe corresponder al pago que efectivamente recibiste."
+            },
+            {
+                "question": "¿Puedo revisar el stock de más de una sucursal?",
+                "answer": "Sí. Puedes consultar existencias por sucursal y registrar traspasos. Revisa en los planes la cantidad de sucursales y funciones que necesitas."
+            },
+            {
+                "question": "¿Qué hago después de conocer el sistema?",
+                "answer": "Compara los planes disponibles según tu operación. Si necesitas ayuda para elegir, usa la opción de hablar con ventas en el chat de esta página."
+            }
         ]
     },
-    cta: {
-        title: 'Tu comercio merece un sistema que trabaje tan duro como tú.',
-        subtitle: 'Solicita una demo personalizada de 30 minutos. Te mostramos en vivo cómo NexoPOS opera en un comercio como el tuyo — sin términos técnicos, sin presión de venta.',
-        button: 'Comenzar prueba gratuita',
+    "cta": {
+        "title": "Tu próximo día de ventas puede estar más ordenado.",
+        "subtitle": "Prueba NexoPOS gratis durante 15 días. Carga tus productos, conoce la caja y descubre cómo llevar el control de tu negocio.",
+        "button": "Comenzar mis 15 días gratis"
     },
-    footer: { description: 'El sistema POS más rápido de Chile. Control total de tu inventario, caja y sucursales en tiempo real.' },
-    seo: {
-        title: 'NexoPOS | Sistema POS Chile — Control Total de tu Comercio',
-        description: 'Software punto de venta líder para PYMES chilenas. Ideal para minimarkets, ferreterías y almacenes. Sincronización de stock en tiempo real y caja ultrarrápida.',
-        keywords: 'sistema pos chile, software punto de venta, software para ferreterías, punto de venta minimarket, control inventario tiempo real, sistema ventas pyme chile, software inventario'
+    "footer": {
+        "description": "Sistema POS para almacenes, botillerías, minimarkets, tiendas y negocios de Chile. Ventas, inventario y caja en un mismo lugar."
     },
-    chatbot: {
-        enabled: false,
-        welcomeMessage: '¡Hola! Soy el asistente de NexoPOS. ¿Tienes alguna pregunta sobre el sistema o quieres agendar una demo gratuita?',
-        options: ['Quiero una Demo', 'Ver Planes y Precios', 'Soporte Técnico']
+    "seo": {
+        "title": "NexoPOS | Sistema POS en Chile · Prueba gratis 15 días",
+        "description": "Sistema POS para almacenes, botillerías, minimarkets y tiendas de ropa en Chile. Controla ventas, inventario y caja. Conócelo con 15 días de prueba gratis.",
+        "keywords": "sistema pos chile, punto de venta almacén, pos botillería, software minimarket, pos tienda ropa, control inventario, prueba gratis 15 días"
+    },
+    "chatbot": {
+        "enabled": false,
+        "welcomeMessage": "¡Hola! Soy el asistente de NexoPOS. ¿Tienes alguna pregunta sobre el sistema o quieres agendar una demo gratuita?",
+        "options": [
+            "Quiero una Demo",
+            "Ver Planes y Precios",
+            "Soporte Técnico"
+        ]
     }
 };
 
+
+// Upgrade the exact previous default copy while keeping custom CMS content intact.
+function normalizeCopy(value: any): any {
+    if (typeof value === 'string') return legacyCopy[value] ?? value;
+    if (Array.isArray(value)) return value.map(normalizeCopy);
+    if (value && typeof value === 'object') return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, normalizeCopy(item)]));
+    return value;
+}
 
 function deepMerge(base: any, override: any): any {
     const result = { ...base };
@@ -183,8 +312,14 @@ function deepMerge(base: any, override: any): any {
             // Fallback to base array if the override array is empty (e.g. no items added in admin)
             result[key] = base[key] || [];
         } else if (override[key] !== undefined && override[key] !== null && override[key] !== '') {
-            result[key] = typeof override[key] === 'string' ? (legacyCopy[override[key]] ?? override[key]) : override[key];
+            result[key] = normalizeCopy(override[key]);
         }
+    }
+    // The previous default had four features. Include the two new cards when that
+    // unchanged default is loaded from the CMS; leave curated feature lists alone.
+    if (Array.isArray(result.items) && base === DEFAULT_CFG.features && result.items.length === 4 &&
+        result.items.every((item: any, index: number) => item.title === base.items[index].title && item.description === base.items[index].description)) {
+        result.items = [...result.items, ...base.items.slice(4)];
     }
     return result;
 }
@@ -204,7 +339,7 @@ export function LandingPage() {
     });
 
     const cfg: LandingConfig = remoteCfg ? deepMerge(DEFAULT_CFG, remoteCfg) : DEFAULT_CFG;
-    const { hero, pain, solution, features, useCases, stats, testimonials, comparison, pricing, faqs, cta, footer, seo } = cfg;
+    const { hero, pain, solution, features, useCases, pricing, faqs, cta, footer, seo } = cfg;
 
     React.useEffect(() => {
         if (seo?.title) {
@@ -244,7 +379,7 @@ export function LandingPage() {
                         <a href="#pricing">Planes</a>
                         <a href="#faqs">Preguntas frecuentes</a>
                         <Link to="/login">Iniciar sesión</Link>
-                        <Link to="/register" className="public-button">Comenzar prueba</Link>
+                        <Link to="/register" className="public-button">Prueba gratis 15 días</Link>
                     </nav>
                     <button type="button" aria-label={isMenuOpen ? 'Cerrar menú' : 'Abrir menú'} aria-expanded={isMenuOpen} aria-controls="landing-mobile-menu" className="public-mobile-toggle" onClick={() => setIsMenuOpen(!isMenuOpen)}>
                         {isMenuOpen ? <X size={20} /> : <Menu size={20} />}
@@ -257,7 +392,7 @@ export function LandingPage() {
                         <a href="#pricing" onClick={() => setIsMenuOpen(false)}>Planes</a>
                         <a href="#faqs" onClick={() => setIsMenuOpen(false)}>Preguntas frecuentes</a>
                         <Link to="/login">Iniciar sesión</Link>
-                        <Link to="/register" className="public-button">Comenzar prueba</Link>
+                        <Link to="/register" className="public-button">Prueba gratis 15 días</Link>
                     </nav>
                 )}
             </header>
@@ -265,17 +400,23 @@ export function LandingPage() {
                 <section className="public-hero">
                     <div className="public-container public-hero-grid">
                         <div>
-                            <p className="public-eyebrow">Gestión comercial para empresas</p>
+                            <p className="public-eyebrow">Sistema POS para los comercios de Chile</p>
+                            <p className="public-trial-badge"><Check size={16} aria-hidden="true" />15 días de prueba gratis</p>
                             <h1>{hero.title} <span>{hero.titleHighlight}</span></h1>
                             <p className="public-copy">{hero.description}</p>
                             <div className="public-actions">
                                 <Link to="/register" className="public-button">{hero.ctaPrimary}<ArrowRight size={16} aria-hidden="true" /></Link>
-                                <a href="#solution" className="public-button secondary">{hero.ctaSecondary}</a>
                             </div>
+                            <p className="public-trial-note">Crea tu cuenta y conoce el sistema con los productos de tu negocio.</p>
+                            <ul className="public-hero-benefits" aria-label="Beneficios principales">
+                                <li><Check size={15} aria-hidden="true" />Ventas y caja en orden</li>
+                                <li><Check size={15} aria-hidden="true" />Stock a la vista</li>
+                                <li><Check size={15} aria-hidden="true" />Reportes para decidir</li>
+                            </ul>
                         </div>
                         <figure className="public-preview">
-                            <img src={hero.image || '/real-inventario.webp'} alt="Inventario y gestión de productos en NexoPOS" fetchPriority="high" width="1200" height="750" />
-                            <figcaption>Ventas, inventario y sucursales en una misma plataforma.</figcaption>
+                            <img src={hero.image || '/real-pos.webp'} alt="Punto de venta NexoPOS con catálogo de productos, carrito y total a cobrar" fetchPriority="high" width="1123" height="545" />
+                            <figcaption>Tu catálogo, el carrito y el total de la venta en una misma pantalla.</figcaption>
                         </figure>
                     </div>
                 </section>
@@ -287,7 +428,7 @@ export function LandingPage() {
                             <p className="public-copy">{solution.description}</p>
                         </div>
                         {solution.image && <figure className="public-preview"><img src={solution.image} alt="Panel de gestión de NexoPOS" loading="lazy" /></figure>}
-                        <div id="features" className="public-grid two" style={{ scrollMarginTop: 24 }}>
+                        <div id="features" className="public-grid" style={{ scrollMarginTop: 24 }}>
                             {features.items.map((item, i) => <article key={i} className="public-feature">
                                 <h3>{cleanHeading(item.title)}</h3>
                                 <p>{item.description}</p>
@@ -298,7 +439,7 @@ export function LandingPage() {
 
                 <section id="use-cases" className="public-section soft">
                     <div className="public-container">
-                        <div className="public-section-intro"><h2>{useCases.title}</h2></div>
+                        <div className="public-section-intro"><p className="public-eyebrow">Del negocio de barrio a tu próxima sucursal</p><h2>{useCases.title}</h2><p className="public-copy">Para quienes atienden el mesón, reponen la mercadería y hacen crecer su negocio cada día.</p></div>
                         <div className="public-grid two">
                             {useCases.items.map((item, i) => <article key={i} className="public-card"><h3>{item.title}</h3><p>{item.description}</p></article>)}
                         </div>
@@ -312,17 +453,17 @@ export function LandingPage() {
                     </div>
                 </section>}
 
-                {comparison.rows.length > 0 && <section id="comparison" className="public-section soft">
+                <section className="public-section public-trial" aria-labelledby="trial-title">
                     <div className="public-container">
-                        <div className="public-section-intro"><h2>{comparison.title}</h2></div>
-                        <div className="public-table-wrap" tabIndex={0} role="region" aria-label="Comparativa de funcionalidades">
-                            <table className="public-table">
-                                <thead><tr><th scope="col">Funcionalidad</th><th scope="col">NexoPOS</th><th scope="col">Planillas</th><th scope="col">Sistemas tradicionales</th></tr></thead>
-                                <tbody>{comparison.rows.map((row, i) => <tr key={i}><th scope="row">{row.feature}</th><td>{row.nexopos}</td><td>{row.excel}</td><td>{row.traditional}</td></tr>)}</tbody>
-                            </table>
-                        </div>
+                        <div className="public-section-intro"><p className="public-eyebrow">Conócelo antes de elegir tu plan</p><h2 id="trial-title">15 días para probarlo en tu negocio.</h2><p className="public-copy">Explora NexoPOS a tu ritmo y descubre cómo se adapta a tu forma de vender.</p></div>
+                        <ol className="public-grid public-trial-steps">
+                            <li><span>01</span><h3>Crea tu cuenta</h3><p>Registra tu negocio y comienza tu prueba gratuita.</p></li>
+                            <li><span>02</span><h3>Carga tus productos</h3><p>Agrega tu catálogo o impórtalo desde una plantilla Excel.</p></li>
+                            <li><span>03</span><h3>Prueba tu operación</h3><p>Conoce el punto de venta, revisa tu stock y explora los reportes.</p></li>
+                        </ol>
+                        <div className="public-actions"><Link to="/register" className="public-button">Comenzar mis 15 días gratis<ArrowRight size={16} aria-hidden="true" /></Link></div>
                     </div>
-                </section>}
+                </section>
 
                 <section id="pricing" className="public-section">
                     <div className="public-container">
@@ -334,16 +475,11 @@ export function LandingPage() {
                                 <div>{plan.isRecommended && <p className="public-plan-tag">Plan recomendado</p>}<h3>{plan.name}</h3>{plan.description && <p>{plan.description}</p>}</div>
                                 <div className="public-price">${plan.price.toLocaleString('es-CL')} <small>/ mes</small></div>
                                 <ul>{(plan.features || []).map((feature, i) => <li key={i}><Check size={15} aria-hidden="true" />{feature}</li>)}</ul>
-                                <Link to="/register" className={`public-button ${plan.isRecommended ? '' : 'secondary'}`}>Elegir plan</Link>
+                                <Link to="/register" className={`public-button ${plan.isRecommended ? '' : 'secondary'}`}>Probar gratis 15 días</Link>
                             </article>)}
                         </div> : <p className="public-copy">Consulta los planes disponibles a través de <Link to="/contacto">nuestro equipo</Link>.</p>}
                     </div>
                 </section>
-
-                {stats.items.length > 0 && <div className="public-container public-stats">{stats.items.map((item, i) => <div key={i}><strong>{item.value}</strong><span>{item.label}</span></div>)}</div>}
-                {testimonials.items.length > 0 && <section className="public-section soft"><div className="public-container public-grid two">
-                    {testimonials.items.map((item, i) => <figure key={i} className="public-card public-quote"><blockquote>{item.content}</blockquote><figcaption><strong>{item.name}</strong>{item.role}</figcaption></figure>)}
-                </div></section>}
 
                 <section id="faqs" className="public-section">
                     <div className="public-container">
