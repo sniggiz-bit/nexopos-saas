@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Check, Menu, X, ArrowRight } from 'lucide-react';
+import { Check, Menu, X, ArrowRight, ShoppingCart, Package, Store, FileSpreadsheet, Wallet, BarChart3, LayoutGrid, type LucideIcon } from 'lucide-react';
 import '../components/landing/public-site.css';
 import { Logo } from '../components/ui/Logo';
 import { PublicChatWidget } from '../components/landing/PublicChatWidget';
@@ -328,6 +328,15 @@ function cleanHeading(value: string) {
     return (legacyCopy[value] ?? value).replace(/^[^\p{L}\p{N}]+/u, '').trim();
 }
 
+const featureIcons: Record<string, LucideIcon> = {
+    'punto de venta': ShoppingCart,
+    inventario: Package,
+    sucursales: Store,
+    excel: FileSpreadsheet,
+    caja: Wallet,
+    reportes: BarChart3,
+};
+
 export function LandingPage() {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const { data: plans, isLoading: plansLoading, isError: plansError, refetch: refetchPlans } = usePublicPlans();
@@ -421,18 +430,28 @@ export function LandingPage() {
                     </div>
                 </section>
 
-                <section id="solution" className="public-section">
+                <section id="solution" className="public-section public-tools">
                     <div className="public-container">
-                        <div className="public-section-intro">
-                            <h2>{solution.title}</h2>
+                        <div className="public-section-intro public-tools-intro">
+                            <div><p className="public-eyebrow">Herramientas para tu día a día</p><h2>{solution.title}</h2></div>
                             <p className="public-copy">{solution.description}</p>
                         </div>
                         {solution.image && <figure className="public-preview"><img src={solution.image} alt="Panel de gestión de NexoPOS" loading="lazy" /></figure>}
-                        <div id="features" className="public-grid" style={{ scrollMarginTop: 24 }}>
-                            {features.items.map((item, i) => <article key={i} className="public-feature">
-                                <h3>{cleanHeading(item.title)}</h3>
-                                <p>{item.description}</p>
-                            </article>)}
+                        <div id="features" className="public-grid public-tools-grid" style={{ scrollMarginTop: 24 }}>
+                            {features.items.map((item, i) => {
+                                const [category, ...benefitParts] = cleanHeading(item.title).split(' · ');
+                                const benefit = benefitParts.join(' · ');
+                                const Icon = featureIcons[category.toLocaleLowerCase('es')] ?? LayoutGrid;
+                                return <article key={i} className="public-tool-card">
+                                    <div className="public-tool-heading"><span className="public-tool-icon"><Icon size={22} aria-hidden="true" /></span>{benefit && <p className="public-tool-label">{category}</p>}</div>
+                                    <h3>{benefit || category}</h3>
+                                    <p className="public-tool-description">{item.description}</p>
+                                </article>;
+                            })}
+                        </div>
+                        <div className="public-tools-footer">
+                            <p>Conoce estas herramientas con los productos de tu negocio.<span>Tienes 15 días para probar NexoPOS gratis.</span></p>
+                            <Link to="/register" className="public-button">Probar gratis por 15 días<ArrowRight size={16} aria-hidden="true" /></Link>
                         </div>
                     </div>
                 </section>
