@@ -76,15 +76,6 @@ export class SalesController {
   @Post()
   @HttpCode(HttpStatus.CREATED)
   async create(@Body() createSaleDto: CreateSaleDto, @CurrentUser() user: any) {
-    console.log(
-      '[SalesController] Received createSaleDto:',
-      JSON.stringify(createSaleDto, null, 2),
-    );
-    console.log(
-      '[SalesController] CurrentUser:',
-      JSON.stringify(user, null, 2),
-    );
-
     createSaleDto.tenantId = user.tenantId;
     createSaleDto.userId = user.id;
 

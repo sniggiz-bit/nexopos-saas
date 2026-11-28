@@ -1,10 +1,12 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Product } from '@/api/products';
 import { useProductsPOS } from '@/hooks/useProducts';
 import { useDebounce } from '@/hooks/useDebounce';
 import { useCategories } from '@/hooks/useCategories';
 import { useSale } from '@/hooks/useSale';
+import { useOfflinePos } from '@/hooks/useOfflinePos';
+import { formatPrice } from '@/utils/formatters';
 import { ProductGrid } from '@/components/pos/ProductGrid';
 import { CategoryFilter } from '@/components/pos/CategoryFilter';
 import { Cart } from '@/components/pos/Cart';
@@ -33,10 +35,16 @@ export function PosPage() {
     const [page, setPage]                           = useState(1);
     const { toast }        = useToast();
     const queryClient      = useQueryClient();
-    const { user }         = useAuth();
+    const { user, token }  = useAuth();
     const branchId         = user?.branchId || '';
 
-    const { data: currentShift, isLoading: isLoadingShift } = useCurrentShift(branchId);
+    const shiftQuery = useCurrentShift(branchId, true);
+    const scope = user && branchId ? JSON.stringify([user.tenantId, branchId, user.id]) : '';
+    const cached = useOfflinePos({ scope, token, liveShift: shiftQuery.data,
+        shiftCheckedAt: shiftQuery.dataUpdatedAt, shiftError: shiftQuery.error });
+    const currentShift = cached.offline ? cached.snapshot?.shift : shiftQuery.data;
+    const canCloseShift = !cached.offline && !cached.pending.some(sale => sale.request?.offline.shiftId === currentShift?.id);
+    const isLoadingShift = shiftQuery.isLoading;
 
     const { data: branches = [] } = useQuery<{ id: string; name: string }[]>({
         queryKey: ['branches', user?.tenantId],
@@ -49,31 +57,46 @@ export function PosPage() {
     const [searchQuery, setSearchQuery] = useState('');
     const debouncedSearch = useDebounce(searchQuery, 300);
 
-    const { data: categories = [] }    = useCategories();
+    const { data: serverCategories = [] } = useCategories();
+    const categories = useMemo(() => cached.offline
+        ? Array.from(new Map(cached.products.flatMap(product => product.category ? [[product.category.id, product.category] as const] : [])).values())
+        : serverCategories, [cached.offline, cached.products, serverCategories]);
 
     // Server-side paginated product query — re-runs after 300ms debounce
-    const { data: productPage, isLoading } = useProductsPOS({
+    const { data: productPage, isLoading: loadingOnline } = useProductsPOS({
         search:     debouncedSearch || undefined,
         categoryId: selectedCategoryId || undefined,
         page,
         limit: 50,
     });
-    const products    = productPage?.data       ?? [];
-    const totalPages  = productPage?.totalPages ?? 1;
-    const totalItems  = productPage?.total      ?? 0;
+    const filteredLocal = useMemo(() => {
+        if (!cached.offline || !cached.ready) return [];
+        const search = searchKey(debouncedSearch.trim());
+        return cached.products.filter(product => (!selectedCategoryId || product.category?.id === selectedCategoryId) &&
+            (!search || [product.name, product.sku, product.barcode].some(value => searchKey(value ?? "").includes(search))));
+    }, [cached.offline, cached.ready, cached.products, debouncedSearch, selectedCategoryId]);
+    const products = cached.offline ? filteredLocal.slice((page - 1) * 50, page * 50) : (productPage?.data ?? []);
+    const totalPages = cached.offline ? Math.max(1, Math.ceil(filteredLocal.length / 50)) : (productPage?.totalPages ?? 1);
+    const totalItems = cached.offline ? filteredLocal.length : (productPage?.total ?? 0);
+    const isLoading = !cached.offline && loadingOnline;
 
     // Reset to page 1 when search or category changes
     useEffect(() => {
         setPage(1);
-    }, [debouncedSearch, selectedCategoryId]);
+    }, [debouncedSearch, selectedCategoryId, cached.offline]);
 
-    const handleAddToCart = (product: Product) => addItem(product);
+    const handleAddToCart = (product: Product) => {
+        if (cached.offline && (!cached.ready || product.stock <= 0)) return;
+        addItem(product);
+    };
 
     // Barcode scanner — search server-side when scanned code is not in current page
     const addToCartByBarcode = (barcode: string) => {
-        const local = products.find(p => p.barcode === barcode || p.sku === barcode);
+        const source = cached.offline && cached.ready ? cached.products : products;
+        const local = source.find(p => p.barcode === barcode || p.sku === barcode);
         if (local) {
-            addItem(local);
+            if (cached.offline && local.stock <= 0) return;
+            handleAddToCart(local);
             toast({ title: 'Producto Agregado', description: local.name, duration: 1200 });
             return;
         }
@@ -86,6 +109,35 @@ export function PosPage() {
 
 
     const { mutateAsync: createSaleAsync, isPending, isSuccess, isError, reset } = useSale();
+
+    const saleItems = (): CreateSaleRequest['items'] => cartItems.map(item => {
+        const quantity = Number(item.quantity) || 0;
+        const price = Number(item.price) || 0;
+        const discount = Number(item.discountValue) || 0;
+        const discountAmount = item.discountType === 'PERCENTAGE' ? Math.round(price * quantity * discount / 100)
+            : item.discountType === 'FIXED' ? Math.round(discount) : 0;
+        return { productId: item.productId, quantity, price, discountAmount };
+    });
+
+    const offlineTotal = saleItems().reduce((sum, item) => sum + Number(item.price) * item.quantity - Number(item.discountAmount), 0);
+
+    const saveOfflineSale = async (method: string, receiptReference: string, paymentReference: string) => {
+        if (!user || !branchId || !cached.snapshot || quoteId || cartCustomerId) {
+            throw new Error('Se requiere un turno guardado y una venta directa sin un cliente asociado.');
+        }
+        const items = saleItems();
+        const total = offlineTotal;
+        await cached.record({
+            tenantId: user.tenantId, branchId, dteType: 0, items,
+            payments: [{ paymentMethod: method, amount: total }],
+            offline: { id: crypto.randomUUID(), shiftId: cached.snapshot.shift.id, operatorId: user.id,
+                recordedAt: new Date().toISOString(), receiptReference: receiptReference || undefined,
+                paymentReference: paymentReference || undefined },
+        });
+        clearCart();
+        toast({ title: 'Venta guardada en este equipo', description: 'Se enviará al servidor al recuperar la conexión.' });
+        window.dispatchEvent(new Event('nexopos:sync-sales'));
+    };
 
     const handleConfirmPayment = async (payments: PaymentRequestData[], dteType?: number, customerId?: string) => {
         if (!user?.tenantId || !user?.branchId) {
@@ -112,6 +164,7 @@ export function PosPage() {
         };
         try {
             const data = await createSaleAsync(saleData);
+            cached.trackOnlineSale(data.id, saleData.items);
             setSaleResult(data);
             toast({
                 variant: 'success',
@@ -163,6 +216,33 @@ export function PosPage() {
         <div className="h-screen w-full flex flex-col bg-muted/30 dark:bg-background overflow-hidden">
             {/* Top bar */}
             <PosUserToolbar currentShift={currentShift} branchName={branchName} />
+
+            {(cached.offline || cached.pending.length > 0 || cached.preparing || cached.ready || cached.storageError) && (
+                <div className="shrink-0 border-b bg-card px-5 py-2 text-xs" aria-live="polite">
+                    <div className="flex flex-wrap gap-x-4 gap-y-1">
+                        {cached.offline ? <strong>{cached.ready ? 'Sin conexión · catálogo guardado' : 'Sin conexión · caja sin preparar'}</strong>
+                            : <span>{cached.ready ? 'Caja preparada para cortes de conexión' : cached.preparing ? 'Preparando catálogo para cortes de conexión…' : ''}</span>}
+                        {cached.storageError && <span className="text-red-600">{cached.storageError}</span>}
+                        {cached.syncing && <span>Sincronizando ventas…</span>}
+                    </div>
+                    {cached.pending.length > 0 && (
+                        <details className="mt-1">
+                            <summary className="cursor-pointer font-medium">Ventas pendientes ({cached.pending.length}) · se incluyen al sincronizar</summary>
+                            <ul className="max-h-36 overflow-y-auto space-y-1 py-1">
+                                {cached.pending.map(sale => (
+                                    <li key={sale.id} className="flex flex-wrap items-center gap-2">
+                                        <span className="tabular-nums">{sale.id.slice(0, 8)} · {formatPrice(sale.request?.payments[0]?.amount ?? 0)}</span>
+                                        <span>{sale.request?.offline.receiptReference && 'Documento: ' + sale.request.offline.receiptReference}</span>
+                                        <span>{sale.issue ?? 'Guardada en este equipo'}</span>
+                                        {sale.status === 'review' && <button type="button" className="underline" disabled={cached.offline}
+                                            onClick={() => void cached.retry(sale.id).catch(() => toast({ title: 'No se pudo reintentar la venta', variant: 'destructive' }))}>Reintentar</button>}
+                                    </li>
+                                ))}
+                            </ul>
+                        </details>
+                    )}
+                </div>
+            )}
 
             {/* Main content */}
             <div className="flex flex-1 overflow-hidden">
@@ -239,6 +319,8 @@ export function PosPage() {
                                 <Button
                                     variant="ghost"
                                     size="sm"
+                                    disabled={!canCloseShift}
+                                    title={!canCloseShift ? 'Conéctate y sincroniza las ventas pendientes para cerrar caja' : undefined}
                                     onClick={() => setIsCloseShiftModalOpen(true)}
                                     className="shrink-0 text-muted-foreground hover:text-danger hover:bg-danger-subtle transition-colors h-9 px-3 rounded-xl"
                                 >
@@ -289,20 +371,25 @@ export function PosPage() {
                         isSuccess={isSuccess}
                         isError={isError}
                         saleResult={saleResult}
+                        offline={{ active: cached.offline, ready: cached.ready, fiscal: cached.snapshot?.salesMode === 'fiscal', total: offlineTotal, onSave: saveOfflineSale }}
                     />
                 </div>
             </div>
 
             {/* Modals */}
-            <OpenShiftModal isOpen={!isLoadingShift && !currentShift && !isCloseShiftModalOpen} />
+            <OpenShiftModal isOpen={!cached.offline && !isLoadingShift && !currentShift && !isCloseShiftModalOpen} />
             <CloseShiftModal
-                isOpen={isCloseShiftModalOpen}
+                isOpen={isCloseShiftModalOpen && canCloseShift}
                 onClose={() => setIsCloseShiftModalOpen(false)}
                 shiftId={currentShift?.id ?? ''}
                 currentShift={currentShift}
             />
         </div>
     );
+}
+
+function searchKey(value: string) {
+    return value.toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, '');
 }
 
 function ViewToggleBtn({

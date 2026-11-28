@@ -76,7 +76,7 @@ const DEFAULT_CFG: LandingConfig = {
         items: [
             {
                 title: '⚡ Caja Hiper-Rápida. Menos de 2 segundos por transacción.',
-                description: 'Busca el producto por código de barra, nombre o categoría en milisegundos. El sistema calcula cambios, descuentos y propinas automáticamente. Múltiples métodos de pago en un clic. Funciona offline si cae el internet. Compatible con impresoras térmicas 57mm y 80mm, lectores de barra y gavetas electrónicas.'
+                description: 'Busca productos por código, nombre o categoría. Con el catálogo guardado y un turno abierto, la caja puede seguir registrando ventas y pagos recibidos durante un corte. Compatible con impresoras térmicas, lectores de barra y gavetas electrónicas.'
             },
             {
                 title: '📦 Stock Sincronizado al Instante. En Todos Tus Locales.',
@@ -142,7 +142,7 @@ const DEFAULT_CFG: LandingConfig = {
         title: 'Preguntas frecuentes',
         subtitle: 'Respuestas claras antes de que las necesites.',
         items: [
-            { question: '¿El POS funciona si se cae el internet?', answer: 'Sí. El módulo de caja cuenta con modo offline inteligente. Puedes seguir vendiendo y registrando pagos sin conexión. Tan pronto vuelva la señal, los datos se sincronizan automáticamente con la nube sin intervención manual.' },
+            { question: '¿El POS funciona si se cae el internet?', answer: 'Sí. Con un turno abierto y el catálogo guardado, el POS registra efectivo o pagos ya confirmados por otro medio. Las ventas se conservan en este equipo y se sincronizan automáticamente al volver la conexión o al reabrir la caja. Si la facturación está habilitada, ingresa la referencia del documento ya emitido por contingencia.' },
             { question: '¿Puedo ver el inventario de todas mis sucursales en tiempo real?', answer: 'Sí. Desde el dashboard administrativo puedes ver el stock de cada bodega y sucursal en tiempo real, desde cualquier dispositivo. No necesitas estar físicamente en el local.' },
             { question: '¿Tengo que firmar un contrato de permanencia mínima?', answer: 'No. El servicio se cobra mensualmente y puedes cancelarlo o cambiar de plan en cualquier momento sin multas ni costos de salida.' },
             { question: '¿Puedo importar mis productos desde Excel?', answer: '¡Por supuesto! NexoPOS tiene un importador masivo de productos en Excel. Si tienes dificultades, nuestro equipo de soporte te asiste para migrar toda tu base de datos en menos de 1 hora.' },

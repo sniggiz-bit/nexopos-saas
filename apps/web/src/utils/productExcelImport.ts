@@ -40,7 +40,7 @@ const columnAliases = {
     brand: ['marca', 'brand'],
     price: ['precio', 'price'],
     costPrice: ['costo', 'costoprecio', 'cost'],
-    stock: ['stockinicial', 'stock', 'existencia', 'cantidad'],
+    stock: ['stockinicial', 'stockactual', 'stock', 'existencia', 'cantidad'],
     minStock: ['stockminimo', 'minimostock'],
     unitType: ['tipo', 'unidad', 'unittype'],
 } as const;
@@ -137,7 +137,7 @@ export function parseProductImportSheet(sheet: XLSX.WorkSheet): ProductImportInp
         const sku = text(columns.sku);
         const skuKey = sku?.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
         if (skuKey && seenSkus.has(skuKey)) {
-            warnings.push('El SKU se repite en el archivo; esta fila actualizará el producto con esos datos.');
+            warnings.push('El SKU se repite en el archivo.');
         }
         if (skuKey) seenSkus.add(skuKey);
 

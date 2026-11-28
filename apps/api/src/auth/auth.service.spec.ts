@@ -128,6 +128,7 @@ describe('AuthService', () => {
                 email: 'admin@testcorp.com',
                 phone: '123456789',
                 password: 'securepassword123',
+                address: 'Av. Libertador 123',
             };
 
             (prisma.user.findUnique as jest.Mock).mockResolvedValue(null);
@@ -147,6 +148,9 @@ describe('AuthService', () => {
             expect(result).toBeDefined();
             expect(result.access_token).toBe('mock-token');
             expect(tenants.createWithDefaults).toHaveBeenCalled();
+            expect(tenants.createWithDefaults).toHaveBeenCalledWith(expect.objectContaining({
+                tenant: expect.objectContaining({ address: dto.address }),
+            }));
             expect(email.send).toHaveBeenCalledWith('t1', 'u1', undefined, dto.password);
             expect(mockNotificationsService.notifySuperAdmin).toHaveBeenCalledWith(
                 'Nuevo usuario registrado', expect.stringContaining(dto.email), 'REGISTRATION',

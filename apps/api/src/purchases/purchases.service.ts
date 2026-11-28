@@ -88,7 +88,7 @@ export class PurchasesService {
             throw new BadRequestException('A purchase must have at least one item');
         }
 
-        return this.prisma.$transaction(async (tx) => {
+        const purchase = await this.prisma.$transaction(async (tx) => {
             // ── Validar que la sucursal pertenece al tenant ───────────────
             const branch = await tx.branch.findUnique({ where: { id: branchId } });
             if (!branch || branch.tenantId !== tenantId) {
@@ -177,14 +177,14 @@ export class PurchasesService {
                 });
             }
 
-            this.eventsService.emit({
-                type: 'purchase.created',
-                tenantId,
-                branchId,
-                payload: { purchaseId: purchase.id },
-            });
-
             return purchase;
         });
+        this.eventsService.emit({
+            type: 'purchase.created',
+            tenantId,
+            branchId,
+            payload: { purchaseId: purchase.id },
+        });
+        return purchase;
     }
 }

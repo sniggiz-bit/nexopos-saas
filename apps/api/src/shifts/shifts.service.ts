@@ -3,6 +3,7 @@ import {
   BadRequestException,
   NotFoundException,
 } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { ShiftReportService, ShiftSummary } from './shift-report.service';
 
@@ -45,7 +46,12 @@ export class ShiftsService {
   }
 
   async closeShift(shiftId: string, userId: string, finalAmount: number) {
-    const shift = await this.prisma.cashShift.findUnique({
+    return this.prisma.$transaction((tx) => this.closeLockedShift(tx, shiftId, userId, finalAmount));
+  }
+
+  private async closeLockedShift(tx: Prisma.TransactionClient, shiftId: string, userId: string, finalAmount: number) {
+    await tx.$queryRawUnsafe('SELECT "id" FROM "CashShift" WHERE "id"=$1 FOR UPDATE', shiftId);
+    const shift = await tx.cashShift.findUnique({
       where: { id: shiftId },
       include: {
         sales: {
@@ -117,7 +123,7 @@ export class ShiftsService {
 
     // Get closer name (current user) - ideally we should fetch the user, but for now we might use ID or fetch it.
     // Let's fetch the user to get the name for the report
-    const closer = await this.prisma.user.findUnique({ where: { id: userId } });
+    const closer = await tx.user.findUnique({ where: { id: userId } });
 
     const summary: ShiftSummary = {
       shiftId: shift.id,
@@ -147,7 +153,7 @@ export class ShiftsService {
       shift.branch.name,
     );
 
-    const updatedShift = await this.prisma.cashShift.update({
+    const updatedShift = await tx.cashShift.update({
       where: { id: shiftId },
       data: {
         endTime: summary.endTime,

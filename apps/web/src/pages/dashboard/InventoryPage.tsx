@@ -1,11 +1,14 @@
 import { useState, useRef } from 'react';
 import { DashboardLayout } from '../../components/dashboard/DashboardLayout';
+import { CatalogPagination, CATALOG_PAGE_SIZE } from '../../components/dashboard/CatalogPagination';
+import { CATALOG_HEADER_CLASS, CATALOG_ROW_CLASS, CatalogProductIdentity, CatalogRowAction, CatalogUnitBadge } from '../../components/dashboard/CatalogTableParts';
 import { useProducts } from '../../hooks/useProducts';
 import { useCategories } from '../../hooks/useCategories';
 import { useBrands } from '../../hooks/useBrands';
 import { InventoryKardexModal } from '../../components/dashboard/InventoryKardexModal';
 import { StockAdjustModal } from '../../components/dashboard/StockAdjustModal';
-import { Search, History, Loader2, Warehouse, AlertCircle, Download, Upload, X, PackagePlus } from 'lucide-react';
+import { Search, History, Loader2, Package, AlertCircle, Download, Upload, X, PackagePlus, ChevronDown } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '../../components/ui/popover';
 import type { Product } from '../../api/types';
 import { useAuth } from '../../context/AuthContext';
 import * as XLSX from 'xlsx';
@@ -19,10 +22,78 @@ import {
     type ProductImportRowResult,
 } from '../../utils/productExcelImport';
 
+const INVENTORY_COLUMNS = [
+    { label: 'Producto' },
+    { label: 'Cód. barras', width: 144 },
+    { label: 'Familia / Marca', width: '16%' },
+    { label: 'Stock actual', width: 132 },
+    { label: 'Tipo', width: 80 },
+    { label: 'Estado', width: 120 },
+    { label: 'Acciones', width: 108 },
+];
+
+const STOCK_STATES = {
+    empty: {
+        label: 'Agotado',
+        number: 'text-red-700 dark:text-red-400',
+        badge: 'border-red-500/20 bg-red-500/10 text-red-700 dark:text-red-400',
+    },
+    low: {
+        label: 'Stock Bajo',
+        number: 'text-amber-800 dark:text-amber-300',
+        badge: 'border-amber-500/20 bg-amber-500/10 text-amber-800 dark:text-amber-300',
+    },
+    sufficient: {
+        label: 'Suficiente',
+        number: 'text-foreground',
+        badge: 'border-emerald-500/20 bg-emerald-500/10 text-emerald-800 dark:text-emerald-400',
+    },
+};
+
+function InventoryStock({ product, numberClass }: { product: Product; numberClass: string }) {
+    const unit = product.unitType === 'WEIGHT' ? 'kg' : 'uds';
+    const quantity = (
+        <span className="inline-flex min-w-0 flex-wrap items-baseline gap-x-1">
+            <span className={`font-bold tabular-nums ${numberClass}`}>{product.stock}</span>
+            <span className="text-[11px] text-muted-foreground dark:text-slate-400">{unit}</span>
+        </span>
+    );
+
+    if (!product.inventoryLevels?.length) return quantity;
+
+    return (
+        <Popover>
+            <PopoverTrigger asChild>
+                <button
+                    type="button"
+                    title="Ver stock por sucursal"
+                    aria-label={`Ver stock por sucursal de ${product.name}. Stock actual ${product.stock} ${unit}`}
+                    className="inline-flex max-w-full items-center gap-1 rounded-md text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                    {quantity}
+                    <ChevronDown className="h-3 w-3 shrink-0 text-muted-foreground dark:text-slate-400" aria-hidden="true" />
+                </button>
+            </PopoverTrigger>
+            <PopoverContent align="start" aria-label="Desglose por sucursal" className="max-h-72 w-60 overflow-y-auto p-3 text-xs">
+                <p className="mb-2 border-b border-border pb-2 font-semibold">Desglose por sucursal</p>
+                <ul className="space-y-2">
+                    {product.inventoryLevels.map(level => (
+                        <li key={level.branchId} className="flex justify-between gap-3">
+                            <span className="min-w-0 break-words">{level.branchName}</span>
+                            <span className="shrink-0 font-semibold tabular-nums">{level.quantity} {unit}</span>
+                        </li>
+                    ))}
+                </ul>
+            </PopoverContent>
+        </Popover>
+    );
+}
+
 export function InventoryPage() {
     const [searchTerm, setSearchTerm] = useState('');
     const [categoryFilter, setCategoryFilter] = useState('');
     const [brandFilter, setBrandFilter] = useState('');
+    const [requestedPage, setPage] = useState(1);
     const [isKardexOpen, setIsKardexOpen] = useState(false);
     const [productForKardex, setProductForKardex] = useState<Product | null>(null);
     const [isAdjustOpen, setIsAdjustOpen] = useState(false);
@@ -33,7 +104,7 @@ export function InventoryPage() {
     const { user } = useAuth();
     const queryClient = useQueryClient();
 
-    const { data: products, isLoading } = useProducts(user?.tenantId);
+    const { data: products, isLoading, isError, refetch } = useProducts(user?.tenantId);
     const { data: categories } = useCategories(user?.tenantId || '');
     const { data: brands } = useBrands(user?.tenantId || '');
 
@@ -46,6 +117,9 @@ export function InventoryPage() {
         const matchesBrand = !brandFilter || product.brand?.id === brandFilter;
         return matchesSearch && matchesCategory && matchesBrand;
     });
+    const page = Math.min(requestedPage, Math.max(1, Math.ceil(filteredProducts.length / CATALOG_PAGE_SIZE)));
+    const visibleProducts = filteredProducts.slice((page - 1) * CATALOG_PAGE_SIZE, page * CATALOG_PAGE_SIZE);
+    const catalogUnavailable = isError && !products;
 
     const handleKardex = (product: Product) => {
         setProductForKardex(product);
@@ -109,7 +183,7 @@ export function InventoryPage() {
 
     const handleImportExcel = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
-        if (!file || !user?.tenantId) return;
+        if (!file || !user?.tenantId || isImporting) return;
 
         setIsImporting(true);
         try {
@@ -127,7 +201,7 @@ export function InventoryPage() {
             for (let offset = 0; offset < rows.length; offset += 100) {
                 const batch = rows.slice(offset, offset + 100);
                 try {
-                    const response = await apiClient.post<ProductImportBatchResult>('/products/import', { rows: batch });
+                    const response = await apiClient.post<ProductImportBatchResult>('/products/import', { rows: batch, onlyNew: true });
                     results.push(...response.data.results);
                 } catch (error) {
                     const message = error instanceof Error ? error.message : 'No se pudo enviar este grupo de filas.';
@@ -157,7 +231,7 @@ export function InventoryPage() {
             const rowsWithNotes = results.filter(result =>
                 result.outcome === 'error' || result.outcome === 'skipped' || result.warnings.length > 0,
             );
-            const summary = `${created} nuevos, ${updated} actualizados, ${skipped} omitidos, ${errors} errores`;
+            const summary = `${created} nuevos${updated ? `, ${updated} actualizados` : ''}, ${skipped} omitidos, ${errors} errores`;
 
             if (rowsWithNotes.length > 0) {
                 const reportRows = results.map(result => ({
@@ -188,14 +262,19 @@ export function InventoryPage() {
 
     return (
         <DashboardLayout>
-            <div className="space-y-4 animate-fade-up">
-                {/* Header bar */}
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
-                    <div>
-                        <h1 className="text-2xl font-bold tracking-tight text-foreground">Inventario General</h1>
-                        <p className="text-[13px] text-muted-foreground/[0.5] mt-1">
-                            Consulta y gestiona los niveles de stock de todos tus productos en tiempo real
-                        </p>
+            <div className="min-w-0 space-y-4 animate-fade-up">
+                <h1 className="sr-only">Inventario General</h1>
+                <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center">
+                    <div className="relative w-full max-w-md flex-1">
+                        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
+                        <input
+                            type="text"
+                            aria-label="Buscar productos en inventario"
+                            placeholder="Buscar por nombre, SKU o código..."
+                            value={searchTerm}
+                            onChange={(e) => { setSearchTerm(e.target.value); setPage(1); }}
+                            className="w-full rounded-lg border border-border bg-background py-2 pl-9 pr-4 text-[13px] text-foreground outline-none transition-colors placeholder:!text-muted-foreground focus:border-cyan-600"
+                        />
                     </div>
                     <div className="flex items-center gap-2 flex-wrap">
                         <button
@@ -203,14 +282,14 @@ export function InventoryPage() {
                             className="inline-flex items-center px-3 py-2 border border-border rounded-lg text-sm text-foreground/[0.85] bg-card hover:bg-[#0099CC]/5 transition-colors shadow-sm"
                             title="Descargar plantilla Excel para carga masiva"
                         >
-                            <Download className="w-4 h-4 mr-1.5 text-muted-foreground/[0.5]" />
+                            <Download className="w-4 h-4 mr-1.5 text-muted-foreground" />
                             Plantilla
                         </button>
                         <button
                             onClick={() => fileInputRef.current?.click()}
                             disabled={isImporting}
-                            className="inline-flex items-center px-3 py-2 border border-[#0099CC]/30 rounded-lg text-sm text-[#0099CC] bg-[#0099CC]/5 hover:bg-[#0099CC]/10 transition-colors shadow-sm disabled:opacity-50"
-                            title="Importar productos desde Excel"
+                            className="inline-flex items-center px-3 py-2 border border-[#0099CC]/30 rounded-lg text-sm text-cyan-800 dark:text-cyan-300 bg-[#0099CC]/5 hover:bg-[#0099CC]/10 transition-colors shadow-sm disabled:opacity-50"
+                            title="Agregar productos nuevos desde Excel"
                         >
                             {isImporting ? (
                                 <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />
@@ -221,7 +300,8 @@ export function InventoryPage() {
                         </button>
                         <button
                             onClick={handleExportExcel}
-                            className="inline-flex items-center px-3 py-2 border border-emerald-500/30 rounded-lg text-sm text-emerald-400 bg-emerald-500/5 hover:bg-emerald-500/10 transition-colors shadow-sm"
+                            disabled={isLoading || catalogUnavailable}
+                            className="inline-flex items-center px-3 py-2 border border-emerald-500/30 rounded-lg text-sm text-emerald-800 dark:text-emerald-400 bg-emerald-500/5 hover:bg-emerald-500/10 transition-colors shadow-sm disabled:opacity-50"
                             title="Exportar inventario a Excel"
                         >
                             <Download className="w-4 h-4 mr-1.5" />
@@ -237,173 +317,133 @@ export function InventoryPage() {
                     </div>
                 </div>
 
-                {/* Filters */}
-                <div className="flex flex-col md:flex-row gap-3">
-                    <div className="relative flex-1">
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground/[0.4]" />
-                        <input
-                            type="text"
-                            placeholder="Buscar por nombre, SKU o código..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full pl-9 pr-4 py-2 bg-card border border-border text-foreground rounded-lg focus:ring-2 focus:ring-[#0099CC] focus:border-transparent outline-none transition-all shadow-sm text-sm placeholder:text-muted-foreground/[0.3]"
-                        />
-                    </div>
-                    <select
-                        value={categoryFilter}
-                        onChange={(e) => setCategoryFilter(e.target.value)}
-                        className="px-3 py-2 border border-border rounded-lg text-sm text-foreground/[0.85] bg-[hsl(var(--card))] shadow-sm focus:ring-2 focus:ring-[#0099CC] outline-none min-w-[160px]"
-                    >
-                        <option value="" className="bg-[hsl(var(--card))]">Todas las familias</option>
-                        {(categories || []).map(cat => (
-                            <option key={cat.id} value={cat.id} className="bg-[hsl(var(--card))]">{cat.name}</option>
-                        ))}
-                    </select>
-                    <select
-                        value={brandFilter}
-                        onChange={(e) => setBrandFilter(e.target.value)}
-                        className="px-3 py-2 border border-border rounded-lg text-sm text-foreground/[0.85] bg-[hsl(var(--card))] shadow-sm focus:ring-2 focus:ring-[#0099CC] outline-none min-w-[140px]"
-                    >
-                        <option value="" className="bg-[hsl(var(--card))]">Todas las marcas</option>
-                        {(brands || []).map(brand => (
-                            <option key={brand.id} value={brand.id} className="bg-[hsl(var(--card))]">{brand.name}</option>
-                        ))}
-                    </select>
-                    {hasFilters && (
-                        <button
-                            onClick={() => { setSearchTerm(''); setCategoryFilter(''); setBrandFilter(''); }}
-                            className="inline-flex items-center px-3 py-2 text-sm text-muted-foreground/[0.6] hover:text-foreground border border-border rounded-lg hover:bg-card transition-colors"
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div className="flex flex-wrap items-center gap-2">
+                        <select
+                            aria-label="Filtrar por familia"
+                            value={categoryFilter}
+                            onChange={(e) => { setCategoryFilter(e.target.value); setPage(1); }}
+                            className="max-w-full rounded-lg border border-border bg-card px-3 py-2 text-[13px] text-foreground outline-none focus:border-cyan-600"
                         >
-                            <X className="w-4 h-4 mr-1" /> Limpiar
-                        </button>
+                            <option value="">Todas las familias</option>
+                            {(categories || []).map(cat => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
+                        </select>
+                        <select
+                            aria-label="Filtrar por marca"
+                            value={brandFilter}
+                            onChange={(e) => { setBrandFilter(e.target.value); setPage(1); }}
+                            className="max-w-full rounded-lg border border-border bg-card px-3 py-2 text-[13px] text-foreground outline-none focus:border-cyan-600"
+                        >
+                            <option value="">Todas las marcas</option>
+                            {(brands || []).map(brand => <option key={brand.id} value={brand.id}>{brand.name}</option>)}
+                        </select>
+                        {hasFilters && (
+                            <button
+                                onClick={() => { setSearchTerm(''); setCategoryFilter(''); setBrandFilter(''); setPage(1); }}
+                                className="inline-flex items-center rounded-lg border border-border px-3 py-2 text-[13px] text-muted-foreground transition-colors hover:bg-card hover:text-foreground"
+                            >
+                                <X className="mr-1 h-4 w-4" aria-hidden="true" /> Limpiar
+                            </button>
+                        )}
+                    </div>
+                    {!isLoading && !catalogUnavailable && (
+                        <div className="flex flex-wrap items-center gap-3">
+                            <p className="text-xs text-muted-foreground">
+                                {filteredProducts.length} producto{filteredProducts.length !== 1 ? 's' : ''} {hasFilters ? 'encontrados' : 'en total'}
+                            </p>
+                            <CatalogPagination page={page} total={filteredProducts.length} onPageChange={setPage} />
+                        </div>
                     )}
                 </div>
 
-                {/* Results count */}
-                {!isLoading && (
-                    <p className="text-xs text-muted-foreground/[0.4]">
-                        {filteredProducts.length} producto{filteredProducts.length !== 1 ? 's' : ''} {hasFilters ? 'encontrados' : 'en total'}
-                    </p>
-                )}
-
                 {/* Table */}
-                <div className="rounded-xl overflow-hidden animate-fade-up bg-card border border-border">
-                    <table className="min-w-full divide-y divide-border">
-                        <thead style={{ background: 'hsl(var(--background))' }}>
-                            <tr>
-                                <th className="px-6 py-4 text-left text-xs font-bold text-muted-foreground uppercase tracking-wider">Producto</th>
-                                <th className="px-6 py-4 text-left text-xs font-bold text-muted-foreground uppercase tracking-wider">Identificadores</th>
-                                <th className="px-6 py-4 text-left text-xs font-bold text-muted-foreground uppercase tracking-wider">Familia / Marca</th>
-                                <th className="px-6 py-4 text-center text-xs font-bold text-muted-foreground uppercase tracking-wider">Stock Actual</th>
-                                <th className="px-6 py-4 text-center text-xs font-bold text-muted-foreground uppercase tracking-wider">Estado</th>
-                                <th className="px-6 py-4 text-right text-xs font-bold text-muted-foreground uppercase tracking-wider">Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-border">
-                            {isLoading ? (
-                                <tr>
-                                    <td colSpan={6} className="px-6 py-12 text-center">
-                                        <Loader2 className="w-8 h-8 animate-spin text-[#0099CC] mx-auto" />
-                                        <p className="mt-2 text-sm text-muted-foreground/[0.5]">Cargando inventario...</p>
-                                    </td>
+                <div className="overflow-hidden rounded-2xl border border-border bg-card">
+                    <div role="region" aria-label="Listado de inventario" tabIndex={0} className="overflow-x-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring">
+                        <table className="w-full min-w-[900px] table-fixed text-[13px]">
+                            <colgroup>
+                                {INVENTORY_COLUMNS.map(({ label, width }) => <col key={label} style={{ width }} />)}
+                            </colgroup>
+                            <thead>
+                                <tr className="border-b border-border">
+                                    {INVENTORY_COLUMNS.map(({ label }) => (
+                                        <th key={label} scope="col" className={`${CATALOG_HEADER_CLASS} ${label === 'Acciones' ? 'text-right' : 'text-left'}`}>
+                                            {label}
+                                        </th>
+                                    ))}
                                 </tr>
-                            ) : filteredProducts.length === 0 ? (
-                                <tr>
-                                    <td colSpan={6} className="px-6 py-12 text-center text-muted-foreground/[0.4]">
-                                        <Warehouse className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
-                                        {hasFilters ? 'No hay productos que coincidan con los filtros.' : 'No se encontraron productos en el inventario.'}
-                                    </td>
-                                </tr>
-                            ) : (
-                                filteredProducts.map((product) => (
-                                    <tr key={product.id} className="hover:bg-muted/30 transition-colors">
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className="flex items-center">
-                                                <div className="w-10 h-10 rounded-lg bg-card border border-border flex-shrink-0 overflow-hidden flex items-center justify-center">
-                                                    {product.image ? (
-                                                        <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
-                                                    ) : (
-                                                        <Warehouse className="w-6 h-6 text-muted-foreground" />
-                                                    )}
-                                                </div>
-                                                <div className="ml-4">
-                                                    <div className="text-sm font-bold text-foreground/[0.95]">{product.name}</div>
-                                                    <div className="text-xs text-muted-foreground/[0.4]">
-                                                        {product.unitType === 'WEIGHT' ? 'Granel (kg)' : 'Unidad'}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className="text-xs font-mono text-foreground/[0.7]">SKU: {product.sku || '-'}</div>
-                                            <div className="text-xs font-mono text-muted-foreground/[0.4]">EAN: {product.barcode || '-'}</div>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className="text-xs text-foreground/[0.85] font-semibold">{product.category?.name || <span className="text-muted-foreground/[0.3]">Sin familia</span>}</div>
-                                            <div className="text-xs text-muted-foreground/[0.4]">{product.brand?.name || <span className="text-muted-foreground/[0.3]">Sin marca</span>}</div>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-center">
-                                            <div className="relative group cursor-help inline-block">
-                                                <span className={`text-lg font-black tabular-nums ${product.stock <= product.minStock ? 'text-red-400' : 'text-white text-glow-cyan'}`}>
-                                                    {product.stock}
-                                                </span>
-                                                <span className="text-xs text-muted-foreground/[0.4] ml-1">
-                                                    {product.unitType === 'WEIGHT' ? 'kg' : 'uds'}
-                                                </span>
-                                                {product.inventoryLevels && product.inventoryLevels.length > 0 && (
-                                                    <div className="absolute z-50 bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block w-48 bg-black/95 text-foreground/[0.95] text-xs rounded-lg shadow-xl p-3 border border-border">
-                                                        <div className="font-bold mb-1 border-b border-border pb-1">Desglose por Sucursal</div>
-                                                        <div className="space-y-1">
-                                                            {product.inventoryLevels.map((lvl) => (
-                                                                <div key={lvl.branchId} className="flex justify-between">
-                                                                    <span>{lvl.branchName}:</span>
-                                                                    <span className="font-mono text-[#0099CC]">{lvl.quantity}</span>
-                                                                </div>
-                                                            ))}
-                                                        </div>
-                                                        <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-8 border-transparent border-t-black"></div>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-center">
-                                            {product.stock <= 0 ? (
-                                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-red-500/10 text-red-400 border border-red-500/20">
-                                                    <AlertCircle className="w-3 h-3 mr-1" /> Agotado
-                                                </span>
-                                            ) : product.stock <= product.minStock ? (
-                                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20">
-                                                    <AlertCircle className="w-3 h-3 mr-1" /> Stock Bajo
-                                                </span>
-                                            ) : (
-                                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                                                    Suficiente
-                                                </span>
-                                            )}
-                                        </td>
-                                        <td className="px-4 py-4 whitespace-nowrap text-right">
-                                            <div className="flex items-center justify-end gap-1.5">
-                                                <button
-                                                    onClick={() => handleAdjust(product)}
-                                                    title="Ajustar stock"
-                                                    className="p-2 rounded-lg text-emerald-400 hover:text-white hover:bg-emerald-500/10 border border-transparent transition-all"
-                                                >
-                                                    <PackagePlus className="w-4 h-4" />
-                                                </button>
-                                                <button
-                                                    onClick={() => handleKardex(product)}
-                                                    title="Ver Kardex"
-                                                    className="p-2 rounded-lg text-[#0099CC] hover:text-white hover:bg-[#0099CC]/10 border border-transparent transition-all"
-                                                >
-                                                    <History className="w-4 h-4" />
-                                                </button>
-                                            </div>
+                            </thead>
+                            <tbody>
+                                {isLoading ? (
+                                    <tr>
+                                        <td colSpan={INVENTORY_COLUMNS.length} className="px-4 py-12 text-center">
+                                            <Loader2 aria-hidden="true" className="mx-auto h-8 w-8 animate-spin text-cyan-700 dark:text-cyan-300" />
+                                            <p role="status" className="mt-2 text-sm text-muted-foreground">Cargando inventario...</p>
                                         </td>
                                     </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
+                                ) : catalogUnavailable ? (
+                                    <tr>
+                                        <td colSpan={INVENTORY_COLUMNS.length} className="px-4 py-12 text-center text-muted-foreground">
+                                            <p role="alert">No se pudo cargar el catálogo completo.</p>
+                                            <button type="button" className="mt-2 font-semibold text-foreground underline" onClick={() => void refetch()}>
+                                                Reintentar
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ) : visibleProducts.length === 0 ? (
+                                    <tr>
+                                        <td colSpan={INVENTORY_COLUMNS.length} className="px-4 py-12 text-center text-muted-foreground">
+                                            <Package aria-hidden="true" className="mx-auto mb-3 h-10 w-10 text-cyan-700 dark:text-cyan-500" />
+                                            {hasFilters ? 'No hay productos que coincidan con los filtros.' : 'No se encontraron productos en el inventario.'}
+                                        </td>
+                                    </tr>
+                                ) : (
+                                    visibleProducts.map(product => {
+                                        const stockState = product.stock <= 0 ? 'empty' : product.stock <= product.minStock ? 'low' : 'sufficient';
+                                        const stock = STOCK_STATES[stockState];
+                                        const family = product.category?.name ?? 'Sin familia';
+                                        const brand = product.brand?.name ?? 'Sin marca';
+
+                                        return (
+                                            <tr key={product.id} className={CATALOG_ROW_CLASS}>
+                                                <td className="px-4 py-3.5">
+                                                    <CatalogProductIdentity product={product} />
+                                                </td>
+                                                <td className="truncate px-4 py-3.5 font-mono text-xs text-muted-foreground dark:text-slate-400" title={product.barcode}>
+                                                    {product.barcode || '—'}
+                                                </td>
+                                                <td className="px-4 py-3.5">
+                                                    <p className="truncate text-xs font-semibold text-foreground" title={family}>{family}</p>
+                                                    <p className="mt-0.5 truncate text-[11px] text-muted-foreground dark:text-slate-400" title={brand}>{brand}</p>
+                                                </td>
+                                                <td className="px-3 py-3.5">
+                                                    <InventoryStock product={product} numberClass={stock.number} />
+                                                </td>
+                                                <td className="px-3 py-3.5">
+                                                    <CatalogUnitBadge unitType={product.unitType} />
+                                                </td>
+                                                <td className="px-3 py-3.5">
+                                                    <span className={`inline-flex items-center gap-1 whitespace-nowrap rounded-full border px-2 py-0.5 text-[11px] font-semibold ${stock.badge}`}>
+                                                        {stockState !== 'sufficient' && <AlertCircle aria-hidden="true" className="h-3 w-3 shrink-0" />}
+                                                        {stock.label}
+                                                    </span>
+                                                </td>
+                                                <td className="px-4 py-3.5">
+                                                    <div className="flex items-center justify-end gap-1.5">
+                                                        <CatalogRowAction onClick={() => handleAdjust(product)} tone="emerald" label="Ajustar stock">
+                                                            <PackagePlus className="h-3.5 w-3.5" aria-hidden="true" />
+                                                        </CatalogRowAction>
+                                                        <CatalogRowAction onClick={() => handleKardex(product)} tone="violet" label="Ver Kardex">
+                                                            <History className="h-3.5 w-3.5" aria-hidden="true" />
+                                                        </CatalogRowAction>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        );
+                                    })
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
 
                 <InventoryKardexModal

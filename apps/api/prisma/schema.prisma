@@ -267,6 +267,9 @@ model Sale {
   branchId           String
   userId             String?
   cashShiftId        String?
+  offlineId          String?
+  offlineReceipt     String?
+  offlinePayment     String?
   customerId         String?
   quoteId            String?
   status             String     @default("COMPLETED") // COMPLETED, PRE_SALE
@@ -296,6 +299,7 @@ model Sale {
   @@index([tenantId])
   @@index([branchId])
   @@index([createdAt])
+  @@unique([tenantId, offlineId])
 }
 
 model SaleItem {

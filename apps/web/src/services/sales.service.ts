@@ -68,6 +68,9 @@ export interface SaleRecord {
     dteFolio?: number | null;
     dteStatus?: string | null;
     dteType?: number | null;
+    offlineId?: string | null;
+    offlineReceipt?: string | null;
+    offlinePayment?: string | null;
     dtePdfUrl?: string | null;
     internalReceiptUrl?: string | null;
     createdAt: string;

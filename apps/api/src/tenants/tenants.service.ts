@@ -28,6 +28,7 @@ export class TenantsService {
       const branch = await tx.branch.create({
         data: {
           name: 'Casa Matriz',
+          address: tenant.address ?? undefined,
           isMain: true,
           isActive: true,
           tenantId: tenant.id,

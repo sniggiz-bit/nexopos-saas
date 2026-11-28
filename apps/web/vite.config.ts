@@ -1,14 +1,34 @@
-import { defineConfig } from 'vite'
+import { defineConfig, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'path'
 import { VitePWA } from 'vite-plugin-pwa'
+
+function versionPwaUrls(): Plugin {
+  return {
+    name: 'nexopos-version-pwa-urls',
+    apply: 'build',
+    enforce: 'post',
+    transformIndexHtml: {
+      order: 'post',
+      handler(html) {
+        const version = html.match(/\/assets\/index-([A-Za-z0-9_-]+)\.js/)?.[1]
+        if (!version) throw new Error('Cannot identify the POS application bundle')
+        const withManifest = html.replace(/(["'])\/manifest\.webmanifest\1/g, (_, quote) => quote + '/manifest.webmanifest?v=' + version + quote)
+        const withWorker = withManifest.replace(/(["'])\/sw\.js\1/g, (_, quote) => quote + '/sw.js?v=' + version + quote)
+        if (withManifest === html || withWorker === withManifest) throw new Error('Cannot version the PWA resource URLs')
+        return withWorker
+      },
+    },
+  }
+}
 
 export default defineConfig({
   plugins: [
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['isotipo.png', 'logo.png'],
+      injectRegister: 'inline',
+      includeAssets: ['pwa/icon-192.png', 'pwa/icon-512.png', 'isotipo.png', 'logo.png'],
       manifest: {
         name: 'NexoPOS',
         short_name: 'NexoPOS',
@@ -20,8 +40,8 @@ export default defineConfig({
         start_url: '/pos',
         scope: '/',
         icons: [
-          { src: '/isotipo.png', sizes: '192x192', type: 'image/png', purpose: 'any maskable' },
-          { src: '/isotipo.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' },
+          { src: '/pwa/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any maskable' },
+          { src: '/pwa/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' },
         ],
         categories: ['business', 'productivity'],
       },
@@ -29,17 +49,19 @@ export default defineConfig({
         skipWaiting: true,
         clientsClaim: true,
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
-        navigateFallbackDenylist: [/^\/api\//],
+        cleanupOutdatedCaches: true,
+        globPatterns: ['index.html', 'assets/**/*.{js,css,woff,woff2}'],
+        navigateFallbackDenylist: [/^\/api(?:\/|$)/, /^\/socket\.io(?:\/|$)/],
         runtimeCaching: [
           {
-            urlPattern: /\/api\/.*/,
+            urlPattern: ({ url, sameOrigin }) => sameOrigin && /^\/api(?:\/|$)/.test(url.pathname),
             handler: 'NetworkOnly',
           },
         ],
       },
       devOptions: { enabled: false },
     }),
+    versionPwaUrls(),
   ],
   resolve: {
     alias: {

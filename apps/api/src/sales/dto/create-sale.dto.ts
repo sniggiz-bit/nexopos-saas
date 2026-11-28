@@ -6,6 +6,11 @@ import {
   Min,
   IsOptional,
   IsEnum,
+  IsISO8601,
+  IsUUID,
+  IsNotEmpty,
+  IsObject,
+  MaxLength,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
@@ -44,7 +49,41 @@ export class CreateSaleItemDto {
   discountAmount?: number;
 }
 
+export class OfflineSaleDto {
+  @IsUUID('4')
+  id: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(80)
+  shiftId: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(80)
+  operatorId: string;
+
+  @IsISO8601({ strict: true })
+  recordedAt: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(80)
+  receiptReference?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(80)
+  paymentReference?: string;
+}
+
 export class CreateSaleDto {
+  @IsOptional()
+  @IsObject()
+  @ValidateNested()
+  @Type(() => OfflineSaleDto)
+  offline?: OfflineSaleDto;
+
   @IsString()
   @IsOptional()
   tenantId?: string;

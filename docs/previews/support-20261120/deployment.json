@@ -1,0 +1,19 @@
+{
+  "release": "df53d201a9b13e8e5e6efc33ac87b553c9274e40",
+  "run": 44724578414,
+  "pr": 119,
+  "backup": "/home/nexopos/deploy-backups/20261120T111043Z-df53d201a9b1",
+  "verification": {
+    "pageStatus": 200,
+    "bundle": "/assets/index-DbdULbkr.js",
+    "bundleChanged": true,
+    "scriptStatus": 200,
+    "trainingPagePresent": true,
+    "geminiConfigurationPresent": true,
+    "historyStatus": 201,
+    "initialPublicTopics": 2,
+    "noConversationCreated": true,
+    "settingsRequireLogin": true
+  },
+  "messagesSentByVerification": 0
+}

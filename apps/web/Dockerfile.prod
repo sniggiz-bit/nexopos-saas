@@ -51,6 +51,15 @@ RUN printf 'server {\n\
         add_header Cache-Control "no-store, no-cache, must-revalidate";\n\
     }\n\
 \n\
+    # Update metadata must be revalidated, including by already installed clients.\n\
+    location = /manifest.webmanifest {\n\
+        default_type application/manifest+json;\n\
+        add_header Cache-Control "no-store, no-cache, must-revalidate" always;\n\
+    }\n\
+    location = /sw.js {\n\
+        add_header Cache-Control "no-store, no-cache, must-revalidate" always;\n\
+    }\n\
+\n\
     # Static assets caching\n\
     location ~* \\.(?:css|js|jpg|jpeg|gif|png|ico|cur|gz|svg|svgz|mp4|ogg|ogv|webm|htc|webp|woff|woff2|ttf|eot)$ {\n\
         expires 1y;\n\

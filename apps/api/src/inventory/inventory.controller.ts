@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Controller,
   Get,
   Post,
@@ -31,26 +32,29 @@ export class InventoryController {
   @UseGuards(JwtAuthGuard)
   @Post('adjust')
   async adjustStock(@Body() body: any, @Request() req: any) {
-    const { productId, branchId, quantity, note } = body;
-
-    const result = await this.inventoryService.logMovement({
+    const { productId, quantity, note } = body;
+    const { tenantId, branchId: userBranchId, sub } = req.user;
+    const branchId = body.branchId ?? userBranchId;
+    const adjustment = Number(quantity);
+    if (typeof productId !== 'string' || !productId || typeof branchId !== 'string' || !branchId ||
+        !Number.isFinite(adjustment) || adjustment === 0) {
+      throw new BadRequestException('Se requiere un producto, una sucursal y una cantidad válida.');
+    }
+    const result = await this.inventoryService.adjustStock(tenantId, {
       productId,
       branchId,
-      quantity: Number(quantity),
+      quantity: adjustment,
       type: MovementType.ADJUSTMENT,
       reference: note || 'Ajuste manual',
-      userId: req.user?.userId,
+      userId: sub,
     });
 
-    const tenantId = req.user?.tenantId;
-    if (tenantId) {
-      this.eventsService.emit({
-        type: 'inventory.adjusted',
-        tenantId,
-        branchId,
-        payload: { productId, newBalance: result.newBalance },
-      });
-    }
+    this.eventsService.emit({
+      type: 'inventory.adjusted',
+      tenantId,
+      branchId,
+      payload: { productId, newBalance: result.newBalance },
+    });
 
     return result;
   }

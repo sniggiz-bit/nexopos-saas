@@ -20,6 +20,7 @@ import { useReceiptPrinter } from '@/hooks/useReceiptPrinter';
 import { isRealDtePdf } from './receipts/ReceiptRenderer';
 import { useTenant } from '@/hooks/useTenant';
 import { useDirectPrinter } from '@/hooks/useDirectPrinter';
+import './checkout.css';
 
 interface CheckoutPanelProps {
     subtotal: number;
@@ -49,7 +50,7 @@ export function CheckoutPanel({
     const { user } = useAuth();
     const { data: tenant } = useTenant(user?.tenantId);
     const receiptPrinter = useReceiptPrinter(defaultFormat, tenant, useWebSerial, printBytes, columns80, cutPaper, directConnection);
-    const salesMode = useQuery({ queryKey: ['dte-sales-mode', user?.tenantId], queryFn: getSalesMode, enabled: !!user?.tenantId, staleTime: 0 });
+    const salesMode = useQuery({ queryKey: ['dte-sales-mode', user?.tenantId], queryFn: () => getSalesMode(), enabled: !!user?.tenantId, staleTime: 0 });
     const internalMode = salesMode.data?.mode === 'internal';
 
     const [paymentType, setPaymentType] = useState<PaymentType>('SINGLE');
@@ -197,22 +198,22 @@ export function CheckoutPanel({
 
     if (isSuccess) {
         return (
-            <div className="flex flex-col h-full bg-white dark:bg-slate-800">
+            <div className="pos-checkout flex flex-col h-full">
                 <div className="flex-1 flex flex-col items-center justify-center gap-4 p-6">
-                    <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
-                        <CheckCircle2 className="w-9 h-9 text-green-600" />
+                    <div className="w-16 h-16 checkout-raised checkout-positive rounded-full flex items-center justify-center">
+                        <CheckCircle2 className="w-9 h-9" />
                     </div>
                     <div className="text-center">
-                        <h3 className="text-lg font-black text-slate-900 dark:text-foreground">¡Venta exitosa!</h3>
-                        <p className="text-sm text-slate-400 mt-1">
+                        <h3 className="text-lg font-bold">¡Venta exitosa!</h3>
+                        <p className="checkout-muted text-sm mt-1">
                             {receiptPrinter.description}
                         </p>
                     </div>
 
                     {saleResult?.dteFolio && (
-                        <div className="bg-slate-50 dark:bg-slate-900 rounded-xl px-6 py-3 text-center">
-                            <span className="text-xs text-slate-400 block mb-1">Folio DTE</span>
-                            <span className="text-2xl font-black text-indigo-600">#{saleResult.dteFolio}</span>
+                        <div className="checkout-raised rounded-xl px-6 py-3 text-center">
+                            <span className="checkout-muted text-xs block mb-1">Folio DTE</span>
+                            <span className="checkout-highlight text-2xl font-black">#{saleResult.dteFolio}</span>
                         </div>
                     )}
 
@@ -244,7 +245,7 @@ export function CheckoutPanel({
                                 aria-label="Formato de impresión"
                                 value={defaultFormat}
                                 onChange={(e) => setDefaultFormat(e.target.value as '80mm' | '58mm' | 'A4')}
-                                className="px-2 py-1 text-xs border border-slate-200 rounded-lg bg-white text-slate-600 focus:outline-none"
+                                className="checkout-input px-2 py-1 text-xs border rounded-lg"
                             >
                                 <option value="80mm">80mm</option>
                                 <option value="58mm">58mm</option>
@@ -254,7 +255,7 @@ export function CheckoutPanel({
                     </div>
                 </div>
 
-                <div className="p-4 border-t border-slate-100 dark:border-slate-700">
+                <div className="p-4 checkout-divider border-t">
                     <Button onClick={onBack} className="w-full" variant="outline">
                         {reviewingReceipt ? 'Cerrar' : `Cerrar (${countdown}s)`}
                     </Button>
@@ -266,20 +267,20 @@ export function CheckoutPanel({
     // ── Error state ───────────────────────────────────────────────────────────
     if (isError) {
         return (
-            <div className="flex flex-col h-full bg-white dark:bg-slate-800">
+            <div className="pos-checkout flex flex-col h-full">
                 <div className="flex-1 flex flex-col items-center justify-center gap-4 p-6">
-                    <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
-                        <XCircle className="w-9 h-9 text-red-600" />
+                    <div className="w-16 h-16 checkout-raised checkout-danger rounded-full flex items-center justify-center">
+                        <XCircle className="w-9 h-9" />
                     </div>
                     <div className="text-center">
-                        <h3 className="text-lg font-black text-slate-900 dark:text-foreground">Error en la venta</h3>
-                        <p className="text-sm text-slate-400 mt-1">Por favor, intenta nuevamente.</p>
+                        <h3 className="text-lg font-bold">Error en la venta</h3>
+                        <p className="checkout-muted text-sm mt-1">Por favor, intenta nuevamente.</p>
                     </div>
                 </div>
-                <div className="flex gap-2 p-4 border-t border-slate-100 dark:border-slate-700">
+                <div className="flex gap-2 p-4 checkout-divider border-t">
                     <Button variant="outline" onClick={onBack} className="flex-1">Cancelar</Button>
                     <Button onClick={handleConfirm}
-                        className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white">
+                        className="checkout-confirm flex-1">
                         Reintentar
                     </Button>
                 </div>
@@ -289,24 +290,25 @@ export function CheckoutPanel({
 
     // ── Checkout form ─────────────────────────────────────────────────────────
     return (
-        <div className="flex flex-col h-full bg-white dark:bg-slate-800">
+        <div className="pos-checkout flex flex-col h-full">
             {/* Header */}
-            <div className="flex items-center gap-3 px-4 py-3 border-b border-slate-100 dark:border-slate-700 shrink-0">
+            <div className="flex items-center gap-2 px-4 py-2 checkout-divider border-b shrink-0">
                 <button
                     onClick={onBack}
                     disabled={isProcessing}
-                    className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors disabled:opacity-40"
+                    aria-label="Volver al carrito"
+                    className="checkout-option grid h-8 w-8 place-items-center rounded-lg border border-transparent disabled:opacity-60"
                 >
                     <ArrowLeft className="w-4 h-4" />
                 </button>
-                <h3 className="text-sm font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                    Checkout
+                <h3 className="text-base font-bold">
+                    Cobro
                 </h3>
-                <span className="ml-auto text-[9px] font-mono bg-slate-100 dark:bg-slate-700 text-slate-400 px-1.5 py-0.5 rounded">Esc volver</span>
+                <kbd className="checkout-key ml-auto">Esc</kbd>
             </div>
 
             {/* Step indicator */}
-            <div className="flex items-center justify-center gap-1.5 px-4 py-2 bg-slate-50 dark:bg-slate-900 border-b border-slate-100 dark:border-slate-700 shrink-0">
+            <div className="flex items-center justify-center gap-1.5 px-3 py-2 checkout-raised checkout-divider border-b shrink-0">
                 {([
                     { steps: ['dte'] as Step[], num: 1, label: 'Documento' },
                     { steps: ['payment'] as Step[], num: 2, label: 'Pago' },
@@ -315,48 +317,46 @@ export function CheckoutPanel({
                     const isActive = steps.includes(activeStep);
                     return (
                         <div key={num} className="flex items-center gap-1">
-                            <div className={`flex items-center gap-1 transition-all ${isActive ? 'text-indigo-600' : 'text-slate-400'}`}>
-                                <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black transition-all ${
-                                    isActive ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-300' : 'bg-slate-200 dark:bg-slate-700 text-slate-500'
-                                }`}>{num}</div>
-                                <span className="text-[10px] font-bold">{label}</span>
+                            <div className="checkout-step flex items-center gap-1.5" aria-current={isActive ? 'step' : undefined}>
+                                <span className="checkout-step-number grid h-5 w-5 place-items-center rounded-full text-[10px] font-bold">{num}</span>
+                                <span className="text-[11px] font-semibold">{label}</span>
                             </div>
-                            {i < 2 && <ChevronRight className="w-3 h-3 text-slate-300 ml-1" />}
+                            {i < 2 && <ChevronRight className="checkout-muted w-3 h-3" />}
                         </div>
                     );
                 })}
             </div>
 
             {/* Scrollable body */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
+            <div className="flex-1 min-h-0 overflow-y-auto px-4 py-3 space-y-3 custom-scrollbar">
 
                 {/* Totals summary */}
-                <div className="bg-slate-50 dark:bg-slate-900/50 rounded-xl p-3 space-y-1.5">
-                    <div className="flex justify-between text-xs text-slate-500">
+                <div className="checkout-raised checkout-divider rounded-xl border px-3 py-2.5 space-y-1">
+                    <div className="checkout-muted flex justify-between text-xs">
                         <span>Subtotal</span><span>{formatPrice(subtotal)}</span>
                     </div>
                     {totalDiscount > 0 && (
-                        <div className="flex justify-between text-xs text-rose-500 font-medium">
+                        <div className="flex justify-between checkout-danger text-xs font-medium">
                             <span>Descuento</span><span>−{formatPrice(totalDiscount)}</span>
                         </div>
                     )}
-                    <div className="flex justify-between text-xs text-slate-400">
+                    <div className="checkout-muted flex justify-between text-xs">
                         <span>IVA (19%)</span><span>{formatPrice(tax)}</span>
                     </div>
-                    <div className="flex justify-between font-black text-base pt-1.5 border-t border-slate-200 dark:border-slate-700">
-                        <span className="text-slate-500">TOTAL</span>
-                        <span className="text-emerald-600">{formatPrice(total)}</span>
+                    <div className="checkout-divider flex items-center justify-between gap-2 border-t pt-2">
+                        <span className="text-sm font-bold">Total a cobrar</span>
+                        <span className="checkout-positive text-2xl font-black tabular-nums">{formatPrice(total)}</span>
                     </div>
                 </div>
 
                 {/* DTE selector */}
-                <div className={`rounded-xl transition-all duration-200 ${activeStep === 'dte' ? 'ring-2 ring-indigo-400 p-2 bg-indigo-50/30 dark:bg-indigo-900/10' : 'opacity-75'}`}>
-                    <p className={`text-[10px] font-bold uppercase tracking-wider mb-2 ${activeStep === 'dte' ? 'text-indigo-500' : 'text-slate-400'}`}>
-                        1 · Documento
+                <div className="space-y-2">
+                    <p className="text-xs font-bold">
+                        Documento
                     </p>
-                    {salesMode.isFetching && <p className="text-sm text-slate-500">Consultando modo de venta...</p>}
-                    {salesMode.isError && <p role="alert" className="text-sm text-rose-500">No se pudo consultar el modo de venta. <button onClick={() => salesMode.refetch()}>Reintentar</button></p>}
-                    {internalMode ? <p className="rounded-xl bg-cyan-500/10 p-3 text-sm font-semibold">Comprobante interno · Sin emisión tributaria</p> : salesMode.isSuccess && <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
+                    {salesMode.isFetching && <p className="checkout-muted text-sm" role="status">Consultando modo de venta...</p>}
+                    {salesMode.isError && <p role="alert" className="checkout-danger text-sm">No se pudo consultar el modo de venta. <button className="font-semibold underline" onClick={() => salesMode.refetch()}>Reintentar</button></p>}
+                    {internalMode ? <p className="checkout-raised checkout-muted rounded-lg px-3 py-2 text-sm font-medium">Comprobante interno · Sin emisión tributaria</p> : salesMode.isSuccess && <div className="checkout-raised flex gap-1 rounded-lg p-1">
                         {([
                             { type: 39 as const, label: 'Boleta', Icon: FileText, kbd: 'F1' },
                             { type: 33 as const, label: 'Factura', Icon: Building2, kbd: 'F2' },
@@ -370,14 +370,11 @@ export function CheckoutPanel({
                                     setCustomerSearch('');
                                     setActiveStep('payment');
                                 }}
-                                className={`flex-1 flex flex-col items-center justify-center py-2 rounded-lg text-xs font-bold transition-all gap-0.5 ${
-                                    dteType === type
-                                        ? 'bg-white dark:bg-slate-700 shadow-sm text-indigo-600'
-                                        : 'text-slate-500 hover:text-slate-700'
-                                }`}
+                                aria-pressed={dteType === type}
+                                className="checkout-option flex flex-1 flex-col items-center justify-center gap-0.5 rounded-md border border-transparent py-1.5 text-xs font-semibold"
                             >
                                 <div className="flex items-center gap-1"><Icon className="w-3 h-3" /> {label}</div>
-                                <span className="text-[9px] font-mono bg-slate-200 dark:bg-slate-600 text-slate-500 dark:text-slate-400 px-1 rounded">{kbd}</span>
+                                <kbd className="checkout-key">{kbd}</kbd>
                             </button>
                         ))}
                     </div>}
@@ -396,18 +393,18 @@ export function CheckoutPanel({
                                 }}
                                 onFocus={() => setShowCustomerDropdown(true)}
                                 onBlur={() => setTimeout(() => setShowCustomerDropdown(false), 200)}
-                                className="text-sm pr-8"
+                                className="checkout-input text-sm pr-8"
                             />
                             {selectedCustomer && (
                                 <button
                                     className="absolute right-2 top-1/2 -translate-y-1/2"
                                     onClick={() => { setSelectedCustomer(null); setCustomerSearch(''); }}
                                 >
-                                    <XCircle className="w-4 h-4 text-slate-400 hover:text-slate-600" />
+                                    <XCircle className="checkout-muted w-4 h-4" />
                                 </button>
                             )}
                             {showCustomerDropdown && !selectedCustomer && filteredCustomers.length > 0 && (
-                                <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg max-h-40 overflow-y-auto">
+                                <div className="absolute z-50 top-full left-0 right-0 mt-1 checkout-surface checkout-divider border rounded-lg shadow-lg max-h-40 overflow-y-auto">
                                     {filteredCustomers.map(c => (
                                         <button
                                             key={c.id}
@@ -416,16 +413,16 @@ export function CheckoutPanel({
                                                 setSelectedCustomer(c);
                                                 setShowCustomerDropdown(false);
                                             }}
-                                            className="w-full text-left px-3 py-2 text-sm hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors border-b border-slate-100 dark:border-slate-800 last:border-0"
+                                            className="w-full text-left px-3 py-2 text-sm checkout-menu-item checkout-divider border-b last:border-0"
                                         >
-                                            <div className="font-medium text-slate-800 dark:text-slate-200">{c.name}</div>
-                                            <div className="text-xs text-slate-400">{c.rut}</div>
+                                            <div className="font-medium">{c.name}</div>
+                                            <div className="checkout-muted text-xs">{c.rut}</div>
                                         </button>
                                     ))}
                                 </div>
                             )}
                             {!selectedCustomer && (
-                                <p className="text-xs text-amber-600 mt-1">
+                                <p className="checkout-warning text-xs mt-1">
                                     Se requiere cliente para emitir Factura
                                 </p>
                             )}
@@ -435,8 +432,8 @@ export function CheckoutPanel({
 
                 {/* Customer picker for CREDITO payment (single or mixed) — only shown if dteType !== 33 to avoid duplication */}
                 {isCreditPayment && (internalMode || dteType !== 33) && (
-                    <div className={`rounded-xl transition-all duration-200 ring-2 ring-amber-400 p-2 bg-amber-50/30 dark:bg-amber-900/10`}>
-                        <p className="text-[10px] font-bold uppercase tracking-wider mb-2 text-amber-500">
+                    <div className="checkout-raised checkout-divider rounded-lg border p-2">
+                        <p className="checkout-warning mb-2 text-xs font-bold">
                             Cliente (requerido para Crédito)
                         </p>
                         <div className="relative">
@@ -452,18 +449,18 @@ export function CheckoutPanel({
                                 }}
                                 onFocus={() => setShowCustomerDropdown(true)}
                                 onBlur={() => setTimeout(() => setShowCustomerDropdown(false), 200)}
-                                className="text-sm pr-8"
+                                className="checkout-input text-sm pr-8"
                             />
                             {selectedCustomer && (
                                 <button
                                     className="absolute right-2 top-1/2 -translate-y-1/2"
                                     onClick={() => { setSelectedCustomer(null); setCustomerSearch(''); }}
                                 >
-                                    <XCircle className="w-4 h-4 text-slate-400 hover:text-slate-600" />
+                                    <XCircle className="checkout-muted w-4 h-4" />
                                 </button>
                             )}
                             {showCustomerDropdown && !selectedCustomer && filteredCustomers.length > 0 && (
-                                <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg max-h-40 overflow-y-auto">
+                                <div className="absolute z-50 top-full left-0 right-0 mt-1 checkout-surface checkout-divider border rounded-lg shadow-lg max-h-40 overflow-y-auto">
                                     {filteredCustomers.map(c => (
                                         <button
                                             key={c.id}
@@ -472,16 +469,16 @@ export function CheckoutPanel({
                                                 setSelectedCustomer(c);
                                                 setShowCustomerDropdown(false);
                                             }}
-                                            className="w-full text-left px-3 py-2 text-sm hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors border-b border-slate-100 dark:border-slate-800 last:border-0"
+                                            className="w-full text-left px-3 py-2 text-sm checkout-menu-item checkout-divider border-b last:border-0"
                                         >
-                                            <div className="font-medium text-slate-800 dark:text-slate-200">{c.name}</div>
-                                            <div className="text-xs text-slate-400">{c.rut}</div>
+                                            <div className="font-medium">{c.name}</div>
+                                            <div className="checkout-muted text-xs">{c.rut}</div>
                                         </button>
                                     ))}
                                 </div>
                             )}
                             {!selectedCustomer && (
-                                <p className="text-xs text-amber-600 mt-1">
+                                <p className="checkout-warning text-xs mt-1">
                                     Se requiere cliente para registrar el crédito
                                 </p>
                             )}
@@ -490,28 +487,22 @@ export function CheckoutPanel({
                 )}
 
                 {/* Payment mode tabs */}
-                <div className={`rounded-xl transition-all duration-200 ${activeStep === 'payment' ? 'ring-2 ring-indigo-400 p-2 bg-indigo-50/30 dark:bg-indigo-900/10' : 'opacity-75'}`}>
-                    <p className={`text-[10px] font-bold uppercase tracking-wider mb-2 ${activeStep === 'payment' ? 'text-indigo-500' : 'text-slate-400'}`}>
-                        2 · Método de Pago
+                <div className="space-y-2">
+                    <p className="text-xs font-bold">
+                        Método de pago
                     </p>
-                    <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl mb-3">
+                    <div className="checkout-raised flex gap-1 rounded-lg p-1">
                         <button
                             onClick={() => setPaymentType('SINGLE')}
-                            className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-bold transition-all ${
-                                paymentType === 'SINGLE'
-                                    ? 'bg-white dark:bg-slate-700 shadow-sm text-indigo-600'
-                                    : 'text-slate-500'
-                            }`}
+                            aria-pressed={paymentType === 'SINGLE'}
+                            className="checkout-option flex flex-1 items-center justify-center gap-1.5 rounded-md border border-transparent py-1.5 text-xs font-semibold"
                         >
                             <RefreshCw className="w-3.5 h-3.5" /> Único
                         </button>
                         <button
                             onClick={() => setPaymentType('MIXED')}
-                            className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-bold transition-all ${
-                                paymentType === 'MIXED'
-                                    ? 'bg-white dark:bg-slate-700 shadow-sm text-indigo-600'
-                                    : 'text-slate-500'
-                            }`}
+                            aria-pressed={paymentType === 'MIXED'}
+                            className="checkout-option flex flex-1 items-center justify-center gap-1.5 rounded-md border border-transparent py-1.5 text-xs font-semibold"
                         >
                             <Layers className="w-3.5 h-3.5" /> Mixto
                         </button>
@@ -524,7 +515,7 @@ export function CheckoutPanel({
                                     { id: PaymentMethod.DEBIT, label: 'Débito', Icon: Calculator, kbd: 'F5' },
                                     { id: PaymentMethod.CASH, label: 'Efectivo', Icon: Banknote, kbd: 'F6' },
                                     { id: PaymentMethod.CARD, label: 'Crédito', Icon: CreditCard, kbd: 'F7' },
-                                    { id: PaymentMethod.TRANSFER, label: 'Transf.', Icon: RefreshCw, kbd: 'F8' },
+                                    { id: PaymentMethod.TRANSFER, label: 'Transferencia', Icon: RefreshCw, kbd: 'F8' },
                                 ].map(({ id, label, Icon, kbd }) => (
                                     <button
                                         key={id}
@@ -532,40 +523,39 @@ export function CheckoutPanel({
                                             setSingleMethod(id);
                                             setActiveStep('cash');
                                         }}
-                                        className={`flex flex-col items-center justify-center p-3 rounded-xl border-2 transition-all ${
-                                            singleMethod === id
-                                                ? 'border-indigo-600 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600'
-                                                : 'border-slate-200 dark:border-slate-700 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800/50'
-                                        }`}
+                                        aria-pressed={singleMethod === id}
+                                        className="checkout-option checkout-method flex min-h-14 items-center gap-2 rounded-lg border px-2.5 py-1.5 text-left"
                                     >
-                                        <Icon className="w-5 h-5 mb-1" />
-                                        <span className="text-[10px] font-black uppercase">{label}</span>
-                                        <span className="text-[9px] font-mono bg-slate-100 dark:bg-slate-700 text-slate-400 px-1 rounded mt-0.5">{kbd}</span>
+                                        <Icon aria-hidden="true" className="h-4 w-4 shrink-0" />
+                                        <span className="grid min-w-0 gap-0.5">
+                                            <span className="text-xs font-bold">{label}</span>
+                                            <kbd className="checkout-key w-fit">{kbd}</kbd>
+                                        </span>
+                                        {singleMethod === id && <CheckCircle2 aria-hidden="true" className="ml-auto h-3.5 w-3.5 shrink-0" />}
                                     </button>
                                 ))}
                             </div>
 
                             <div className="space-y-1">
-                                <Label className="text-xs font-bold uppercase text-slate-400">
+                                <Label htmlFor="checkout-cash-received" className="text-xs font-bold">
                                     Monto Recibido
                                 </Label>
                                 <div className="relative">
-                                    <Banknote className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                    <Banknote className="checkout-muted pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" />
                                     <Input
                                         ref={cashInputRef}
+                                        id="checkout-cash-received"
                                         type="number"
                                         value={cashReceived}
                                         onChange={(e) => setCashReceived(e.target.value)}
-                                        className={`pl-9 h-10 text-base font-bold transition-all ${
-                                            activeStep === 'cash' ? 'ring-2 ring-indigo-400 border-indigo-400' : ''
-                                        }`}
+                                        className="checkout-input pl-9 h-10 text-base font-bold tabular-nums"
                                         placeholder="Ej: 5000"
                                     />
                                 </div>
                                 {change > 0 && (
                                     <div className="flex justify-between items-center pt-1">
-                                        <span className="text-xs font-bold uppercase text-slate-400">Vuelto</span>
-                                        <span className="text-xl font-black text-amber-500">{formatPrice(change)}</span>
+                                        <span className="text-xs font-bold">Vuelto</span>
+                                        <span className="checkout-positive text-xl font-black tabular-nums">{formatPrice(change)}</span>
                                     </div>
                                 )}
                             </div>
@@ -580,26 +570,27 @@ export function CheckoutPanel({
                             ].map(({ id, label, Icon }) => (
                                 <div key={id} className="relative group">
                                     <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center gap-1.5 pointer-events-none">
-                                        <Icon className="w-3.5 h-3.5 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
-                                        <span className="text-[9px] font-black uppercase text-slate-400 group-focus-within:text-indigo-500">
+                                        <Icon className="checkout-muted w-3.5 h-3.5" />
+                                        <span className="checkout-muted text-[11px] font-semibold">
                                             {label}
                                         </span>
                                     </div>
                                     <Input
                                         type="number"
+                                        aria-label={label}
                                         value={mixedPayments[id] ?? ''}
                                         onChange={(e) => setMixedPayments({
                                             ...mixedPayments,
                                             [id]: e.target.value === '' ? '' : parseFloat(e.target.value) || 0,
                                         })}
-                                        className="pl-28 h-9 font-bold text-right border-slate-200 dark:border-slate-700"
+                                        className="checkout-input pl-28 h-9 font-bold tabular-nums text-right"
                                         placeholder="0"
                                     />
                                 </div>
                             ))}
                             <div className="flex justify-between text-xs font-bold pt-1">
-                                <span className="text-slate-400">Cubierto</span>
-                                <span className={isTotalCovered ? 'text-emerald-500' : 'text-rose-500'}>
+                                <span className="checkout-muted">Cubierto</span>
+                                <span className={isTotalCovered ? 'checkout-positive' : 'checkout-danger'}>
                                     {formatPrice(totalMixed)} / {formatPrice(total)}
                                 </span>
                             </div>
@@ -609,31 +600,29 @@ export function CheckoutPanel({
             </div>
 
             {/* Footer */}
-            <div className="shrink-0 p-4 border-t border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800">
+            <div className="checkout-surface checkout-divider shrink-0 border-t px-4 py-3">
                 {paymentType === 'MIXED' && !isTotalCovered && (
                     <Badge
                         variant="outline"
-                        className="w-full justify-center border-dashed border-rose-300 text-rose-500 bg-rose-50 dark:bg-rose-900/10 py-1.5 mb-3"
+                        className="checkout-raised checkout-danger checkout-divider w-full justify-center py-1.5 mb-2"
                     >
-                        Faltan {formatPrice(remaining)}
+                        {remaining > 0 ? 'Faltan' : 'Exceso de'} {formatPrice(Math.abs(remaining))}
                     </Badge>
                 )}
                 <Button
                     onClick={handleConfirm}
                     disabled={isProcessing || (paymentType === 'MIXED' && !isTotalCovered) || !canConfirm}
-                    className={`w-full h-12 text-base font-black tracking-tight rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-500/20 disabled:bg-slate-200 disabled:text-slate-400 disabled:shadow-none transition-all active:scale-[0.98] ${
-                        (activeStep === 'confirm' || activeStep === 'cash') && canConfirm ? 'ring-2 ring-offset-2 ring-emerald-400 animate-pulse' : ''
-                    }`}
+                    className="checkout-confirm h-12 w-full rounded-lg text-sm font-bold"
                 >
                     {isProcessing ? (
                         <div className="flex items-center gap-2">
                             <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                            PROCESANDO...
+                            Procesando pago…
                         </div>
                     ) : (
                         <div className="flex items-center gap-2">
-                            CONFIRMAR PAGO
-                            <span className="text-[10px] font-mono bg-white/20 px-1.5 py-0.5 rounded">F12</span>
+                            Confirmar pago
+                            <kbd className="checkout-key">F12</kbd>
                         </div>
                     )}
                 </Button>

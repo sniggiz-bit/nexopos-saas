@@ -19,30 +19,29 @@ export interface SystemBranch {
 export function useSuperAdminBranches() {
     const [branches, setBranches] = useState<SystemBranch[]>([]);
     const [loading, setLoading] = useState(true);
+    const [loadFailed, setLoadFailed] = useState(false);
+    const [pendingIds, setPendingIds] = useState(() => new Set<string>());
     const { toast } = useToast();
 
     const fetchBranches = useCallback(async () => {
+        setLoading(true);
         try {
-            setLoading(true);
-            const response = await api.get('/branches/system');
+            const response = await api.get<SystemBranch[]>('/branches/system');
             setBranches(response.data);
-        } catch (error: any) {
+            setLoadFailed(false);
+        } catch (error) {
             console.error('Error fetching system branches:', error);
-            toast({
-                title: 'Error',
-                description: 'No se pudieron cargar todas las sucursales.',
-                variant: 'destructive',
-            });
+            setLoadFailed(true);
         } finally {
             setLoading(false);
         }
-    }, [toast]);
+    }, []);
 
     const toggleBranchStatus = async (id: string, isActive: boolean) => {
+        setPendingIds(previous => new Set(previous).add(id));
         try {
             await api.patch(`/branches/${id}/status`, { isActive });
 
-            // Optimistic update
             setBranches(prev => prev.map(b =>
                 b.id === id ? { ...b, isActive } : b
             ));
@@ -51,14 +50,19 @@ export function useSuperAdminBranches() {
                 title: 'Éxito',
                 description: `Sucursal ${isActive ? 'activada' : 'desactivada'} correctamente.`,
             });
-        } catch (error: any) {
+        } catch (error) {
             console.error('Error updating branch status:', error);
             toast({
                 title: 'Error',
                 description: 'No se pudo cambiar el estado de la sucursal.',
                 variant: 'destructive',
             });
-            throw error;
+        } finally {
+            setPendingIds(previous => {
+                const remaining = new Set(previous);
+                remaining.delete(id);
+                return remaining;
+            });
         }
     };
 
@@ -66,5 +70,5 @@ export function useSuperAdminBranches() {
         fetchBranches();
     }, [fetchBranches]);
 
-    return { branches, loading, fetchBranches, toggleBranchStatus };
+    return { branches, loading, loadFailed, fetchBranches, pendingIds, toggleBranchStatus };
 }

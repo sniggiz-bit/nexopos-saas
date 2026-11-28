@@ -18,11 +18,15 @@ import { UpdateProductDto } from './dto/update-product.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CurrentUser } from '../auth/user.decorator';
 import { ImportProductRowDto } from './dto/import-product.dto';
+import { EventsService } from '../events/events.service';
 
 @Controller('products')
 @UseGuards(JwtAuthGuard)
 export class ProductsController {
-  constructor(private readonly productsService: ProductsService) {}
+  constructor(
+    private readonly productsService: ProductsService,
+    private readonly eventsService: EventsService,
+  ) {}
 
   /**
    * GET /products/critical
@@ -96,7 +100,7 @@ export class ProductsController {
    */
   @Post('import')
   async importProducts(
-    @Body() body: { rows?: ImportProductRowDto[] },
+    @Body() body: { rows?: ImportProductRowDto[]; onlyNew?: boolean },
     @CurrentUser() user: any,
   ) {
     if (!Array.isArray(body?.rows) || body.rows.length === 0) {
@@ -111,6 +115,7 @@ export class ProductsController {
       user.branchId,
       user.sub,
       body.rows,
+      body.onlyNew !== false,
     );
   }
 
@@ -185,12 +190,18 @@ export class ProductsController {
     @Body() updateProductDto: UpdateProductDto,
     @Request() req: any,
   ): Promise<ProductResponseDto> {
-    return this.productsService.update(
+    const { tenantId, branchId, sub } = req.user;
+    const product = await this.productsService.update(
       id,
-      req.user.tenantId,
+      tenantId,
       updateProductDto,
-      req.user?.sub,
+      sub,
+      branchId ?? undefined,
     );
+    if (updateProductDto.stock !== undefined) {
+      this.eventsService.emit({ type: 'stock.updated', tenantId, branchId });
+    }
+    return product;
   }
 
   /**

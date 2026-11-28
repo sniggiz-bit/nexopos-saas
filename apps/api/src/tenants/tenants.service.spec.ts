@@ -34,7 +34,7 @@ describe('TenantsService', () => {
     describe('createWithDefaults', () => {
         it('should create tenant, branch, user and settings in a transaction', async () => {
             const data = {
-                tenant: { name: 'Test Tenant', slug: 'test-tenant' },
+                tenant: { name: 'Test Tenant', slug: 'test-tenant', address: 'Av. Libertador 123' },
                 admin: { email: 'admin@test.com', name: 'Admin', password: 'hashed' },
             };
 
@@ -51,7 +51,9 @@ describe('TenantsService', () => {
 
             expect(result).toBeDefined();
             expect(mockTx.tenant.create).toHaveBeenCalled();
-            expect(mockTx.branch.create).toHaveBeenCalled();
+            expect(mockTx.branch.create).toHaveBeenCalledWith({
+                data: expect.objectContaining({ address: data.tenant.address, isMain: true }),
+            });
             expect(mockTx.user.create).toHaveBeenCalled();
             expect(mockTx.tenantSettings.create).toHaveBeenCalled();
             expect(result.tenant.id).toBe('t1');
@@ -68,7 +70,7 @@ describe('TenantsService', () => {
                 systemLog: { create: jest.fn().mockResolvedValue({}) },
             };
             mockPrismaService.$transaction.mockImplementation(cb => cb(tx));
-            const data = { tenant: { name: 'Client', slug: 'client' }, admin: { email: 'admin@client.cl', password: 'hash', role: 'TENANT_ADMIN' as const }, actorId: 'superadmin' };
+            const data = { tenant: { name: 'Client', slug: 'client', address: 'Calle Central 456' }, admin: { email: 'admin@client.cl', password: 'hash', role: 'TENANT_ADMIN' as const }, actorId: 'superadmin' };
             await service.createWithDefaults(data);
             expect(tx.systemLog.create).toHaveBeenCalledWith({ data: {
                 tenantId: 't1', level: 'INFO', message: 'CLIENT_ADMIN_ACTION',

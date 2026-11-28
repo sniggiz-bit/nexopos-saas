@@ -26,6 +26,8 @@ interface ProductImportIdentity {
   id: string;
   sku: string | null;
   barcode: string | null;
+  name: string;
+  isActive: boolean;
 }
 
 interface ProductDuplicateCandidate {
@@ -138,7 +140,7 @@ export class ProductsService {
         include,
         skip,
         take: limit,
-        orderBy: { name: 'asc' },
+        orderBy: [{ name: 'asc' }, { id: 'asc' }],
       }),
       this.prisma.product.count({ where }),
     ]);
@@ -268,16 +270,13 @@ export class ProductsService {
    */
   async create(
     createProductDto: CreateProductDto,
+    db: Pick<Prisma.TransactionClient, 'product' | 'category' | 'brand' | 'supplier'> = this.prisma,
   ): Promise<ProductResponseDto> {
-    console.log(
-      '[ProductsService] Service starting with DTO:',
-      JSON.stringify(createProductDto, null, 2),
-    );
     const { tenantId, barcode, initialStock, priceTiers, branchId, ...productData } =
       createProductDto;
 
     if (productData.categoryId) {
-      const category = await this.prisma.category.findFirst({
+      const category = await db.category.findFirst({
         where: { id: productData.categoryId, tenantId },
       });
       if (!category) {
@@ -286,7 +285,7 @@ export class ProductsService {
     }
 
     if (productData.brandId) {
-      const brand = await this.prisma.brand.findFirst({
+      const brand = await db.brand.findFirst({
         where: { id: productData.brandId, tenantId },
       });
       if (!brand) {
@@ -295,7 +294,7 @@ export class ProductsService {
     }
 
     if (productData.supplierId) {
-      const supplier = await this.prisma.supplier.findFirst({
+      const supplier = await db.supplier.findFirst({
         where: { id: productData.supplierId, tenantId },
       });
       if (!supplier) {
@@ -306,7 +305,7 @@ export class ProductsService {
     const sku = this.cleanImportText(productData.sku);
     if (sku) {
       productData.sku = sku;
-      const existingProduct = await this.prisma.product.findFirst({
+      const existingProduct = await db.product.findFirst({
         where: {
           tenantId,
           isActive: true,
@@ -321,7 +320,7 @@ export class ProductsService {
 
     // Validate barcode uniqueness per tenant if provided
     if (barcode) {
-      const existingProduct = await this.prisma.product.findFirst({
+      const existingProduct = await db.product.findFirst({
         where: {
           barcode,
           tenantId,
@@ -339,7 +338,7 @@ export class ProductsService {
     this.validatePriceTiers(productData.price, createProductDto.priceTiers);
 
     // Create product with default values for optional fields
-    const product = await this.prisma.product.create({
+    const product = await db.product.create({
       data: {
         ...productData,
         barcode,
@@ -569,8 +568,7 @@ export class ProductsService {
     if (updateProductDto.stock !== undefined) {
       const newStock = new Prisma.Decimal(updateProductDto.stock);
 
-      // Use existing inventory branch, or the first branch of the tenant
-      const existingInv = await this.prisma.inventory.findFirst({
+      const existingInv = stockBranchId ? null : await this.prisma.inventory.findFirst({
         where: { productId: id },
       });
       const fallbackBranch = stockBranchId || existingInv ? null : await this.prisma.branch.findFirst({
@@ -613,7 +611,7 @@ export class ProductsService {
       }
     }
 
-    return this.findOne(id, product.tenantId);
+    return this.findOne(id, product.tenantId, stockBranchId);
   }
 
   async importProducts(
@@ -621,6 +619,7 @@ export class ProductsService {
     requestedBranchId: string | null | undefined,
     userId: string | undefined,
     rows: ImportProductRowDto[],
+    onlyNew = false,
   ): Promise<ImportProductsResultDto> {
     const categories = await this.prisma.category.findMany({
       where: { tenantId },
@@ -631,8 +630,8 @@ export class ProductsService {
       select: { id: true, name: true },
     });
     const products = await this.prisma.product.findMany({
-      where: { tenantId, isActive: true },
-      select: { id: true, sku: true, barcode: true },
+      where: onlyNew ? { tenantId } : { tenantId, isActive: true },
+      select: { id: true, sku: true, barcode: true, name: true, isActive: true },
       orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
     });
     const selectedBranch = requestedBranchId
@@ -658,6 +657,7 @@ export class ProductsService {
     );
     const productsBySku = new Map<string, ProductImportIdentity[]>();
     const productsByBarcode = new Map<string, ProductImportIdentity>();
+    const productsByName = new Map<string, ProductImportIdentity>();
     const indexProduct = (product: ProductImportIdentity) => {
       if (product.sku) {
         const key = this.normalizeImportName(product.sku);
@@ -667,6 +667,9 @@ export class ProductsService {
       }
       if (product.barcode) {
         productsByBarcode.set(this.normalizeImportName(product.barcode), product);
+      }
+      if (onlyNew && product.name) {
+        productsByName.set(this.normalizeImportName(product.name), product);
       }
     };
     const unindexProduct = (product: ProductImportIdentity) => {
@@ -682,8 +685,7 @@ export class ProductsService {
       }
     };
     for (const product of products) {
-      const identity = { id: product.id, sku: product.sku, barcode: product.barcode };
-      indexProduct(identity);
+      indexProduct(product);
     }
 
     const results: ImportProductRowResultDto[] = [];
@@ -703,8 +705,22 @@ export class ProductsService {
         const skuKey = sku ? this.normalizeImportName(sku) : '';
         const barcodeKey = barcode ? this.normalizeImportName(barcode) : '';
         const skuMatches = skuKey ? productsBySku.get(skuKey) ?? [] : [];
+        const barcodeOwner = barcodeKey ? productsByBarcode.get(barcodeKey) : undefined;
         const existing = skuMatches[0]
-          ?? (!sku && barcodeKey ? productsByBarcode.get(barcodeKey) : undefined);
+          ?? (!sku || (onlyNew && !barcodeOwner?.sku?.trim()) ? barcodeOwner : undefined)
+          ?? (onlyNew && !sku && !barcode && name ? productsByName.get(this.normalizeImportName(name)) : undefined);
+
+        if (onlyNew && existing) {
+          results.push({
+            rowNumber,
+            name: name ?? existing.name,
+            sku,
+            outcome: 'skipped',
+            message: existing.isActive ? 'El producto ya existe.' : 'El producto ya existe y está inactivo.',
+            warnings,
+          });
+          continue;
+        }
 
         if (!existing && !name) {
           results.push({
@@ -722,12 +738,9 @@ export class ProductsService {
         }
 
         let safeBarcode = barcode;
-        if (barcodeKey) {
-          const barcodeOwner = productsByBarcode.get(barcodeKey);
-          if (barcodeOwner && barcodeOwner.id !== existing?.id) {
-            safeBarcode = undefined;
-            warnings.push('El código de barras ya pertenece a otro producto; se importó sin ese código.');
-          }
+        if (barcodeOwner && barcodeOwner.id !== existing?.id) {
+          safeBarcode = undefined;
+          warnings.push('El código de barras ya pertenece a otro producto; se importó sin ese código.');
         }
 
         const categoryId = categoryName
@@ -745,7 +758,9 @@ export class ProductsService {
           : undefined;
 
         if (!sku && !barcode) {
-          warnings.push('El producto no tiene SKU ni código de barras para futuras actualizaciones automáticas.');
+          warnings.push(onlyNew
+            ? 'Sin SKU ni código de barras. El nombre se usará para reconocer el producto al recargar.'
+            : 'El producto no tiene SKU ni código de barras para futuras actualizaciones automáticas.');
         }
         if (!existing && price === undefined) {
           warnings.push('El producto nuevo quedará con precio 0 porque no se recibió un precio válido.');
@@ -797,26 +812,34 @@ export class ProductsService {
             tenantId,
             isActive: true,
           };
-          let created: ProductResponseDto;
+          const createProduct = () => onlyNew
+            ? this.createNewImportProduct(createData, barcode)
+            : this.create(createData);
+          let created: ProductResponseDto | null;
           try {
-            created = await this.create(createData);
+            created = await createProduct();
           } catch (error) {
             if (!safeBarcode || !this.isImportBarcodeConflict(error)) throw error;
             safeBarcode = undefined;
             createData.barcode = undefined;
             warnings.push('El código de barras ya pertenece a otro producto; se importó sin ese código.');
-            created = await this.create(createData);
+            created = await createProduct();
+          }
+          if (!created) {
+            results.push({ rowNumber, name, sku, outcome: 'skipped', message: 'El producto ya existe.', warnings });
+            continue;
           }
           resultId = created.id;
           outcome = 'created';
         }
 
-        const oldIdentity = existing ?? { id: resultId, sku: null, barcode: null };
-        unindexProduct(oldIdentity);
+        if (existing) unindexProduct(existing);
         const newIdentity: ProductImportIdentity = {
           id: resultId,
           sku: sku ?? existing?.sku ?? null,
           barcode: safeBarcode ?? existing?.barcode ?? null,
+          name: name ?? existing?.name ?? '',
+          isActive: true,
         };
         indexProduct(newIdentity);
 
@@ -840,6 +863,28 @@ export class ProductsService {
       errors: results.filter(result => result.outcome === 'error').length,
       results,
     };
+  }
+
+  private createNewImportProduct(data: CreateProductDto, sourceBarcode?: string): Promise<ProductResponseDto | null> {
+    const identities: Prisma.ProductWhereInput[] = [];
+    if (data.sku) identities.push({ sku: { equals: data.sku, mode: 'insensitive' } });
+    if (sourceBarcode) {
+      identities.push({
+        barcode: { equals: sourceBarcode, mode: 'insensitive' },
+        ...(data.sku ? { OR: [{ sku: null }, { sku: '' }] } : {}),
+      });
+    }
+    if (!identities.length) identities.push({ name: { equals: data.name, mode: 'insensitive' } });
+
+    return this.prisma.$transaction(async tx => {
+      // Recheck under the same lock as the write for overlapping uploads.
+      await tx.$queryRaw`SELECT 1 FROM pg_advisory_xact_lock(hashtext('product-import'), hashtext(${data.tenantId}))`;
+      const existing = await tx.product.findFirst({
+        where: { tenantId: data.tenantId, OR: identities },
+        select: { id: true },
+      });
+      return existing ? null : this.create(data, tx);
+    }, { timeout: 15000 });
   }
 
   private cleanImportText(value: unknown): string | undefined {

@@ -69,7 +69,7 @@ export function PaymentModal({
     const { user } = useAuth();
     const { data: tenant } = useTenant(user?.tenantId);
     const receiptPrinter = useReceiptPrinter(defaultFormat, tenant, useWebSerial, printBytes, columns80, cutPaper, directConnection);
-    const salesMode = useQuery({ queryKey: ['dte-sales-mode', user?.tenantId], queryFn: getSalesMode, enabled: isOpen && !!user?.tenantId, staleTime: 0 });
+    const salesMode = useQuery({ queryKey: ['dte-sales-mode', user?.tenantId], queryFn: () => getSalesMode(), enabled: isOpen && !!user?.tenantId, staleTime: 0 });
     const internalMode = salesMode.data?.mode === 'internal';
 
     // Payment Logic States

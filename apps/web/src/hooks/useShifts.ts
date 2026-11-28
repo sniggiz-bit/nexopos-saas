@@ -2,10 +2,11 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getShift, openShift, closeShift, getShiftLiveSummary, OpenShiftRequest, CloseShiftRequest } from '../api/shifts';
 
-export const useCurrentShift = (branchId: string) => {
+export const useCurrentShift = (branchId: string, monitorConnection = false) => {
     return useQuery({
         queryKey: ['current-shift', branchId],
-        queryFn: () => getShift(branchId),
+        queryFn: () => getShift(branchId, monitorConnection ? 7500 : undefined),
+        refetchInterval: monitorConnection ? 30_000 : false,
         enabled: !!branchId,
         retry: false,
         staleTime: 0,
