@@ -1,9 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import {
-    CheckCircle, Building2, FileText, Menu, Globe, Truck, ArrowRight, Sparkles,
-    AlertTriangle, ChevronDown
-} from 'lucide-react';
+import { Check, Menu, X, ArrowRight } from 'lucide-react';
+import '../components/landing/public-site.css';
 import { Logo } from '../components/ui/Logo';
 import { PublicChatWidget } from '../components/landing/PublicChatWidget';
 import { usePublicPlans } from '../hooks/usePublicPlans';
@@ -38,104 +36,59 @@ interface LandingConfig {
     chatbot?: { enabled: boolean; welcomeMessage: string; options: string[] };
 }
 
-const HeroCarousel = () => {
-    const images = [
-        "/real-pos.webp",
-        "/real-dashboard.webp",
-        "/real-inventario.webp",
-        "/real-tesoreria.webp",
-        "/real-store online.webp",
-        "/real-historial de ventas.webp"
-    ];
-    
-    const [currentIndex, setCurrentIndex] = useState(0);
-
-    useEffect(() => {
-        const timer = setInterval(() => {
-            setCurrentIndex((prev) => (prev + 1) % images.length);
-        }, 4000);
-        return () => clearInterval(timer);
-    }, [images.length]);
-
-    return (
-        <div className="w-full h-full relative group overflow-hidden bg-black">
-            {images.map((img, idx) => (
-                <img
-                    key={img}
-                    src={img}
-                    alt={`NexoPOS Interface ${idx}`}
-                    className={`
-                        absolute inset-0 w-full h-full object-cover object-left-top transition-all duration-1000 ease-in-out
-                        ${idx === currentIndex ? 'opacity-100 scale-100 z-10' : 'opacity-0 scale-105 z-0 pointer-events-none'}
-                    `}
-                />
-            ))}
-            
-            {/* Carousel Indicators */}
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 flex space-x-2 bg-black/60 px-3 py-2 rounded-full backdrop-blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                {images.map((_, idx) => (
-                    <button
-                        key={idx}
-                        onClick={() => setCurrentIndex(idx)}
-                        className={`w-2 h-2 rounded-full transition-all duration-300 ${idx === currentIndex ? 'bg-cyan-400 w-4' : 'bg-white/40 hover:bg-white/70'}`}
-                    />
-                ))}
-            </div>
-        </div>
-    );
-};
+const legacyCopy: Record<string, string> = {"Tu comercio no puede funcionar a ciegas.":"Ventas e inventario","NexoPOS te devuelve el control total, en tiempo real.":"bajo una misma gestión.","El sistema POS más rápido de Chile. Stock sincronizado al instante, caja sin filas y tu operación completa en un solo panel — desde cualquier dispositivo.":"Centraliza el punto de venta, el inventario y tus sucursales. Consulta la operación de tu empresa y toma decisiones con información actualizada.","Solicitar Demo Gratuita":"Comenzar prueba gratuita","Ver el sistema en acción":"Conocer la plataforma","Si ya viviste esto, sabes exactamente de lo que hablamos.":"Visibilidad para la operación diaria.","La caja que no cuadra nunca":"Seguimiento de caja","Vendes lo que no tienes. Pierdes lo que no ves.":"Disponibilidad de productos","Filas que matan ventas y sucursales que operan como islas":"Coordinación entre sucursales","Un sistema tan rápido como tu comercio. Tan preciso como necesitas.":"Las herramientas de tu comercio, conectadas.","NexoPOS fue construido sobre una premisa simple: cada décima de segundo que ahorras en la caja y cada unidad que tu inventario registra correctamente, es dinero que vuelve a tu bolsillo. Una sola plataforma. Un solo dashboard. Cero doble digitación.":"Registra ventas, revisa existencias y consulta los movimientos de cada sucursal desde un entorno de trabajo compartido.","⚡ Caja Hiper-Rápida. Menos de 2 segundos por transacción.":"Punto de venta","📦 Stock Sincronizado al Instante. En Todos Tus Locales.":"Inventario y trazabilidad","🏪 Control Multisucursal. Todo desde un Solo Panel.":"Administración de sucursales","🌐 Tu Tienda Online Sincronizada con tu Local.":"Catálogo y tienda online","Planes escalables. Sin contratos. Sin sorpresas.":"Un plan para cada operación.","NexoPOS vs. Excel y sistemas del pasado":"Funciones de la plataforma"};
 
 const DEFAULT_CFG: LandingConfig = {
     hero: {
         badge: 'Software POS · +350 Comercios en Chile · Operando desde 2022',
-        title: 'Tu comercio no puede funcionar a ciegas.',
-        titleHighlight: 'NexoPOS te devuelve el control total, en tiempo real.',
-        description: 'El sistema POS más rápido de Chile. Stock sincronizado al instante, caja sin filas y tu operación completa en un solo panel — desde cualquier dispositivo.',
-        ctaPrimary: 'Solicitar Demo Gratuita',
-        ctaSecondary: 'Ver el sistema en acción',
+        title: 'Ventas e inventario',
+        titleHighlight: 'bajo una misma gestión.',
+        description: 'Centraliza el punto de venta, el inventario y tus sucursales. Consulta la operación de tu empresa y toma decisiones con información actualizada.',
+        ctaPrimary: 'Comenzar prueba gratuita',
+        ctaSecondary: 'Conocer la plataforma',
         dteBanner: 'Incluye Facturación Electrónica DTE certificada ante el SII, sin costo extra.',
     },
     pain: {
-        title: 'Si ya viviste esto, sabes exactamente de lo que hablamos.',
+        title: 'Visibilidad para la operación diaria.',
         subtitle: 'EL CAOS QUE QUEMA TU NEGOCIO POR DENTRO',
         items: [
             {
-                title: 'La caja que no cuadra nunca',
+                title: 'Seguimiento de caja',
                 description: 'Tu cajero anota las ventas a mano o en una planilla que nadie actualiza al mismo tiempo. Al final del día, los números no cierran — y nunca sabrás si fue un error humano, una venta mal registrada o robo hormiga. Revisas todo de nuevo. Son las 10 de la noche. Sigues en el local.'
             },
             {
-                title: 'Vendes lo que no tienes. Pierdes lo que no ves.',
+                title: 'Disponibilidad de productos',
                 description: 'Un cliente pide el producto que más te rota. Tú dices que hay stock. Vas a buscarlo a la bodega y no está. ¿Fue vendido sin registrarse? ¿Quedó mal ingresado? No tienes cómo saberlo. El cliente se va. La reputación se daña. El margen se evapora.'
             },
             {
-                title: 'Filas que matan ventas y sucursales que operan como islas',
+                title: 'Coordinación entre sucursales',
                 description: 'Cada segundo de espera en la caja es un cliente que recalcula si vale la pena. Un sistema lento no solo molesta — te cuesta ventas reales. Y lo que pasa en una sucursal no llega a la otra ni al dueño. Descubres los problemas días después, cuando ya no hay solución.'
             }
         ]
     },
     solution: {
-        title: 'Un sistema tan rápido como tu comercio. Tan preciso como necesitas.',
+        title: 'Las herramientas de tu comercio, conectadas.',
         subtitle: 'NEXOPOS — CONTROL TOTAL. SIN CONCESIONES.',
-        description: 'NexoPOS fue construido sobre una premisa simple: cada décima de segundo que ahorras en la caja y cada unidad que tu inventario registra correctamente, es dinero que vuelve a tu bolsillo. Una sola plataforma. Un solo dashboard. Cero doble digitación.'
+        description: 'Registra ventas, revisa existencias y consulta los movimientos de cada sucursal desde un entorno de trabajo compartido.'
     },
     features: {
         sectionTitle: 'Tres módulos que transforman la forma en que operas.',
         sectionSubtitle: 'Cada funcionalidad fue diseñada para eliminar una fricción específica en el comercio chileno moderno.',
         items: [
             {
-                title: '⚡ Caja Hiper-Rápida. Menos de 2 segundos por transacción.',
+                title: 'Punto de venta',
                 description: 'Busca productos por código, nombre o categoría. Con el catálogo guardado y un turno abierto, la caja puede seguir registrando ventas y pagos recibidos durante un corte. Compatible con impresoras térmicas, lectores de barra y gavetas electrónicas.'
             },
             {
-                title: '📦 Stock Sincronizado al Instante. En Todos Tus Locales.',
+                title: 'Inventario y trazabilidad',
                 description: 'Cada vez que un producto sale por la caja — ya sea en tu local físico, tu tienda online o una sucursal a 200 km — el inventario se actualiza en milisegundos en toda la red. Alertas automáticas de stock mínimo. Transferencias entre bodegas con trazabilidad completa. Dashboard en tiempo real desde el celular.'
             },
             {
-                title: '🏪 Control Multisucursal. Todo desde un Solo Panel.',
+                title: 'Administración de sucursales',
                 description: 'Administra múltiples locales sin moverte de tu casa. Visualiza el stock de cada bodega en tiempo real, inspecciona reportes consolidados por sede y detecta descuadres antes de que se conviertan en pérdidas. El control que antes requería presencia física, ahora está en tu pantalla.'
             },
             {
-                title: '🌐 Tu Tienda Online Sincronizada con tu Local.',
+                title: 'Catálogo y tienda online',
                 description: 'Tu catálogo físico y online comparten el mismo inventario en tiempo real. Si vendes en el local, el stock web baja al instante. Si vendes online, el POS ya sabe que ese producto no está disponible. Sin quiebres de stock. Sin ventas de productos inexistentes. Sin clientes enojados.'
             },
         ],
@@ -172,7 +125,7 @@ const DEFAULT_CFG: LandingConfig = {
         ]
     },
     comparison: {
-        title: 'NexoPOS vs. Excel y sistemas del pasado',
+        title: 'Funciones de la plataforma',
         subtitle: 'COMPARATIVA OBJETIVA',
         rows: [
             { feature: 'Sincronización de stock en tiempo real', nexopos: 'Sí, 100% instantáneo', excel: 'No (archivos locales aislados)', traditional: 'A veces (servidores lentos)' },
@@ -183,7 +136,7 @@ const DEFAULT_CFG: LandingConfig = {
         ]
     },
     pricing: {
-        title: 'Planes escalables. Sin contratos. Sin sorpresas.',
+        title: 'Un plan para cada operación.',
         subtitle: 'Elige el plan que soporta tu operación hoy. Escala cuando crezcas. Cancela cuando quieras — sin multas ni costos extras.',
     },
     faqs: {
@@ -205,7 +158,7 @@ const DEFAULT_CFG: LandingConfig = {
     cta: {
         title: 'Tu comercio merece un sistema que trabaje tan duro como tú.',
         subtitle: 'Solicita una demo personalizada de 30 minutos. Te mostramos en vivo cómo NexoPOS opera en un comercio como el tuyo — sin términos técnicos, sin presión de venta.',
-        button: 'Solicitar Demo Gratuita',
+        button: 'Comenzar prueba gratuita',
     },
     footer: { description: 'El sistema POS más rápido de Chile. Control total de tu inventario, caja y sucursales en tiempo real.' },
     seo: {
@@ -220,12 +173,6 @@ const DEFAULT_CFG: LandingConfig = {
     }
 };
 
-const FEATURE_ICONS = [
-    { icon: FileText, color: 'text-indigo-400', bg: 'bg-indigo-500/10', border: 'border-indigo-500/20', hover: 'hover:border-indigo-500/40 hover:bg-indigo-500/5' },
-    { icon: Building2, color: 'text-cyan-400', bg: 'bg-cyan-500/10', border: 'border-cyan-500/20', hover: 'hover:border-cyan-500/40 hover:bg-cyan-500/5' },
-    { icon: Truck, color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20', hover: 'hover:border-emerald-500/40 hover:bg-emerald-500/5' },
-    { icon: Globe, color: 'text-purple-400', bg: 'bg-purple-500/10', border: 'border-purple-500/20', hover: 'hover:border-purple-500/40 hover:bg-purple-500/5' },
-];
 
 function deepMerge(base: any, override: any): any {
     const result = { ...base };
@@ -236,33 +183,19 @@ function deepMerge(base: any, override: any): any {
             // Fallback to base array if the override array is empty (e.g. no items added in admin)
             result[key] = base[key] || [];
         } else if (override[key] !== undefined && override[key] !== null && override[key] !== '') {
-            result[key] = override[key];
+            result[key] = typeof override[key] === 'string' ? (legacyCopy[override[key]] ?? override[key]) : override[key];
         }
     }
     return result;
 }
 
-function FAQItem({ question, answer }: { question: string; answer: string }) {
-    const [isOpen, setIsOpen] = useState(false);
-    return (
-        <div className="border border-white/[0.06] bg-white/[0.01] rounded-2xl p-6 transition-all hover:bg-white/[0.02]">
-            <button 
-                onClick={() => setIsOpen(!isOpen)} 
-                className="w-full flex justify-between items-center text-left text-slate-100 hover:text-cyan-300 transition-colors"
-            >
-                <span className="text-sm sm:text-base font-bold">{question}</span>
-                <ChevronDown className={`w-5 h-5 text-slate-400 transition-transform duration-300 ${isOpen ? 'transform rotate-180 text-cyan-400' : ''}`} />
-            </button>
-            <div className={`transition-all duration-300 overflow-hidden ${isOpen ? 'max-h-60 opacity-100 mt-4' : 'max-h-0 opacity-0'}`}>
-                <p className="text-slate-400 text-xs sm:text-sm leading-relaxed">{answer}</p>
-            </div>
-        </div>
-    );
+function cleanHeading(value: string) {
+    return (legacyCopy[value] ?? value).replace(/^[^\p{L}\p{N}]+/u, '').trim();
 }
 
 export function LandingPage() {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
-    const { data: plans, isLoading: plansLoading } = usePublicPlans();
+    const { data: plans, isLoading: plansLoading, isError: plansError, refetch: refetchPlans } = usePublicPlans();
 
     const { data: remoteCfg } = useQuery<LandingConfig>({
         queryKey: ['landing-config'],
@@ -297,592 +230,143 @@ export function LandingPage() {
         }
     }, [seo]);
 
+
     return (
-        <main className="dark min-h-screen bg-[#070913] text-slate-100 font-sans relative overflow-hidden selection:bg-cyan-500/30 selection:text-cyan-200">
-            {/* Fine tech grid background overlay */}
-            <div 
-                className="absolute inset-0 z-0 pointer-events-none opacity-40" 
-                style={{
-                    backgroundImage: `radial-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px)`,
-                    backgroundSize: '32px 32px'
-                }}
-            />
-
-            {/* Glowing backdrop orbs */}
-            <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-indigo-600/10 blur-[120px] pointer-events-none" />
-            <div className="absolute top-[30%] right-[-10%] w-[55%] h-[55%] rounded-full bg-emerald-500/8 blur-[130px] pointer-events-none" />
-            <div className="absolute bottom-[-10%] left-[10%] w-[50%] h-[50%] rounded-full bg-purple-500/5 blur-[150px] pointer-events-none" />
-
-            {/* Navigation Header */}
-            <nav className="fixed w-full bg-[#070913]/60 backdrop-blur-xl z-50 border-b border-white/[0.06] transition-all">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex justify-between h-16 items-center">
-                        <Link to="/" className="flex items-center gap-2">
-                            <Logo variant="full" className="h-9 w-auto brightness-0 invert opacity-95" />
-                        </Link>
-                        <div className="hidden md:flex items-center space-x-8">
-                            <a href="#features" className="text-slate-300 hover:text-cyan-400 font-medium text-sm transition-colors duration-200">Características</a>
-                            <a href="#use-cases" className="text-slate-300 hover:text-cyan-400 font-medium text-sm transition-colors duration-200">Casos</a>
-                            <a href="#comparison" className="text-slate-300 hover:text-cyan-400 font-medium text-sm transition-colors duration-200">Comparativa</a>
-                            <a href="#pricing" className="text-slate-300 hover:text-cyan-400 font-medium text-sm transition-colors duration-200">Precios</a>
-                            <a href="#faqs" className="text-slate-300 hover:text-cyan-400 font-medium text-sm transition-colors duration-200">Preguntas</a>
-                            <Link to="/login" className="text-slate-300 hover:text-cyan-400 font-medium text-sm transition-colors duration-200">Iniciar Sesión</Link>
-                            <Link 
-                                to="/register" 
-                                className="
-                                    bg-gradient-to-r from-cyan-500 via-indigo-500 to-emerald-500 text-white 
-                                    px-5 py-2.5 rounded-xl font-bold text-sm shadow-[0_0_20px_rgba(6,182,212,0.15)]
-                                    hover:shadow-[0_0_25px_rgba(6,182,212,0.25)] hover:scale-[1.02] active:scale-[0.98] 
-                                    transition-all duration-200
-                                "
-                            >
-                                Comenzar ahora
-                            </Link>
-                        </div>
-                        <div className="md:hidden flex items-center">
-                            <button 
-                                onClick={() => setIsMenuOpen(!isMenuOpen)} 
-                                className="text-slate-300 p-2 hover:bg-white/[0.05] rounded-xl transition-colors"
-                            >
-                                <Menu className="w-6 h-6" />
-                            </button>
-                        </div>
-                    </div>
+        <div className="public-site">
+            <header className="public-header">
+                <div className="public-container public-header-inner">
+                    <Link to="/landing" className="public-brand" aria-label="NexoPOS, inicio">
+                        <Logo variant="full" mode="light" className="h-10 w-auto" />
+                    </Link>
+                    <nav aria-label="Navegación principal" className="public-header-links desktop">
+                        <a href="#features">Producto</a>
+                        <a href="#use-cases">Sectores</a>
+                        <a href="#pricing">Planes</a>
+                        <a href="#faqs">Preguntas frecuentes</a>
+                        <Link to="/login">Iniciar sesión</Link>
+                        <Link to="/register" className="public-button">Comenzar prueba</Link>
+                    </nav>
+                    <button type="button" aria-label={isMenuOpen ? 'Cerrar menú' : 'Abrir menú'} aria-expanded={isMenuOpen} aria-controls="landing-mobile-menu" className="public-mobile-toggle" onClick={() => setIsMenuOpen(!isMenuOpen)}>
+                        {isMenuOpen ? <X size={20} /> : <Menu size={20} />}
+                    </button>
                 </div>
-                {/* Mobile dropdown */}
                 {isMenuOpen && (
-                    <div className="md:hidden bg-[#0d1226]/95 border-b border-white/[0.08] px-4 pt-2 pb-6 space-y-3 shadow-2xl absolute w-full backdrop-blur-xl z-50">
-                        <a href="#features" onClick={() => setIsMenuOpen(false)} className="block text-slate-300 font-medium py-2 px-3 rounded-lg hover:bg-white/[0.04]">Características</a>
-                        <a href="#use-cases" onClick={() => setIsMenuOpen(false)} className="block text-slate-300 font-medium py-2 px-3 rounded-lg hover:bg-white/[0.04]">Casos</a>
-                        <a href="#comparison" onClick={() => setIsMenuOpen(false)} className="block text-slate-300 font-medium py-2 px-3 rounded-lg hover:bg-white/[0.04]">Comparativa</a>
-                        <a href="#pricing" onClick={() => setIsMenuOpen(false)} className="block text-slate-300 font-medium py-2 px-3 rounded-lg hover:bg-white/[0.04]">Precios</a>
-                        <a href="#faqs" onClick={() => setIsMenuOpen(false)} className="block text-slate-300 font-medium py-2 px-3 rounded-lg hover:bg-white/[0.04]">Preguntas</a>
-                        <Link to="/login" className="block text-slate-300 font-medium py-2 px-3 rounded-lg hover:bg-white/[0.04]">Iniciar Sesión</Link>
-                        <Link 
-                            to="/register" 
-                            className="
-                                block text-center py-3 mt-4 rounded-xl font-bold text-white
-                                bg-gradient-to-r from-cyan-500 via-indigo-500 to-emerald-500
-                            "
-                        >
-                            Comenzar ahora
-                        </Link>
-                    </div>
+                    <nav id="landing-mobile-menu" aria-label="Menú móvil" className="public-container public-mobile-nav">
+                        <a href="#features" onClick={() => setIsMenuOpen(false)}>Producto</a>
+                        <a href="#use-cases" onClick={() => setIsMenuOpen(false)}>Sectores</a>
+                        <a href="#pricing" onClick={() => setIsMenuOpen(false)}>Planes</a>
+                        <a href="#faqs" onClick={() => setIsMenuOpen(false)}>Preguntas frecuentes</a>
+                        <Link to="/login">Iniciar sesión</Link>
+                        <Link to="/register" className="public-button">Comenzar prueba</Link>
+                    </nav>
                 )}
-            </nav>
-
-            {/* Hero Section */}
-            <section className="relative pt-20 lg:pt-36 pb-16 lg:pb-32 z-10" style={{
-                backgroundImage: 'url(/hero-bg-store.webp)',
-                backgroundSize: 'cover',
-                backgroundPosition: 'center',
-            }}>
-                <div className="absolute inset-0 bg-[#070913]/85 backdrop-blur-[2px] z-0"></div>
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-                    <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
-                        {/* Hero Text */}
-                        <div className="max-w-2xl text-center lg:text-left space-y-6">
-                            {/* Glowing Badge */}
-                            <div className="hidden md:inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-xs font-bold tracking-wider uppercase">
-                                <Sparkles className="w-3.5 h-3.5" />
-                                {hero.badge}
-                            </div>
-                            
-                            <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight text-foreground leading-[1.1]">
-                                {hero.title}{' '}
-                                <span className="bg-gradient-to-r from-cyan-400 via-indigo-400 to-emerald-400 bg-clip-text text-transparent block mt-2">
-                                    {hero.titleHighlight}
-                                </span>
-                            </h1>
-
-                            <p className="text-base sm:text-lg text-slate-400 leading-relaxed max-w-xl mx-auto lg:mx-0">
-                                {hero.description}
-                            </p>
-
-                            <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start pt-2">
-                                <Link 
-                                    to="/register" 
-                                    className="
-                                        w-full sm:w-auto inline-flex items-center justify-center px-8 py-3.5 text-sm font-bold text-white 
-                                        bg-gradient-to-r from-cyan-500 via-indigo-500 to-emerald-500 rounded-xl
-                                        shadow-[0_0_20px_rgba(6,182,212,0.2)] hover:shadow-[0_0_30px_rgba(6,182,212,0.35)]
-                                        hover:scale-[1.02] active:scale-[0.98] transition-all duration-300
-                                    "
-                                >
-                                    {hero.ctaPrimary}
-                                    <ArrowRight className="w-4 h-4 ml-2" />
-                                </Link>
-                                <a 
-                                    href="#pricing" 
-                                    className="
-                                        w-full sm:w-auto inline-flex items-center justify-center px-8 py-3.5 text-sm font-semibold text-slate-200 
-                                        bg-white/[0.03] border border-white/[0.08] rounded-xl hover:bg-white/[0.06] 
-                                        hover:border-white/[0.15] transition-all duration-200
-                                    "
-                                >
-                                    {hero.ctaSecondary}
-                                </a>
-                            </div>
-
-                            {/* DTE Notice Banner */}
-                            <div className="hidden md:inline-flex items-center justify-center lg:justify-start gap-3 text-xs sm:text-sm text-slate-400 bg-white/[0.02] border border-white/[0.06] py-3 px-5 rounded-2xl shadow-inner backdrop-blur-md">
-                                <CheckCircle className="w-5 h-5 text-emerald-400 flex-shrink-0" />
-                                <span dangerouslySetInnerHTML={{ __html: hero.dteBanner.replace('Facturación Electrónica DTE', '<strong class="text-cyan-300 font-bold">Facturación Electrónica DTE</strong>') }} />
+            </header>
+            <main>
+                <section className="public-hero">
+                    <div className="public-container public-hero-grid">
+                        <div>
+                            <p className="public-eyebrow">Gestión comercial para empresas</p>
+                            <h1>{hero.title} <span>{hero.titleHighlight}</span></h1>
+                            <p className="public-copy">{hero.description}</p>
+                            <div className="public-actions">
+                                <Link to="/register" className="public-button">{hero.ctaPrimary}<ArrowRight size={16} aria-hidden="true" /></Link>
+                                <a href="#solution" className="public-button secondary">{hero.ctaSecondary}</a>
                             </div>
                         </div>
-
-                        {/* Hero Demo Graphic */}
-                        <div className="relative mt-10 lg:mt-0 block">
-                            {/* Glowing light background backing */}
-                            <div className="absolute -inset-2 bg-gradient-to-r from-cyan-500/20 via-indigo-500/20 to-emerald-500/20 rounded-2xl blur-3xl opacity-30"></div>
-                            
-                            {/* Outer Glass Card */}
-                            <div className="relative rounded-2xl bg-[#0a0a0a] border border-white/[0.15] shadow-[0_30px_60px_rgba(0,0,0,0.6)] overflow-hidden aspect-video flex flex-col backdrop-blur-xl">
-                                <div className="h-9 border-b border-white/[0.08] bg-[#1a1b1e] flex items-center px-4 space-x-2">
-                                    <div className="w-3 h-3 rounded-full bg-red-500/80"></div>
-                                    <div className="w-3 h-3 rounded-full bg-yellow-500/80"></div>
-                                    <div className="w-3 h-3 rounded-full bg-green-500/80"></div>
-                                </div>
-                                <div className="flex-1 bg-black relative">
-                                    <HeroCarousel />
-                                    <div className="hidden absolute inset-0 m-4 border border-dashed border-white/[0.1] rounded-xl bg-white/[0.01] flex flex-col items-center justify-center text-slate-400">
-                                        <Building2 className="w-12 h-12 mb-3 opacity-40 text-cyan-400" />
-                                        <p className="font-semibold text-sm tracking-wide text-slate-200">Plataforma B2B Unificada</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                        <figure className="public-preview">
+                            <img src={hero.image || '/real-inventario.webp'} alt="Inventario y gestión de productos en NexoPOS" fetchPriority="high" width="1200" height="750" />
+                            <figcaption>Ventas, inventario y sucursales en una misma plataforma.</figcaption>
+                        </figure>
                     </div>
+                </section>
 
-
-                </div>
-            </section>
-
-            {/* Pain Points Section */}
-            {pain && (
-                <section id="pain" className="py-16 md:py-24 lg:py-32 relative z-10 border-t border-white/[0.05] bg-gradient-to-b from-[#070913] to-slate-950/20">
-                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                        <div className="text-center max-w-3xl mx-auto mb-12 md:mb-20 space-y-4">
-                            {pain.subtitle && (
-                                <span className="text-xs font-bold tracking-wider uppercase bg-gradient-to-r from-red-500 to-amber-500 bg-clip-text text-transparent">
-                                    {pain.subtitle}
-                                </span>
-                            )}
-                            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-foreground tracking-tight leading-tight">
-                                {pain.title}
-                            </h2>
+                <section id="solution" className="public-section">
+                    <div className="public-container">
+                        <div className="public-section-intro">
+                            <h2>{solution.title}</h2>
+                            <p className="public-copy">{solution.description}</p>
                         </div>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 max-w-6xl mx-auto">
-                            {(pain.items || []).map((item, i) => (
-                                <div 
-                                    key={i} 
-                                    className="p-8 rounded-3xl bg-gradient-to-b from-red-950/20 to-black/40 border border-red-500/10 hover:border-red-500/30 backdrop-blur-xl transition-all duration-300 group hover:-translate-y-2 hover:shadow-[0_10px_40px_-10px_rgba(220,38,38,0.15)] flex flex-col"
-                                >
-                                    <div className="w-14 h-14 bg-red-500/10 border border-red-500/20 rounded-2xl flex items-center justify-center mb-8 group-hover:scale-110 transition-transform duration-300 group-hover:bg-red-500/20">
-                                        <AlertTriangle className="w-6 h-6 text-red-400 group-hover:text-red-300 transition-colors" />
-                                    </div>
-                                    <h3 className="text-xl font-bold text-white mb-4 tracking-tight leading-snug">{item.title}</h3>
-                                    <p className="text-red-200/60 leading-relaxed text-sm flex-1">{item.description}</p>
-                                </div>
-                            ))}
+                        {solution.image && <figure className="public-preview"><img src={solution.image} alt="Panel de gestión de NexoPOS" loading="lazy" /></figure>}
+                        <div id="features" className="public-grid two" style={{ scrollMarginTop: 24 }}>
+                            {features.items.map((item, i) => <article key={i} className="public-feature">
+                                <h3>{cleanHeading(item.title)}</h3>
+                                <p>{item.description}</p>
+                            </article>)}
                         </div>
                     </div>
                 </section>
-            )}
 
-            {/* Solution Section */}
-            {solution && (
-                <section id="solution" className="py-16 md:py-24 lg:py-32 relative z-10 border-t border-white/[0.05] bg-slate-950/40">
-                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                        <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
-                            {/* Visual Graphic Mockup */}
-                            <div className="relative order-2 lg:order-1">
-                                <div className="absolute -inset-3 bg-gradient-to-r from-cyan-500/10 to-indigo-500/10 rounded-2xl blur-3xl opacity-40"></div>
-                                <div className="relative rounded-2xl bg-[#0a0a0a] border border-white/[0.15] shadow-[0_30px_60px_rgba(0,0,0,0.6)] overflow-hidden aspect-video flex flex-col backdrop-blur-xl">
-                                    <div className="h-9 border-b border-white/[0.08] bg-[#1a1b1e] flex items-center px-4 space-x-2">
-                                        <div className="w-3 h-3 rounded-full bg-red-500/80"></div>
-                                        <div className="w-3 h-3 rounded-full bg-yellow-500/80"></div>
-                                        <div className="w-3 h-3 rounded-full bg-green-500/80"></div>
-                                    </div>
-                                    <div className="flex-1 bg-black relative">
-                                        <img 
-                                            src={solution.image || "/real-dashboard.webp"} 
-                                            alt="Panel de Control NexoPOS" 
-                                            className="w-full h-full object-cover object-left-top"
-                                            onError={e => {
-                                                (e.target as HTMLImageElement).style.display = 'none';
-                                                (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
-                                            }}
-                                        />
-                                        <div className="hidden absolute inset-0 m-4 border border-dashed border-white/[0.1] rounded-xl bg-white/[0.01] flex flex-col items-center justify-center text-slate-400">
-                                            <Building2 className="w-12 h-12 mb-3 opacity-40 text-cyan-400" />
-                                            <p className="font-semibold text-sm text-slate-200">Panel Control Operativo</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Solution Text */}
-                            <div className="space-y-6 order-1 lg:order-2">
-                                {solution.subtitle && (
-                                    <span className="text-xs font-bold tracking-wider uppercase bg-gradient-to-r from-cyan-400 to-indigo-400 bg-clip-text text-transparent">
-                                        {solution.subtitle}
-                                    </span>
-                                )}
-                                <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-foreground tracking-tight leading-tight">
-                                    {solution.title}
-                                </h2>
-                                <p className="text-slate-400 leading-relaxed text-sm sm:text-base">
-                                    {solution.description}
-                                </p>
-                                <div className="pt-2">
-                                    <Link 
-                                        to="/register" 
-                                        className="
-                                            w-full sm:w-auto inline-flex items-center justify-center px-6 py-3 text-sm font-bold text-white 
-                                            bg-gradient-to-r from-cyan-500 to-indigo-500 rounded-xl
-                                            hover:opacity-95 shadow-[0_0_20px_rgba(6,182,212,0.15)] hover:scale-[1.02] transition-all duration-200
-                                        "
-                                    >
-                                        Conocer más funciones
-                                        <ArrowRight className="w-4 h-4 ml-2" />
-                                    </Link>
-                                </div>
-                            </div>
+                <section id="use-cases" className="public-section soft">
+                    <div className="public-container">
+                        <div className="public-section-intro"><h2>{useCases.title}</h2></div>
+                        <div className="public-grid two">
+                            {useCases.items.map((item, i) => <article key={i} className="public-card"><h3>{item.title}</h3><p>{item.description}</p></article>)}
                         </div>
                     </div>
                 </section>
-            )}
 
-            {/* Features Section */}
-            <section id="features" className="py-16 md:py-24 lg:py-32 relative z-10 border-t border-white/[0.05]">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="text-center max-w-3xl mx-auto mb-12 md:mb-20 space-y-4">
-                        <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-foreground tracking-tight">
-                            {features.sectionTitle}
-                        </h2>
-                        <p className="text-slate-400 text-sm sm:text-base leading-relaxed">
-                            {features.sectionSubtitle}
-                        </p>
+                {pain.items.length > 0 && <section className="public-section">
+                    <div className="public-container">
+                        <div className="public-section-intro"><h2>{pain.title}</h2></div>
+                        <div className="public-grid">{pain.items.map((item, i) => <article key={i} className="public-feature"><h3>{item.title}</h3><p>{item.description}</p></article>)}</div>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
-                        {(features.items || []).map((item, i) => {
-                            const { icon: Icon, color, bg, border, hover } = FEATURE_ICONS[i] ?? FEATURE_ICONS[0];
-                            const isLarge = i === 0 || i === 3; // Make 1st and 4th items large
-                            const bentoImages = ['/real-pos.webp', '/real-inventario.webp', '/real-tesoreria.webp', '/real-store online.webp'];
-                            
-                            return (
-                                <div 
-                                    key={i} 
-                                    className={`
-                                        relative overflow-hidden p-6 md:p-8 rounded-3xl bg-slate-900/40 border border-white/[0.08] 
-                                        ${hover} backdrop-blur-xl transition-all duration-300 group hover:-translate-y-1
-                                        flex flex-col justify-between min-h-[360px]
-                                        ${isLarge ? 'md:col-span-2' : 'md:col-span-1'}
-                                    `}
-                                >
-                                    <div className="absolute inset-0 bg-gradient-to-br from-white/[0.02] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                                    <div className="relative z-10">
-                                        <div 
-                                            className={`
-                                                w-12 h-12 ${bg} ${border} border rounded-2xl flex items-center justify-center mb-6 
-                                                group-hover:scale-110 transition-transform duration-300
-                                            `}
-                                        >
-                                            <Icon className={`w-6 h-6 ${color}`} />
-                                        </div>
-                                        <h3 className="text-2xl font-black text-white mb-3 tracking-tight">{item.title}</h3>
-                                        <p className="text-slate-400 leading-relaxed text-sm">{item.description}</p>
-                                    </div>
-                                    
-                                    {/* Mockup decoration for bento boxes */}
-                                    <div className={`relative mt-8 -mx-8 -mb-8 ${isLarge ? 'h-64' : 'h-48'} overflow-hidden border-t border-white/[0.08] bg-black/40`}>
-                                        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/20 to-transparent z-10 pointer-events-none"></div>
-                                        <img src={bentoImages[i] || bentoImages[0]} alt={item.title} className="w-full h-full object-cover object-top opacity-70 group-hover:opacity-100 transition-all duration-500 group-hover:scale-105 group-hover:translate-y-2" />
-                                    </div>
-                                </div>
-                            );
-                        })}
-                    </div>
-                </div>
-            </section>
+                </section>}
 
-            {/* Use Cases Section */}
-            {useCases && (
-                <section id="use-cases" className="py-16 md:py-24 lg:py-32 relative z-10 border-t border-white/[0.05] bg-[#070913]/60">
-                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                        <div className="text-center max-w-3xl mx-auto mb-12 md:mb-20 space-y-4">
-                            {useCases.subtitle && (
-                                <span className="text-xs font-bold tracking-wider uppercase bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
-                                    {useCases.subtitle}
-                                </span>
-                            )}
-                            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-foreground tracking-tight">
-                                {useCases.title}
-                            </h2>
-                        </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-stretch">
-                            {(useCases.items || []).map((item, i) => (
-                                <div 
-                                    key={i} 
-                                    className="p-6 rounded-2xl bg-white/[0.02] border border-white/[0.06] hover:border-cyan-500/20 hover:bg-[#0d1226]/20 backdrop-blur-md transition-all duration-300 flex flex-col justify-between"
-                                >
-                                    <div>
-                                        <div className="w-10 h-10 bg-cyan-500/10 border border-cyan-500/20 rounded-xl flex items-center justify-center mb-5">
-                                            <Building2 className="w-5 h-5 text-cyan-400" />
-                                        </div>
-                                        <h3 className="text-lg font-bold text-slate-100 mb-2">{item.title}</h3>
-                                        <p className="text-slate-400 text-xs leading-relaxed">{item.description}</p>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                </section>
-            )}
-
-            {/* Stats & Testimonials Section */}
-            {((stats && stats.items && stats.items.length > 0) || (testimonials && testimonials.items && testimonials.items.length > 0)) && (
-                <section id="proof" className="py-16 md:py-24 lg:py-32 relative z-10 border-t border-white/[0.05] bg-gradient-to-b from-[#070913] to-slate-950/40">
-                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                        {/* Stats grid */}
-                        {stats && stats.items && stats.items.length > 0 && (
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto mb-12 md:mb-20">
-                                {stats.items.map((stat, i) => (
-                                    <div key={i} className="p-6 md:p-8 rounded-3xl bg-white/[0.01] border border-white/[0.05] backdrop-blur-md text-center">
-                                        <div className="text-4xl sm:text-5xl font-black bg-gradient-to-r from-cyan-400 via-indigo-400 to-emerald-400 bg-clip-text text-transparent mb-2">
-                                            {stat.value}
-                                        </div>
-                                        <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                                            {stat.label}
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-
-                        {/* Testimonials */}
-                        {testimonials && testimonials.items && testimonials.items.length > 0 && (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
-                                {testimonials.items.map((testimonial, i) => (
-                                    <div key={i} className="p-6 md:p-8 rounded-3xl bg-white/[0.02] border border-white/[0.06] flex flex-col justify-between relative">
-                                        {/* Quotation icon decoration */}
-                                        <div className="absolute top-6 right-8 text-foreground/[0.02] text-7xl font-serif pointer-events-none">“</div>
-                                        <p className="text-slate-300 leading-relaxed text-sm italic relative z-10 mb-6">
-                                            "{testimonial.content}"
-                                        </p>
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-cyan-500 to-indigo-500 flex items-center justify-center text-white font-bold text-sm">
-                                                {testimonial.name[0]}
-                                            </div>
-                                            <div>
-                                                <h4 className="text-sm font-bold text-slate-100">{testimonial.name}</h4>
-                                                <p className="text-xs text-slate-500">{testimonial.role}</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-                </section>
-            )}
-
-            {/* Visual Comparison Section */}
-            {comparison && comparison.rows && comparison.rows.length > 0 && (
-                <section id="comparison" className="py-16 md:py-24 lg:py-32 relative z-10 border-t border-white/[0.05] bg-[#070913]/40">
-                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                        <div className="text-center max-w-3xl mx-auto mb-12 md:mb-20 space-y-4">
-                            {comparison.subtitle && (
-                                <span className="text-xs font-bold tracking-wider uppercase bg-gradient-to-r from-purple-400 to-indigo-400 bg-clip-text text-transparent">
-                                    {comparison.subtitle}
-                                </span>
-                            )}
-                            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-foreground tracking-tight">
-                                {comparison.title}
-                            </h2>
-                        </div>
-                        <div className="max-w-4xl mx-auto overflow-x-auto rounded-3xl border border-white/[0.06] bg-white/[0.01] backdrop-blur-md">
-                            <table className="w-full text-left border-collapse text-xs sm:text-sm">
-                                <thead>
-                                    <tr className="border-b border-white/[0.08] bg-slate-950/40">
-                                        <th className="p-3 sm:p-5 font-bold text-slate-300 uppercase tracking-wider">Característica</th>
-                                        <th className="p-3 sm:p-5 font-bold text-cyan-400 uppercase tracking-wider">NexoPOS Cloud</th>
-                                        <th className="p-3 sm:p-5 font-bold text-slate-400 uppercase tracking-wider">Excel / Planillas</th>
-                                        <th className="p-3 sm:p-5 font-bold text-slate-400 uppercase tracking-wider">Sistemas Tradicionales</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-white/[0.04]">
-                                    {comparison.rows.map((row, i) => (
-                                        <tr key={i} className="hover:bg-white/[0.01] transition-colors">
-                                            <td className="p-3 sm:p-5 font-bold text-slate-200">{row.feature}</td>
-                                            <td className="p-3 sm:p-5 font-semibold text-cyan-300">{row.nexopos}</td>
-                                            <td className="p-3 sm:p-5 text-slate-400">{row.excel}</td>
-                                            <td className="p-3 sm:p-5 text-slate-400">{row.traditional}</td>
-                                        </tr>
-                                    ))}
-                                </tbody>
+                {comparison.rows.length > 0 && <section id="comparison" className="public-section soft">
+                    <div className="public-container">
+                        <div className="public-section-intro"><h2>{comparison.title}</h2></div>
+                        <div className="public-table-wrap" tabIndex={0} role="region" aria-label="Comparativa de funcionalidades">
+                            <table className="public-table">
+                                <thead><tr><th scope="col">Funcionalidad</th><th scope="col">NexoPOS</th><th scope="col">Planillas</th><th scope="col">Sistemas tradicionales</th></tr></thead>
+                                <tbody>{comparison.rows.map((row, i) => <tr key={i}><th scope="row">{row.feature}</th><td>{row.nexopos}</td><td>{row.excel}</td><td>{row.traditional}</td></tr>)}</tbody>
                             </table>
                         </div>
                     </div>
-                </section>
-            )}
+                </section>}
 
-            {/* Pricing Section */}
-            <section id="pricing" className="py-16 md:py-24 lg:py-32 relative z-10 border-t border-white/[0.05]">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="text-center max-w-3xl mx-auto mb-12 md:mb-20 space-y-4">
-                        <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-foreground tracking-tight">{pricing.title}</h2>
-                        <p className="text-slate-400 text-sm sm:text-base">{pricing.subtitle}</p>
-                    </div>
-                    
-                    {plansLoading ? (
-                        <div className="flex justify-center items-center py-20">
-                            <div className="animate-spin rounded-full h-10 w-10 border-2 border-t-transparent border-cyan-400"></div>
-                        </div>
-                    ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto items-stretch">
-                            {plans?.map(plan => (
-                                <div 
-                                    key={plan.id} 
-                                    className={`
-                                        rounded-3xl p-6 sm:p-8 relative flex flex-col justify-between backdrop-blur-md transition-all duration-300 
-                                        ${plan.isRecommended 
-                                            ? 'bg-slate-900/60 border-2 border-cyan-500/80 shadow-[0_0_40px_rgba(6,182,212,0.15)] transform lg:scale-105 z-10 ring-4 ring-cyan-500/5' 
-                                            : 'bg-white/[0.02] border border-white/[0.06] hover:border-white/[0.12] hover:bg-[#0d1226]/40 shadow-lg'
-                                        }
-                                    `}
-                                >
-                                    {plan.isRecommended && (
-                                        <div className="absolute top-0 inset-x-0 flex justify-center -mt-4">
-                                            <span className="bg-gradient-to-r from-cyan-500 to-indigo-500 text-white px-4 py-1 rounded-full text-xs font-bold uppercase tracking-wider shadow-md">
-                                                Más Popular
-                                            </span>
-                                        </div>
-                                    )}
-                                    
-                                    <div className="space-y-6">
-                                        <div className="border-b border-white/[0.06] pb-6 mt-2">
-                                            <h3 className="text-xl font-bold text-slate-100 mb-1">{plan.name}</h3>
-                                            <p className="text-xs text-slate-400">{plan.description || 'Ideal para dar el siguiente paso.'}</p>
-                                        </div>
-                                        
-                                        <div className="flex items-baseline gap-1 py-2">
-                                            <span className="text-4xl font-black text-slate-100">${plan.price.toLocaleString('es-CL')}</span>
-                                            <span className="text-slate-400 text-xs font-medium">/mes</span>
-                                        </div>
-
-                                        <ul className="space-y-3.5 pb-6">
-                                            {(plan.features || []).map((feature, idx) => (
-                                                <li key={idx} className="flex items-start">
-                                                    <CheckCircle className={`w-4 h-4 mr-3 mt-0.5 flex-shrink-0 ${plan.isRecommended ? 'text-cyan-400' : 'text-slate-500'}`} />
-                                                    <span className="text-slate-300 text-xs leading-relaxed">{feature}</span>
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    </div>
-
-                                    <Link 
-                                        to="/register" 
-                                        className={`
-                                            block w-full text-center px-5 py-3.5 text-xs font-bold rounded-xl transition-all 
-                                            ${plan.isRecommended 
-                                                ? 'bg-gradient-to-r from-cyan-500 to-indigo-500 text-white hover:opacity-95 shadow-md hover:shadow-cyan-500/10' 
-                                                : 'bg-white/[0.05] border border-white/[0.08] text-slate-200 hover:bg-white/[0.08] hover:border-white/[0.15]'
-                                            }
-                                        `}
-                                    >
-                                        {plan.isRecommended ? 'Comenzar Prueba Gratis' : 'Seleccionar Plan'}
-                                    </Link>
-                                </div>
-                            ))}
-                        </div>
-                    )}
-                </div>
-            </section>
-
-            {/* FAQ Accordion Section */}
-            {faqs && faqs.items && faqs.items.length > 0 && (
-                <section id="faqs" className="py-16 md:py-24 lg:py-32 relative z-10 border-t border-white/[0.05] bg-gradient-to-b from-[#070913] to-slate-950/30">
-                    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-                        <div className="text-center mb-10 md:mb-16 space-y-4">
-                            {faqs.subtitle && (
-                                <span className="text-xs font-bold tracking-wider uppercase bg-gradient-to-r from-cyan-400 to-indigo-400 bg-clip-text text-transparent">
-                                    {faqs.subtitle}
-                                </span>
-                            )}
-                            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-foreground tracking-tight leading-tight">{faqs.title}</h2>
-                        </div>
-                        <div className="space-y-4">
-                            {faqs.items.map((item, i) => (
-                                <FAQItem key={i} question={item.question} answer={item.answer} />
-                            ))}
-                        </div>
+                <section id="pricing" className="public-section">
+                    <div className="public-container">
+                        <div className="public-section-intro"><h2>{pricing.title}</h2><p className="public-copy">{pricing.subtitle}</p></div>
+                        {plansLoading ? <p role="status">Cargando planes…</p> : plansError ? (
+                            <div role="alert"><p>No se pudieron cargar los planes.</p><button className="public-button secondary" onClick={() => void refetchPlans()}>Reintentar</button></div>
+                        ) : plans?.length ? <div className="public-grid">
+                            {plans.map(plan => <article key={plan.id} className={`public-card public-plan ${plan.isRecommended ? 'recommended' : ''}`}>
+                                <div>{plan.isRecommended && <p className="public-plan-tag">Plan recomendado</p>}<h3>{plan.name}</h3>{plan.description && <p>{plan.description}</p>}</div>
+                                <div className="public-price">${plan.price.toLocaleString('es-CL')} <small>/ mes</small></div>
+                                <ul>{(plan.features || []).map((feature, i) => <li key={i}><Check size={15} aria-hidden="true" />{feature}</li>)}</ul>
+                                <Link to="/register" className={`public-button ${plan.isRecommended ? '' : 'secondary'}`}>Elegir plan</Link>
+                            </article>)}
+                        </div> : <p className="public-copy">Consulta los planes disponibles a través de <Link to="/contacto">nuestro equipo</Link>.</p>}
                     </div>
                 </section>
-            )}
 
-            {/* CTA Final */}
-            <section className="relative z-10 border-t border-b border-white/[0.06] bg-gradient-to-br from-indigo-950/20 via-[#070913] to-emerald-950/20 py-16 sm:py-24">
-                <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
-                    <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-foreground">{cta.title}</h2>
-                    <p className="text-slate-400 text-sm sm:text-base leading-relaxed max-w-xl mx-auto">{cta.subtitle}</p>
-                    <div className="pt-2">
-                        <Link 
-                            to="/register" 
-                            className="
-                                w-full sm:w-auto inline-flex items-center justify-center px-8 py-4 text-sm font-bold text-white 
-                                bg-gradient-to-r from-cyan-500 via-indigo-500 to-emerald-500 rounded-xl
-                                shadow-[0_0_20px_rgba(6,182,212,0.2)] hover:shadow-[0_0_30px_rgba(6,182,212,0.35)]
-                                hover:scale-[1.02] active:scale-[0.98] transition-all duration-300
-                            "
-                        >
-                            {cta.button}
-                        </Link>
-                    </div>
-                </div>
-            </section>
+                {stats.items.length > 0 && <div className="public-container public-stats">{stats.items.map((item, i) => <div key={i}><strong>{item.value}</strong><span>{item.label}</span></div>)}</div>}
+                {testimonials.items.length > 0 && <section className="public-section soft"><div className="public-container public-grid two">
+                    {testimonials.items.map((item, i) => <figure key={i} className="public-card public-quote"><blockquote>{item.content}</blockquote><figcaption><strong>{item.name}</strong>{item.role}</figcaption></figure>)}
+                </div></section>}
 
-            {/* Footer */}
-            <footer className="relative z-10 py-16 bg-[#070913]">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
-                        <div className="space-y-4">
-                            <Logo variant="full" className="h-9 w-auto brightness-0 invert opacity-95" />
-                            <p className="text-xs text-slate-500 leading-relaxed">{footer.description}</p>
-                        </div>
-                        <div>
-                            <h4 className="text-slate-200 font-bold mb-4 text-xs tracking-wider uppercase">Producto</h4>
-                            <ul className="space-y-3 text-xs">
-                                <li><a href="#features" className="text-slate-400 hover:text-cyan-400 transition-colors">Características</a></li>
-                                <li><a href="#pricing" className="text-slate-400 hover:text-cyan-400 transition-colors">Precios</a></li>
-                            </ul>
-                        </div>
-                        <div>
-                            <h4 className="text-slate-200 font-bold mb-4 text-xs tracking-wider uppercase">Compañía</h4>
-                            <ul className="space-y-3 text-xs">
-                                <li><Link to="/contacto" className="text-slate-400 hover:text-cyan-400 transition-colors">Contacto</Link></li>
-                                <li><Link to="/soporte" className="text-slate-400 hover:text-cyan-400 transition-colors">Soporte</Link></li>
-                            </ul>
-                        </div>
-                        <div>
-                            <h4 className="text-slate-200 font-bold mb-4 text-xs tracking-wider uppercase">Legal</h4>
-                            <ul className="space-y-3 text-xs">
-                                <li><Link to="/terminos" className="text-slate-400 hover:text-cyan-400 transition-colors">Términos de Servicio</Link></li>
-                                <li><Link to="/privacidad" className="text-slate-400 hover:text-cyan-400 transition-colors">Privacidad</Link></li>
-                            </ul>
-                        </div>
+                <section id="faqs" className="public-section">
+                    <div className="public-container">
+                        <div className="public-section-intro"><h2>{faqs.title}</h2></div>
+                        {faqs.items.map((item, i) => <details key={i} className="public-faq"><summary>{item.question}</summary><p>{item.answer}</p></details>)}
                     </div>
-                    <div className="border-t border-white/[0.06] mt-12 pt-8 text-xs text-slate-500 text-center md:text-left flex flex-col md:flex-row justify-between gap-4">
-                        <p>© {new Date().getFullYear()} NexoPOS. Todos los derechos reservados.</p>
-                        <p className="font-mono text-[10px] tracking-wider text-slate-600">CONEXIÓN SEGURA SSL · CHILE</p>
+                </section>
+                <section className="public-section public-cta">
+                    <div className="public-container"><h2>{cta.title}</h2><p className="public-copy">{cta.subtitle}</p><div className="public-actions"><Link to="/register" className="public-button">{cta.button}<ArrowRight size={16} aria-hidden="true" /></Link></div></div>
+                </section>
+            </main>
+            <footer className="public-footer">
+                <div className="public-container">
+                    <div className="public-footer-top">
+                        <div><Link to="/landing" className="public-brand" aria-label="NexoPOS, inicio"><Logo variant="full" mode="light" className="h-10 w-auto" /></Link><p>{footer.description}</p></div>
+                        <nav aria-label="Enlaces de contacto y legales" className="public-footer-links">
+                            <Link to="/contacto">Contacto</Link><Link to="/soporte">Soporte</Link><Link to="/terminos">Términos</Link><Link to="/privacidad">Privacidad</Link>
+                        </nav>
                     </div>
+                    <div className="public-footer-bottom">© {new Date().getFullYear()} NexoPOS. Todos los derechos reservados.</div>
                 </div>
             </footer>
-            
-            {/* Chatbot Publico */}
             {cfg.chatbot?.enabled && <PublicChatWidget cfg={cfg.chatbot} />}
-        </main>
+        </div>
     );
 }
-
