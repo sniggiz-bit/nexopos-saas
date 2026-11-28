@@ -1,0 +1,33 @@
+name: Read-only SEO production routing check
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  inspect:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Inspect public routing without changing production
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          port: ${{ secrets.SERVER_PORT }}
+          command_timeout: 3m
+          script: |
+            set -eu
+            cd /home/nexopos/nexopos.cl
+            printf 'SOURCE_SHA=%s\n' "$(git rev-parse HEAD)"
+            docker exec nexopos_web nginx -T 2>&1 | grep -E '(^[[:space:]]*(root |index |server_name |location |try_files |rewrite |return |absolute_redirect)|configuration file)' || true
+            for route in / /index.html /contacto /pos; do
+              printf 'CONTAINER_ROUTE=%s\n' "$route"
+              docker exec nexopos_web wget -S -O /dev/null "http://127.0.0.1$route" 2>&1 || true
+            done
+            curl -4 --max-time 20 -sS -o /dev/null -w 'PUBLIC_ROOT_HTTP=%{http_code}\n' -A 'NexoPOS-SEO-ReadOnly-bb35d43' 'https://nexopos.cl/?seo-routing-probe=bb35d43' || true
+            docker logs --since 3m nexopos_web 2>&1 | grep 'NexoPOS-SEO-ReadOnly-bb35d43' || true
