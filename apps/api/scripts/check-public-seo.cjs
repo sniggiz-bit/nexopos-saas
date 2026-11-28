@@ -1,5 +1,6 @@
 // Read-only HTTP checks for the real release server, including responses without JavaScript.
 const assert = require('node:assert/strict');
+const http = require('node:http');
 const origin = process.env.PUBLIC_SEO_ORIGIN || 'http://release-web';
 const canonicalOrigin = 'https://nexopos.cl';
 const paths = ['/', '/contacto', '/soporte', '/terminos', '/privacidad'];
@@ -7,6 +8,15 @@ const decode = text => text.replaceAll('&amp;', '&').replaceAll('&quot;', '"').r
 async function request(path, options = {}) {
   const response = await fetch(new URL(path, origin), { redirect: 'manual', signal: AbortSignal.timeout(20000), ...options });
   return { response, html: await response.text() };
+}
+// Native fetch can normalize Host to the URL hostname. Use HTTP for virtual-host tests.
+function wwwRequest(path) {
+  return new Promise((resolve, reject) => {
+    const req = http.get(new URL(path, origin), { headers: { Host: 'www.nexopos.cl' } }, response => {
+      response.resume(); response.on('end', () => resolve({ status: response.statusCode, headers: response.headers }));
+    });
+    req.setTimeout(20000, () => req.destroy(new Error('Virtual-host check timed out'))); req.on('error', reject);
+  });
 }
 function meta(html, attribute, name) {
   return decode(html.match(new RegExp(`<meta\\s+${attribute}="${name}"\\s+content="([^"]*)"`))?.[1] || '');
@@ -50,19 +60,19 @@ function meta(html, attribute, name) {
   }
   const { response: verificationResponse, html: verification } = await request('/googledf3aaa8616c6306f.html');
   assert.equal(verificationResponse.status, 200); assert.equal(verification.trim(), 'google-site-verification: googledf3aaa8616c6306f.html');
-  const { html: robots } = await request('/robots.txt'); assert.match(robots, /Sitemap: https:\/\/nexopos.cl\/sitemap.xml/); assert.doesNotMatch(robots, /Disallow: \/(?:login|register|admin|dashboard|pos)/);
+  const { html: robots } = await request('/robots.txt'); assert.match(robots, /Sitemap: https:\/\/nexopos.cl\/sitemap.xml/); assert.doesNotMatch(robots, /Disallow: \/(?:api|login|register|admin|dashboard|pos)/);
   const { html: sitemap } = await request('/sitemap.xml'); const locations = Array.from(sitemap.matchAll(/<loc>([^<]+)<\/loc>/g), match => match[1]);
   assert.deepEqual(locations.sort(), paths.map(path => canonicalOrigin + path).sort()); assert.doesNotMatch(sitemap, /2024|\/landing|\/login|\/register/);
   const { response: shellResponse, html: shell } = await request('/app-shell.html'); assert.equal(shellResponse.status, 200); assert.match(meta(shell, 'name', 'robots'), /noindex/); assert.match(shell, /<div id="root"><\/div>/);
   const { html: worker } = await request('/sw.js'); assert.match(worker, /app-shell\.html/);
-  const { response: apiResponse } = await request('/api/support/chat'); assert.equal(apiResponse.status, 401);
+  const { response: apiResponse } = await request('/api/support/chat'); assert.equal(apiResponse.status, 401); assert.match(apiResponse.headers.get('x-robots-tag') || '', /noindex/);
   if (new URL(origin).hostname === 'release-web') {
-    const { response } = await request('/', { headers: { Host: 'www.nexopos.cl' } }); assert.equal(response.status, 301); assert.equal(response.headers.get('location'), 'https://nexopos.cl/');
-    const { response: verification } = await request('/googledf3aaa8616c6306f.html', { headers: { Host: 'www.nexopos.cl' } }); assert.equal(verification.status, 200);
+    const response = await wwwRequest('/'); assert.equal(response.status, 301); assert.equal(response.headers.location, 'https://nexopos.cl/');
+    const verification = await wwwRequest('/googledf3aaa8616c6306f.html'); assert.equal(verification.status, 200);
     for (const path of ['/pos', '/login', '/register', '/sw.js', '/manifest.webmanifest', '/index.html', '/app-shell.html', '/store/seo-check-store']) {
-      const { response } = await request(path, { headers: { Host: 'www.nexopos.cl' } }); assert.equal(response.status, 200, 'Preserve existing client origin: ' + path);
+      const response = await wwwRequest(path); assert.equal(response.status, 200, 'Preserve existing client origin: ' + path);
     }
-    const { response: wwwApi } = await request('/api/support/chat', { headers: { Host: 'www.nexopos.cl' } }); assert.equal(wwwApi.status, 401);
+    const wwwApi = await wwwRequest('/api/support/chat'); assert.equal(wwwApi.status, 401);
   }
   console.log('PASS public SEO: prerendered pages, unique metadata and schema, canonicals, redirects, real 404s, noindex application, Google verification, sitemap and offline app shell.');
 })().catch(error => { console.error(error); process.exitCode = 1; });

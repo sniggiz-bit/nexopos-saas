@@ -1,7 +1,7 @@
 User-agent: *
 Allow: /
-# Private HTML routes expose noindex headers; allow crawling to read them.
-Disallow: /api
+# Public rendering data must remain crawlable. Application HTML and JSON API
+# responses expose noindex headers; authentication still protects account data.
 Disallow: /socket.io/
 
 Sitemap: https://nexopos.cl/sitemap.xml

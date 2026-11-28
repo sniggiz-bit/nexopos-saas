@@ -21,7 +21,7 @@ async function metadata(page, pathname, index) {
     await page.route('https://fonts.gstatic.com/**', route => route.abort());
     const errors = []; page.on('pageerror', error => errors.push(error.message));
     await page.goto(origin + '/', { waitUntil: 'domcontentloaded' });
-    await page.getByRole('heading', { level: 1 }).filter({ hasText: 'Vende con más tranquilidad.' }).waitFor();
+    await page.locator('.public-hero h1').waitFor();
     await metadata(page, '/', true);
     assert.equal(await page.locator('h1').count(), 1);
     await page.getByRole('link', { name: 'Iniciar sesión', exact: true }).click();
