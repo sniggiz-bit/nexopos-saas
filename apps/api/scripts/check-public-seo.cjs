@@ -33,7 +33,7 @@ function meta(html, attribute, name) {
     assert.doesNotMatch(html, /<h1[^>]*>[^<]*Cargando/);
     if (path === '/') { assert.match(html, /15 días/); assert.match(html, /public-tool-card/); assert.match(html, /"@type":"WebSite"/); }
   }
-  for (const path of ['/landing', '/landing/', '/index.html', '/contacto/', '/contacto/index.html']) {
+  for (const path of ['/landing', '/landing/', '/contacto/', '/contacto/index.html']) {
     const { response } = await request(path); assert.equal(response.status, 301, path);
     const target = new URL(response.headers.get('location'), origin);
     assert.equal(target.pathname, path.startsWith('/contacto') ? '/contacto' : '/');
@@ -59,6 +59,10 @@ function meta(html, attribute, name) {
   if (new URL(origin).hostname === 'release-web') {
     const { response } = await request('/', { headers: { Host: 'www.nexopos.cl' } }); assert.equal(response.status, 301); assert.equal(response.headers.get('location'), 'https://nexopos.cl/');
     const { response: verification } = await request('/googledf3aaa8616c6306f.html', { headers: { Host: 'www.nexopos.cl' } }); assert.equal(verification.status, 200);
+    for (const path of ['/pos', '/login', '/register', '/sw.js', '/manifest.webmanifest', '/index.html', '/app-shell.html', '/store/seo-check-store']) {
+      const { response } = await request(path, { headers: { Host: 'www.nexopos.cl' } }); assert.equal(response.status, 200, 'Preserve existing client origin: ' + path);
+    }
+    const { response: wwwApi } = await request('/api/support/chat', { headers: { Host: 'www.nexopos.cl' } }); assert.equal(wwwApi.status, 401);
   }
   console.log('PASS public SEO: prerendered pages, unique metadata and schema, canonicals, redirects, real 404s, noindex application, Google verification, sitemap and offline app shell.');
 })().catch(error => { console.error(error); process.exitCode = 1; });
