@@ -10,6 +10,8 @@ import { toast } from 'react-hot-toast';
 import { api } from '../../lib/api';
 import { useSocket } from '../../hooks/useSocket';
 import { useTheme } from '../../context/ThemeContext';
+import { routeSeo } from '../../lib/seo';
+import { applyPageSeo } from '../../lib/seo-dom';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -856,53 +858,43 @@ export const PublicStorePage = () => {
 
   // Initial: fetch store + filters
   useEffect(() => {
+    let cancelled = false;
+    setStore(null);
+    setStoreError('');
+    setLoadingStore(true);
     const load = async () => {
       try {
         const [storeRes, filtersRes] = await Promise.all([
           api.get(`/store/${slug}`),
           api.get(`/store/${slug}/filters`).catch(() => ({ data: { categories: [], brands: [] } })),
         ]);
+        if (cancelled) return;
         setStore(storeRes.data);
         setStoreFilters(filtersRes.data);
       } catch {
-        setStoreError('Tienda no encontrada o no disponible');
+        if (!cancelled) setStoreError('Tienda no encontrada o no disponible');
       } finally {
-        setLoadingStore(false);
+        if (!cancelled) setLoadingStore(false);
       }
     };
     load();
+    return () => { cancelled = true; };
   }, [slug]);
 
   // Apply SEO meta tags from store settings
   useEffect(() => {
-    if (!store) return;
+    if (!store) {
+      if (storeError) applyPageSeo({ ...routeSeo(`/store/${slug}`), title: 'Tienda no disponible | NexoPOS', description: storeError, index: false });
+      return;
+    }
     const ss = store.storeSettings;
     const title = ss.seoTitle || store.name;
-    const description = ss.seoDescription || '';
+    const description = ss.seoDescription || `Consulta los productos y compra en ${store.name}.`;
     const keywords = ss.seoKeywords || '';
     const ogImage = ss.ogImageUrl || '';
 
-    document.title = title;
-
-    const setMeta = (selector: string, attr: string, attrVal: string, content: string) => {
-      let el = document.querySelector(selector) as HTMLMetaElement | null;
-      if (!el) {
-        el = document.createElement('meta');
-        el.setAttribute(attr, attrVal);
-        document.head.appendChild(el);
-      }
-      el.content = content;
-    };
-
-    setMeta('meta[name="description"]', 'name', 'description', description);
-    if (keywords) setMeta('meta[name="keywords"]', 'name', 'keywords', keywords);
-    setMeta('meta[property="og:title"]', 'property', 'og:title', title);
-    setMeta('meta[property="og:description"]', 'property', 'og:description', description);
-    if (ogImage) setMeta('meta[property="og:image"]', 'property', 'og:image', ogImage);
-    setMeta('meta[property="og:type"]', 'property', 'og:type', 'website');
-
-    return () => { document.title = 'NexoPOS'; };
-  }, [store]);
+    applyPageSeo({ ...routeSeo(`/store/${slug}`), title, description, keywords, image: ogImage || undefined });
+  }, [store, storeError, slug]);
 
   // Fetch products when filters change
   useEffect(() => {

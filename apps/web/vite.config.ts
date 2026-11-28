@@ -2,6 +2,12 @@ import { defineConfig, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'path'
 import { VitePWA } from 'vite-plugin-pwa'
+import { publicSeoPlugin } from './config/public-seo'
+
+const aliases = {
+  '@': path.resolve(__dirname, './src'),
+  '@nexopos/shared': path.resolve(__dirname, '../../packages/shared/index.ts'),
+}
 
 function versionPwaUrls(): Plugin {
   return {
@@ -33,7 +39,7 @@ export default defineConfig({
         name: 'NexoPOS',
         short_name: 'NexoPOS',
         description: 'Sistema de Gestión Integral para PYMES chilenas',
-        theme_color: '#4f46e5',
+        theme_color: '#17364f',
         background_color: '#ffffff',
         display: 'standalone',
         orientation: 'landscape',
@@ -50,7 +56,8 @@ export default defineConfig({
         clientsClaim: true,
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
         cleanupOutdatedCaches: true,
-        globPatterns: ['index.html', 'assets/**/*.{js,css,woff,woff2}'],
+        globPatterns: ['index.html', 'app-shell.html', 'assets/**/*.{js,css,woff,woff2}'],
+        navigateFallback: '/app-shell.html',
         navigateFallbackDenylist: [/^\/api(?:\/|$)/, /^\/socket\.io(?:\/|$)/],
         runtimeCaching: [
           {
@@ -62,12 +69,10 @@ export default defineConfig({
       devOptions: { enabled: false },
     }),
     versionPwaUrls(),
+    publicSeoPlugin(__dirname, aliases),
   ],
   resolve: {
-    alias: {
-      '@': path.resolve(__dirname, './src'),
-      '@nexopos/shared': path.resolve(__dirname, '../../packages/shared/index.ts'),
-    },
+    alias: aliases,
   },
   server: {
     port: 5173,

@@ -7,6 +7,8 @@ import { PublicChatWidget } from '../components/landing/PublicChatWidget';
 import { usePublicPlans } from '../hooks/usePublicPlans';
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '../api/client';
+import { routeSeo, structuredData } from '../lib/seo';
+import { applyPageSeo } from '../lib/seo-dom';
 
 
 interface PainItem { title: string; description: string }
@@ -351,27 +353,10 @@ export function LandingPage() {
     const { hero, pain, solution, features, useCases, pricing, faqs, cta, footer, seo } = cfg;
 
     React.useEffect(() => {
-        if (seo?.title) {
-            document.title = seo.title;
-        }
-        if (seo?.description) {
-            let metaDesc = document.querySelector('meta[name="description"]');
-            if (!metaDesc) {
-                metaDesc = document.createElement('meta');
-                metaDesc.setAttribute('name', 'description');
-                document.head.appendChild(metaDesc);
-            }
-            metaDesc.setAttribute('content', seo.description);
-        }
-        if (seo?.keywords) {
-            let metaKeys = document.querySelector('meta[name="keywords"]');
-            if (!metaKeys) {
-                metaKeys = document.createElement('meta');
-                metaKeys.setAttribute('name', 'keywords');
-                document.head.appendChild(metaKeys);
-            }
-            metaKeys.setAttribute('content', seo.keywords);
-        }
+        const page = routeSeo('/');
+        const title = seo?.title || page.title;
+        const description = seo?.description || page.description;
+        applyPageSeo({ ...page, title, description, keywords: seo?.keywords, structuredData: structuredData('/', title, description) });
     }, [seo]);
 
 
@@ -379,7 +364,7 @@ export function LandingPage() {
         <div className="public-site">
             <header className="public-header">
                 <div className="public-container public-header-inner">
-                    <Link to="/landing" className="public-brand" aria-label="NexoPOS, inicio">
+                    <Link to="/" className="public-brand" aria-label="NexoPOS, inicio">
                         <Logo variant="full" mode="light" className="h-10 w-auto" />
                     </Link>
                     <nav aria-label="Navegación principal" className="public-header-links desktop">
@@ -513,7 +498,7 @@ export function LandingPage() {
             <footer className="public-footer">
                 <div className="public-container">
                     <div className="public-footer-top">
-                        <div><Link to="/landing" className="public-brand" aria-label="NexoPOS, inicio"><Logo variant="full" mode="light" className="h-10 w-auto" /></Link><p>{footer.description}</p></div>
+                        <div><Link to="/" className="public-brand" aria-label="NexoPOS, inicio"><Logo variant="full" mode="light" className="h-10 w-auto" /></Link><p>{footer.description}</p></div>
                         <nav aria-label="Enlaces de contacto y legales" className="public-footer-links">
                             <Link to="/contacto">Contacto</Link><Link to="/soporte">Soporte</Link><Link to="/terminos">Términos</Link><Link to="/privacidad">Privacidad</Link>
                         </nav>

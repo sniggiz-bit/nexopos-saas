@@ -1,10 +1,7 @@
 User-agent: *
 Allow: /
-Allow: /landing
-Allow: /login
-Allow: /register
-Disallow: /dashboard/
-Disallow: /admin/
-Disallow: /reset-password/
+# Private HTML routes expose noindex headers; allow crawling to read them.
+Disallow: /api
+Disallow: /socket.io/
 
 Sitemap: https://nexopos.cl/sitemap.xml

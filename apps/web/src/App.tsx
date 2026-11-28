@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import SuperAdminLayout from './layouts/SuperAdminLayout';
 import AdminDashboardPage from './pages/admin/AdminDashboardPage';
@@ -51,6 +51,8 @@ import { ProtectedRoute } from './components/ProtectedRoute';
 import { useRealtimeSync } from './hooks/useRealtimeSync';
 import { ThemeProvider } from './context/ThemeContext';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { RouteSeo } from './components/RouteSeo';
+import { NotFoundPage } from './pages/public/NotFoundPage';
 
 // Create a client for TanStack Query
 const queryClient = new QueryClient({
@@ -74,7 +76,7 @@ function RoleBasedRedirect() {
 
   // If not authenticated, show landing page
   if (!user) {
-    return <Navigate to="/landing" replace />;
+    return <LandingPage />;
   }
 
   if (user?.role === 'SUPER_ADMIN') {
@@ -99,6 +101,11 @@ function LoadingScreen() {
   );
 }
 
+function HomeAlias() {
+  const { search, hash } = useLocation();
+  return <Navigate to={{ pathname: '/', search, hash }} replace />;
+}
+
 function App() {
   return (
     <ErrorBoundary>
@@ -108,10 +115,11 @@ function App() {
             <CartProvider>
               <RealtimeSync />
               <BrowserRouter>
+                <RouteSeo />
                 <Suspense fallback={<LoadingScreen />}>
                   <Routes>
                     {/* Public Routes */}
-                    <Route path="/landing" element={<LandingPage />} />
+                    <Route path="/landing" element={<HomeAlias />} />
                     <Route path="/register" element={<RegisterPage />} />
                     <Route path="/auth/sso" element={<SsoLoginPage />} />
                     <Route path="/login" element={<LoginPage />} />
@@ -176,6 +184,7 @@ function App() {
                     {/* Default Redirect */}
                     {/* Default Redirect - Handle Role Based Redirect */}
                     <Route path="/" element={<RoleBasedRedirect />} />
+                    <Route path="*" element={<NotFoundPage />} />
                   </Routes>
                 </Suspense>
                 <Toaster
