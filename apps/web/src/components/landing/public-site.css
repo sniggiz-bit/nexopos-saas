@@ -26,8 +26,8 @@
 .public-eyebrow { margin: 0 0 18px; color: #00637e; font-size: 12px; font-weight: 650; letter-spacing: .09em; text-transform: uppercase; }
 .public-site h1 { font-size: clamp(32px, 3.3vw, 47px); line-height: 1.15; letter-spacing: -.035em; font-weight: 600; margin: 0 0 24px; }
 .public-site h1 span { color: #1e6077; }
-.public-site h2 { font-size: clamp(26px, 2.5vw, 34px); line-height: 1.25; letter-spacing: -.025em; font-weight: 600; margin: 0 0 18px; max-width: 760px; }
-.public-site h3 { font-size: 18px; font-weight: 600; line-height: 1.4; margin: 0 0 12px; }
+.public-site > main h2 { font-size: clamp(26px, 2.5vw, 34px); line-height: 1.25; letter-spacing: -.025em; font-weight: 600; margin: 0 0 18px; max-width: 760px; }
+.public-site > main h3 { font-size: 18px; font-weight: 600; line-height: 1.4; margin: 0 0 12px; }
 .public-copy { color: #526577; font-size: 16px; line-height: 1.8; max-width: 660px; }
 .public-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 28px; }
 .public-preview { margin: 0; padding: 10px; border: 1px solid #ccd7e0; background: #fff; border-radius: 10px; box-shadow: 0 15px 35px #102d4410; }

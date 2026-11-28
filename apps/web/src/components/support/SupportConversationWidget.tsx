@@ -1,7 +1,7 @@
 import { neutralBillingText } from '@nexopos/shared';
 import { supportUuid } from '@/lib/support-id';
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Bot, Headphones, Loader2, MessageSquare, Send, X } from "lucide-react";
+import { Bot, Headphones, Loader2, MessageSquare, Send, X, BriefcaseBusiness } from "lucide-react";
 import { api } from "@/lib/api";
 import { io } from 'socket.io-client';
 import { eventsUrl } from '@/lib/events-url';
@@ -176,14 +176,21 @@ export function SupportConversationWidget({
     }
   }
   const bot = snapshot.mode === "BOT" || snapshot.mode === "RESOLVED";
+  const publicChat = audience === "PUBLIC";
+  const contactOptions = publicChat
+    ? [
+        { label: "Hablar con ventas", message: "Necesito comunicarme con el equipo de ventas.", icon: BriefcaseBusiness },
+        { label: "Hablar con soporte", message: "Necesito hablar con una persona de soporte.", icon: Headphones },
+      ]
+    : [{ label: "Hablar con soporte", message: "Necesito hablar con una persona de soporte.", icon: Headphones }];
   return (
     <>
       {!open && (
         <button
           ref={launcher}
-          aria-label="Abrir chat de soporte"
+          aria-label={publicChat ? "Abrir chat de ventas y soporte" : "Abrir chat de soporte"}
           onClick={() => setOpen(true)}
-          className="fixed bottom-5 right-5 z-50 flex h-14 w-14 items-center justify-center rounded-2xl bg-violet-600 text-white shadow-xl shadow-violet-600/25 transition hover:bg-violet-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-violet-400"
+          className="fixed bottom-5 right-5 z-50 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#17364f] text-white shadow-xl shadow-slate-900/20 transition hover:bg-[#254c6c] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-cyan-600"
         >
           <MessageSquare className="h-6 w-6" />
         </button>
@@ -193,14 +200,14 @@ export function SupportConversationWidget({
           ref={dialog}
           tabIndex={-1}
           role="dialog"
-          aria-label="Chat de soporte NexoPOS"
+          aria-label={publicChat ? "Chat de ventas y soporte NexoPOS" : "Chat de soporte NexoPOS"}
           onKeyDown={(event) => {
             if (event.key === "Escape") close();
           }}
           className="fixed bottom-4 right-4 z-50 flex w-[calc(100vw-2rem)] max-w-[420px] flex-col overflow-hidden rounded-2xl border border-border bg-card text-foreground shadow-2xl"
           style={{ height: "min(640px, calc(100dvh - 2rem))" }}
         >
-          <header className="flex items-center gap-3 border-b border-border bg-violet-600 px-4 py-4 text-white">
+          <header className="flex items-center gap-3 border-b border-border bg-[#17364f] px-4 py-4 text-white">
             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/15">
               {bot ? (
                 <Bot className="h-5 w-5" />
@@ -209,13 +216,13 @@ export function SupportConversationWidget({
               )}
             </span>
             <div className="min-w-0 flex-1">
-              <h2 className="text-sm font-semibold">Soporte NexoPOS</h2>
-              <p role="status" className="mt-0.5 text-xs text-violet-100">
-                {modeLabel[snapshot.mode] || modeLabel.BOT}
+              <h2 className="text-sm font-semibold">{publicChat ? "Atención NexoPOS" : "Soporte NexoPOS"}</h2>
+              <p role="status" className="mt-0.5 text-xs text-slate-100">
+                {publicChat && bot ? "Ventas y soporte" : publicChat && snapshot.mode === "HUMAN" ? "Conversación con el equipo NexoPOS" : modeLabel[snapshot.mode] || modeLabel.BOT}
               </p>
             </div>
             <button
-              aria-label="Cerrar chat de soporte"
+              aria-label={publicChat ? "Cerrar chat de ventas y soporte" : "Cerrar chat de soporte"}
               onClick={close}
               className="rounded-lg p-2 hover:bg-white/15"
             >
@@ -250,7 +257,7 @@ export function SupportConversationWidget({
                   className={
                     "rounded-2xl p-3 text-sm leading-relaxed whitespace-pre-wrap break-words [overflow-wrap:anywhere] " +
                     (message.sender === "VISITOR"
-                      ? "rounded-tr-sm bg-violet-600 text-white"
+                      ? "rounded-tr-sm bg-[#17364f] text-white"
                       : "rounded-tl-sm border border-border bg-muted/50")
                   }
                 >
@@ -258,14 +265,14 @@ export function SupportConversationWidget({
                     className={
                       "mb-1 text-[10px] font-semibold uppercase tracking-wide " +
                       (message.sender === "VISITOR"
-                        ? "text-violet-100"
+                        ? "text-slate-100"
                         : "text-muted-foreground")
                     }
                   >
                     {message.sender === "VISITOR"
                       ? "Tú"
                       : message.sender === "ADMIN"
-                        ? "Equipo de soporte"
+                        ? publicChat ? "Equipo NexoPOS" : "Equipo de soporte"
                         : "Asistente NexoPOS"}
                   </p>
                   {neutralBillingText(message.content)}
@@ -293,7 +300,7 @@ export function SupportConversationWidget({
                       <button
                         key={item.id}
                         onClick={() => void send(item.label, item.id)}
-                        className="rounded-xl border border-violet-500/25 bg-violet-500/5 px-3 py-2 text-left text-xs leading-relaxed text-foreground transition hover:bg-violet-500/15"
+                        className="rounded-xl border border-cyan-700/25 bg-cyan-700/5 px-3 py-2 text-left text-xs leading-relaxed text-foreground transition hover:bg-cyan-700/10"
                       >
                         {item.label}
                       </button>
@@ -314,20 +321,20 @@ export function SupportConversationWidget({
           </div>
           <footer className="border-t border-border bg-card p-3">
             {bot && (
-              <button
-                onClick={() =>
-                  void send(
-                    "Necesito hablar con una persona de soporte.",
-                    undefined,
-                    true,
-                  )
-                }
-                disabled={busy && pending.current?.human === true}
-                className="mb-3 flex min-h-10 w-full items-center justify-center gap-2 rounded-xl border border-border text-xs font-semibold transition hover:bg-muted disabled:opacity-50"
-              >
-                <Headphones className="h-4 w-4" />
-                Hablar con soporte
-              </button>
+              <div className={publicChat ? "mb-3 grid grid-cols-2 gap-2" : "mb-3"}>
+                {contactOptions.map(option => (
+                  <button
+                    key={option.label}
+                    type="button"
+                    onClick={() => void send(option.message, undefined, true)}
+                    disabled={busy && pending.current?.human === true}
+                    className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-border px-2 py-2 text-xs font-semibold transition hover:bg-muted disabled:opacity-50"
+                  >
+                    <option.icon className="h-4 w-4 shrink-0" aria-hidden="true" />
+                    {option.label}
+                  </button>
+                ))}
+              </div>
             )}
             {error && (
               <p
@@ -345,14 +352,14 @@ export function SupportConversationWidget({
               className="flex items-end gap-2"
             >
               <textarea
-                aria-label="Mensaje para soporte"
+                aria-label={publicChat ? "Mensaje para NexoPOS" : "Mensaje para soporte"}
                 placeholder="Escribe tu consulta…"
                 value={input}
                 onChange={(event) => setInput(event.target.value)}
                 maxLength={4000}
                 rows={2}
                 disabled={busy || snapshot.processing}
-                className="min-w-0 flex-1 resize-none rounded-xl border border-border bg-muted/40 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500"
+                className="min-w-0 flex-1 resize-none rounded-xl border border-border bg-muted/40 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-700"
                 onKeyDown={(event) => {
                   if (event.key === "Enter" && !event.shiftKey) {
                     event.preventDefault();
@@ -362,9 +369,9 @@ export function SupportConversationWidget({
               />
               <button
                 type="submit"
-                aria-label="Enviar mensaje a soporte"
+                aria-label={publicChat ? "Enviar mensaje a NexoPOS" : "Enviar mensaje a soporte"}
                 disabled={!input.trim() || busy || snapshot.processing}
-                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-violet-600 text-white transition hover:bg-violet-500 disabled:opacity-40"
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#17364f] text-white transition hover:bg-[#254c6c] disabled:opacity-40"
               >
                 <Send className="h-4 w-4" />
               </button>
